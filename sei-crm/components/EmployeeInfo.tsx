@@ -23,7 +23,7 @@ import { BsFiletypePdf } from "react-icons/bs";
 import { downloadHtmlToPdf } from "@/app/utils/downloadHtmlToPdf";
 import DropDown from "./DropDown";
 import { calculateAge } from "@/app/utils/calculateAge";
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import EmployeeTask from "./EmployeeTask";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -185,7 +185,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
     }
   }, [fetchResults[1].isLoading]);
 
-  const { mutate, isLoading: mutateLoading } = doMutation();
+  const { mutate, isLoading: mutateLoading } = useDoMutation();
 
   const onFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

@@ -12,7 +12,7 @@ import HandleSuspence from "../HandleSuspence";
 import { BASE_API } from "@/app/constant";
 import { ICourse, ISuccess, TBatches } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
 
 // const tableDatas = {
@@ -89,7 +89,7 @@ export default function CourseBatch({ courseId }: IProps) {
     );
   }
 
-  const { mutate, isLoading } = doMutation();
+  const { mutate, isLoading } = useDoMutation();
   const handleBatchDeleteBtn = (rowIndex: number) => {
     if (!confirm("Are you sure you want to delete this batch ?")) {
       return;

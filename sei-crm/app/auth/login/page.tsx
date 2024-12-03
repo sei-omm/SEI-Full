@@ -1,6 +1,6 @@
 "use client";
 
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import { setInfo } from "@/app/utils/saveInfo";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 
 export default function Login() {
-  const { mutate, isLoading } = doMutation();
+  const { mutate, isLoading } = useDoMutation();
 
   const route = useRouter();
 

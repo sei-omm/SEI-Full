@@ -13,7 +13,7 @@ import { ISuccess, TOneAdmission } from "@/types";
 import HandleSuspence from "@/components/HandleSuspence";
 import { getDate } from "@/app/utils/getDate";
 import { FaRegSave } from "react-icons/fa";
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import AppliedCourseListItem from "@/components/Course/AppliedCourseListItem";
 import { useDispatch } from "react-redux";
 import { setDialog } from "@/redux/slices/dialogs.slice";
@@ -30,7 +30,7 @@ async function fetchData(url: string) {
 }
 
 export default function ManageStudentAdmissionForm({ searchParams }: IProps) {
-  const { mutate } = doMutation();
+  const { mutate } = useDoMutation();
   const dispatch = useDispatch();
 
   const { data, isLoading } = useQuery<ISuccess<TOneAdmission>>(

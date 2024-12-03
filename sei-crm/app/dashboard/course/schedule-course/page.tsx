@@ -1,7 +1,7 @@
 "use client";
 
 import { BASE_API } from "@/app/constant";
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import Button from "@/components/Button";
 import SearchAndEditScheduleCourse from "@/components/Course/SearchAndEditScheduleCourse";
 import DateInput from "@/components/DateInput";
@@ -16,7 +16,7 @@ export default function ScheduleCourse() {
   const [courseCenter, setCourseCenter] = useState("Kolkata");
   const isNewBatch = useRef(true);
 
-  const { mutate, isLoading: isMutating } = doMutation();
+  const { mutate, isLoading: isMutating } = useDoMutation();
 
   //get courses for dropdown
   const { data, isFetching } = useQuery<ISuccess<ICourse[]>>({

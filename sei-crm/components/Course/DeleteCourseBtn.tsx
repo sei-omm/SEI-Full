@@ -1,6 +1,6 @@
 "use client";
 
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import { useRouter } from "next/navigation";
 import Spinner from "../Spinner";
 
@@ -10,7 +10,7 @@ interface IProps {
 }
 
 export default function DeleteCourseBtn({ children, id }: IProps) {
-  const { mutate, isLoading } = doMutation();
+  const { mutate, isLoading } = useDoMutation();
   const route = useRouter();
 
   const handleDeleteCourseBtn = () => {

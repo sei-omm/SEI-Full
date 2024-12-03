@@ -4,7 +4,7 @@ import DialogBody from "./DialogBody";
 import DateInput from "../DateInput";
 import DropDown from "../DropDown";
 import Button from "../Button";
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { toast } from "react-toastify";
@@ -29,7 +29,7 @@ export default function ManageCourseBatchDialog() {
     visibility,
   } = extraValue; //course_id -> number | null
 
-  const { mutate } = doMutation();
+  const { mutate } = useDoMutation();
   const isNewBatch = btnType === "add";
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {

@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { RootState } from "@/redux/store";
 import { useSearchParams } from "next/navigation";
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
 
 const paymentTypes = [
@@ -59,7 +59,7 @@ export default function AdmissionPaymentDialog() {
   const [selectedPaymentModeIndex, setSelectedPaymentModeIndex] = useState(0);
   const [currentAmount] = useState(0);
 
-  const { mutate, isLoading: isMutating } = doMutation();
+  const { mutate, isLoading: isMutating } = useDoMutation();
 
   const searchParams = useSearchParams();
 

@@ -31,7 +31,7 @@ async function submitInformationToServer<T>(params: ParamsType) {
   };
 }
 
-export const doMutation = <T>() => {
+export const useDoMutation = <T>() => {
   const { mutate, isLoading } = useMutation(submitInformationToServer<T>, {
     onSuccess: (data) => {
       if (data.onSuccess) {

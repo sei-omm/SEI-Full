@@ -5,7 +5,7 @@ import { IoPricetagOutline } from "react-icons/io5";
 import { MdOutlineDateRange, MdUpdate } from "react-icons/md";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { TEnrollCourses } from "@/types";
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
 
 interface IProps {
@@ -13,7 +13,7 @@ interface IProps {
 }
 
 export default function AppliedCourseListItem({ enroll_course_info }: IProps) {
-  const { mutate, isLoading: isMutating } = doMutation();
+  const { mutate, isLoading: isMutating } = useDoMutation();
 
   const currentBtn = useRef<
     "enrollment-status-cancel" | "enrollment-status-approve"

@@ -1,7 +1,7 @@
 "use client";
 
 import { BASE_API } from "@/app/constant";
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
 import Spinner from "@/components/Spinner";
@@ -45,7 +45,7 @@ export default function Admission() {
     heads: ["Name", "Form Id", "Status", "Action"],
     body: [],
   });
-  const { mutate, isLoading: isMutating } = doMutation();
+  const { mutate, isLoading: isMutating } = useDoMutation();
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
   const route = useRouter();

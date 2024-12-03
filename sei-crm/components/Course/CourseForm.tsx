@@ -11,7 +11,7 @@ import { useQuery } from "react-query";
 import { ICourse, ISuccess, OptionsType } from "@/types";
 import HandleSuspence from "../HandleSuspence";
 import { getFileName } from "@/app/utils/getFileName";
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 import { AiOutlineDelete } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 import DeleteCourseBtn from "./DeleteCourseBtn";
@@ -40,7 +40,7 @@ export default function CourseForm({ slug }: IProps) {
   const formRef = useRef<HTMLFormElement>(null);
 
   //mute the server
-  const { mutate, isLoading } = doMutation();
+  const { mutate, isLoading } = useDoMutation();
 
   //get response form server
   const { isLoading: isQuerying, data: course } = useQuery<ISuccess<ICourse>>(

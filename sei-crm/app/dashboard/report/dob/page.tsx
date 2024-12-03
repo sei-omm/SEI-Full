@@ -26,7 +26,7 @@ import {
   Title,
 } from "chart.js";
 import { RiMailSendLine } from "react-icons/ri";
-import { doMutation } from "@/app/utils/doMutation";
+import { useDoMutation } from "@/app/utils/useDoMutation";
 
 ChartJS.register(
   CategoryScale,
@@ -120,7 +120,7 @@ export default function DobReport() {
     refetch();
   };
 
-  const { mutate, isLoading: isSendingEmail } = doMutation();
+  const { mutate, isLoading: isSendingEmail } = useDoMutation();
 
   const handleSendEmail = (rowIndex: number) => {
     const formData = new FormData();
