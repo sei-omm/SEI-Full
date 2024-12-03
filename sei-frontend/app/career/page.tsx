@@ -19,23 +19,28 @@ type TTab = {
 
 interface IProps {
   searchParams: {
-    department: string;
+    department?: number;
   };
 }
 
 export default async function page({ searchParams }: IProps) {
+
+  const departmentID = searchParams.department === undefined ? 0 : searchParams.department;
+
   const [department, jobs] = await Promise.all([
     fetch(BASE_API + "/hr/department"),
     fetch(
       BASE_API +
         `/hr/job${
-          parseInt(searchParams.department) === 0
+          departmentID === 0
             ? ""
-            : "?department=" + searchParams.department
+            : "?department=" + departmentID
         }`,
-        {next : {
-          revalidate : 1000
-        }}
+      {
+        next: {
+          revalidate: 1000,
+        },
+      }
     ),
   ]);
 
@@ -44,18 +49,16 @@ export default async function page({ searchParams }: IProps) {
     jobs.json() as Promise<IResponse<IJob[]>>,
   ]);
 
-  console.log(jobsResult);
-
   const tab_options: TTab[] = [];
   tab_options.push({
-    isSelected: 0 === parseInt(searchParams.department),
+    isSelected: 0 == departmentID,
     text: "View All",
     slug: "?department=0",
   });
 
   departmentResult.data.forEach((item) => {
     tab_options.push({
-      isSelected: item.id === parseInt(searchParams.department),
+      isSelected: item.id == departmentID,
       text: item.name,
       slug: `?department=${item.id}`,
     });

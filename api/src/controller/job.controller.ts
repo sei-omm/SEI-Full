@@ -7,6 +7,7 @@ import {
   createJobValidator,
   deleteJobValidator,
   getCandidateJobApplicationValidator,
+  getJobsValidator,
   trackJobApplicationValidator,
   updateCandidateApplicationStatusValidator,
   updateJobValidator,
@@ -21,12 +22,16 @@ const table_name = "job";
 
 export const getAllJobs = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const department = req.query.department;
+    const {error, value} = getJobsValidator.validate(req.query);
+    if(error) return res.status(200).json(new ApiResponse(200, "", []));
+
+    const department = value.department;
     const queryValues: string[] = [];
 
     if (department) {
       queryValues.push(department.toString());
     }
+
     const { rows } = await pool.query(
       `
       SELECT 

@@ -1,5 +1,9 @@
 import Joi from "joi";
 
+export const getJobsValidator = Joi.object({
+  department : Joi.number().optional()
+})
+
 export const createJobValidator = Joi.object({
   job_title: Joi.string().required(),
   address: Joi.string().required(),
