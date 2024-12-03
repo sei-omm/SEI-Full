@@ -58,6 +58,8 @@ CREATE TABLE employee (
     login_password VARCHAR(255),
     
     max_teaching_hrs_per_week VARCHAR(15),
+    employee_type VARCHAR(50),
+    faculty_attendance_type VARCHAR(50),
     employee_attendance_type VARCHAR(20) CHECK (employee_attendance_type IN ('Regular', 'Visiting')) DEFAULT 'Regular',
     institute VARCHAR(20), --Faridabad/Kolkata
 
@@ -86,6 +88,7 @@ CREATE TABLE job (
     exprience VARCHAR(100) NOT NULL,
     -- department VARCHAR(100) NOT NULL,
     department INTEGER,
+    job_description TEXT,
     FOREIGN KEY (department) REFERENCES department(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

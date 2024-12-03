@@ -15,9 +15,7 @@ export default async function CoursesPage({ centerName }: IProps) {
       centerName || ""
     )}`,
     {
-      next: {
-        revalidate: 3600,
-      },
+      cache : "default"
     }
   );
   const courses = (await response.json()) as IResponse<CourseType[]>;
