@@ -17,27 +17,29 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import AppliedCourseListItem from "@/components/Course/AppliedCourseListItem";
 import { useDispatch } from "react-redux";
 import { setDialog } from "@/redux/slices/dialogs.slice";
+import { useSearchParams } from "next/navigation";
 
-interface IProps {
-  searchParams: {
-    "form-id": string;
-    "student-id": string;
-  };
-}
+// interface IProps {
+//   searchParams: {
+//     "form-id": string;
+//     "student-id": string;
+//   };
+// }
 
 async function fetchData(url: string) {
   return (await axios.get(url)).data;
 }
 
-export default function ManageStudentAdmissionForm({ searchParams }: IProps) {
+export default function ManageStudentAdmissionForm() {
   const { mutate } = useDoMutation();
   const dispatch = useDispatch();
+  const searchParams = useSearchParams();
 
   const { data, isLoading } = useQuery<ISuccess<TOneAdmission>>(
     {
       queryKey: "fetch-admission-details",
       queryFn: () =>
-        fetchData(`${BASE_API}/admission?form-id=${searchParams["form-id"]}`),
+        fetchData(`${BASE_API}/admission?form-id=${searchParams.get("form-id")}`),
 
       staleTime: 0,
       cacheTime: 0,
@@ -50,7 +52,7 @@ export default function ManageStudentAdmissionForm({ searchParams }: IProps) {
 
     const formData = new FormData(event.currentTarget);
     // formData.set("course_id", searchParams["course-id"]);
-    formData.set("student_id", searchParams["student-id"]);
+    formData.set("student_id", `${searchParams.get("student-id")}`);
     formData.set("form_id", `${data?.data.course_and_student_info.form_id}`);
 
     mutate({
