@@ -210,7 +210,7 @@ export const registerStudent = asyncErrorHandler(
     if (rowCount !== 0)
       throw new ErrorHandler(409, "Account Already Exist Please Login");
 
-    sendOtp(value.email);
+    await sendOtp(value.email);
 
     res
       .status(200)
