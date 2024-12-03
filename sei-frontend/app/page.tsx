@@ -1,0 +1,331 @@
+import Image from "next/image";
+
+import NextSvg from "./svgicons/NextSvg";
+import Button from "./components/Button";
+import { CourseType } from "./type";
+import CourseItem from "./components/CourseItem";
+import Ratings from "./components/Ratings";
+import { CiCalendarDate } from "react-icons/ci";
+import { BsPhoneVibrateFill } from "react-icons/bs";
+import Link from "next/link";
+import { GiRotaryPhone } from "react-icons/gi";
+import HomeNewBanner from "./components/HomeNewBanner";
+
+const what_we_provide = [
+  {
+    icon: "/icons/docuemnts.svg",
+    heading: "Assessment and Evaluation",
+    subheading:
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
+  },
+  {
+    icon: "/icons/graduation-cap.svg",
+    heading: "Learning and Instruction",
+    subheading:
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
+  },
+  {
+    icon: "/icons/research.svg",
+    heading: "Research and Exploration",
+    subheading:
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
+  },
+  {
+    icon: "/icons/teamwork.svg",
+    heading: "Collaboration and Interaction",
+    subheading:
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
+  },
+];
+
+const courses: CourseType[] = [];
+
+const notices = [
+  {
+    heading: "1 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
+    date: "14 July, 2024",
+    description:
+      "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
+  },
+  {
+    heading: "2 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
+    date: "14 July, 2024",
+    description:
+      "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
+  },
+  {
+    heading: "3 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
+    date: "14 July, 2024",
+    description:
+      "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
+  },
+
+  {
+    heading: "4 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
+    date: "14 July, 2024",
+    description:
+      "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
+  },
+
+  {
+    heading: "5 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
+    date: "14 July, 2024",
+    description:
+      "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
+  },
+];
+
+export default function Home() {
+  return (
+    <div>
+      <div className="min-h-10 w-full bg-white flex items-center">
+        <div className="bg-transparent main-layout flex items-center justify-between text-gray-500 flex-wrap sm:gap-y-2 sm:py-2">
+          <div className="flex-center gap-2 font-semibold">
+            <BsPhoneVibrateFill />
+            <Link href={"tel:9830782955"}>+91-9830782955 | Kolkata</Link>
+          </div>
+          <div className="flex-center gap-2 font-semibold">
+            <GiRotaryPhone />
+            <Link href={"tel:129-4002955"}>+91-129-4002955 | Faridabad</Link>
+          </div>
+        </div>
+      </div>
+      {/* <HomeBanner /> */}
+      <HomeNewBanner />
+      <div className="main-layout">
+        {/* what we provide */}
+        <section className="space-y-10 py-10">
+          <div className="flex flex-wrap gap-y-2 items-start">
+            <div className="flex items-center basis-96 flex-grow">
+              <h2 className="text-5xl font-semibold">
+                Our <span className="text-[#e9b858]">Best Features</span> For
+                you
+              </h2>
+            </div>
+
+            <div className="basis-96 flex-grow">
+              <p>
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit.
+                Aspernatur ea aperiam, eveniet expedita accusamus facere sequi
+                reprehenderit praesentium obcaecati dolorum provident doloremque
+                molestiae itaque consequatur deleniti, ab vitae, odit est?
+              </p>
+            </div>
+          </div>
+
+          <ul className="flex flex-wrap justify-center gap-10">
+            {what_we_provide.map((info) => (
+              <li
+                key={info.heading}
+                className="shadow-2xl border border-gray-100 p-6 space-y-2 rounded-2xl basis-[26rem] max-w-[50rem] flex-grow"
+              >
+                <div className="size-12 p-3 bg-[#ffc75f96] rounded-full">
+                  <Image src={info.icon} alt="" height={1200} width={1200} />
+                </div>
+                <h2 className="font-semibold text-[1.3rem]">{info.heading}</h2>
+                <h3 className="text-gray-500">{info.subheading}</h3>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* About Us */}
+        <section className="flex items-center flex-wrap gap-x-12 gap-y-5 py-10">
+          <div className="overflow-hidden flex-center relative basis-[30rem] flex-grow">
+            <div className="w-full aspect-video overflow-hidden shadow-2xl relative rounded-3xl">
+              <Image
+                className="size-full"
+                src={"/images/About/img1.jpg"}
+                alt="about image"
+                height={1200}
+                width={1200}
+              />
+
+              <div className="absolute inset-0 fade-to-top-yellow-color"></div>
+            </div>
+          </div>
+
+          <div className="flex justify-center flex-col gap-y-5 basis-[30rem] flex-grow">
+            <h2 className="font-semibold text-5xl">
+              We are one of the leading{" "}
+              <span className="text-[#e9b858]">
+                Maritime Training Institutes
+              </span>
+            </h2>
+            <p className="text-[#4b4231] space-y-3">
+              <span className="inline-block">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex
+                omnis harum eveniet animi commodi rem! Ea quisquam, corporis
+                alias laudantium obcaecati sed molestiae porro sequi et repellat
+                saepe. Vitae, eum?
+              </span>
+
+              <span className="inline-block">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex
+                omnis harum eveniet animi commodi rem! Ea quisquam, corporis
+                alias laudantium obcaecati sed molestiae porro sequi et repellat
+                saepe. Vitae, eum?
+              </span>
+            </p>
+
+            <Button className="!bg-[#e9b858] !text-black hover:bg-[#e9b95871]">
+              <span>Contact Us Now</span>
+              <NextSvg />
+            </Button>
+          </div>
+        </section>
+
+        {/* Our Courses */}
+        <section className="pb-10 pt-5">
+          <div className="flex-center flex-col gap-y-2">
+            <h2 className="text-5xl font-semibold">
+              Our <span className="text-[#e9b858]">Courses</span>
+            </h2>
+            <h3 className="max-w-[40rem] text-center sm:text-left">
+              Lorem ipsum dolor sit amet consectetur adipisicing elit.
+              Exercitationem possimus itaque error saepe, rerum eaque ducimus
+              veniam assumenda.
+            </h3>
+          </div>
+
+          <ul className="flex flex-wrap justify-center gap-8 py-8">
+            {courses.map((course, index) => (
+              <CourseItem
+                key={index}
+                className="sm:!max-w-full"
+                course={course}
+              />
+            ))}
+          </ul>
+        </section>
+
+        {/* Ratings */}
+        <section className="py-10 sm:pt-0">
+          <div className="flex flex-wrap gap-y-2">
+            <div className="flex items-center basis-96 flex-grow">
+              <h2 className="text-5xl font-semibold">
+                What <span className="text-[#e9b858]">Our Students</span> Say
+              </h2>
+            </div>
+
+            <div className="basis-96 flex-grow">
+              <p>
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit.
+                Aspernatur ea aperiam, eveniet expedita accusamus facere sequi
+                reprehenderit praesentium obcaecati dolorum provident doloremque
+                molestiae itaque consequatur deleniti, ab vitae, odit est?
+              </p>
+            </div>
+          </div>
+
+          {/* <ul className="grid grid-cols-3 gap-8 py-12">
+            {[1, 2, 3].map((review) => (
+              <li className="shadow-xl rounded-2xl border-gray-100 border px-8 py-7 space-y-3">
+                <div className="flex items-start gap-x-2">
+                  <Image
+                    className="size-10 rounded-full"
+                    src={"/images/studient-icon.jpg"}
+                    alt="Student Icon"
+                    height={512}
+                    width={512}
+                  />
+                  <div>
+                    <h2 className="font-semibold leading-none">
+                      Senator Victoria Davis
+                    </h2>
+                    <span className="text-sm leading-none">Student</span>
+                  </div>
+                </div>
+
+                <p className="text-sm tracking-wide">
+                  "Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                  Officiis laborum autem sed voluptates dolore libero, possimus
+                  vel quia nesciunt accusamus aliquid."
+                </p>
+
+                <div className="flex items-center gap-x-2 text-xs">
+                  <span>5.0</span>
+                  <div className="flex items-center gap-x-1 text-[#e9b858]">
+                    <IoIosStar />
+                    <IoIosStar />
+                    <IoIosStar />
+                    <IoIosStar />
+                    <IoIosStar />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul> */}
+
+          <Ratings />
+
+          {/* <div className="flex-center gap-x-3">
+            {[1, 2, 3].map((item, index) => (
+              <div
+                className={`size-2 ${
+                  index === 0 ? "bg-[#ffdf9e]" : "bg-[#e9b958d5]"
+                } border rounded-full `}
+              ></div>
+            ))}
+          </div> */}
+        </section>
+
+        {/* Promo Banner Section */}
+        <section className="pt-20 overflow-hidden sm:pt-0">
+          <section className="bg-[#EAE7E4] w-full h-72 rounded-2xl p-14 grid grid-cols-2 sm:grid-cols-1 sm:h-auto sm:p-9 sm:pb-0">
+            <div>
+              <h2 className="text-4xl font-semibold">Are you Ready to fly &</h2>
+              <h3 className="text-3xl">Pursue your dream job?</h3>
+
+              <p className="text-gray-500 mt-1">
+                Lorem, ipsum dolor sit amet consectetur adipisicing elit.
+                Reprehenderit cupiditate doloremque totam reiciendis magni
+                eligendi.
+              </p>
+              <Button
+                varient="light"
+                className="!py-2 !min-w-36 mt-4 hover:!text-black"
+              >
+                <span>Contact us</span>
+                <NextSvg />
+              </Button>
+            </div>
+
+            <div className="flex items-end flex-col pr-14 sm:items-center sm:pr-0">
+              <Image
+                className="w-[24rem] -translate-y-36 object-contain sm:translate-y-0 sm:translate-x-5"
+                src={"/images/MarinMan.png"}
+                alt=""
+                height={1200}
+                width={1200}
+              />
+            </div>
+          </section>
+        </section>
+
+        {/* Notice Board */}
+        <section className="py-10">
+          <div className="w-full shadow-xl border min-h-64 p-8 hidden sm:block">
+            <h2 className="text-5xl font-semibold border-b border-[#e9b858] pb-2">
+              Latest <span className="text-[#e9b858]">Notice</span>
+            </h2>
+
+            <ul className="space-y-3 mt-3 size-full">
+              {notices.map((notice, index) => (
+                <li key={index}>
+                  {/* Notice Heading */}
+                  <h2 className="font-[600] text-sm">{notice.heading}</h2>
+                  <p className="flex items-center gap-x-1 text-xs">
+                    <CiCalendarDate />
+                    {notice.date}
+                  </p>
+                  <p className="text-xs">{notice.description}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

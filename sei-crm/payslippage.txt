@@ -1,0 +1,222 @@
+"use client";
+
+import Image from "next/image";
+import Button from "@/components/Button";
+import { BsFiletypePdf } from "react-icons/bs";
+import { useRef } from "react";
+import { downloadHtmlToPdf } from "@/app/utils/downloadHtmlToPdf";
+import { useSearchParams } from "next/navigation";
+
+// interface IProps {
+//   searchParams: {
+//     eid: string | undefined;
+//   };
+// }
+
+export default function PaySlip() {
+  // const employeeID = searchParams.eid;
+  const searchParams = useSearchParams();
+  const employeeID = searchParams.get("eid");
+  const layoutForConvartingPdf = useRef<HTMLDivElement>(null);
+
+  if (!employeeID) {
+    return (
+      <div className="flex-center py-10">
+        <h2 className="text-2xl font-semibold">Employee ID Is Required</h2>
+      </div>
+    );
+  }
+
+  const employee_info = [
+    {
+      key: "Name : ",
+      value: "Somnath Gupta",
+    },
+    {
+      key: "Role : ",
+      value: "Software Engineer",
+    },
+    {
+      key: "Employee ID : ",
+      value: "FT-0009",
+    },
+    {
+      key: "Joining Date : ",
+      value: "1 Mar, 2024",
+    },
+    {
+      key: "Pay Date : ",
+      value: "1 Apr, 2024",
+    },
+    {
+      key: "Transaction Id",
+      value: "IG7458RT",
+    },
+  ];
+
+  const earning_info = [
+    {
+      key: "Basic Salary : ",
+      value: "83,334",
+    },
+    {
+      key: "House Rent Allowance : ",
+      value: "41,667",
+    },
+    {
+      key: "Other Allowances : ",
+      value: "41,667",
+    },
+    {
+      key: "Gross Earning : ",
+      value: "1,66,668",
+      keyCss: "!font-medium uppercase",
+      valueCss: "!font-semibold",
+    },
+  ];
+
+  const deductions_info = [
+    {
+      key: "Provident Fund : ",
+      value: "10,000",
+    },
+    {
+      key: "Professional Tax : ",
+      value: "200",
+    },
+    {
+      key: "Income Tax : ",
+      value: "19,000",
+    },
+    {
+      key: "Current Net Pay : ",
+      value: "1,37,468",
+      keyCss: "!font-medium uppercase",
+      valueCss: "!font-semibold",
+    },
+  ];
+
+  return (
+    <section className="py-5">
+      <div ref={layoutForConvartingPdf} className="w-full card-shdow border p-8 bg-white">
+        <h1 className="text-center uppercase font-semibold underline">
+          PAYSLIP FOR THE MONTH OF OCTOBER 2024
+        </h1>
+
+        {/* <div className="w-full flex items-start">
+          <div className="space-y-4 max-w-[35rem]">
+            <Image
+              className="w-16"
+              src={"/logo.png"}
+              alt=""
+              height={512}
+              width={512}
+            />
+            <div>
+              <h2 className="font-semibold text-sm">
+                SEI EDUCATIONAL TRUST (Kolkata)
+              </h2>
+              <p className="text-sm">
+                Debamita', B.B.T Road, Vill. - Gopalpur, P.O. Sarkarpool, P.S. -
+                Maheshtala Kolkata - 700141, India MTI No.: 303014
+              </p>
+            </div>
+          </div>
+          <div className="h-full">
+            <h3 className="text-2xl font-semibold">PAYSLIP #49029</h3>
+            <p className="text-sm">
+              <span className="font-semibold">Salary Month: </span> October,
+              2024
+            </p>
+          </div>
+        </div> */}
+
+        <div className="space-y-4 max-w-[35rem]">
+          <Image
+            className="w-16"
+            src={"/logo.png"}
+            alt=""
+            height={512}
+            width={512}
+          />
+          <div>
+            <h2 className="font-semibold text-sm">
+              SEI EDUCATIONAL TRUST (Kolkata)
+            </h2>
+            <p className="text-sm">
+              Debamita&apos;, B.B.T Road, Vill. - Gopalpur, P.O. Sarkarpool, P.S. -
+              Maheshtala Kolkata - 700141, India MTI No.: 303014
+            </p>
+          </div>
+        </div>
+
+        <div className="h-full pt-5">
+          <h3 className="text-2xl font-semibold">PAYSLIP #49029</h3>
+          <p className="text-sm">
+            <span className="font-semibold">Salary Month: </span> October, 2024
+          </p>
+        </div>
+
+        {/* Employee Table */}
+        {/* <div className="pt-5">
+          <h2 className="font-semibold">Somnath Gupta</h2>
+          <h3 className="flex flex-col gap-1 text-gray-500 font-[600] text-xs">
+            <span>Software Engineer</span> <span>Employee ID: FT-0009</span>{" "}
+            <span>Joining Date: 1 Jan 2023</span>
+          </h3>
+        </div> */}
+
+        <div className="pt-10 space-y-3">
+          <h2 className="text-xl font-semibold uppercase text-gray-800">
+            Basic Information
+          </h2>
+          <ul className="flex flex-wrap">
+            {employee_info.map(({ key, value }) => (
+              <li key={key} className="flex items-center flex-grow basis-96 gap-4 border border-gray-200 p-3 text-sm">
+                <span className="font-semibold">{key}</span>
+                <span>{value}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Earning Table */}
+        <div className="pt-10 space-y-3">
+          <h2 className="text-xl font-semibold uppercase text-gray-800">
+            Salary
+          </h2>
+          <ul className="">
+            {earning_info.map(({ key, value, keyCss, valueCss }) => (
+              <li key={key} className="flex items-center justify-between gap-4 border border-gray-200 p-3 text-sm">
+                <span className={`font-semibold ${keyCss}`}>{key}</span>
+                <span className={valueCss}>{value}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Deductions Table */}
+        <div className="pt-10 space-y-3">
+          <h2 className="text-xl font-semibold uppercase text-gray-800">
+            Deductions
+          </h2>
+          <ul className="">
+            {deductions_info.map(({ key, value, keyCss, valueCss }) => (
+              <li key={key} className="flex items-center justify-between gap-4 border border-gray-200 p-3 text-sm">
+                <span className={`font-semibold ${keyCss}`}>{key}</span>
+                <span className={valueCss}>{value}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-end pt-6">
+        <Button onClick={() => downloadHtmlToPdf(layoutForConvartingPdf)} className="flex-center gap-2">
+          <BsFiletypePdf />
+          <span>Download As PDF</span>
+        </Button>
+      </div>
+    </section>
+  );
+}

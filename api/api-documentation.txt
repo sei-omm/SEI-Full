@@ -1,0 +1,31 @@
+--department -> DONE
+    /api/v1/hr/department -> get request for getting all department list
+    /api/v1/hr/department -> post request for add new department : {reqBody : department_name : string}
+    /api/v1/hr/department/<id> -> patch request for update department name {reqBody : department_name : string}
+    /api/v1/hr/department/<id> -> delete request for delete department
+
+--employee
+    /api/v1/employee -> get request for getting employee data. you can add 'fildes' query to get data vai fildes. ex : ?fildes=id,name;
+    /api/v1/employee/<id> -> get single employee id with it's id and fildes searchQuery params;
+    /api/v1/employee -> post request for adding new employee. 'name' is required;
+    /api/v1/employee/<id> -> put request for updating employee data;
+    /api/v1/employee/<id> -> patch request for update employee status BODY : {is_active : true/fasle};
+    /api/v1/employee/<id> -> delete request for remove employee;
+
+    /api/v1/employee/leave -> post method, BODY : { employee_id, leave_from : "yyyy-month-day", leave_to : "yyyy-month-day", leave_reason }. For creating a leave request
+
+--leave
+    /api/v1/hr/leave -> get method to get all the requested leave list,
+    /api/v1/hr/leave/<leave_request_id> -> patch request to update the status of the leave
+
+--job
+    /api/v1/hr/job -> get method to get all listed jobs
+    /api/v1/hr/job/<id> -> get method to get a job with id
+    /api/v1/hr/job -> post request to add new job
+    /api/v1/hr/job/<id> -> delete request to delete one of job posting
+    /api/v1/hr/job/<id> -> put request to update job
+
+    /api/v1/hr/job/apply -> post method to apply for job BODY : {name, email, contact_number, dob, work_experience, job_id}
+    /api/v1/hr/job/apply/:application_list_id -> patch method for update candidate application status reqBody { status }
+    /api/v1/hr/job/apply/<job_id> -> get method to get all the candidate applied for this job,
+    /api/v1/hr/job/apply/track/<application_id> -> get method to get the status of the job application
