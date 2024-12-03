@@ -5,6 +5,7 @@ import { handleUpload } from "@vercel/blob/client";
 
 export const uploadStudentsFiles = asyncErrorHandler(
   async (req: Request, res: Response) => {
+    const vercelBlobToken = process.env.BLOB_READ_WRITE_TOKEN;
     const response = await handleUpload({
       body: req.body,
       request: req,
@@ -13,7 +14,7 @@ export const uploadStudentsFiles = asyncErrorHandler(
         console.log(clientPayload);
         return {
           allowedContentTypes: ["image/jpeg", "image/png", "application/pdf", "image/webp"],
-          token: process.env.BLOB_READ_WRITE_TOKEN as string,
+          token: vercelBlobToken as string,
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
