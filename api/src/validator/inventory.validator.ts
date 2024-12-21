@@ -177,7 +177,7 @@ export const deleteConsumableItemValidator = Joi.object({
 //vendor
 export const addNewVendorValidator = Joi.object({
   vendor_name: Joi.string().required(),
-  institutes: Joi.string().required(),
+  institute: Joi.string().required(),
   service_type: Joi.string().required(),
   address: Joi.string().required(),
   contact_details: Joi.string().required(),

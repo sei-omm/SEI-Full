@@ -86,7 +86,7 @@ export default function VendorForm({ params }: IProps) {
             />
           </div>
           <DropDownTag
-            name="institutes"
+            name="institute"
             label="Institutes"
             options={[
               { text: "Kolkata", value: "Kolkata" },

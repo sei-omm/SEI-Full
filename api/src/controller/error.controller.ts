@@ -38,5 +38,6 @@ export const globalErrorController = (
   res: Response,
   next: NextFunction
 ) => {
+  // console.log(err)
   backErrorResponse(err, res, "dev");
 };
