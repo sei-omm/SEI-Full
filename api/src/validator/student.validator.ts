@@ -67,3 +67,20 @@ export const saveStudentDocumentValidator = Joi.object({
   doc_uri: Joi.string().required(),
   doc_name: Joi.string().required(),
 });
+
+export const saveProfileImageValidator = Joi.object({
+  student_id: Joi.number().required(),
+  profile_url: Joi.string().required(),
+});
+
+export const getLibraryStudentValidator = Joi.object({
+  student_id: Joi.number().required(),
+  visibility: Joi.string()
+    .valid("subject-specific", "course-specific")
+    .optional(),
+  item_id: Joi.string().when("visibility", {
+    is: Joi.exist(),
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+});

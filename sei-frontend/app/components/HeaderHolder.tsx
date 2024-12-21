@@ -11,6 +11,8 @@ export default function HeaderHolder({ children }: IProps) {
   const { isScrolling, scrollingDirection } = useScrollChecker();
   const pathname = usePathname();
 
+  if(pathname.includes("view-file")) return <></>;
+
   return (
     <div
       style={{

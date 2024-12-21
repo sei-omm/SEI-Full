@@ -215,8 +215,6 @@ export const updateEmployeeAttendance = asyncErrorHandler(
       req.body.date,
     ]);
 
-    // console.log(`UPDATE ${table_name} SET status = ${req.body.status} WHERE employee_id = ${req.params.employee_id} AND date = ${currentDate}`);
-
     res.status(200).json(new ApiResponse(200, "Employee Attendance Updated"));
   }
 );

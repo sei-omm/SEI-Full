@@ -2,13 +2,13 @@
 
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
+import ManageAdmissionFilter from "@/components/Admission/ManageAdmissionFilter";
 import Button from "@/components/Button";
 import DownloadFormUrl from "@/components/DownloadFormUrl";
-import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
 import { IError, ISuccess } from "@/types";
 import axios, { AxiosError } from "axios";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { LuFileSpreadsheet } from "react-icons/lu";
 import { useQuery } from "react-query";
@@ -31,28 +31,27 @@ export default function CourseTrendReport() {
   });
 
   const searchParams = useSearchParams();
-  const route = useRouter();
-  const [selectedCourse, setSelectedCourse] = useState(0);
+  // const route = useRouter();
+  // const [selectedCourse, setSelectedCourse] = useState(0);
 
-  const { data: dropDownCoursesInfo } = useQuery<
-    ISuccess<{ course_id: number; course_name: string }[]>
-  >({
-    queryKey: "get-course-names",
-    queryFn: async () => (await axios.get(BASE_API + "/course/drop-down")).data,
-    onSuccess: (cData) => {
-      if (searchParams.get("course_id")) {
-        setSelectedCourse(parseInt(`${searchParams.get("course_id")}`));
-      } else {
-        setSelectedCourse(cData.data[0].course_id);
-      }
-    },
-  });
+  // const { data: dropDownCoursesInfo } = useQuery<
+  //   ISuccess<{ course_id: number; course_name: string }[]>
+  // >({
+  //   queryKey: "get-course-names",
+  //   queryFn: async () => (await axios.get(BASE_API + "/course/drop-down")).data,
+  //   onSuccess: (cData) => {
+  //     if (searchParams.get("course_id")) {
+  //       setSelectedCourse(parseInt(`${searchParams.get("course_id")}`));
+  //     } else {
+  //       setSelectedCourse(cData.data[0].course_id);
+  //     }
+  //   },
+  // });
 
   const {
     data: report,
     error,
     isFetching,
-    refetch,
   } = useQuery<ISuccess<TCourseTrendReport[]>, AxiosError<IError>>(
     ["get-course-trend-report", searchParams.toString()],
     async () =>
@@ -81,23 +80,23 @@ export default function CourseTrendReport() {
     }
   );
 
-  function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const urlSearchParams = new URLSearchParams();
-    const formData = new FormData(event.currentTarget);
-    formData.entries().forEach(([key, value]) => {
-      urlSearchParams.set(key, value.toString());
-    });
+  // function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
+  //   event.preventDefault();
+  //   const urlSearchParams = new URLSearchParams();
+  //   const formData = new FormData(event.currentTarget);
+  //   formData.entries().forEach(([key, value]) => {
+  //     urlSearchParams.set(key, value.toString());
+  //   });
 
-    route.push(
-      "/dashboard/report/course-trend-report?" + urlSearchParams.toString()
-    );
-    refetch();
-  }
+  //   route.push(
+  //     "/dashboard/report/course-trend-report?" + urlSearchParams.toString()
+  //   );
+  //   refetch();
+  // }
 
   return (
     <div className="space-y-10">
-      <form
+      {/* <form
         onSubmit={handleFormSubmit}
         className="flex items-end gap-5 *:flex-grow"
       >
@@ -151,7 +150,9 @@ export default function CourseTrendReport() {
         <div className="!mb-2 !flex-grow-0 flex items-center gap-5">
           <Button className="">Search</Button>
         </div>
-      </form>
+      </form> */}
+
+      <ManageAdmissionFilter />
 
       <div className="flex items-center justify-end">
         <DownloadFormUrl
@@ -169,16 +170,9 @@ export default function CourseTrendReport() {
       </div>
 
       <HandleSuspence
-        errorMsg={
-          error
-            ? error.response?.data.message
-            : tableDatas.body.length === 0
-            ? "No Response"
-            : report?.data.length === 0
-            ? "No Data Found"
-            : ""
-        }
         isLoading={isFetching}
+        error={error}
+        dataLength={report?.data.length}
       >
         <div className="w-full overflow-hidden card-shdow">
           <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black">

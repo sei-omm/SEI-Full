@@ -1,59 +1,98 @@
+import QueryString from "qs";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { transaction } from "../utils/transaction";
+import { pool } from "../config/db";
+import { getAdmissionsValidator } from "../validator/admission.validator";
 
-export const getAdmissionsService = async (courseId?: string) => {
-  let sql1 = `
-      SELECT
+// export const getAdmissionsService = async (courseId?: string) => {
+//   let sql1 = `
+//       SELECT
 
-      f.*,
-      s.name,
-      s.profile_image
+//       f.*,
+//       s.name,
+//       s.profile_image
 
-      FROM fillup_forms AS f
+//       FROM fillup_forms AS f
 
-      LEFT JOIN students AS s
-      ON f.student_id = s.student_id
-`;
-  const sql1Values: any[] = [];
+//       LEFT JOIN students AS s
+//       ON f.student_id = s.student_id
+// `;
+//   const sql1Values: any[] = [];
 
-  if (courseId) {
-    sql1 = `
-        SELECT
-        f.*,
-        s.name,
-        s.profile_image
-        FROM enrolled_batches_courses as ebc
+//   if (courseId) {
+//     sql1 = `
+//         SELECT
+//         f.*,
+//         s.name,
+//         s.profile_image
+//         FROM enrolled_batches_courses as ebc
 
-        LEFT JOIN fillup_forms AS f
-        ON ebc.form_id = f.form_id
+//         LEFT JOIN fillup_forms AS f
+//         ON ebc.form_id = f.form_id
 
-        LEFT JOIN students AS s
-        ON f.student_id = s.student_id
-      `;
-  }
+//         LEFT JOIN students AS s
+//         ON f.student_id = s.student_id
+//       `;
+//   }
 
-  if (courseId) {
-    sql1 += ` WHERE course_id = $1`;
-    sql1Values.push(courseId);
-  }
+//   if (courseId) {
+//     sql1 += ` WHERE course_id = $1`;
+//     sql1Values.push(courseId);
+//   }
 
-  const sql2 = `SELECT course_id, course_name FROM courses`;
+//   const sql2 = `SELECT course_id, course_name FROM courses`;
 
-  const response = await transaction([
-    {
-      sql: sql1,
-      values: sql1Values,
-    },
-    {
-      sql: sql2,
-      values: [],
-    },
-  ]);
+//   const response = await transaction([
+//     {
+//       sql: sql1,
+//       values: sql1Values,
+//     },
+//     {
+//       sql: sql2,
+//       values: [],
+//     },
+//   ]);
 
-  return {
-    enrolled_students: response[0].rows,
-    courses_name: response[1].rows,
-  };
+//   return {
+//     enrolled_students: response[0].rows,
+//     courses_name: response[1].rows,
+//   };
+// };
+
+export const getAdmissionsService = async (query: QueryString.ParsedQs) => {
+  const { error } = getAdmissionsValidator.validate(query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { rows } = await pool.query(
+    `
+    SELECT 
+      ff.form_id,
+      ff.form_status,
+      s.profile_image,
+      s.name AS student_name,
+      s.student_id
+    FROM fillup_forms AS ff
+
+    LEFT JOIN students AS s
+    ON s.student_id = ff.student_id
+
+    LEFT JOIN enrolled_batches_courses AS ebc
+    ON ebc.form_id = ff.form_id
+
+    LEFT JOIN courses AS c
+    ON c.course_id = ebc.course_id
+
+    LEFT JOIN course_batches AS cb
+    ON cb.batch_id = ebc.batch_id
+
+    WHERE c.course_id = $1 AND c.institute = $2 AND c.course_type = $3 AND cb.start_date = $4
+
+    GROUP BY ebc.course_id, ff.form_id, s.profile_image, s.name, s.student_id
+  `,
+    [query.course_id, query.institute, query.course_type, query.batch_date]
+  );
+
+  return rows;
 };
 
 export const getSingleAdmissionInfo = async (form_id: string) => {
@@ -138,20 +177,25 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
   const existedPaymentIds = new Map();
   response[1].rows.forEach((item) => {
     if (existedPaymentIds.has(item.payment_id)) {
-      const tempPayInfo = paymentInfo.payments[existedPaymentIds.get(item.payment_id)];
-      tempPayInfo.paid_amount = parseFloat(tempPayInfo.paid_amount) + parseFloat(item.paid_amount);
-      tempPayInfo.misc_payment = parseFloat(tempPayInfo.misc_payment) + parseFloat(item.misc_payment);
+      const tempPayInfo =
+        paymentInfo.payments[existedPaymentIds.get(item.payment_id)];
+      tempPayInfo.paid_amount =
+        parseFloat(tempPayInfo.paid_amount) + parseFloat(item.paid_amount);
+      tempPayInfo.misc_payment =
+        parseFloat(tempPayInfo.misc_payment) + parseFloat(item.misc_payment);
     } else {
       paymentInfo.payments.push(item);
       existedPaymentIds.set(item.payment_id, paymentInfo.payments.length - 1);
     }
-    paymentInfo.total_paid =  parseFloat(`${paymentInfo.total_paid}`) + parseFloat(item.paid_amount);
+    paymentInfo.total_paid =
+      parseFloat(`${paymentInfo.total_paid}`) + parseFloat(item.paid_amount);
     paymentInfo.total_misc_payment += parseInt(item.misc_payment || 0.0);
   });
 
   paymentInfo.total_fee = parseFloat(response[2].rows[0].total_fee);
-  paymentInfo.total_due = parseFloat
-  (`${paymentInfo.total_fee - paymentInfo.total_paid}`);
+  paymentInfo.total_due = parseFloat(
+    `${paymentInfo.total_fee - paymentInfo.total_paid}`
+  );
 
   return {
     course_and_student_info: response[0].rows[0],

@@ -8,6 +8,7 @@ import { IHREmployee, ISuccess } from "@/types";
 import TagsBtn from "./TagsBtn";
 import { LuFileSpreadsheet } from "react-icons/lu";
 import DownloadFormUrl from "./DownloadFormUrl";
+import EmployeeTypeFilter from "./Employee/EmployeeTypeFilter";
 
 const tableDatas = {
   heads: ["Name", "Job Title", "Department", "Status", "Action"],
@@ -17,8 +18,19 @@ const tableDatas = {
   ],
 };
 
-export default async function Contacts() {
-  const response = await fetch(BASE_API + "/employee", { cache: "no-store" });
+interface IProps {
+  searchParams: {
+    type?: string;
+  };
+}
+
+export default async function Contacts({ searchParams }: IProps) {
+  const response = await fetch(
+    `${BASE_API}/employee${
+      searchParams.type === undefined ? "" : `?employee_type=${searchParams.type}`
+    }`,
+    { cache: "no-store" }
+  );
   const result = (await response.json()) as ISuccess<IHREmployee[]>;
 
   tableDatas.body = result?.data?.map((employee) => [
@@ -32,25 +44,28 @@ export default async function Contacts() {
   return (
     <section className="w-full overflow-hidden card-shdow px-5 py-5">
       {/* table action buttons */}
-      <div className="w-full flex items-center justify-end gap-x-5">
-        <Link href={"/dashboard/hr-module/manage-employee/add-faculty"}>
-          <Button className="flex-center gap-x-2">
-            <IoIosAdd size={23} />
-            Add Faculty
-          </Button>
-        </Link>
-        <Link href={"/dashboard/hr-module/manage-employee/add-employee"}>
-          <Button className="flex-center gap-x-2">
-            <IoIosAdd size={23} />
-            Add Employee
-          </Button>
-        </Link>
-        <DownloadFormUrl urlToDownload={BASE_API + "/employee/export-sheet"}>
-          <Button className="!bg-[#34A853] flex-center gap-4">
-            <LuFileSpreadsheet size={20} />
-            Generate Excel Sheet
-          </Button>
-        </DownloadFormUrl>
+      <div className="flex items-center justify-between">
+        <EmployeeTypeFilter />
+        <div className="w-full flex items-center justify-end gap-x-5">
+          <Link href={"/dashboard/hr-module/manage-employee/add-faculty"}>
+            <Button className="flex-center gap-x-2">
+              <IoIosAdd size={23} />
+              Add Faculty
+            </Button>
+          </Link>
+          <Link href={"/dashboard/hr-module/manage-employee/add-employee"}>
+            <Button className="flex-center gap-x-2">
+              <IoIosAdd size={23} />
+              Add Employee
+            </Button>
+          </Link>
+          <DownloadFormUrl urlToDownload={BASE_API + "/employee/export-sheet"}>
+            <Button className="!bg-[#34A853] flex-center gap-4">
+              <LuFileSpreadsheet size={20} />
+              Generate Excel Sheet
+            </Button>
+          </DownloadFormUrl>
+        </div>
       </div>
 
       {/* table info */}
@@ -104,11 +119,7 @@ export default async function Contacts() {
                             <div className="size-10 bg-gray-200 overflow-hidden rounded-full">
                               <Image
                                 className="size-full object-cover"
-                                src={
-                                  BASE_API +
-                                  "/" +
-                                  result.data[rowIndex].profile_image
-                                }
+                                src={result.data[rowIndex].profile_image}
                                 alt="Employee Image"
                                 height={90}
                                 width={90}

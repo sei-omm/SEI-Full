@@ -32,33 +32,36 @@ self.onmessage = (event: MessageEvent<File>) => {
   reader.readAsArrayBuffer(file); // Read the file as an ArrayBuffer
 };
 
-
 //past code in your main thrade
-    // Dynamically create the Worker
-    const worker = new Worker(new URL("../../../public/fileCompressorWorker.ts", import.meta.url), {
-      type: "module",
-    });
+// Dynamically create the Worker
+const worker = new Worker(
+  new URL("../../../public/fileCompressorWorker.ts", import.meta.url),
+  {
+    type: "module",
+  }
+);
 
-    worker.onmessage = (e: MessageEvent<{ compressedBlob?: Blob; error?: string }>) => {
-      if (e.data.error) {
-        // setError(e.data.error);
-        worker.terminate();
-        return;
-      }
+worker.onmessage = (
+  e: MessageEvent<{ compressedBlob?: Blob; error?: string }>
+) => {
+  if (e.data.error) {
+    // setError(e.data.error);
+    worker.terminate();
+    return;
+  }
 
-      if (e.data.compressedBlob) {
-        const compressedBlobUrl = URL.createObjectURL(e.data.compressedBlob);
-         console.log(compressedBlobUrl)
-        // setCompressedFileUrl(compressedBlobUrl);
-        worker.terminate();
-      }
-    };
+  if (e.data.compressedBlob) {
+    // const compressedBlobUrl = URL.createObjectURL(e.data.compressedBlob);
+    // setCompressedFileUrl(compressedBlobUrl);
+    worker.terminate();
+  }
+};
 
-    worker.onerror = (err) => {
-      console.error(err);
-      // setError(`Worker error: ${err.message}`);
-      worker.terminate();
-    };
+worker.onerror = (err) => {
+  console.error(err);
+  // setError(`Worker error: ${err.message}`);
+  worker.terminate();
+};
 
-    // Send the file to the worker
-    // worker.postMessage(file);
+// Send the file to the worker
+// worker.postMessage(file);

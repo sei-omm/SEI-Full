@@ -5,10 +5,6 @@ import {
   getSingleAdmissionInfo,
 } from "../service/admission.service";
 import { ApiResponse } from "../utils/ApiResponse";
-import {
-  studentRegisterValidator,
-  fillUpFormValidator,
-} from "../validator/student.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import {
   saveAdmissionInfoValidator,
@@ -23,7 +19,9 @@ import { transaction } from "../utils/transaction";
 
 export const getAdmissions = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const course_id = req.query?.["course-id"];
+    // const course_id = req.query.course_id;
+    // const institute = req.query.institute;
+    // const batch_date = req.query.batch_date;
     const form_id = req.query?.["form-id"];
 
     //get single admission data
@@ -46,7 +44,7 @@ export const getAdmissions = asyncErrorHandler(
         new ApiResponse(
           200,
           "",
-          await getAdmissionsService(course_id as string)
+          await getAdmissionsService(req.query)
         )
       );
   }

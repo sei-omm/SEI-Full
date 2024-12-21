@@ -10,7 +10,6 @@ import { BsPhoneVibrateFill } from "react-icons/bs";
 import Link from "next/link";
 import { GiRotaryPhone } from "react-icons/gi";
 import HomeNewBanner from "./components/HomeNewBanner";
-import { BASE_API, BASE_API_UPLOAD } from "./constant";
 
 const what_we_provide = [
   {
@@ -77,8 +76,6 @@ const notices = [
 ];
 
 export default function Home() {
-  console.log(BASE_API)
-  console.log(BASE_API_UPLOAD)
   return (
     <div>
       <div className="min-h-10 w-full bg-white flex items-center">
@@ -111,7 +108,7 @@ export default function Home() {
                 Lorem ipsum dolor sit amet consectetur, adipisicing elit.
                 Aspernatur ea aperiam, eveniet expedita accusamus facere sequi
                 reprehenderit praesentium obcaecati dolorum provident doloremque
-                molestiae itaque consequatur deleniti, {BASE_API + " "}{BASE_API_UPLOAD} 
+                molestiae itaque consequatur deleniti,
               </p>
             </div>
           </div>

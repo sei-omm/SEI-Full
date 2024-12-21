@@ -11,20 +11,27 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { useQueries, UseQueryResult } from "react-query";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
-import { EmployeeType, IDepartment, IEmployee, ISuccess } from "@/types";
+import {
+  EmployeeType,
+  IDepartment,
+  IEmployee,
+  ISuccess,
+  TEmployeeDocs,
+} from "@/types";
 import { toast } from "react-toastify";
 import { getDate } from "@/app/utils/getDate";
-import { getFileName } from "@/app/utils/getFileName";
 import HandleSuspence from "./HandleSuspence";
 import DateInput from "./DateInput";
 import { TbRadioactive } from "react-icons/tb";
-import ChooseFileInput from "./ChooseFileInput";
 import { BsFiletypePdf } from "react-icons/bs";
 import { downloadHtmlToPdf } from "@/app/utils/downloadHtmlToPdf";
 import DropDown from "./DropDown";
 import { calculateAge } from "@/app/utils/calculateAge";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import EmployeeTask from "./EmployeeTask";
+import EmployeeDocuments from "./Employee/EmployeeDocuments";
+import { uploadToVercel } from "@/utils/uploadToVercel";
+import Spinner from "./Spinner";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -63,12 +70,18 @@ export default function EmployeeInfo({ employeeID }: IProps) {
       queryFn: () =>
         isNewEmployee ? null : fetchEmployeeInfo(employeeID.toString()),
       refetchOnMount: true,
-      cacheTime: 0,
+      cacheTime: 0
     },
   ]);
 
   const employeeInfo = fetchResults[1]?.data?.data[0];
   const departements = fetchResults[0].data?.data;
+
+  const [stateProfileUpload, setStateProfileUpload] = useState<
+    "done" | "uploading"
+  >("done");
+
+  const employeeDocsInfoState = useRef<TEmployeeDocs[]>([]);
 
   const filePickerRef = useRef<HTMLInputElement>(null);
   // const [file, setFile] = useState<File | null>(null);
@@ -123,7 +136,8 @@ export default function EmployeeInfo({ employeeID }: IProps) {
 
   const onFilePicked = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files![0];
-    // setFile(selectedFile);
+
+    if (!confirm("Are you sure you want to upload profile image")) return;
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -131,6 +145,19 @@ export default function EmployeeInfo({ employeeID }: IProps) {
     };
 
     reader.readAsDataURL(selectedFile);
+
+    uploadToVercel({
+      fileName: [`employee-profile/${selectedFile.name}`],
+      file: [selectedFile],
+      endPoint: "/upload/employee-profile",
+      onProcessing: () => {
+        setStateProfileUpload("uploading");
+      },
+      onUploaded: (blob) => {
+        setStateProfileUpload("done");
+        setSelectedProfileIcon(blob[0].url);
+      },
+    });
   };
 
   const handleSalaryInput = (
@@ -169,6 +196,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
   useEffect(() => {
     if (!isNewEmployee) {
       setJoinDate(employeeInfo?.joining_date || "");
+      setSelectedProfileIcon(employeeInfo?.profile_image || "")
       const newArray = [...salaryValues];
       newArray[0] = parseInt(employeeInfo?.basic_salary || "0");
       newArray[1] = parseInt(employeeInfo?.hra || "0");
@@ -200,8 +228,10 @@ export default function EmployeeInfo({ employeeID }: IProps) {
     formData.set("department_id", `${singleDepartmentInfo?.id}`);
     if (employeeID === "add-employee") {
       formData.set("employee_type", "Office Staff");
-    } else {
+    } else if (employeeID === "add-faculty") {
       formData.set("employee_type", "Faculty");
+    } else {
+      formData.set("employee_type", `${employeeInfo?.employee_type}`);
     }
     formData.delete("department_name");
 
@@ -228,6 +258,14 @@ export default function EmployeeInfo({ employeeID }: IProps) {
       }
     }
 
+    formData.set("profile_image", selectedPofileIcon);
+    formData.set(
+      "employee_docs_info",
+      JSON.stringify(
+        employeeDocsInfoState.current.filter((item) => item.doc_uri != null)
+      )
+    );
+
     if (isNewEmployee) {
       mutate({
         apiPath: "/employee",
@@ -238,6 +276,9 @@ export default function EmployeeInfo({ employeeID }: IProps) {
       mutate({
         apiPath: "/employee",
         method: "put",
+        headers: {
+          "Content-Type": "application/json",
+        },
         formData,
         id: employeeInfo?.id,
       });
@@ -251,7 +292,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
   const layoutToDownloadAsPdf = useRef<HTMLDivElement>(null);
 
   return (
-    <HandleSuspence isLoading={fetchResults[0].isLoading}>
+    <HandleSuspence isLoading={fetchResults[0].isLoading} dataLength={1} error={fetchResults[1].error}>
       <div className="py-3 flex items-center justify-between gap-5">
         <div>
           <h2 className="font-semibold text-2xl">
@@ -259,9 +300,6 @@ export default function EmployeeInfo({ employeeID }: IProps) {
               ? "Add New Employee Informations"
               : `${employeeInfo?.name}'s Informations`}
           </h2>
-          {isNewEmployee ? null : (
-            <h3 className="text-sm text-gray-500">SG14IOM</h3>
-          )}
         </div>
       </div>
 
@@ -269,19 +307,23 @@ export default function EmployeeInfo({ employeeID }: IProps) {
         <div ref={layoutToDownloadAsPdf} className="space-y-7">
           <div className="flex bg-white items-start gap-x-4 p-10 border card-shdow rounded-3xl">
             {/* Logo Div */}
-            <div className="size-28 bg-gray-200 overflow-hidden rounded-lg">
-              <Image
-                className="size-full object-cover"
-                src={
-                  selectedPofileIcon === ""
-                    ? BASE_API + "/" + employeeInfo?.profile_image
-                    : selectedPofileIcon
-                }
-                alt="Logo"
-                height={512}
-                width={512}
-                priority={false}
-              />
+            <div className="size-28 bg-gray-200 overflow-hidden rounded-lg flex-center">
+              {stateProfileUpload === "done" ? (
+                <Image
+                  className="size-full object-cover"
+                  src={
+                    selectedPofileIcon === ""
+                      ? (employeeInfo?.profile_image as string)
+                      : selectedPofileIcon
+                  }
+                  alt="Logo"
+                  height={512}
+                  width={512}
+                  priority={false}
+                />
+              ) : (
+                <Spinner size="20px" />
+              )}
             </div>
 
             <div className="flex flex-col justify-between h-full *:mb-2">
@@ -292,9 +334,9 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   ? employeeInfo?.name
                   : employeeName}
               </h2>
-              <p className="text-sm">
+              {/* <p className="text-sm">
                 Employee ID : <span className="font-semibold">SG14IOM</span>
-              </p>
+              </p> */}
               <p className="text-xs text-gray-500 font-semibold">
                 Date of Join :{" "}
                 {joinDate
@@ -308,7 +350,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
 
               <div className="space-x-3">
                 <input
-                  name="profile_image"
+                  // name="profile_image"
                   onChange={onFilePicked}
                   ref={filePickerRef}
                   accept="image/*"
@@ -530,7 +572,6 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   />
                 </>
               ) : null}
-
               <DropDown
                 key={"institute"}
                 label="Institute"
@@ -592,7 +633,15 @@ export default function EmployeeInfo({ employeeID }: IProps) {
           {/* Documents Info */}
           <div className="p-10 border card-shdow rounded-3xl">
             <h2 className="text-2xl font-semibold pb-6">Documentation</h2>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+            <EmployeeDocuments
+              employeeDocsInfoState={employeeDocsInfoState}
+              employeeId={
+                employeeID === "add-employee" || employeeID === "add-faculty"
+                  ? -1
+                  : employeeID
+              }
+            />
+            {/* <div className="grid grid-cols-2 gap-x-3 gap-y-4">
               <ChooseFileInput
                 fileName={getFileName(employeeInfo?.resume) ?? "Choose Resume"}
                 id="resume-picker"
@@ -693,7 +742,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                     : undefined
                 }
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Salary Info */}

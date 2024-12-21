@@ -8,7 +8,6 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import axios, { AxiosError } from "axios";
 import { BASE_API } from "@/app/constant";
 import { IDepartment, IError, ISuccess } from "@/types";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import { toast } from "react-toastify";
 import { useRef } from "react";
 import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
@@ -125,58 +124,56 @@ export default function Department() {
   };
 
   return (
-    <HandleSuspence isLoading={isLoading}>
-      <ErrorBoundary error={error}>
-        <section>
-          <form onSubmit={onFormSubmit} className="flex items-end gap-5 py-5">
-            <div className="flex-grow">
-              <Input
-                referal={inputRef}
-                name="department_name"
-                className="!w-full"
-                type="text"
-                label="Add new department"
-                placeholder="Add new department"
-              />
-            </div>
-            <Button
-              onClick={() => (whichBtnClicked.current = "add")}
-              className="mb-1"
-            >
-              Add
-            </Button>
-            <Button
-              onClick={() => (whichBtnClicked.current = "update")}
-              className="mb-1"
-            >
-              Update
-            </Button>
-          </form>
+    <HandleSuspence isLoading={isLoading} dataLength={response?.data.length} error={error}>
+      <section>
+        <form onSubmit={onFormSubmit} className="flex items-end gap-5 py-5">
+          <div className="flex-grow">
+            <Input
+              referal={inputRef}
+              name="department_name"
+              className="!w-full"
+              type="text"
+              label="Add new department"
+              placeholder="Add new department"
+            />
+          </div>
+          <Button
+            onClick={() => (whichBtnClicked.current = "add")}
+            className="mb-1"
+          >
+            Add
+          </Button>
+          <Button
+            onClick={() => (whichBtnClicked.current = "update")}
+            className="mb-1"
+          >
+            Update
+          </Button>
+        </form>
 
-          <ul className="w-full grid grid-cols-4 py-10 gap-6">
-            {response?.data.map((department) => (
-              <li
-                key={department.id}
-                className="card-shdow p-5 rounded-xl border border-gray-200"
-              >
-                <h2 className="font-semibold">{department.name}</h2>
-                <div className="w-full flex items-center justify-end gap-4 *:cursor-pointer">
-                  <CiEdit
-                    onClick={() =>
-                      handleEditButton(department.id, department.name)
-                    }
-                    className="active:scale-90"
-                  />
-                  <AiOutlineDelete
-                    onClick={() => handleDeleteButton(department.id)}
-                    className="active:scale-90"
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </ErrorBoundary>
+        <ul className="w-full grid grid-cols-4 py-10 gap-6">
+          {response?.data.map((department) => (
+            <li
+              key={department.id}
+              className="card-shdow p-5 rounded-xl border border-gray-200"
+            >
+              <h2 className="font-semibold">{department.name}</h2>
+              <div className="w-full flex items-center justify-end gap-4 *:cursor-pointer">
+                <CiEdit
+                  onClick={() =>
+                    handleEditButton(department.id, department.name)
+                  }
+                  className="active:scale-90"
+                />
+                <AiOutlineDelete
+                  onClick={() => handleDeleteButton(department.id)}
+                  className="active:scale-90"
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
     </HandleSuspence>
   );
 }

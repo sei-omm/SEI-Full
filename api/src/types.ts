@@ -22,3 +22,9 @@ export interface TTokenDataType extends StudentLoginTokenDataType {
   login_email: string;
   institute : string
 }
+
+export type TEmployeeDocs = {
+  doc_id: string;
+  doc_uri: string | null;
+  doc_name: string | null;
+};

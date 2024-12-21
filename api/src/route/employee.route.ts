@@ -3,7 +3,9 @@ import {
   addNewEmployee,
   generateAllEmployeeExcelSheet,
   getEmployee,
+  getEmployeeDocuments,
   getMarketingTeam,
+  getSingleEmployeeInfo,
   loginEmployee,
   removeEmployee,
   updateEmployee,
@@ -29,10 +31,11 @@ employeeRoute
   .get("/", getEmployee)
   .get("/export-sheet", generateAllEmployeeExcelSheet)
   .get("/marketing-team", getMarketingTeam)
-  .get("/:id", getEmployee)
+  .get("/:employee_id/document", getEmployeeDocuments)
+  .get("/:id", getSingleEmployeeInfo)
   .post("/", upload.fields(uploadFileFilds), addNewEmployee)
   .post("/leave", createEmployeeLeaveRequest)
-  .put("/:id", upload.fields(uploadFileFilds), updateEmployee)
+  .put("/:id", updateEmployee)
   .patch("/:id", updateEmployeeActiveStatus)
   .delete("/:id", removeEmployee)
   .post("/login", loginEmployee);

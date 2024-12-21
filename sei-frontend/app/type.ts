@@ -4,7 +4,6 @@ export type DialogSliceType = {
   extraValue?: any;
 };
 
-
 export type TabMenuType = {
   text: string;
   slug: string;
@@ -15,9 +14,9 @@ export type TCourseBatches = {
   batch_id: number;
   course_id: number;
   start_date: string;
-  batch_fee : number;
-  batch_total_seats : number;
-  batch_reserved_seats : number;
+  batch_fee: number;
+  batch_total_seats: number;
+  batch_reserved_seats: number;
   end_date: string;
   visibility: string;
 };
@@ -38,16 +37,16 @@ export type CourseType = {
   course_update_time: string;
   created_at: string;
   course_pdf?: string;
-  enrolled_batch_date ? : string;
-  enrollment_status ? : string;
-  enrolled_batch_id : number;
-  due_amount : number;
+  enrolled_batch_date?: string;
+  enrollment_status?: string;
+  enrolled_batch_id: number;
+  due_amount: number;
   batches: TCourseBatches[];
 };
 
 export type TMultipleCoursePrice = {
-  course_id : number;
-  course_name : string;
+  course_id: number;
+  course_name: string;
   total_price: number;
   minimum_to_pay: number;
 };
@@ -67,18 +66,18 @@ export interface IStudent {
   dob: string;
   profile_image: string;
   courses: CourseType[];
-  indos_number : string | null
+  indos_number: string | null;
 }
 
 export type TCourseCart = {
   course_id: number;
-  batch_id : number;
+  batch_id: number;
   course_name: string;
   batch_start_date: string;
   batch_end_date: string;
   course_price: number;
-  institute : string;
-  isInWaitingList : boolean;
+  institute: string;
+  isInWaitingList: boolean;
 };
 
 export type RazorpaySuccesshandlerTypes = {
@@ -88,13 +87,13 @@ export type RazorpaySuccesshandlerTypes = {
 };
 
 export type TLoginSuccess = {
-  token : string;
-  profile_image : string;
-  enrolled_courses : {
-    batch_id : number;
-    course_id : number;
-  }[]
-}
+  token: string;
+  profile_image: string;
+  enrolled_courses: {
+    batch_id: number;
+    course_id: number;
+  }[];
+};
 
 export type OptionsType = { text: string; value: any };
 
@@ -109,7 +108,13 @@ export interface IJob {
   address: string;
   exprience: string;
   department: number;
-  department_name : string;
+  department_name: string;
   created_at: string;
-  job_description : string;
+  job_description: string;
 }
+
+export type TMyLibrarySearchParams = {
+  tab?: string;
+  course_id?: string;
+  library_file_type?: string;
+};

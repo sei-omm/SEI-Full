@@ -13,7 +13,7 @@ import { RootState } from "@/redux/store";
 export default function StudentUploadedDocDialog() {
   const { extraValue } = useSelector((state: RootState) => state.dialogs);
 
-  const { data, isFetching } = useQuery<ISuccess<TStudentsUploadedDocuments[]>>(
+  const { data, isFetching, error } = useQuery<ISuccess<TStudentsUploadedDocuments[]>>(
     {
       queryKey: "get-students-uploaded-docs-list",
       queryFn: async () =>
@@ -22,13 +22,13 @@ export default function StudentUploadedDocDialog() {
             `${BASE_API}/admission/student-documents/${extraValue.studentId}`
           )
         ).data,
-      retryOnMount: true,
+      refetchOnMount: true,
     }
   );
 
   return (
     <DialogBody className="max-h-[90vh] overflow-y-auto">
-      <HandleSuspence isLoading={isFetching}>
+      <HandleSuspence isLoading={isFetching} dataLength={data?.data.length} error={error}>
         {data?.data.map((item) => (
           <div key={item.doc_id} className="w-full">
             <ChooseFileInput

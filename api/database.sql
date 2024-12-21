@@ -39,13 +39,13 @@ CREATE TABLE employee (
     account_holder_name VARCHAR(100),
     ifsc_code CHAR(11),
     profile_image VARCHAR(2083),
-    resume VARCHAR(2083),
-    pan_card VARCHAR(2083),
-    aadhaar_card VARCHAR(2083),
-    ten_pass_certificate VARCHAR(2083),
-    twelve_pass_certificate VARCHAR(2083),
-    graduation_certificate VARCHAR(2083),
-    other_certificate TEXT,
+    -- resume VARCHAR(2083),
+    -- pan_card VARCHAR(2083),
+    -- aadhaar_card VARCHAR(2083),
+    -- ten_pass_certificate VARCHAR(2083),
+    -- twelve_pass_certificate VARCHAR(2083),
+    -- graduation_certificate VARCHAR(2083),
+    -- other_certificate TEXT,
     basic_salary DECIMAL(10, 2) DEFAULT 0.0,
     hra DECIMAL(10, 2) DEFAULT 0.0,
     other_allowances DECIMAL(10, 2) DEFAULT 0.0,
@@ -117,7 +117,7 @@ CREATE TABLE attendance (
   id SERIAL PRIMARY KEY,
   employee_id INTEGER NOT NULL,
   date DATE DEFAULT CURRENT_DATE, -- The date of attendance
-  status VARCHAR(20) CHECK (status IN ('Present', 'Absent', 'Leave')), -- Tracks the attendance status
+  status VARCHAR(20) CHECK (status IN ('Present', 'Absent', 'Half Day', 'Sunday', 'Holiday')), -- Tracks the attendance status
   FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE,
   UNIQUE (employee_id, date)
 --   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -274,3 +274,244 @@ CREATE TABLE student_docs (
     doc_name VARCHAR(255),
     UNIQUE (doc_id, student_id)
 );
+
+CREATE TABLE employee_docs (
+    employee_id INT,
+    FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE,
+
+    doc_id VARCHAR(255) NOT NULL,
+    doc_uri TEXT,
+    doc_name VARCHAR(255),
+    UNIQUE (doc_id, employee_id)
+);
+
+CREATE TABLE library (
+    library_id SERIAL PRIMARY KEY,
+
+    library_file_name VARCHAR(255),
+    library_file_type VARCHAR(20) CHECK (library_file_type IN ('pdf', 'doc', 'audio', 'image', 'link')),
+
+    is_active BOOLEAN,
+    library_resource_link TEXT,
+    allow_download BOOLEAN,
+
+    visibility VARCHAR(20) CHECK(visibility IN ('subject-specific', 'course-specific')),
+
+    institute VARCHAR(20), --Faridabad/Kolkata
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE subjects (
+    subject_id SERIAL PRIMARY KEY,
+    subject_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE library_with_course (
+    library_id INTEGER NOT NULL,
+    FOREIGN KEY (library_id) REFERENCES library(library_id) ON DELETE CASCADE,
+
+    course_id INTEGER DEFAULT NULL,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+);
+
+CREATE TABLE library_with_subject (
+    library_id INTEGER NOT NULL,
+    FOREIGN KEY (library_id) REFERENCES library(library_id) ON DELETE CASCADE,
+
+    subject_id INT DEFAULT NULL,
+    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE CASCADE
+);
+
+-- For File and Folders compliance-record
+CREATE TABLE folders (
+    folder_id SERIAL PRIMARY KEY,
+    folder_name VARCHAR(255),
+    parent_folder_id INTEGER DEFAULT NULL
+);
+
+CREATE TABLE files (
+    file_id SERIAL PRIMARY KEY,
+    file_name VARCHAR(255),
+
+    file_type VARCHAR(255),
+    file_url TEXT,
+
+    folder_id INT DEFAULT NULL,
+    FOREIGN KEY (folder_id) REFERENCES folders(folder_id) ON DELETE CASCADE
+);
+
+
+-- Inventory Management
+
+CREATE TABLE durable (
+    durable_id SERIAL PRIMARY KEY,
+    room_name VARCHAR(255),
+    floor INTEGER,
+    number_of_rows INTEGER,
+    capasity INTEGER,
+    available_items TEXT,
+    is_available BOOLEAN,
+    institute VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE consumable_category (
+    category_id SERIAL PRIMARY KEY,
+    category_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE consumable (
+    consumable_id SERIAL PRIMARY KEY,
+    item_name VARCHAR(255),
+
+    category_id INTEGER,
+    FOREIGN KEY (category_id) REFERENCES consumable_category(category_id) ON DELETE SET NULL,
+
+    quantity INTEGER,
+    min_quantity INTEGER,
+
+    last_purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    supplier_id INTEGER,
+
+    cost_per_unit DECIMAL(10, 2),
+
+    total_volume INTEGER,
+    remark TEXT,
+
+    institute VARCHAR(100),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE vendor (
+   vendor_id SERIAL PRIMARY KEY,
+   vendor_name VARCHAR(255),
+   institute VARCHAR(100),
+   service_type VARCHAR(255),
+   address TEXT,
+   contact_details VARCHAR(255),
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE inventory_list (
+    inventory_id SERIAL PRIMARY KEY,
+    item_name VARCHAR(255),
+
+    category INTEGER,
+    sub_category INTEGER,
+
+    description TEXT,
+    where_to_use VARCHAR(255),
+    used_by VARCHAR(255),
+
+    opening_stock INTEGER,
+    minimum_quantity INTEGER,
+    item_consumed INTEGER,
+    closing_stock INTEGER,
+
+    item_status INTEGER,
+
+    vendor_id INTEGER,
+    FOREIGN KEY (vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL,
+
+    cost_per_unit_current DECIMAL(10, 2),
+    total_value DECIMAL(10, 2),
+    remark TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE inventory_item_info (
+    item_id SERIAL PRIMARY KEY,
+    item_name VARCHAR(255),
+
+    category INTEGER,
+    sub_category INTEGER,
+    
+    where_to_use VARCHAR(255),
+    used_by VARCHAR(255),
+    description TEXT,
+
+    minimum_quantity INTEGER,
+
+    -- Additional For Not To Do Much Query For Reports
+    current_status TEXT,
+    current_vendor_id INTEGER,
+    FOREIGN KEY (current_vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL,
+    cost_per_unit_current DECIMAL(10, 2),
+    cost_per_unit_previous DECIMAL(10, 2),
+    current_purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    institute VARCHAR(100),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE inventory_stock_info (
+    stock_id SERIAL PRIMARY KEY,
+    
+    opening_stock INTEGER,
+    item_consumed INTEGER,
+    closing_stock INTEGER,
+
+    status TEXT,
+
+    vendor_id INTEGER,
+    FOREIGN KEY (vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL,
+
+    cost_per_unit_current DECIMAL(10, 2),
+    total_value DECIMAL(10, 2),
+    remark TEXT,
+
+    item_id INTEGER,
+    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE SET NULL,
+
+    type VARCHAR(8) CHECK(type IN ('add', 'consumed')),
+
+    purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notification (
+    notification_id SERIAL PRIMARY KEY,
+    notification_title VARCHAR(255),
+    notification_description TEXT,
+    from_role VARCHAR(255), -- Send Notification From Which Role
+    to_role VARCHAR(255), -- Send Notifiaction To Which Role
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE maintence_record (
+    record_id SERIAL PRIMARY KEY,
+
+    item_id INTEGER,
+    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE SET NULL,
+
+    maintence_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    work_station VARCHAR(255),
+    description_of_work TEXT,
+    department VARCHAR(255),
+    assigned_person VARCHAR(255),
+    approved_by VARCHAR(255),
+    cost VARCHAR(255),
+    status VARCHAR(10),
+    completed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    remark TEXT,
+
+    institute VARCHAR(100),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- fro clering all table of db
+-- DO $$ 
+-- BEGIN
+--     EXECUTE (
+--         SELECT string_agg('DROP TABLE IF EXISTS "' || tablename || '" CASCADE;', ' ')
+--         FROM pg_tables
+--         WHERE schemaname = 'public'
+--     );
+-- END $$;

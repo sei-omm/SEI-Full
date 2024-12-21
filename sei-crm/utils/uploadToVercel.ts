@@ -1,53 +1,59 @@
-// import { BASE_API } from "@/app/constant";
-// import { axiosQuery } from "./axiosQuery";
-// import { IError, ISuccess } from "@/types";
-// import { upload  } from "@vercel/blob/client";
-// import { UploadProgressEvent } from "@vercel/blob";
-// import { getAuthToken } from "@/app/utils/getAuthToken";
+import { upload } from "@vercel/blob/client";
+import { BASE_API } from "@/app/constant";
+import { convartImgToWebp } from "./convartImgToWebp";
+import { TUploadMethod } from "@/types";
+import { PutBlobResult } from "@vercel/blob";
 
-// type TUploadToVercelArgs = {
-//   file: File;
-//   fileName: string;
-//   clientPayload?: string;
-//   onUploadProgress? : (progressEvent : UploadProgressEvent) => void
-// };
+interface TUploadArgs extends TUploadMethod {
+  fileName: string[];
+  file: File[];
+  endPoint: string;
+  clientPayload?: string;
+  convartToWebp?: boolean;
+}
 
-// export async function uploadToVercel(args: TUploadToVercelArgs) {
-//   const blob = await upload(args.fileName, args.file, {
-//     access: "public",
-//     onUploadProgress: (progressEvent) => {
-//       args.onUploadProgress?.(progressEvent)
-//     },
-//     handleUploadUrl: "http://localhost:8081/api/v1/student/upload", // Endpoint on your server
-//     clientPayload: args.clientPayload,
-//   });
+export const uploadToVercel = async ({
+  fileName,
+  file,
+  endPoint,
+  clientPayload,
+  onUploaded,
+  onUploadProgress,
+  onError,
+  onProcessing,
+  onFinally,
+  convartToWebp,
+}: TUploadArgs) => {
+  try {
+    let fileToUpload: Blob[] | File[];
 
-//   const { error } = await axiosQuery<ISuccess, IError>({
-//     url: BASE_API + "/student/save-doc",
-//     method: "put",
-//     headers: {
-//       "Content-Type": "application/json",
-//       ...getAuthToken(),
-//     },
-//     data: {
-//       doc_id: fileId,
-//       doc_uri: blob.url,
-//       doc_name: blob.pathname,
-//     },
-//   });
+    onProcessing?.();
+    if (convartToWebp === true) {
+      if (fileName.length > 0 || file.length > 0)
+        throw new Error("No able to convart multiple image to webp");
+      fileToUpload = [await convartImgToWebp(file[0])];
+    } else {
+      fileToUpload = file;
+    }
 
-//   if (error) {
-//     setLoadingState({
-//       state: "error",
-//       progress: -1,
-//       errMsg: error.message,
-//     });
-//     return toast.error(error.message);
-//   }
-
-//   setLoadingState({
-//     state: "uploaded",
-//     progress: -1,
-//   });
-//   toast.success("File Successfully Uploaded");
-// }
+    const blobs: PutBlobResult[] = [];
+    for (let i = 0; i < fileToUpload.length; i++) {
+      const blob = await upload(fileName[i], fileToUpload[i], {
+        access: "public",
+        contentType : fileToUpload[i].type,
+        onUploadProgress: (progressInfo) => {
+          onUploadProgress?.(progressInfo.percentage);
+        },
+        handleUploadUrl: BASE_API + endPoint, // Endpoint on your server
+        clientPayload,
+      });
+      blobs.push(blob);
+    }
+    onUploaded?.(blobs);
+    onFinally?.(blobs);
+  } catch (error) {
+    const err = error as Error;
+    onError?.(err);
+    onFinally?.(err);
+  }
+};

@@ -7,6 +7,7 @@ import { ErrorHandler } from "../utils/ErrorHandler";
 import {
   employeeLoginValidator,
   employeeSchema,
+  getEmployeeDocumentValidator,
   updateEmployeeStatusValidator,
 } from "../validator/employee.validator";
 import { getDate } from "../utils/getDate";
@@ -17,6 +18,10 @@ import {
   objectToSqlInsert,
 } from "../utils/objectToSql";
 import { reqFilesToKeyValue } from "../utils/reqFilesToKeyValue";
+import { TEmployeeDocs } from "../types";
+import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
+import { transaction } from "../utils/transaction";
+import { tryCatch } from "../utils/tryCatch";
 
 const table_name = "employee";
 
@@ -76,24 +81,7 @@ export const getHrDashboardInfo = asyncErrorHandler(
 
 export const getEmployee = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    // const fildesNames = (req.query.fildes as string) || null;
-    // const id = (req.params.id as string) || null;
-
-    // let sql = "";
-    // if (fildesNames === null) {
-    //   sql = `SELECT * FROM ${table_name}`;
-    // } else {
-    //   sql = `SELECT ${clarifySqlTables(fildesNames)} FROM ${table_name}`;
-    // }
-
-    // if (id) {
-    //   sql += ` WHERE id = $1`;
-    // }
-
-    // const { rows } = await pool.query(sql, id ? [id] : []);
-    // res.status(200).json(new ApiResponse(200, "Employee informations", rows));
-
-    const employee_id = req.params.id || null;
+    const employee_type = req.query.employee_type;
 
     let query = `
         SELECT 
@@ -112,14 +100,28 @@ export const getEmployee = asyncErrorHandler(
         LEFT JOIN 
             department d 
             ON e.department_id = d.id
+        ${employee_type !== undefined ? "WHERE employee_type = $2" : ""}
         ORDER BY 
             e.name;
     `;
 
     const queryValues = [getDate(date)];
-    if (employee_id) {
-      queryValues.push(employee_id);
-      query = `
+    if (employee_type !== undefined) {
+      queryValues.push(employee_type.toString());
+    }
+
+    const { rows } = await pool.query(query, queryValues);
+
+    res.status(200).json(new ApiResponse(200, "All Employee Info", rows));
+  }
+);
+
+export const getSingleEmployeeInfo = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const employee_id = req.params.id || null;
+    if (!employee_id) throw new ErrorHandler(400, "Employee Id Is Required");
+
+    const query = `
         SELECT 
             e.*,
             '********' AS login_password,                             
@@ -138,52 +140,83 @@ export const getEmployee = asyncErrorHandler(
             e.id = $2
         ORDER BY 
             e.name;`;
-    }
 
-    const { rows } = await pool.query(query, queryValues);
-
-    res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          employee_id ? "Single Employee Data" : "All Employee Informations",
-          rows
-        )
-      );
+    const { rows } = await pool.query(query, [getDate(date), employee_id]);
+    res.status(200).json(new ApiResponse(200, "Single Employee Info", rows));
   }
 );
 
 export const addNewEmployee = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error } = employeeSchema.validate(req.body);
-
     if (error) throw new ErrorHandler(400, error.message);
 
-    const filesOBJ = reqFilesToKeyValue(req);
-    const { columns, params, values } = objectToSqlInsert({
-      ...req.body,
-      ...filesOBJ,
+    const employeeDocsInfo = JSON.parse(
+      req.body.employee_docs_info
+    ) as TEmployeeDocs[];
+    delete req.body.employee_docs_info;
+
+    const sqlForEmployeeDocsInfo = `
+      INSERT INTO employee_docs
+      (employee_id, doc_id, doc_uri, doc_name)
+      VALUES
+      ${sqlPlaceholderCreator(4, employeeDocsInfo.length).placeholder}
+      ON CONFLICT (employee_id, doc_id)
+      DO UPDATE SET 
+        doc_uri = EXCLUDED.doc_uri,
+        doc_name = EXCLUDED.doc_name
+    `;
+
+    const { columns, params, values } = objectToSqlInsert(req.body);
+    const sql = `INSERT INTO ${table_name} ${columns} VALUES ${params} RETURNING id`;
+
+    const client = await pool.connect();
+
+    const { error: err } = await tryCatch(async () => {
+      await client.query("BEGIN");
+
+      const { rows } = await client.query(sql, values);
+      const employeeGeneratedId = rows[0].id;
+
+      if (employeeDocsInfo.length !== 0) {
+        //if employee docs list is not empty
+        const valuesForEmployeeDocsInfo: (string | null)[] = [];
+        employeeDocsInfo.forEach((item) => {
+          valuesForEmployeeDocsInfo.push(
+            employeeGeneratedId,
+            item.doc_id,
+            item.doc_uri,
+            item.doc_name
+          );
+        });
+
+        await client.query(sqlForEmployeeDocsInfo, valuesForEmployeeDocsInfo);
+      }
+
+      await client.query("COMMIT");
+      client.release();
     });
 
-    const sql = `INSERT INTO ${table_name} ${columns} VALUES ${params} RETURNING *`;
+    if (err) {
+      await client.query("ROLLBACK");
+      client.release();
+    }
 
-    const { rows } = await pool.query(sql, values);
     res
       .status(200)
-      .json(new ApiResponse(200, "New employee added successfully", rows));
+      .json(new ApiResponse(200, "New employee added successfully"));
   }
 );
 
 export const updateEmployee = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { error } = employeeSchema.validate(req.body);
+    //i need to store two thing first employee/fackalty info and documents
 
+    const { error } = employeeSchema.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
+    //this is the id of employee
     const id = (req.params.id as string) || null;
-
-    const fileOBJ = reqFilesToKeyValue(req);
 
     let login_password = req.body.login_password;
     if (login_password != "********") {
@@ -193,15 +226,54 @@ export const updateEmployee = asyncErrorHandler(
       delete req.body.login_password;
     }
 
-    const { keys, values, paramsNum } = objectToSqlConverterUpdate({
-      ...req.body,
-      ...fileOBJ,
+    const employeeDocsInfo = JSON.parse(
+      req.body.employee_docs_info
+    ) as TEmployeeDocs[];
+    delete req.body.employee_docs_info;
+
+    const sqlForEmployeeDocsInfo = `
+      INSERT INTO employee_docs
+      (employee_id, doc_id, doc_uri, doc_name)
+      VALUES
+      ${sqlPlaceholderCreator(4, employeeDocsInfo.length).placeholder}
+      ON CONFLICT (employee_id, doc_id)
+      DO UPDATE SET 
+        doc_uri = EXCLUDED.doc_uri,
+        doc_name = EXCLUDED.doc_name
+    `;
+
+    const valuesForEmployeeDocsInfo: (string | null)[] = [];
+    employeeDocsInfo.forEach((item) => {
+      valuesForEmployeeDocsInfo.push(
+        id,
+        item.doc_id,
+        item.doc_uri,
+        item.doc_name
+      );
     });
 
-    const sql = `UPDATE ${table_name} SET ${keys} WHERE id = $${paramsNum}`;
-    values.push(id as string);
+    const {
+      keys,
+      values: valuesForEmployeeInfo,
+      paramsNum,
+    } = objectToSqlConverterUpdate(req.body);
 
-    await pool.query(sql, values);
+    const sql = `UPDATE ${table_name} SET ${keys} WHERE id = $${paramsNum}`;
+    valuesForEmployeeInfo.push(id as string);
+
+    const trnsationList: { sql: string; values: any[] }[] = [];
+    trnsationList.push({
+      sql: sql,
+      values: valuesForEmployeeInfo,
+    });
+    if (valuesForEmployeeDocsInfo.length !== 0) {
+      trnsationList.push({
+        sql: sqlForEmployeeDocsInfo,
+        values: valuesForEmployeeDocsInfo,
+      });
+    }
+
+    await transaction(trnsationList);
 
     res.status(200).json(new ApiResponse(200, "Employee information updated"));
   }
@@ -343,6 +415,19 @@ export const getMarketingTeam = asyncErrorHandler(
   }
 );
 
+export const getEmployeeDocuments = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { error, value } = getEmployeeDocumentValidator.validate(req.params);
+    if (error) throw new ErrorHandler(400, error.message);
+
+    const { rows } = await pool.query(
+      `SELECT * FROM employee_docs WHERE employee_id = $1`,
+      [value.employee_id]
+    );
+
+    res.status(200).json(new ApiResponse(200, "", rows));
+  }
+);
 // export const getPayrollInfo = asyncErrorHandler(
 //   async (req: Request, res: Response) => {
 //     const sql = `SELECT name, profile_image, job_title, basic_salary, hra, other_allowances, provident_fund, professional_tax, income_tax FROM ${table_name}`;

@@ -7,16 +7,17 @@ import { useState } from "react";
 import SpinnerSvg from "../SpinnerSvg";
 import { useQuery } from "react-query";
 import axios from "axios";
-import { BASE_API, BASE_API_UPLOAD } from "@/app/constant";
+import { BASE_API } from "@/app/constant";
 import { IResponse } from "@/app/type";
 import HandleLoading from "../HandleLoading";
 import { axiosQuery } from "@/app/utils/axiosQuery";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 import { toast } from "react-toastify";
-import { upload } from "@vercel/blob/client";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/redux/store";
 import { setDialog } from "@/app/redux/slice/dialog.slice";
+import { PutBlobResult } from "@vercel/blob";
+import { uploadToVercel } from "@/app/utils/uploadToVercel";
 
 type TRequiredDocuments = {
   course_name: string;
@@ -99,29 +100,13 @@ export default function UploadDocumentsDialog() {
     refetchOnMount: true,
   });
 
-  const [loadingState, setLoadingState] = useState<{
-    state: "null" | "compressing" | "uploading" | "uploaded" | "error";
+  const [status, setStatus] = useState<{
+    state: "done" | "compressing" | "uploading" | "error";
     progress: number;
     errMsg?: string;
-  }>({ state: "null", progress: -1 });
+  }>({ state: "done", progress: 0 });
 
-  async function uploadFileToVercel(
-    blobData: Blob,
-    fileName: string,
-    fileId: string
-  ) {
-    const blob = await upload(fileName, blobData, {
-      access: "public",
-      onUploadProgress: ({ percentage }) => {
-        setLoadingState({
-          state: "uploading",
-          progress: percentage,
-        });
-      },
-      handleUploadUrl: BASE_API_UPLOAD + "/student/upload", // Endpoint on your server
-      clientPayload: JSON.stringify({ size: blobData.size }),
-    });
-
+  async function saveDocument(blob: PutBlobResult, fileId: string) {
     const { error } = await axiosQuery<IResponse, IResponse>({
       url: BASE_API + "/student/save-doc",
       method: "put",
@@ -136,65 +121,45 @@ export default function UploadDocumentsDialog() {
       },
     });
 
-    if (error) {
-      setLoadingState({
-        state: "error",
-        progress: -1,
-        errMsg: error.message,
-      });
-      return toast.error(error.message);
-    }
-
-    setLoadingState({
-      state: "uploaded",
-      progress: -1,
+    setStatus({
+      progress: 0,
+      state: "done",
     });
-    toast.success("File Successfully Uploaded");
+
+    if (error) return toast.error(error.message);
+
+    toast.success("File Successfully uploaded");
   }
 
-  const handleFilePicked = async (file: File, fileId: string) => {
-    //any image to webp
-    const worker = new Worker(
-      new URL("../../../public/imageWorker.ts", import.meta.url),
-      {
-        type: "module",
-      }
-    );
-
-    setLoadingState({
-      state: "compressing",
-      progress: 0,
-    });
-
-    worker.onmessage = (e: MessageEvent<Blob | { error: string }>) => {
-      if ("error" in e.data) {
-        setLoadingState({
-          state: "error",
-          progress: -1,
-          errMsg: e.data.error.toString(),
+  const handleFilePicked = (file: File, fileId: string) => {
+    uploadToVercel({
+      fileName: `students-document/${file.name}`,
+      file: file,
+      endPoint: "/upload/student-documents",
+      convartToWebp: true,
+      onProcessing: () => {
+        setStatus({
+          progress: 0,
+          state: "compressing",
         });
-        worker.terminate();
-        return;
-      }
-      // const webpBlob = e.data as Blob;
-      uploadFileToVercel(e.data, file.name, fileId);
-      // const webpUrl = URL.createObjectURL(webpBlob);
-      // console.log(webpUrl)
-      // setWebpImageUrl(webpUrl);
-      worker.terminate();
-    };
-
-    worker.onerror = (err) => {
-      setLoadingState({
-        state: "error",
-        progress: 0,
-        errMsg: err.message,
-      });
-      worker.terminate();
-    };
-
-    // Send the image file to the worker
-    worker.postMessage(file);
+      },
+      onUploadProgress(percentage) {
+        setStatus({
+          progress: percentage,
+          state: "uploading",
+        });
+      },
+      onError(error) {
+        setStatus({
+          progress: 0,
+          state: "error",
+          errMsg: error.message,
+        });
+      },
+      onUploaded(blob) {
+        saveDocument(blob, fileId);
+      },
+    });
   };
 
   return (
@@ -204,27 +169,27 @@ export default function UploadDocumentsDialog() {
     >
       <div
         className={`absolute size-full inset-0 bg-[#000000bd] z-20 gap-2 text-white ${
-          loadingState.progress == -1
+          status.state === "done"
             ? "hidden"
             : "flex items-center justify-center flex-col"
         }`}
       >
         <SpinnerSvg size="20px" />
-        {loadingState.state === "compressing" ? (
+        {status.state === "compressing" ? (
           <span>Compressing..</span>
         ) : (
           <span>
-            Uploading.. <span>{loadingState.progress}%</span>
+            Uploading.. <span>{status.progress}%</span>
           </span>
         )}
 
         <div
           className={`h-1 w-72 bg-white ${
-            loadingState.progress == 0 ? "hidden" : "block"
+            status.progress == 0 ? "hidden" : "block"
           }`}
         >
           <div
-            style={{ width: `${loadingState.progress}%` }}
+            style={{ width: `${status.progress}%` }}
             className={`h-full bg-[#E9B858] transition-all duration-700`}
           ></div>
         </div>
@@ -263,20 +228,20 @@ export default function UploadDocumentsDialog() {
               : "Loading.."}
           </div>
 
-          <div className="w-full flex items-center justify-between">
+          <div className="w-full flex items-center justify-between flex-wrap-reverse gap-3">
             <Button
               onClick={() =>
                 dispatch(
                   setDialog({
                     type: "CLOSE",
                     dialogKey: "upload-documents-dialog",
-                    extraValue: { preventToClose: false }
+                    extraValue: { preventToClose: false },
                   })
                 )
               }
               type="button"
               varient="new-default"
-              className="bg-white active:scale-90"
+              className="bg-white active:scale-90 w-60 sm:w-full"
             >
               Skip For Now
             </Button>

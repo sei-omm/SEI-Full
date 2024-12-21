@@ -5,15 +5,14 @@ import {
   registerStudent,
   resendOtp,
   saveIndosNumber,
+  saveProfileImage,
   saveStudentDocument,
   saveStudentForm,
   sendResetPasswordEmail,
   setNewPassword,
-  uploadProfileImage,
   verifyOtp,
 } from "../controller/student.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
-import { upload } from "../middleware/multer";
 
 export const studentRouter = Router();
 
@@ -24,7 +23,7 @@ studentRouter
   .post("/login", loginStudent)
   .post("/verify-otp", verifyOtp)
   .post("/forgot-password", sendResetPasswordEmail)
-  .post("/profile-image", upload.single("profile_image"), uploadProfileImage)
+  .post("/profile-image", isAuthenticated, saveProfileImage)
   .patch("/set-password", setNewPassword)
   .put("/save-form", isAuthenticated, saveStudentForm)
   .put("/save-doc", isAuthenticated, saveStudentDocument)

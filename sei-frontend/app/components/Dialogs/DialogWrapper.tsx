@@ -12,6 +12,7 @@ import SelectOurCenter from "./SelectOurCenter";
 import ProcessPaymentDialog from "./ProcessPaymentDialog";
 import EditIndosNumberDialog from "./EditIndosNumberDialog";
 import UploadDocumentsDialog from "./UploadDocumentsDialog";
+import LibraryMobileFilterDialog from "./LibraryMobileFilterDialog";
 
 const dialogs = new Map<string, React.ReactNode>();
 dialogs.set("apply-job-dialog", <ApplyJobDialog />);
@@ -19,12 +20,13 @@ dialogs.set("student-login-dialog", <SLogin />);
 dialogs.set("student-register-dialog", <SRegister />);
 dialogs.set("otp", <Otp />);
 dialogs.set("forgot-password-dialog", <ForgotPasswordDialog />);
-dialogs.set("select-our-center", <SelectOurCenter />)
-dialogs.set("open-process-payment-dialog", <ProcessPaymentDialog />)
+dialogs.set("select-our-center", <SelectOurCenter />);
+dialogs.set("open-process-payment-dialog", <ProcessPaymentDialog />);
 
 dialogs.set("notice-dialog", <NoticeDialog />);
 dialogs.set("edit-indos-num-dialog", <EditIndosNumberDialog />);
 dialogs.set("upload-documents-dialog", <UploadDocumentsDialog />);
+dialogs.set("mobile-library-filter", <LibraryMobileFilterDialog />);
 
 export default function DialogWrapper() {
   const { dialogKey, type } = useSelector((state: RootState) => state.dialog);

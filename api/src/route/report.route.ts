@@ -4,25 +4,29 @@ import {
   generateAdmissionExcelReport,
   generateDobExcelReport,
   getBatchReport,
+  getBatchReportExcel,
   getCourseTrendExcelReport,
   getCourseTrendReport,
-  getDgsIndosExcelReport,
   getDgsIndosReport,
+  getReceiptReport,
+  getReceiptReportExcel,
   getStudentsBirthDateReport,
   sendBirthdateWish,
-  testController,
 } from "../controller/report.controller";
+import { streamAdmissionExcelReport, streamBatchExcelReport, streamCourseTrendExcelReport, streamDgsIndosExcelReport, streamReceiptExcelReport } from "../controller/stream.report";
 
 export const reportRouter = Router();
 reportRouter
   .get("/admission", createAdmissionReport)
-  .get("/admission/excel", generateAdmissionExcelReport)
+  .get("/admission/excel", streamAdmissionExcelReport)
   .get("/dob", getStudentsBirthDateReport)
   .get("/dob/excel", generateDobExcelReport)
   .get("/dgs", getDgsIndosReport)
-  .get("/dgs/excel", getDgsIndosExcelReport)
+  .get("/dgs/excel", streamDgsIndosExcelReport)
   .get("/course-trend-report", getCourseTrendReport)
-  .get("/course-trend-report/excel", getCourseTrendExcelReport)
+  .get("/course-trend-report/excel", streamCourseTrendExcelReport)
   .get("/batch", getBatchReport)
+  .get("/batch/excel", streamBatchExcelReport)
+  .get("/receipt", getReceiptReport)
+  .get("/receipt/excel", streamReceiptExcelReport)
   .post("/dob/send-wish", sendBirthdateWish)
-  .get("/test", testController);

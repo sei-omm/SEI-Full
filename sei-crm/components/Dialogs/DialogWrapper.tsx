@@ -16,6 +16,11 @@ import AdmissionPaymentDialog from "./AdmissionPaymentDialog";
 import ManageCourseBatchDialog from "./ManageCourseBatchDialog";
 import UploadDocumentsDialog from "./UploadDocumentsDialog";
 import StudentUploadedDocDialog from "./StudentUploadedDocDialog";
+import RenameFileOrFolder from "./RenameFileOrFolder";
+import AddFolder from "./AddFolder";
+import ChooseFilesDialog from "./ChooseFilesDialog";
+import AddInventoryStockDialog from "./AddInventoryStockDialog";
+import ConsumeStockDialog from "./ConsumeStockDialog";
 
 type DivType = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -78,6 +83,30 @@ const dialogs = [
   {
     id: "view-student-upload-documents",
     component: <StudentUploadedDocDialog />,
+  },
+
+  {
+    id: "rename-file-or-folder",
+    component: <RenameFileOrFolder />,
+  },
+
+  {
+    id: "add-folder",
+    component: <AddFolder />,
+  },
+
+  {
+    id: "choose-files-dialog",
+    component: <ChooseFilesDialog />,
+  },
+  {
+    id: "inventory-stock-dialog",
+    component: <AddInventoryStockDialog />,
+  },
+
+  {
+    id: "inventory-stock-consume-dialog",
+    component: <ConsumeStockDialog />,
   },
 ];
 

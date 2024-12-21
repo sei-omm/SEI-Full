@@ -38,29 +38,31 @@ export const employeeSchema = Joi.object({
     .label("Account Holder Name"),
   ifsc_code: Joi.string().length(11).optional().label("IFSC Code"),
   profile_image: Joi.string().uri().max(2083).optional().label("Profile Image"),
-  resume: Joi.string().uri().max(2083).optional().label("Resume"),
-  pan_card: Joi.string().uri().max(2083).optional().label("PAN Card"),
-  aadhaar_card: Joi.string().uri().max(2083).optional().label("Aadhaar Card"),
-  ten_pass_certificate: Joi.string()
-    .uri()
-    .max(2083)
-    .optional()
-    .label("10th Pass Certificate"),
-  twelve_pass_certificate: Joi.string()
-    .uri()
-    .max(2083)
-    .optional()
-    .label("12th Pass Certificate"),
-  graduation_certificate: Joi.string()
-    .uri()
-    .max(2083)
-    .optional()
-    .label("Graduation Certificate"),
-  other_certificate: Joi.string()
-    .uri()
-    .max(2083)
-    .optional()
-    .label("Other Certificate"),
+  employee_docs_info: Joi.string().required(),
+
+  // resume: Joi.string().uri().max(2083).optional().label("Resume"),
+  // pan_card: Joi.string().uri().max(2083).optional().label("PAN Card"),
+  // aadhaar_card: Joi.string().uri().max(2083).optional().label("Aadhaar Card"),
+  // ten_pass_certificate: Joi.string()
+  //   .uri()
+  //   .max(2083)
+  //   .optional()
+  //   .label("10th Pass Certificate"),
+  // twelve_pass_certificate: Joi.string()
+  //   .uri()
+  //   .max(2083)
+  //   .optional()
+  //   .label("12th Pass Certificate"),
+  // graduation_certificate: Joi.string()
+  //   .uri()
+  //   .max(2083)
+  //   .optional()
+  //   .label("Graduation Certificate"),
+  // other_certificate: Joi.string()
+  //   .uri()
+  //   .max(2083)
+  //   .optional()
+  //   .label("Other Certificate"),
   basic_salary: Joi.number().precision(2).optional().label("Basic Salary"),
   hra: Joi.number().precision(2).optional().label("HRA"),
   other_allowances: Joi.number()
@@ -99,8 +101,8 @@ export const employeeSchema = Joi.object({
 
   max_teaching_hrs_per_week: Joi.string().optional().allow(""),
   faculty_attendance_type: Joi.string().valid("Regular", "Visiting"),
-  employee_type : Joi.string().valid("Office Staff", "Faculty"),
-  institute: Joi.string().optional().allow("")
+  employee_type: Joi.string().valid("Office Staff", "Faculty"),
+  institute: Joi.string().optional().allow(""),
 });
 
 export const employeeLoginValidator = Joi.object({
@@ -114,4 +116,8 @@ export const employeeLoginValidator = Joi.object({
     "string.max": "Employee Login Password should be at most 12 characters",
     "any.required": "Employee Login Password is required",
   }),
+});
+
+export const getEmployeeDocumentValidator = Joi.object({
+  employee_id: Joi.number().required(),
 });

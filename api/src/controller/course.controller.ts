@@ -23,8 +23,6 @@ import {
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { getAuthToken } from "../utils/getAuthToken";
 import { verifyToken } from "../utils/token";
-import { fillUpForm } from "../service/student.service";
-import { fillUpFormValidator } from "../validator/student.validator";
 import { createOrder } from "../service/razorpay.service";
 import { reqFilesToKeyValue } from "../utils/reqFilesToKeyValue";
 import { transaction } from "../utils/transaction";
@@ -84,6 +82,18 @@ export const getCoursesWithBatch = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const center = req.query.center;
 
+    const token = getAuthToken(req);
+    let whereCondition = `WHERE c.course_visibility = 'Public' ${center ? "AND institute = $1" : ""}`;
+
+    if (token) {
+      const { error, data } = await verifyToken<{ role: string }>(token);
+      if (error) throw new ErrorHandler(400, error.message);
+
+      if (data?.role !== "Student") {
+        whereCondition = center ? "WHERE institute = $1" : "";
+      }
+    }
+
     const sql = `
         SELECT 
         c.*,
@@ -96,7 +106,9 @@ export const getCoursesWithBatch = asyncErrorHandler(
         courses c
     LEFT JOIN 
         course_batches b ON c.course_id = b.course_id
-    WHERE c.course_visibility = 'Public' ${center ? "AND institute = $1" : ""}
+        
+    ${whereCondition}
+
     GROUP BY 
         c.course_id, c.course_name ORDER BY course_showing_order ASC;
     `;
@@ -118,11 +130,11 @@ export const getCoursesWithBatch = asyncErrorHandler(
 //     if (error) throw new ErrorHandler(400, error.message);
 
 //     const sql = `
-//       SELECT *, 
-//         CASE 
-//           WHEN course_update_time <= NOW() AND course_visibility = 'Schedule' 
-//           THEN 'Public' 
-//           ELSE course_visibility 
+//       SELECT *,
+//         CASE
+//           WHEN course_update_time <= NOW() AND course_visibility = 'Schedule'
+//           THEN 'Public'
+//           ELSE course_visibility
 //         END AS course_visibility
 //       FROM ${table_name} WHERE course_id = $1
 //     `;
@@ -655,8 +667,31 @@ export const getCoursesRequiredDocuments = asyncErrorHandler(
 
 export const getCoursesForDropDown = asyncErrorHandler(
   async (req: Request, res: Response) => {
+    const institute = req.query.institute;
+
+    let filter = "";
+    const valueToStore: string[] = [];
+
+    if (institute) {
+      filter = "WHERE institute = $1";
+      valueToStore.push(institute.toString());
+    }
+
     const { rows } = await pool.query(
-      `SELECT course_id, course_name FROM ${table_name}`
+      `SELECT 
+        c.course_id, 
+        c.course_name,
+        COALESCE(JSON_AGG(cb.start_date) FILTER (WHERE cb.course_id IS NOT NULL), '[]'::json) AS course_batches
+      FROM ${table_name} AS c
+
+      LEFT JOIN course_batches AS cb
+      ON cb.course_id = c.course_id
+
+      ${filter}
+
+      GROUP BY c.course_id
+      `,
+      valueToStore
     );
     res.status(200).json(new ApiResponse(200, "Courses For Dropdown", rows));
   }

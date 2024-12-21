@@ -4,6 +4,7 @@ import {
   fillUpFormValidator,
   resendOtpValidator,
   saveIndosNumberValidator,
+  saveProfileImageValidator,
   saveStudentDocumentValidator,
   sendResetPasswordEmailValidator,
   setNewPasswordValidator,
@@ -22,7 +23,6 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { createToken, verifyToken } from "../utils/token";
 import { sendEmail } from "../utils/sendEmail";
 import { sendOtp } from "../utils/sendOtp";
-import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 
 const table_name = "students";
 
@@ -112,15 +112,6 @@ export const getStudentInfo = asyncErrorHandler(
     // `
 
     const query = `
-        WITH aggregated_payments AS (
-            SELECT
-                batch_id,
-                COALESCE(SUM(paid_amount), 0) AS total_paid
-            FROM
-                payments
-            GROUP BY
-                batch_id
-        )
         SELECT
             s.student_id, 
             s.name, 
@@ -140,6 +131,7 @@ export const getStudentInfo = asyncErrorHandler(
                         'require_documents', c.require_documents,
                         'course_duration', c.course_duration,
                         'course_fee', c.course_fee,
+                        'batch_fee', cb.batch_fee,
                         'min_pay_percentage', c.min_pay_percentage,
                         'total_seats', c.total_seats,
                         'remain_seats', c.remain_seats,
@@ -149,7 +141,8 @@ export const getStudentInfo = asyncErrorHandler(
                         'enrolled_batch_date', cb.start_date,
                         'enrollment_status', ebc.enrollment_status,
                         'enrolled_batch_id', cb.batch_id,
-                        'due_amount', cb.batch_fee - COALESCE(ap.total_paid, 0)
+                        -- 'due_amount', cb.batch_fee - COALESCE(ap.total_paid, 0)
+                        'due_amount', cb.batch_fee - ( SELECT SUM(paid_amount) FROM payments WHERE batch_id = cb.batch_id AND student_id = ebc.student_id )
                     )
                 ) FILTER (WHERE c.course_id IS NOT NULL), 
                 '[]'::json
@@ -162,8 +155,8 @@ export const getStudentInfo = asyncErrorHandler(
             courses AS c ON ebc.course_id = c.course_id
         LEFT JOIN
             course_batches AS cb ON cb.batch_id = ebc.batch_id
-        LEFT JOIN
-            aggregated_payments AS ap ON ap.batch_id = cb.batch_id
+        -- LEFT JOIN
+            -- aggregated_payments AS ap ON ap.batch_id = cb.batch_id
         WHERE 
             s.student_id = $1
         GROUP BY 
@@ -250,7 +243,6 @@ export const verifyOtp = asyncErrorHandler(
         .status(201)
         .json(new ApiResponse(201, "Registration Successfully Completed"));
     } catch (error) {
-      console.log(error);
       throw new ErrorHandler(400, "error");
     }
   }
@@ -381,22 +373,47 @@ export const setNewPassword = asyncErrorHandler(
   }
 );
 
-export const uploadProfileImage = asyncErrorHandler(
-  async (req: Request, res: Response) => {
-    const studentId = req.body.student_id || null;
-    const profilUrl = req.file?.path;
+// export const uploadProfileImage = asyncErrorHandler(
+//   async (req: Request, res: Response) => {
+//     const studentId = req.body.student_id || null;
+//     const profilUrl = req.file?.path;
 
-    if (!studentId) throw new ErrorHandler(400, "'student_id' is required");
+//     if (!studentId) throw new ErrorHandler(400, "'student_id' is required");
+
+//     await pool.query(
+//       `UPDATE ${table_name} SET profile_image = $1 WHERE student_id = $2`,
+//       [profilUrl, req.body.student_id]
+//     );
+
+//     res
+//       .status(200)
+//       .json(
+//         new ApiResponse(200, "Profile Image Successfully Updated", profilUrl)
+//       );
+//   }
+// );
+
+export const saveProfileImage = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { error, value } = saveProfileImageValidator.validate({
+      ...req.body,
+      ...res.locals,
+    });
+    if (error) throw new ErrorHandler(400, error.message);
 
     await pool.query(
       `UPDATE ${table_name} SET profile_image = $1 WHERE student_id = $2`,
-      [profilUrl, req.body.student_id]
+      [value.profile_url, value.student_id]
     );
 
     res
       .status(200)
       .json(
-        new ApiResponse(200, "Profile Image Successfully Updated", profilUrl)
+        new ApiResponse(
+          200,
+          "Profile Image Successfully Updated",
+          value.profile_url
+        )
       );
   }
 );
@@ -441,7 +458,15 @@ export const saveStudentDocument = asyncErrorHandler(
     const { error, value } = saveStudentDocumentValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
-    const studentId = parseInt(res.locals.student_id);
+    // Will Fix This Code While Securing The Routes Code Start
+    let studentId = 0;
+    if(res.locals.student_id) {
+      studentId = parseInt(res.locals.student_id);
+    } else {
+        if(!req.query.student_id) throw new ErrorHandler(400, "student_id is required");
+        studentId = parseInt(req.query.student_id.toString());
+    }
+    // Will Fix This Code While Securing The Routes Code End
 
     await pool.query(
       `

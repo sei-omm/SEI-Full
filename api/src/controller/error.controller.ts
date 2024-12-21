@@ -12,7 +12,6 @@ const backErrorResponse = (
   res: Response,
   mode: "prod" | "dev"
 ) => {
-  console.log(err)
   if (err.isOperational) {
     //these errors will throw by me
     res

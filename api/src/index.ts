@@ -14,6 +14,13 @@ import { paymentRouter } from "./route/payment.route";
 import { pool } from "./config/db";
 import { admissionRouter } from "./route/admission.route";
 import { reportRouter } from "./route/report.route";
+import { uploadRoute } from "./route/upload.routes";
+import { libraryRouter } from "./route/library.routes";
+import https from "https";
+import { subjectRoute } from "./route/subject.routes";
+import cookieParser from "cookie-parser";
+import { storageRouter } from "./route/storage.routes";
+import { inventoryRoute } from "./route/inventory.routes";
 
 // import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 
@@ -29,6 +36,7 @@ app.use(
     exposedHeaders: ["Content-Disposition", "Content-Type"],
   })
 );
+app.use(cookieParser())
 // app.use(express.urlencoded({ extended: true }));
 
 //parent routes
@@ -40,42 +48,47 @@ app.use("/api/v1/course", courseRouter);
 app.use("/api/v1/payment", paymentRouter);
 app.use("/api/v1/admission", admissionRouter);
 app.use("/api/v1/report", reportRouter);
+app.use("/api/v1/upload", uploadRoute);
+app.use("/api/v1/library", libraryRouter);
+app.use("/api/v1/subject", subjectRoute);
+app.use("/api/v1/storage", storageRouter);
+app.use("/api/v1/inventory", inventoryRoute)
 app.use("/api/v1/db", setupDbRoute);
 
-app.get("/test", (req, res) => {
-  //no expire token for testing
-  const quantityToRemove = 1;
-  pool.query(
-    `UPDATE courses SET remain_seats = remain_seats - $1 WHERE course_id = $2 AND remain_seats >= $1`,
-    [`${quantityToRemove}`, 1]
-  );
+app.get("/stream-vercel-blob", async (req, res) => {
+  // //no expire token for testing
+  // const quantityToRemove = 1;
+  // pool.query(
+  //   `UPDATE courses SET remain_seats = remain_seats - $1 WHERE course_id = $2 AND remain_seats >= $1`,
+  //   [`${quantityToRemove}`, 1]
+  // );
+
+  const vercelBlobUrl = "https://wgli5hygbpaa0ifp.public.blob.vercel-storage.com/library-files/JOYITA%20KUNDU%20CV-bk65x4xuq9yJU6fXs8uq6cmXWXyYQ4.pdf";
+
+  https.get(vercelBlobUrl, (blobRes) => {
+    // Forward Content-Type header
+    const contentType = blobRes.headers['content-type'];
+    if (contentType) {
+      res.setHeader('Content-Type', contentType);
+    }
+
+    // Forward Content-Length header if available
+    const contentLength = blobRes.headers['content-length'];
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    } else {
+      console.warn('Content-Length header is missing');
+    }
+
+    // Stream the response to the client
+    blobRes.pipe(res);
+  }).on('error', (err) => {
+    console.error(err);
+    res.status(500).send('Error streaming the file');
+  });
+
+
 });
-
-// app.post("/api/upload-url", async (req: Request, res: Response) => {
-//   console.log("Clicked")
-//   const body = req.body as HandleUploadBody
-//   // console.log(body.payload)
-//   // console.log(body.type)
-//   console.log(body)
-//   try {
-//       const response = await handleUpload({
-//           body: req.body, // Request body from the client
-//           request: req, // Pass the Express request object
-//           onBeforeGenerateToken: async () => ({
-//               allowedContentTypes: ["image/jpeg", "image/png"], // Restrict file types
-//               token: process.env.BLOB_READ_WRITE_TOKEN as string, // Token from environment
-//           }),
-//           onUploadCompleted: async ({ blob, tokenPayload }) => {
-//               console.log("Upload completed:", blob, tokenPayload);
-//           },
-//       });
-
-//       res.status(200).json(response); // Return the upload URL to the client
-//   } catch (error) {
-//       console.error("Error generating upload URL:", error);
-//       res.status(500).json({ error: (error as Error).message });
-//   }
-// });
 
 //global error handler
 app.use(globalErrorController);

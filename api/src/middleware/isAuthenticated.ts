@@ -9,11 +9,9 @@ export const isAuthenticated = asyncErrorHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const token = getAuthToken(req);
 
-    
     if (!token) {
       throw new ErrorHandler(404, "Authorization Token missing");
     }
-
 
     const { error, data } = await verifyToken<TTokenDataType>(token);
     if (error) throw new ErrorHandler(401, error.message);

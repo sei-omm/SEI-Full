@@ -81,8 +81,8 @@ export default function DropDown({
                     onChange?.(option);
                   }}
                   key={index}
-                  className={`px-5 py-3 hover:bg-gray-300 ${
-                    selectedItem?.value === option.value ? "bg-gray-200" : ""
+                  className={`px-5 py-3 hover:bg-[#e9b9588e] ${
+                    selectedItem?.value === option.value ? "bg-[#e9b9588e]" : ""
                   }`}
                 >
                   {option.text}

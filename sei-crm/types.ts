@@ -1,3 +1,6 @@
+import { PutBlobResult } from "@vercel/blob";
+import { Dispatch, SetStateAction } from "react";
+
 export interface ITabItems {
   name: string;
   slug: string;
@@ -31,9 +34,9 @@ export interface IJob {
   address: string;
   exprience: string;
   department: number;
-  department_name : string;
+  department_name: string;
   created_at: string;
-  job_description : string;
+  job_description: string;
 }
 
 export interface IJobAppliedCandidate {
@@ -82,13 +85,13 @@ export interface IEmployee {
   account_holder_name: string;
   ifsc_code: string;
   profile_image: string | null;
-  resume: string;
-  pan_card?: string;
-  aadhaar_card?: string;
-  ten_pass_certificate?: string;
-  twelve_pass_certificate?: string;
-  graduation_certificate?: string;
-  other_certificate?: string;
+  // resume: string;
+  // pan_card?: string;
+  // aadhaar_card?: string;
+  // ten_pass_certificate?: string;
+  // twelve_pass_certificate?: string;
+  // graduation_certificate?: string;
+  // other_certificate?: string;
   basic_salary: string;
   hra: string;
   other_allowances: string;
@@ -173,7 +176,7 @@ export interface ICourse {
   course_update_time: string;
   created_at: string;
   course_pdf?: string;
-  course_showing_order : number;
+  course_showing_order: number;
   batches?: TBatches[];
 }
 
@@ -209,18 +212,18 @@ export type TPaymentInfo = {
 };
 
 export type TEnrollCourses = {
-  enroll_id : number,
+  enroll_id: number;
   course_name: string;
-  course_id : number;
-  course_require_documents : string;
+  course_id: number;
+  course_require_documents: string;
   batch_start_date: string;
   batch_end_date: string;
   batch_fee: number;
-  enrollment_status : string;
-}
+  enrollment_status: string;
+};
 
 export type TOneAdmission = {
-  course_and_student_info : {
+  course_and_student_info: {
     student_id: number;
     course_id: number;
     name: string;
@@ -247,8 +250,8 @@ export type TOneAdmission = {
     form_status: string;
     form_id: string;
     enrolled_courses_info: TEnrollCourses[];
-  }
-  student_payment_info : TPaymentInfo
+  };
+  student_payment_info: TPaymentInfo;
 };
 
 export type TAdmissionTable = {
@@ -256,10 +259,204 @@ export type TAdmissionTable = {
   body: (string | null | undefined)[][];
 };
 
-
 export type TStudentsUploadedDocuments = {
   student_id: number;
   doc_id: string;
   doc_uri: string;
   doc_name: string;
+};
+
+export type TSetUploadStatus = Dispatch<
+  SetStateAction<{
+    status: "done" | "processing" | "uploading";
+    progress: number;
+  }>
+>;
+
+export type TEmployeeDocs = {
+  doc_id: string;
+  doc_uri: string | null;
+  doc_name: string | null;
+};
+
+export interface TEmployeeDocsFromDB extends TEmployeeDocs {
+  employee_id: number;
+}
+
+export type TCourseDropDown = {
+  course_id: number;
+  course_name: string;
+  course_batches: string[];
+};
+
+export type TLibraryVisibility = "subject-specific" | "course-specific";
+
+export type TLibrary = {
+  library_id: number;
+  library_file_name: string;
+  library_file_type: string;
+  is_active: boolean;
+
+  library_resource_link: string;
+  allow_download: boolean;
+
+  visibility: TLibraryVisibility;
+
+  institute: string;
+
+  created_at: string;
+
+  subject_ids: number[];
+  course_ids: number[];
+};
+
+export type TUploadMethod = {
+  onUploaded?: (blob: PutBlobResult[]) => void;
+  onError?: (error: Error) => void;
+  onProcessing?: () => void;
+  onUploadProgress?: (percentage: number) => void;
+  onFinally?: (data: Error | PutBlobResult[]) => void;
+};
+
+export type TSubject = {
+  subject_id: number;
+  subject_name: string;
+};
+
+export type TFileFolderOptionAction =
+  | "open"
+  | "delete"
+  | "rename"
+  | "copy"
+  | "cut"
+  | "paste";
+
+export type TFolder = {
+  folder_id: number;
+  folder_name: string;
+  parent_folder_id?: number;
+};
+
+export type TFile = {
+  file_id: number;
+  file_name: string;
+  file_type: string;
+  file_url: string;
+  folder_id?: number;
+};
+
+export type IStorageResponse = {
+  folders: TFolder[];
+  files: TFile[];
+};
+
+export type TDurable = {
+  durable_id: number;
+  room_name: string;
+  floor: number;
+  number_of_rows: number;
+  capasity: number;
+  available_items: string;
+  is_available: boolean;
+  created_at: string;
+};
+
+export type TConsumableCategory = {
+  category_id: number;
+  category_name: string;
+};
+
+export type TVendor = {
+  vendor_id: number;
+  vendor_name: string;
+  institute: string;
+  service_type: string;
+  address: string;
+  contact_details: string;
+  created_at: string;
+};
+
+export type TVendorIdName = {
+  vendor_id: number;
+  vendor_name: string;
+};
+
+export interface TConsumable extends TVendorIdName {
+  consumable_id: number;
+  item_name: string;
+  category_id: number;
+  quantity: number;
+  min_quantity: number;
+  last_purchase_date: string;
+  cost_per_unit: number;
+  total_volume: number;
+  remark: string;
+  created_at: string;
+  category_name: string;
+}
+
+export type TInventoryItem = {
+  item_id: number;
+  item_name: string;
+  category: number;
+  sub_category: number;
+  where_to_use: string;
+  used_by: string;
+  description: string;
+  minimum_quantity: number;
+  institute: string;  
+  created_at: string;
+};
+
+export type TInventoryStock = {
+  stock_id: number;
+  opening_stock: number;
+  item_consumed: number;
+  closing_stock: number;
+  status: string;
+  vendor_id: number;
+  cost_per_unit_current: string;
+  total_value: string;
+  remark: string;
+  item_id: number;
+  type: string;
+  purchase_date: string;
+  created_at: string;
+  vendor_name: string;
+};
+
+export type TInventoryWithStockItem = {
+  item_id: number;
+  item_name: string;
+  category: number;
+  sub_category: number;
+  minimum_quantity: number;
+  opening_stock: string | null;
+  item_consumed: string | null;
+  closing_stock: string | null;
+  current_status: string | null;
+  current_purchase_date: string;
+  current_vendor_id: number | null;
+  current_vendor_name : string | null;
+  cost_per_unit_current: string | null;
+  cost_per_unit_previous: string | null;
+  total_value: string | null;
+};
+
+export type TMaintenanceRecord = {
+  record_id: number;
+  item_id: number;
+  item_name: string;
+  maintence_date: string;
+  work_station: string;
+  description_of_work: string;
+  department: string;
+  assigned_person: string;
+  approved_by: string;
+  cost: string;
+  status: string;
+  completed_date: string;
+  remark: string;
+  created_at: string;
+  institute: string;
 };

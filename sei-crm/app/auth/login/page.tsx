@@ -5,7 +5,6 @@ import { setInfo } from "@/app/utils/saveInfo";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import { ISuccess } from "@/types";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -71,20 +70,8 @@ export default function Login() {
         <Button className="flex-center" loading={isLoading}>
           LOGIN
         </Button>
-
-        {/* <span className="block text-center text-sm">
-          Don't have any account?{" "}
-          <Link className="font-semibold" href={"/auth/register"}>
-            Register
-          </Link>
-        </span> */}
-        <div className="text-center">
-          <Link
-            className="text-sm font-semibold"
-            href={"/auth/forgot-password"}
-          >
-            Forgot Password?{" "}
-          </Link>
+        <div className="text-center text-sm font-semibold">
+          Ask Your HR For Login Credentials
         </div>
       </form>
     </main>

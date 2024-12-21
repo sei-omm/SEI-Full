@@ -35,7 +35,7 @@ export default function ManageStudentAdmissionForm() {
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
 
-  const { data, isLoading } = useQuery<ISuccess<TOneAdmission>>(
+  const { data, isLoading, error } = useQuery<ISuccess<TOneAdmission>>(
     {
       queryKey: "fetch-admission-details",
       queryFn: () =>
@@ -68,7 +68,7 @@ export default function ManageStudentAdmissionForm() {
     <form onSubmit={handleFormSubmit} className="w-full main-layout space-y-4">
       <h2 className="text-2xl font-semibold">Course Form</h2>
 
-      <HandleSuspence isLoading={isLoading}>
+      <HandleSuspence isLoading={isLoading} dataLength={1} error={error}>
         {/* Courses Enrolled */}
         <div className="p-10 border card-shdow rounded-3xl space-y-3">
           <h2 className="text-2xl font-semibold">Courses Applied for</h2>
@@ -268,66 +268,6 @@ export default function ManageStudentAdmissionForm() {
           >
             Manage Student Documents
           </Button>
-
-          {/* <div className="flex items-start gap-x-5 gap-y-3 flex-wrap *:basis-96 *:flex-grow">
-            <ChooseFileInput
-              id="id_proof"
-              label="Upload Id Proof *"
-              name="id_proof"
-              fileName={getFileName(
-                data?.data.course_and_student_info.id_proof
-                  ? data?.data.course_and_student_info.id_proof
-                  : "upload Pan Card OR Voter Card OR Aadhaar Card"
-              )}
-              viewLink={
-                data?.data.course_and_student_info.id_proof
-                  ? `${BASE_API}/${data?.data.course_and_student_info.id_proof}`
-                  : null
-              }
-            />
-
-            <ChooseFileInput
-              id="address_proof"
-              label="Upload Address Proof *"
-              name="address_proof"
-              fileName={getFileName(
-                data?.data.course_and_student_info.address_proof
-                  ? data?.data.course_and_student_info.address_proof
-                  : "upload Voter Card OR Aadhaar Card"
-              )}
-              viewLink={
-                data?.data.course_and_student_info.address_proof
-                  ? `${BASE_API}/${data?.data.course_and_student_info.address_proof}`
-                  : null
-              }
-            />
-
-            <ChooseFileInput
-              id="academic_proof"
-              label="Upload Academic Proof *"
-              name="academic_proof"
-              fileName={getFileName(
-                data?.data.course_and_student_info.academic_proof
-                  ? data?.data.course_and_student_info.academic_proof
-                  : "upload 10th Pass OR 12th Pass OR Graduation Certificate"
-              )}
-              viewLink={
-                data?.data.course_and_student_info.academic_proof
-                  ? `${BASE_API}/${data?.data.course_and_student_info.academic_proof}`
-                  : null
-              }
-            />
-          </div> */}
-
-          {/* <div className="flex items-start gap-x-5 gap-y-3 flex-wrap *:basis-96 *:flex-grow">
-            {
-              data?.data.course_and_student_info.enrolled_courses_info.map(item => {
-                return <div>
-                  <ChooseFileInput />
-                </div>
-              })
-            }
-          </div> */}
         </div>
 
         {/* Payment Info */}

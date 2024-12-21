@@ -122,7 +122,8 @@ export default function CourseBatch({ courseId }: IProps) {
 
       {/* Table */}
       <HandleSuspence
-        errorMsg={data?.data.length === 0 ? "No Data Found" : ""}
+        // errorMsg={data?.data.length === 0 ? "No Data Found" : ""}
+        dataLength={data?.data.length}
         isLoading={isFetching}
       >
         <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black card-shdow rounded-xl mt-5">

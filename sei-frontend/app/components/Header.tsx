@@ -16,7 +16,6 @@ import { MdOutlineAccountCircle } from "react-icons/md";
 import { setProfileImage } from "../redux/slice/profileImage.slice";
 import { removeInfo } from "../utils/saveInfo";
 import { usePathname, useRouter } from "next/navigation";
-import { BASE_API } from "../constant";
 import { setLoginStatus } from "../redux/slice/loginStatus";
 import SpinnerSvg from "./SpinnerSvg";
 
@@ -139,11 +138,11 @@ export default function Header() {
                   <Image
                     src={
                       profileImage
-                        ? BASE_API + "/" + profileImage
+                        ? profileImage
                         : !userInfo?.profile_image ||
                           userInfo.profile_image === "null"
                         ? "/images/user_profile.jpg"
-                        : BASE_API + "/" + userInfo.profile_image
+                        : userInfo.profile_image
                     }
                     alt="Profile Image"
                     height={80}

@@ -4,14 +4,12 @@ import React, { useState } from "react";
 import { SlCloudUpload } from "react-icons/sl";
 import Button from "../Button";
 import Input from "../Input";
-import { useUploadVercel } from "@/app/hooks/useUploadVercel";
 import DialogBody from "./DialogBody";
-import SpinnerSvg from "../SpinnerSvg";
 
 export default function ApplyJobDialog() {
   const [file, setFile] = useState<File | undefined>(undefined);
 
-  const { uploadingState, uploadToVercel } = useUploadVercel();
+  // const { uploadingState, uploadToVercel } = useUploadVercel();
 
   const onResumePicked = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0];
@@ -19,11 +17,11 @@ export default function ApplyJobDialog() {
     if (!confirm("Are you sure you want to upload your cv ?")) return;
     if (!file) return alert("Pick Your Cv First");
 
-    uploadToVercel({
-      fileName: file.name,
-      file,
-      endPoint: "/job/upload-cv",
-    });
+    // uploadToVercel({
+    //   fileName: file.name,
+    //   file,
+    //   endPoint: "/job/upload-cv",
+    // });
   };
 
   async function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -33,7 +31,7 @@ export default function ApplyJobDialog() {
 
   return (
     <DialogBody className="relative overflow-hidden">
-      <div
+      {/* <div
         className={`absolute inset-0 z-20 bg-[#000000a4] ${
           uploadingState.state === "null" || uploadingState.state === "error"
             ? "hidden"
@@ -42,7 +40,7 @@ export default function ApplyJobDialog() {
       >
         <SpinnerSvg size="20px" />
         <span>Uploading..</span>
-      </div>
+      </div> */}
       <div className="space-y-1">
         <h2 className="font-bold text-gray-700 text-2xl">
           Upload Your <span className="text-[#e9b858]">Resume</span>

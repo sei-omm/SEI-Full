@@ -2,19 +2,14 @@
 
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
-import Button from "@/components/Button";
-import DateInput from "@/components/DateInput";
-import DownloadFormUrl from "@/components/DownloadFormUrl";
-import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
 import TagsBtn from "@/components/TagsBtn";
 import { IError, ISuccess } from "@/types";
 import axios, { AxiosError } from "axios";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import React, {  useState } from "react";
-import { LuFileSpreadsheet } from "react-icons/lu";
+import { useSearchParams } from "next/navigation";
+import React, { useState } from "react";
 import { useQuery } from "react-query";
 import {
   Chart as ChartJS,
@@ -26,6 +21,8 @@ import {
   LineElement,
   Title,
 } from "chart.js";
+import DateDurationFilter from "@/components/DateDurationFilter";
+import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 
 ChartJS.register(
   CategoryScale,
@@ -51,17 +48,6 @@ type TAdmissionReport = {
   due_amount_for_course: string;
   total_paid: string;
 };
-
-// type TLineGrap = {
-//   labels: string[];
-//   datasets: {
-//     label: string;
-//     data: number[];
-//     fill: boolean;
-//     borderColor: string;
-//     tension: number;
-//   }[];
-// };
 
 const fetchData = async (url: string) => {
   const response = await axios.get(url);
@@ -89,13 +75,11 @@ export default function AdmissionReport() {
   });
 
   const searchParams = useSearchParams();
-  const route = useRouter();
 
   const {
     data: report,
     error,
-    isFetching,
-    refetch,
+    isFetching
   } = useQuery<ISuccess<TAdmissionReport[]>, AxiosError<IError>>(
     ["fetch-admission-report", searchParams.toString()],
     () =>
@@ -120,17 +104,17 @@ export default function AdmissionReport() {
     }
   );
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+  // const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  //   event.preventDefault();
+  //   const formData = new FormData(event.currentTarget);
 
-    const searchParams = new URLSearchParams();
-    searchParams.set("institute", `${formData.get("institute")}`);
-    searchParams.set("from_date", `${formData.get("from_date")}`);
-    searchParams.set("to_date", `${formData.get("to_date")}`);
-    route.push(`/dashboard/report/admission?${searchParams.toString()}`);
-    refetch();
-  };
+  //   const searchParams = new URLSearchParams();
+  //   searchParams.set("institute", `${formData.get("institute")}`);
+  //   searchParams.set("from_date", `${formData.get("from_date")}`);
+  //   searchParams.set("to_date", `${formData.get("to_date")}`);
+  //   route.push(`/dashboard/report/admission?${searchParams.toString()}`);
+  //   refetch();
+  // };
 
   // const data = {
   //   labels: ["Jan", "Fab", "Mar", "Apr", "May", "Jun", "July"],
@@ -189,9 +173,9 @@ export default function AdmissionReport() {
   // }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-5">
       {/* Filters */}
-      <form
+      {/* <form
         onSubmit={handleFormSubmit}
         className="flex items-end gap-5 *:flex-grow"
       >
@@ -202,7 +186,7 @@ export default function AdmissionReport() {
             { text: "Kolkata", value: "Kolkata" },
             { text: "Faridabad", value: "Faridabad" },
           ]}
-          defaultValue={searchParams.get("institute")}
+          defaultValue={searchParams.get("institute") || "Kolkata"}
         />
 
         <DateInput
@@ -233,7 +217,15 @@ export default function AdmissionReport() {
             </Button>
           </DownloadFormUrl>
         </div>
-      </form>
+      </form> */}
+      <DateDurationFilter />
+
+      <div className="flex items-center justify-end">
+        <GenarateExcelReportBtn
+          hidden={tableDatas.body.length === 0}
+          apiPath={`/report/admission/excel?${searchParams.toString()}`}
+        />
+      </div>
 
       {/* chat view */}
       {/* {lineData === null ? null : (
@@ -243,16 +235,9 @@ export default function AdmissionReport() {
       )} */}
 
       <HandleSuspence
-        errorMsg={
-          error
-            ? error.response?.data.message
-            : tableDatas.body.length === 0
-            ? "No Response"
-            : report?.data.length === 0
-            ? "No Data Found"
-            : ""
-        }
+        error={error}
         isLoading={isFetching}
+        dataLength={report?.data.length}
       >
         <div className="w-full overflow-hidden card-shdow">
           <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black">
@@ -282,7 +267,7 @@ export default function AdmissionReport() {
                         className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
                         key={value}
                       >
-                        {value?.includes("@") ? (
+                        {typeof value !== "number" && value?.includes("@") ? (
                           <Link
                             className="text-[#346FD8] font-medium"
                             href={`mailto:${value}`}
@@ -290,7 +275,13 @@ export default function AdmissionReport() {
                             {value}
                           </Link>
                         ) : (
-                          <span className={`line-clamp-1 inline-flex gap-x-3 ${columnIndex === 3 ? "text-red-600 font-semibold" : ""}`}>
+                          <span
+                            className={`line-clamp-1 inline-flex gap-x-3 ${
+                              columnIndex === 3
+                                ? "text-red-600 font-semibold"
+                                : ""
+                            }`}
+                          >
                             {columnIndex === 4 ? (
                               <div className="flex items-center gap-2">
                                 <div className="size-10 bg-gray-200 overflow-hidden rounded-full">
@@ -300,9 +291,7 @@ export default function AdmissionReport() {
                                     <Image
                                       className="size-full object-cover"
                                       src={
-                                        BASE_API +
-                                          "/" +
-                                          report.data[rowIndex].profile_image ||
+                                        report.data[rowIndex].profile_image ||
                                         ""
                                       }
                                       alt="Student Image"

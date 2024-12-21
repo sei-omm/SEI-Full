@@ -119,7 +119,7 @@ export default function CourseForm({ slug }: IProps) {
   }, [course]);
 
   return (
-    <HandleSuspence isLoading={isQuerying}>
+    <HandleSuspence isLoading={isQuerying} dataLength={1}>
       <form ref={formRef} onSubmit={handleFormSubmit}>
         <div className="flex items-start flex-wrap *:basis-80 *:flex-grow gap-x-3 gap-y-4">
           <Input

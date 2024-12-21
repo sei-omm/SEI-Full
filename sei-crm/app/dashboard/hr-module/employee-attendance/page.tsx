@@ -103,7 +103,7 @@ export default async function page({ searchParams }: IProps) {
                           <div className="size-10 border border-gray-300 overflow-hidden rounded-full">
                             <Image
                               className="size-full object-cover"
-                              src={BASE_API + "/" + result.data[index].profile_image}
+                              src={result.data[index].profile_image}
                               alt="Employee Image"
                               height={90}
                               width={90}

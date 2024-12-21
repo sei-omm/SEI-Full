@@ -7,7 +7,7 @@ import { IError } from "@/types";
 
 export const setAttendanceStatus = async (
   employee_id: number,
-  status: "Present" | "Absent" | "Leave",
+  status: "Present" | "Absent" | "Half Day" | "Sunday" | "Holiday",
   date: string
 ) => {
   try {

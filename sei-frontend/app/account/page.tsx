@@ -1,27 +1,23 @@
 import Link from "next/link";
 import Image from "next/image";
 import { HiOutlineMail } from "react-icons/hi";
-import {
-  MdOutlineDateRange,
-  MdOutlinePhone,
-} from "react-icons/md";
+import { MdOutlineDateRange, MdOutlinePhone } from "react-icons/md";
 import TabMenu from "../components/TabMenu";
 import MyCourses from "../components/MyAccount/MyCourses";
 import { PiBuildingOfficeLight } from "react-icons/pi";
 import { BASE_API } from "../constant";
 import { getAuthTokenServer } from "../actions/cookies";
-import { IResponse, IStudent } from "../type";
+import { IResponse, IStudent, TMyLibrarySearchParams } from "../type";
 import StudentProfileImage from "../components/StudentProfileImage";
 import IsAuthenticated from "../components/IsAuthenticated";
 import Button from "../components/Button";
 import { CiEdit } from "react-icons/ci";
 import OpenDialogButton from "../components/OpenDialogButton";
 import { IoDocumentTextOutline } from "react-icons/io5";
+import MyLibrary from "../components/MyAccount/MyLibrary";
 
 interface IProps {
-  searchParams: {
-    tab: string | undefined;
-  };
+  searchParams: TMyLibrarySearchParams;
 }
 
 export default async function page({ searchParams }: IProps) {
@@ -64,10 +60,7 @@ export default async function page({ searchParams }: IProps) {
       <div className="main-layout pt-10 space-y-12">
         <div className="flex items-start justify-between flex-wrap gap-6">
           <div className="flex items-start gap-8 flex-wrap">
-            <StudentProfileImage
-              imageUrl={result.data.profile_image}
-              student_id={result.data.student_id}
-            />
+            <StudentProfileImage imageUrl={result.data.profile_image} />
 
             <div className="space-y-2 sm:flex justify-center flex-col">
               <h1 className="font-semibold text-2xl">{result.data?.name}</h1>
@@ -149,7 +142,9 @@ export default async function page({ searchParams }: IProps) {
 
           {searchParams.tab === "course" || searchParams.tab === undefined ? (
             <MyCourses courses={result.data.courses || []} />
-          ) : null}
+          ) : (
+            <MyLibrary courses={result.data.courses || []} searchParams={searchParams}/>
+          )}
         </div>
       </div>
     </IsAuthenticated>

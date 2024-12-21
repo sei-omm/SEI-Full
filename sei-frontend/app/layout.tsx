@@ -7,6 +7,7 @@ import Footer from "./components/Footer";
 import HeaderHolder from "./components/HeaderHolder";
 import MyProvider from "./redux/MyProvider";
 import DialogWrapper from "./components/Dialogs/DialogWrapper";
+import PreventRightClick from "./components/PreventRightClick";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -66,6 +67,7 @@ export default function RootLayout({
       <body className={`${futura.variable} ${inter.variable} font-futura antialiased w-full`}>
         <MyProvider>
           <DialogWrapper />
+          <PreventRightClick />
           <HeaderHolder>
             <Header />
           </HeaderHolder>

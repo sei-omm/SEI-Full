@@ -7,7 +7,6 @@ import { FaPeopleGroup } from "react-icons/fa6";
 import { FcLeave } from "react-icons/fc";
 import { MdOutlinePendingActions } from "react-icons/md";
 
-
 const data = [
   {
     icon: <BsPeople size={22} color="#F44336" />,
@@ -31,13 +30,19 @@ const data = [
   },
 ];
 
-export default async function page() {
+interface IProps {
+  searchParams: {
+    type?: string;
+  };
+}
+
+export default async function page({ searchParams }: IProps) {
   const response = await fetch(`${BASE_API}/hr/dashboard`);
   const result = (await response.json()) as ISuccess<{
     total_employees: string;
     active_employees: string;
     employees_on_leave: string;
-    pending_leave_request : string;
+    pending_leave_request: string;
   }>;
 
   data[0].value = result.data.total_employees;
@@ -62,7 +67,7 @@ export default async function page() {
         ))}
       </div>
 
-      <Contacts />
+      <Contacts searchParams={searchParams} />
     </section>
   );
 }

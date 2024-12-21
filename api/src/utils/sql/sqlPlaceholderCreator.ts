@@ -15,3 +15,4 @@ export function sqlPlaceholderCreator(colLength: number, rowLength: number) {
 
   return { placeholderNum: num, placeholder: placeholders.join(", ") };
 }
+

@@ -4,19 +4,26 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { RiSettings3Line } from "react-icons/ri";
-import { MdOutlineDateRange } from "react-icons/md";
+import {
+  MdOutlineDateRange,
+  MdOutlineSubject,
+} from "react-icons/md";
 import { FaPeopleRoof } from "react-icons/fa6";
 import Image from "next/image";
 import { RxDot } from "react-icons/rx";
-import {
-  TbCategory2,
-  TbReportSearch,
-} from "react-icons/tb";
+import { TbCategory2, TbReportSearch } from "react-icons/tb";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { GoDiscussionOutdated, GoSidebarCollapse } from "react-icons/go";
 import { FaRegListAlt } from "react-icons/fa";
 // import { SiAmazonpay } from "react-icons/si";
-import { IoPersonAddOutline } from "react-icons/io5";
+import {
+  IoFileTrayOutline,
+  IoLibraryOutline,
+  IoListSharp,
+  IoPersonAddOutline,
+} from "react-icons/io5";
+import { GrVend } from "react-icons/gr";
+import { BsReverseLayoutTextSidebarReverse } from "react-icons/bs";
 
 const sidebarOptions = [
   {
@@ -55,12 +62,74 @@ const sidebarOptions = [
         name: "Job Posting",
         slug: "/dashboard/hr-module/job-posting",
       },
+      {
+        id: "1-6",
+        icon: <IoFileTrayOutline />,
+        name: "Compliance Record",
+        slug: "/dashboard/hr-module/compliance-record",
+      },
       // {
       //   id: "1-6",
       //   icon: <SiAmazonpay />,
       //   name: "Payrole",
       //   slug: "/dashboard/hr-module/payrole",
       // },
+    ],
+  },
+
+  {
+    id: 7,
+    icon: null,
+    name: "Inventory Management",
+    slug: "#",
+    // subMenu: [
+    //   {
+    //     id: "7-1",
+    //     icon: <GiDuration />,
+    //     name: "Durable",
+    //     slug: "/dashboard/inventory/durable",
+    //   },
+    //   {
+    //     id: "7-2",
+    //     icon: <VscSymbolConstant />,
+    //     name: "Consumable",
+    //     slug: "/dashboard/inventory/consumable",
+    //   },
+    //   {
+    //     id: "7-3",
+    //     icon: <MdOutlineCategory />,
+    //     name: "Consumable Category",
+    //     slug: "/dashboard/inventory/category",
+    //   },
+    // ],
+    subMenu: [
+      {
+        id: "7-1",
+        icon: <IoListSharp />,
+        name: "Inventory List",
+        slug: "/dashboard/inventory/inventory-list",
+      },
+      {
+        id: "7-2",
+        icon: <BsReverseLayoutTextSidebarReverse />,
+        name: "Maintence Record",
+        slug: "/dashboard/inventory/maintence-record",
+      },
+    ],
+  },
+
+  {
+    id: 8,
+    icon: null,
+    name: "Vendor Management",
+    slug: "#",
+    subMenu: [
+      {
+        id: "8-3",
+        icon: <GrVend />,
+        name: "Vendor",
+        slug: "/dashboard/vendor",
+      },
     ],
   },
 
@@ -76,23 +145,17 @@ const sidebarOptions = [
         name: "Course",
         slug: "/dashboard/course/manage-course",
       },
-      // {
-      //   id: "2-2",
-      //   icon: <TbCategory2 />,
-      //   name: "Schedule Course",
-      //   slug: "/dashboard/course/schedule-course",
-      // },
     ],
   },
 
   {
-    id: 4,
+    id: 3,
     icon: null,
     name: "Admission Management",
     slug: "#",
     subMenu: [
       {
-        id: "4-1",
+        id: "3-1",
         icon: <IoPersonAddOutline />,
         name: "Manage Admission",
         slug: "/dashboard/admission",
@@ -100,45 +163,77 @@ const sidebarOptions = [
     ],
   },
   {
-    id: 3,
+    id: 4,
+    icon: null,
+    name: "Library Management",
+    slug: "#",
+    subMenu: [
+      {
+        id: "4-1",
+        icon: <IoLibraryOutline />,
+        name: "Manage Library",
+        slug: "/dashboard/library/item",
+      },
+      {
+        id: "4-2",
+        icon: <MdOutlineSubject />,
+        name: "Manage Library Subjects",
+        slug: "/dashboard/library/subject",
+      },
+    ],
+  },
+  {
+    id: 5,
     icon: null,
     name: "Reports Management",
     slug: "#",
     subMenu: [
       {
-        id: "3-1",
+        id: "5-1",
         icon: <TbReportSearch />,
         name: "Admission Reports",
         slug: "/dashboard/report/admission",
       },
       {
-        id: "3-2",
+        id: "5-2",
         icon: <TbReportSearch />,
         name: "DOB Reports",
         slug: "/dashboard/report/dob",
       },
       {
-        id: "3-3",
+        id: "5-3",
         icon: <TbReportSearch />,
         name: "DGS & INDOS Reports",
         slug: "/dashboard/report/dgs",
       },
       {
-        id : "3-4",
-        icon : <TbReportSearch />,
-        name : "Course Trend Report",
-        slug : "/dashboard/report/course-trend-report"
-      }
+        id: "5-4",
+        icon: <TbReportSearch />,
+        name: "Course Trend Report",
+        slug: "/dashboard/report/course-trend-report",
+      },
+      {
+        id: "5-5",
+        icon: <TbReportSearch />,
+        name: "Batch Report",
+        slug: "/dashboard/report/batch",
+      },
+      {
+        id: "5-6",
+        icon: <TbReportSearch />,
+        name: "Receipt Report",
+        slug: "/dashboard/report/receipt",
+      },
     ],
   },
   {
-    id: 3,
+    id: 6,
     icon: null,
     name: "Settings Management",
     slug: "#",
     subMenu: [
       {
-        id: "3-1",
+        id: "6-1",
         icon: <RiSettings3Line />,
         name: "Settings",
         slug: "/dashboard/settings/company-details",

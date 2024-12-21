@@ -8,9 +8,10 @@ type ParamsType = {
   apiPath: string;
   method: "post" | "put" | "delete" | "patch";
   id?: number;
-  formData?: FormData;
+  formData?: FormData | any;
   headers?: object;
   onSuccess?: (data: ISuccess<any>) => void;
+  onError?: () => void;
 };
 
 async function submitInformationToServer<T>(params: ParamsType) {
@@ -19,7 +20,7 @@ async function submitInformationToServer<T>(params: ParamsType) {
     method: params.method,
     data: params.formData,
     headers: params.headers
-      ? {...params.headers}
+      ? { ...params.headers }
       : {
           "Content-Type": "multipart/form-data",
         },
@@ -31,15 +32,20 @@ async function submitInformationToServer<T>(params: ParamsType) {
   };
 }
 
-export const useDoMutation = <T>() => {
+export const useDoMutation = <T = any>(
+  onGSuccess?: (data: ISuccess<T>) => void,
+  onGError?: (error: AxiosError<IError>) => void
+) => {
   const { mutate, isLoading } = useMutation(submitInformationToServer<T>, {
     onSuccess: (data) => {
+      onGSuccess?.(data.response);
       if (data.onSuccess) {
         data.onSuccess(data.response);
       }
       toast.success(data.response.message);
     },
     onError: (error: AxiosError<IError>) => {
+      onGError?.(error);
       toast.error(error.response?.data.message);
     },
   });

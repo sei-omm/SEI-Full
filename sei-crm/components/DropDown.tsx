@@ -1,6 +1,7 @@
 "use client";
 
 import { OptionsType } from "@/types";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaAngleDown } from "react-icons/fa6";
 
@@ -12,6 +13,8 @@ interface IProps {
   defaultValue?: any;
   name?: string;
   onChange?: (item: OptionsType) => void;
+  changeSearchParamsOnChange?: boolean;
+  viewOnly?: boolean;
 }
 
 export default function DropDown({
@@ -22,11 +25,15 @@ export default function DropDown({
   name,
   defaultValue,
   onChange,
+  changeSearchParamsOnChange,
+  viewOnly,
 }: IProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<OptionsType | null>(null);
+
+  const route = useRouter();
 
   const checkClickOutside = (event: MouseEvent) => {
     if (isOpen && !modalRef.current?.contains(event.target as Node)) {
@@ -35,7 +42,7 @@ export default function DropDown({
   };
 
   useEffect(() => {
-    if (defaultValue) {
+    if (defaultValue !== undefined) {
       const findTextFromValue = options.find(
         (item) => item.value == defaultValue
       );
@@ -44,6 +51,13 @@ export default function DropDown({
       setSelectedItem(options[0]);
     }
   }, [defaultValue]);
+
+  // useEffect(() => {
+  //   const findTextFromValue = options.find(
+  //     (item) => item.value == defaultValue
+  //   );
+  //   setSelectedItem(findTextFromValue || null);
+  // }, [defaultValue])
 
   useEffect(() => {
     document.addEventListener("click", checkClickOutside);
@@ -66,30 +80,42 @@ export default function DropDown({
           className="flex items-center justify-between text-sm relative p-2.5"
         >
           <h2 className="font-semibold line-clamp-1">{selectedItem?.text}</h2>
-          <FaAngleDown />
-          <div
-            className={`${
-              isOpen ? "block" : "hidden"
-            } left-0 right-0 top-2 absolute z-20`}
-          >
-            <input hidden name={name} defaultValue={selectedItem?.value} />
-            <ul className="bg-white border rounded-xl drop_down_sidebar overflow-x-hidden relative top-11 max-h-60 overflow-y-auto">
-              {options?.map((option, index) => (
-                <li
-                  onClick={() => {
-                    setSelectedItem(option);
-                    onChange?.(option);
-                  }}
-                  key={index}
-                  className={`px-5 py-3 hover:bg-gray-300 ${
-                    selectedItem?.value === option.value ? "bg-gray-200" : ""
-                  }`}
-                >
-                  {option.text}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {viewOnly ? null : (
+            <>
+              <FaAngleDown />
+              <div
+                className={`${
+                  isOpen ? "block" : "hidden"
+                } left-0 right-0 top-2 absolute z-20`}
+              >
+                <input hidden name={name} defaultValue={selectedItem?.value} />
+                <ul className="bg-white border rounded-xl drop_down_sidebar overflow-x-hidden relative top-11 max-h-60 overflow-y-auto">
+                  {options?.map((option, index) => (
+                    <li
+                      onClick={() => {
+                        if (changeSearchParamsOnChange) {
+                          const url = new URL(window.location.href);
+                          route.push(
+                            `${url.protocol}//${url.host}${url.pathname}?${name}=${option.value}`
+                          );
+                        }
+                        setSelectedItem(option);
+                        onChange?.(option);
+                      }}
+                      key={index}
+                      className={`px-5 py-3 hover:bg-gray-300 ${
+                        selectedItem?.value === option.value
+                          ? "bg-gray-200"
+                          : ""
+                      }`}
+                    >
+                      {option.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

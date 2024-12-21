@@ -12,6 +12,8 @@ interface IProps {
   date: string;
 }
 
+type TActions = "Present" | "Absent" | "Half Day" | "Sunday" | "Holiday";
+
 export default function AttendanceActionBtn({
   value,
   employee_id,
@@ -21,21 +23,20 @@ export default function AttendanceActionBtn({
   const { openDialog, closeDialog } = useLoadingDialog();
   const [errorMsg, setErrMsg] = useState<string | undefined>(undefined);
 
-  const handleSuccess = () => {
-    openDialog();
-    startTransition(async () => {
-      const response = await setAttendanceStatus(employee_id, "Present", date);
-      if (!response.success) {
-        setErrMsg(response.message);
-      }
-      closeDialog();
-    });
-  };
+  useEffect(() => {
+    if (errorMsg != undefined) {
+      toast.error(errorMsg);
+    }
+  }, [errorMsg]);
 
-  function handleAbsentButton() {
+  function handleActions(actionValue: TActions) {
     openDialog();
     startTransition(async () => {
-      const respones = await setAttendanceStatus(employee_id, "Absent", date);
+      const respones = await setAttendanceStatus(
+        employee_id,
+        actionValue,
+        date
+      );
       if (!respones.success) {
         setErrMsg(respones.message);
       }
@@ -43,28 +44,21 @@ export default function AttendanceActionBtn({
     });
   }
 
-  useEffect(() => {
-    if (errorMsg != undefined) {
-      toast.error(errorMsg);
-    }
-  }, [errorMsg]);
-
   return (
     <div className="flex flex-col gap-y-2 group/items">
       <span className="hidden">{isPending}</span>
       <TagsBtn
-        onClick={handleSuccess}
+        onClick={() => handleActions("Present")}
         className={`${
           value === "Present" ? "flex" : "hidden"
         } group-hover/items:flex`}
-        
         type="SUCCESS"
       >
         Present
       </TagsBtn>
 
       <TagsBtn
-        onClick={handleAbsentButton}
+        onClick={() => handleActions("Absent")}
         className={`${
           value === "Absent" ? "flex" : "hidden"
         } group-hover/items:flex`}
@@ -74,7 +68,36 @@ export default function AttendanceActionBtn({
       </TagsBtn>
 
       <TagsBtn
-        onClick={handleAbsentButton}
+        onClick={() => handleActions("Sunday")}
+        className={`${
+          value === "Sunday" ? "flex" : "hidden"
+        } group-hover/items:flex`}
+        type="FAILED"
+      >
+        Sunday
+      </TagsBtn>
+
+      <TagsBtn
+        onClick={() => handleActions("Holiday")}
+        className={`${
+          value === "Holiday" ? "flex" : "hidden"
+        } group-hover/items:flex`}
+        type="PENDING"
+      >
+        Holiday
+      </TagsBtn>
+
+      <TagsBtn
+        onClick={() => handleActions("Half Day")}
+        className={`${
+          value === "Half Day" ? "flex" : "hidden"
+        } group-hover/items:flex`}
+        type="FAILED"
+      >
+        Half Day
+      </TagsBtn>
+
+      <TagsBtn
         className={`${
           value === "Pending" ? "flex" : "hidden"
         } group-hover/items:hidden`}

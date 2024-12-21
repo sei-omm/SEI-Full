@@ -6,22 +6,36 @@ interface IProps extends InputTypes {
   label?: string;
   hideLabel?: boolean;
   referal?: LegacyRef<HTMLInputElement>;
-  defaultValue ? : any
+  defaultValue?: any;
+  moneyInput?: boolean;
+  viewOnly?: boolean;
 }
 
 export default function Input(props: IProps) {
   return (
     <div className={`${props.wrapperCss}`}>
       {props.hideLabel ? null : (
-        <span className="block font-semibold text-sm pl-1 mb-[0.5rem]">{props.label}</span>
+        <span className="block font-semibold text-sm pl-1 mb-[0.5rem]">
+          {props.label}
+        </span>
       )}
 
-      <input
-        type="text"
-        {...props}
-        ref={props.referal}
-        className={`outline-none border-2 border-gray-200 placeholder:text-gray-400 rounded-lg w-full text-sm px-4 py-3 ${props.className}`}
-      />
+      <div className="w-full flex items-center gap-[2px] border-2 border-gray-200 rounded-lg text-sm px-4 py-3">
+        {/* <span>₹</span> */}
+        {props.moneyInput ? <span>₹</span> : null}
+
+        <span className={props.viewOnly ? "block" : "hidden"}>
+          {props.defaultValue || props.value}
+        </span>
+        <input
+          type="text"
+          {...props}
+          ref={props.referal}
+          className={`outline-none placeholder:text-gray-400 w-full text-sm ${
+            props.className
+          } ${props.viewOnly ? "hidden" : "block"}`}
+        />
+      </div>
     </div>
   );
 }

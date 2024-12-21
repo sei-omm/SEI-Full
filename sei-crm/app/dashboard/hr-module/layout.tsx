@@ -1,5 +1,3 @@
-import BreadCrumb from "@/components/BreadCrumb";
-
 interface IProps {
   children: React.ReactNode;
 }
@@ -7,7 +5,7 @@ interface IProps {
 export default function layout({ children }: IProps) {
   return (
     <main className="p-8">
-      <BreadCrumb />
+      {/* <BreadCrumb /> */}
       {children}
     </main>
   );
