@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { globalErrorController } from "./controller/error.controller";
@@ -9,9 +9,7 @@ import { employeeRoute } from "./route/employee.route";
 import { resourceRouter } from "./route/resource.route";
 import { studentRouter } from "./route/student.route";
 import { courseRouter } from "./route/course.route";
-import { createToken } from "./utils/token";
 import { paymentRouter } from "./route/payment.route";
-import { pool } from "./config/db";
 import { admissionRouter } from "./route/admission.route";
 import { reportRouter } from "./route/report.route";
 import { uploadRoute } from "./route/upload.routes";

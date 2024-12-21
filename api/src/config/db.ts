@@ -1,19 +1,18 @@
-import { Client, Pool, PoolConfig } from "pg";
+import { Pool, PoolConfig } from "pg";
+import dotenv from "dotenv";
 
-export const dbConfig : PoolConfig = {
-  user: "postgres",
-  host: "localhost",
-  database: "sei_db",
-  password: "123456",
-  port: 5432,
-};
+dotenv.config();
+function configDb() {
+  const dbConfig: PoolConfig = {
+    connectionString: process.env.POSTGRES_URL,
+    ssl:
+      process.env.NODE_ENV === "development"
+        ? false
+        : {
+            rejectUnauthorized: false,
+          },
+  };
+  return dbConfig;
+}
 
-// export const dbConfig: PoolConfig = {
-//   connectionString: process.env.POSTGRES_URL,
-//   ssl: {
-//     rejectUnauthorized: false,
-//   },
-// };
-
-export const pool = new Pool(dbConfig);
-export const client = new Client(dbConfig);
+export const pool = new Pool(configDb());
