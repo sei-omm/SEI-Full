@@ -5,12 +5,7 @@ dotenv.config();
 function configDb() {
   const dbConfig: PoolConfig = {
     connectionString: process.env.POSTGRES_URL,
-    ssl:
-      process.env.NODE_ENV === "development"
-        ? false
-        : {
-            rejectUnauthorized: false,
-          },
+    ssl: false
   };
   return dbConfig;
 }
