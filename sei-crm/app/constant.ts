@@ -1,5 +1,6 @@
 export const BASE_API = "https://sei-api-zeta.vercel.app/api/v1";
 
+
 export const inventoryCatList = [
   { category_id: 1, category_name: "Consumable" },
   { category_id: 2, category_name: "Durable" },
