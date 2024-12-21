@@ -79,7 +79,7 @@ export default function Vendor() {
             <table className="min-w-max w-full table-auto">
               <thead className="uppercase w-full border-b border-gray-100">
                 <tr>
-                  {tableDatas.heads?.map((item) => (
+                  {tableDatas.heads?.map?.((item) => (
                     <th
                       className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
                       key={item}
@@ -90,7 +90,7 @@ export default function Vendor() {
                 </tr>
               </thead>
               <tbody>
-                {tableDatas.body?.map((itemArray, rowIndex) => (
+                {tableDatas.body?.map?.((itemArray, rowIndex) => (
                   <tr
                     key={rowIndex}
                     className="hover:bg-gray-100 group/bodyitem"
