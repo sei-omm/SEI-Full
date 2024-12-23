@@ -1,7 +1,7 @@
 "use client";
 
 import { OptionsType } from "@/types";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { FaAngleDown } from "react-icons/fa6";
 import { IoCloseOutline } from "react-icons/io5";
 
@@ -15,7 +15,7 @@ interface IProps {
   // onChange?: (item: OptionsType) => void;
 }
 
-export default function DropDownTag({
+function DropDownTag({
   wrapperCss,
   className,
   label,
@@ -28,7 +28,14 @@ export default function DropDownTag({
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const [tags, setTags] = useState<OptionsType[]>(options.filter((item) => defaultValues?.includes(item.value)));
+  const [tags, setTags] = useState<OptionsType[]>([]);
+
+  useEffect(() => {
+    if(tags.length === 0) {
+      setTags(options.filter((item) => defaultValues?.includes(item.value)))
+    }
+  }, [defaultValues])
+  console.log(tags)
 
   const checkClickOutside = (event: MouseEvent) => {
     if (isOpen && !modalRef.current?.contains(event.target as Node)) {
@@ -121,3 +128,5 @@ export default function DropDownTag({
     </div>
   );
 }
+
+export default DropDownTag

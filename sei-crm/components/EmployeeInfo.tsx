@@ -70,7 +70,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
       queryFn: () =>
         isNewEmployee ? null : fetchEmployeeInfo(employeeID.toString()),
       refetchOnMount: true,
-      cacheTime: 0
+      cacheTime: 0,
     },
   ]);
 
@@ -196,7 +196,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
   useEffect(() => {
     if (!isNewEmployee) {
       setJoinDate(employeeInfo?.joining_date || "");
-      setSelectedProfileIcon(employeeInfo?.profile_image || "")
+      setSelectedProfileIcon(employeeInfo?.profile_image || "");
       const newArray = [...salaryValues];
       newArray[0] = parseInt(employeeInfo?.basic_salary || "0");
       newArray[1] = parseInt(employeeInfo?.hra || "0");
@@ -292,7 +292,11 @@ export default function EmployeeInfo({ employeeID }: IProps) {
   const layoutToDownloadAsPdf = useRef<HTMLDivElement>(null);
 
   return (
-    <HandleSuspence isLoading={fetchResults[0].isLoading} dataLength={1} error={fetchResults[1].error}>
+    <HandleSuspence
+      isLoading={fetchResults[0].isLoading}
+      dataLength={1}
+      error={fetchResults[1].error}
+    >
       <div className="py-3 flex items-center justify-between gap-5">
         <div>
           <h2 className="font-semibold text-2xl">
@@ -752,70 +756,77 @@ export default function EmployeeInfo({ employeeID }: IProps) {
             <div className="flex items-start">
               <div className="basis-[40%] flex-grow space-y-4">
                 <Input
+                  moneyInput={true}
                   defaultValue={employeeInfo?.basic_salary || ""}
                   required
                   name="basic_salary"
                   type="number"
                   onChange={(e) => handleSalaryInput(e, 0)}
                   label="Basic Salary"
-                  placeholder="₹83,334"
+                  placeholder="83,334"
                 />
                 <Input
+                  moneyInput={true}
                   defaultValue={employeeInfo?.hra || ""}
                   required
                   type="number"
                   name="hra"
                   onChange={(e) => handleSalaryInput(e, 1)}
                   label="HRA"
-                  placeholder="₹41,667"
+                  placeholder="41,667"
                 />
                 <Input
+                  moneyInput={true}
                   defaultValue={employeeInfo?.other_allowances || ""}
                   required
                   type="number"
                   name="other_allowances"
                   onChange={(e) => handleSalaryInput(e, 2)}
                   label="Other Allowances"
-                  placeholder="₹41,667"
+                  placeholder="41,667"
                 />
 
                 <Input
+                  moneyInput={true}
                   defaultValue={employeeInfo?.provident_fund || ""}
                   required
                   type="number"
                   name="provident_fund"
                   onChange={(e) => handleSalaryInput(e, 3)}
                   label="Provident Fund"
-                  placeholder="₹10,000"
+                  placeholder="10,000"
                 />
                 <Input
+                  moneyInput={true}
                   defaultValue={employeeInfo?.professional_tax || ""}
                   required
                   type="number"
                   name="professional_tax"
                   onChange={(e) => handleSalaryInput(e, 4)}
                   label="Professional Tax"
-                  placeholder="₹200"
+                  placeholder="200"
                 />
 
                 <Input
+                  moneyInput={true}
                   defaultValue={employeeInfo?.esic || ""}
                   required
                   type="number"
                   name="esic"
                   onChange={(e) => handleSalaryInput(e, 5)}
                   label="ESIC"
-                  placeholder="₹200"
+                  placeholder="200"
                 />
 
                 <Input
+                  moneyInput={true}
                   defaultValue={employeeInfo?.income_tax || ""}
                   required
                   type="number"
                   name="income_tax"
                   onChange={(e) => handleSalaryInput(e, 6)}
                   label="Income Tax"
-                  placeholder="₹19,000"
+                  placeholder="19,000"
                 />
 
                 <h2 className="text-sm">

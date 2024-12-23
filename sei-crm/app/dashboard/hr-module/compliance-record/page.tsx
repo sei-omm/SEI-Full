@@ -22,7 +22,7 @@ interface IProps {
 
 export default function ComplianceRecord({ searchParams }: IProps) {
   const { data, isFetching, error } = useQuery<ISuccess<IStorageResponse>>({
-    queryKey: ["fetch-files-and-folders", searchParams],
+    queryKey: ["fetch-files-and-folders", searchParams.folder_id],
     queryFn: async () =>
       (
         await axios.get(

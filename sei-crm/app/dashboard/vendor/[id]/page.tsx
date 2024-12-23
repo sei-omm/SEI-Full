@@ -34,7 +34,7 @@ export default function VendorForm({ params }: IProps) {
   const handleFormSubmit = (formData: FormData) => {
     if (isNewItem) {
       mutate({
-        apiPath: "/inventory/vendor",
+        apiPath: "/inventory/vendo",
         method: "post",
         headers: {
           "Content-Type": "application/json",
@@ -45,7 +45,7 @@ export default function VendorForm({ params }: IProps) {
     }
 
     mutate({
-      apiPath: "/inventory/vendor",
+      apiPath: "/inventory/vendo",
       method: "put",
       headers: {
         "Content-Type": "application/json",
@@ -92,7 +92,7 @@ export default function VendorForm({ params }: IProps) {
               { text: "Kolkata", value: "Kolkata" },
               { text: "Faridabad", value: "Faridabad" },
             ]}
-            defaultValues={data?.data.institute.split(",") || []}
+            defaultValues={data?.data.institute.split(",")}
           />
 
           <Button

@@ -84,7 +84,7 @@ export default function EmployeeDocuments({
   return (
     <HandleSuspence
       isLoading={isFetching}
-      dataLength={data?.data.length}
+      dataLength={1}
       error={error}
     >
       <ul className="grid grid-cols-2 gap-x-3 gap-y-4">

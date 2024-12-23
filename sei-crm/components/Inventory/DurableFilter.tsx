@@ -5,10 +5,10 @@ import DropDown from "../DropDown";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
 import { ISuccess } from "@/types";
-import HandleDataSuspense from "../HandleDataSuspense";
 import Button from "../Button";
 import { CiSearch } from "react-icons/ci";
 import { useRouter } from "next/navigation";
+import HandleSuspence from "../HandleSuspence";
 
 type TFiltersInfo = {
   floors: number[];
@@ -39,9 +39,8 @@ export default function DurableFilter() {
   };
 
   return (
-    <HandleDataSuspense data={data?.data} isLoading={isFetching} error={error}>
-      {(filterInfo) => (
-        <form action={handleForm} className="flex items-end gap-5">
+    <HandleSuspence dataLength={1} isLoading={isFetching} error={error}>
+      <form action={handleForm} className="flex items-end gap-5">
           <DropDown
             name="is_available"
             label="Availability"
@@ -56,10 +55,7 @@ export default function DurableFilter() {
             label="Floors"
             options={[
               { text: "Not Selected", value: -1 },
-              ...filterInfo.floors?.map((item) => ({
-                text: item.toString(),
-                value: item,
-              })),
+              ...data?.data.floors?.map?.(item => ({text : item.toString(), value : item})) || []
             ]}
           />
           <DropDown
@@ -67,10 +63,7 @@ export default function DurableFilter() {
             label="Rows In Room"
             options={[
               { text: "Not Selected", value: -1 },
-              ...filterInfo.number_of_rows?.map((item) => ({
-                text: item.toString(),
-                value: item,
-              })),
+              ...data?.data.number_of_rows?.map?.(item => ({text : item.toString(), value : item})) || [],
             ]}
           />
           <DropDown
@@ -78,10 +71,7 @@ export default function DurableFilter() {
             label="Room Capasity"
             options={[
               { text: "Not Selected", value: -1 },
-              ...filterInfo.capacities?.map((item) => ({
-                text: item.toString(),
-                value: item,
-              })),
+              ...data?.data.capacities?.map?.(item => ({text : item.toString(), value : item})) || [],
             ]}
           />
           <Button className="flex-center gap-3 mb-1">
@@ -89,7 +79,6 @@ export default function DurableFilter() {
             Search
           </Button>
         </form>
-      )}
-    </HandleDataSuspense>
+    </HandleSuspence>
   );
 }

@@ -1,5 +1,5 @@
-export const BASE_API = "https://sei-api-zeta.vercel.app/api/v1";
-// export const BASE_API = "http://localhost:8080/api/v1";
+// export const BASE_API = "https://sei-api-zeta.vercel.app/api/v1";
+export const BASE_API = "http://localhost:8080/api/v1";
 
 
 export const inventoryCatList = [

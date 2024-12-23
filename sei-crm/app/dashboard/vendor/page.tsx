@@ -115,7 +115,7 @@ export default function Vendor() {
                           <div className="flex items-center gap-3">
                             <Link
                               className="active:scale-90"
-                              href={`/dashboard/inventory/durable/`}
+                              href={`/dashboard/vendor/${durableFetchedData?.data[rowIndex].vendor_id}`}
                             >
                               <CiEdit className="cursor-pointer" size={18} />
                             </Link>

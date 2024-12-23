@@ -124,33 +124,36 @@ export default function Department() {
   };
 
   return (
-    <HandleSuspence isLoading={isLoading} dataLength={response?.data.length} error={error}>
-      <section>
-        <form onSubmit={onFormSubmit} className="flex items-end gap-5 py-5">
-          <div className="flex-grow">
-            <Input
-              referal={inputRef}
-              name="department_name"
-              className="!w-full"
-              type="text"
-              label="Add new department"
-              placeholder="Add new department"
-            />
-          </div>
-          <Button
-            onClick={() => (whichBtnClicked.current = "add")}
-            className="mb-1"
-          >
-            Add
-          </Button>
-          <Button
-            onClick={() => (whichBtnClicked.current = "update")}
-            className="mb-1"
-          >
-            Update
-          </Button>
-        </form>
-
+    <section>
+      <form onSubmit={onFormSubmit} className="flex items-end gap-5 py-5">
+        <div className="flex-grow">
+          <Input
+            referal={inputRef}
+            name="department_name"
+            className="!w-full"
+            type="text"
+            label="Add new department"
+            placeholder="Add new department"
+          />
+        </div>
+        <Button
+          onClick={() => (whichBtnClicked.current = "add")}
+          className="mb-1"
+        >
+          Add
+        </Button>
+        <Button
+          onClick={() => (whichBtnClicked.current = "update")}
+          className="mb-1"
+        >
+          Update
+        </Button>
+      </form>
+      <HandleSuspence
+        isLoading={isLoading}
+        dataLength={response?.data.length}
+        error={error}
+      >
         <ul className="w-full grid grid-cols-4 py-10 gap-6">
           {response?.data.map((department) => (
             <li
@@ -173,7 +176,7 @@ export default function Department() {
             </li>
           ))}
         </ul>
-      </section>
-    </HandleSuspence>
+      </HandleSuspence>
+    </section>
   );
 }
