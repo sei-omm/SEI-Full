@@ -1,7 +1,7 @@
 "use client";
 
 import { OptionsType } from "@/types";
-import { memo, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaAngleDown } from "react-icons/fa6";
 import { IoCloseOutline } from "react-icons/io5";
 

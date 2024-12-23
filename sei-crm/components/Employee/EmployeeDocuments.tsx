@@ -37,7 +37,7 @@ export default function EmployeeDocuments({
     { doc_id: "Choose Other Certificate", doc_uri: null, doc_name: null },
   ]);
 
-  const { isFetching, data, error } = useQuery<ISuccess<TEmployeeDocsFromDB[]>>(
+  const { isFetching, error } = useQuery<ISuccess<TEmployeeDocsFromDB[]>>(
     {
       queryKey: "employee_documents",
       queryFn: async () =>
