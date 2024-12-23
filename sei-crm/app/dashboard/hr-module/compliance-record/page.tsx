@@ -8,25 +8,23 @@ import FolderItem from "@/components/HR/FolderItem";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { IStorageResponse, ISuccess } from "@/types";
 import axios from "axios";
+import { useSearchParams } from "next/navigation";
 import React from "react";
 import { BsCloudUpload } from "react-icons/bs";
 import { FiFolderPlus } from "react-icons/fi";
 import { useQuery } from "react-query";
 import { useDispatch } from "react-redux";
 
-interface IProps {
-  searchParams: {
-    folder_id?: number;
-  };
-}
+export default function ComplianceRecord() {
 
-export default function ComplianceRecord({ searchParams }: IProps) {
+  const searchParams = useSearchParams();
+
   const { data, isFetching, error } = useQuery<ISuccess<IStorageResponse>>({
-    queryKey: ["fetch-files-and-folders", searchParams.folder_id],
+    queryKey: ["fetch-files-and-folders", searchParams.toString()],
     queryFn: async () =>
       (
         await axios.get(
-          `${BASE_API}/storage?folder_id=${searchParams.folder_id ?? 0}`
+          `${BASE_API}/storage?folder_id=${searchParams.get("folder_id") ?? 0}`
         )
       ).data,
   });
@@ -48,7 +46,7 @@ export default function ComplianceRecord({ searchParams }: IProps) {
         type: "OPEN",
         dialogId: "choose-files-dialog",
         extraValue : {
-          folderId : searchParams.folder_id
+          folderId : searchParams.get("folder_id")
         }
       })
     );
