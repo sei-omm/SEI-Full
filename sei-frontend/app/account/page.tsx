@@ -15,6 +15,7 @@ import { CiEdit } from "react-icons/ci";
 import OpenDialogButton from "../components/OpenDialogButton";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import MyLibrary from "../components/MyAccount/MyLibrary";
+import UnAuthorizedPage from "../components/UnAuthorizedPage";
 
 interface IProps {
   searchParams: TMyLibrarySearchParams;
@@ -22,13 +23,14 @@ interface IProps {
 
 export default async function page({ searchParams }: IProps) {
   const AUTH_HEADER_OBJ = await getAuthTokenServer();
-
   const response = await fetch(BASE_API + "/student", {
     headers: {
       ...AUTH_HEADER_OBJ,
       "Content-Type": "application/json",
     },
   });
+
+  if (!response.ok) return <UnAuthorizedPage />;
 
   const result = (await response.json()) as IResponse<IStudent>;
 
@@ -107,7 +109,7 @@ export default async function page({ searchParams }: IProps) {
               dialogKey="upload-documents-dialog"
               extraValue={{
                 courseIds: result.data.courses
-                  .map((item) => item.course_id)
+                  ?.map((item) => item.course_id)
                   .join(","),
                 preventToClose: false,
               }}
@@ -143,7 +145,10 @@ export default async function page({ searchParams }: IProps) {
           {searchParams.tab === "course" || searchParams.tab === undefined ? (
             <MyCourses courses={result.data.courses || []} />
           ) : (
-            <MyLibrary courses={result.data.courses || []} searchParams={searchParams}/>
+            <MyLibrary
+              courses={result.data.courses || []}
+              searchParams={searchParams}
+            />
           )}
         </div>
       </div>

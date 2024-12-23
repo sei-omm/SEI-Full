@@ -3,7 +3,7 @@ import TabMenu from "./TabMenu";
 import CoursesListView from "./CoursesListView";
 import { BASE_API } from "../constant";
 import { capitalizeFirstChar } from "../utils/capitalizeFirstChar";
-import CourseSearchBox from "./CourseSearchBox";
+// import CourseSearchBox from "./CourseSearchBox";
 
 interface IProps {
   centerName?: string;
@@ -15,7 +15,7 @@ export default async function CoursesPage({ centerName }: IProps) {
       centerName || ""
     )}`,
     {
-      cache : "default"
+      cache : "no-store"
     }
   );
   const courses = (await response.json()) as IResponse<CourseType[]>;
@@ -43,7 +43,7 @@ export default async function CoursesPage({ centerName }: IProps) {
         </div>
 
         {/* Search Box */}
-        <CourseSearchBox />
+        {/* <CourseSearchBox /> */}
       </div>
 
       {/* Courses List */}
