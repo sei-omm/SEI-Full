@@ -21,6 +21,7 @@ import AddFolder from "./AddFolder";
 import ChooseFilesDialog from "./ChooseFilesDialog";
 import AddInventoryStockDialog from "./AddInventoryStockDialog";
 import ConsumeStockDialog from "./ConsumeStockDialog";
+import FacultyAssignCoursesDialog from "./FacultyAssignCoursesDialog";
 
 type DivType = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -107,6 +108,11 @@ const dialogs = [
   {
     id: "inventory-stock-consume-dialog",
     component: <ConsumeStockDialog />,
+  },
+
+  {
+    id: "faculty-assign-courses-dialog",
+    component: <FacultyAssignCoursesDialog />,
   },
 ];
 

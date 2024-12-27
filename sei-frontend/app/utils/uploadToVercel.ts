@@ -1,4 +1,4 @@
-import { PutBlobResult } from "@vercel/blob";
+import { PutBlobResult, BlobError } from "@vercel/blob";
 import { convartImgToWebp } from "./convartImgToWebp";
 import { upload } from "@vercel/blob/client";
 import { BASE_API } from "../constant";
@@ -10,7 +10,7 @@ type TUploadArgs = {
   clientPayload?: string;
   convartToWebp?: boolean;
   onUploaded?: (blob: PutBlobResult) => void;
-  onError?: (error: Error) => void;
+  onError?: (error: BlobError) => void;
   onProcessing?: () => void;
   onUploadProgress?: (percentage: number) => void;
   onFinally? : (data : PutBlobResult | Error) => void;

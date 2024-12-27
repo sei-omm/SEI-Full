@@ -132,7 +132,11 @@ export default function JobForm({ action }: IProps) {
   }, [response[0].isLoading]);
 
   return (
-    <HandleSuspence isLoading={response[0].isFetching}>
+    <HandleSuspence
+      isLoading={response[0].isFetching}
+      error={response[0].error}
+      dataLength={1}
+    >
       <form onSubmit={onSubmit} className="w-full">
         <div className="grid grid-cols-2 py-5 gap-6">
           <Input
@@ -168,7 +172,10 @@ export default function JobForm({ action }: IProps) {
                 value: item.id,
               })) || []
             }
-            defaultValue={response[0].data?.data?.[0]?.department || response[1].data?.data[0].id}
+            defaultValue={
+              response[0].data?.data?.[0]?.department ||
+              response[1].data?.data[0].id
+            }
           />
           <TextArea
             name="job_description"

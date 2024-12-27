@@ -14,11 +14,11 @@ import { admissionRouter } from "./route/admission.route";
 import { reportRouter } from "./route/report.route";
 import { uploadRoute } from "./route/upload.routes";
 import { libraryRouter } from "./route/library.routes";
-import https from "https";
 import { subjectRoute } from "./route/subject.routes";
 import cookieParser from "cookie-parser";
 import { storageRouter } from "./route/storage.routes";
 import { inventoryRoute } from "./route/inventory.routes";
+import { notificationRoutes } from "./route/notification.routes";
 
 // import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 
@@ -50,43 +50,9 @@ app.use("/api/v1/upload", uploadRoute);
 app.use("/api/v1/library", libraryRouter);
 app.use("/api/v1/subject", subjectRoute);
 app.use("/api/v1/storage", storageRouter);
-app.use("/api/v1/inventory", inventoryRoute)
+app.use("/api/v1/inventory", inventoryRoute);
+app.use("/api/v1/notification", notificationRoutes);
 app.use("/api/v1/db", setupDbRoute);
-
-app.get("/stream-vercel-blob", async (req, res) => {
-  // //no expire token for testing
-  // const quantityToRemove = 1;
-  // pool.query(
-  //   `UPDATE courses SET remain_seats = remain_seats - $1 WHERE course_id = $2 AND remain_seats >= $1`,
-  //   [`${quantityToRemove}`, 1]
-  // );
-
-  const vercelBlobUrl = "https://wgli5hygbpaa0ifp.public.blob.vercel-storage.com/library-files/JOYITA%20KUNDU%20CV-bk65x4xuq9yJU6fXs8uq6cmXWXyYQ4.pdf";
-
-  https.get(vercelBlobUrl, (blobRes) => {
-    // Forward Content-Type header
-    const contentType = blobRes.headers['content-type'];
-    if (contentType) {
-      res.setHeader('Content-Type', contentType);
-    }
-
-    // Forward Content-Length header if available
-    const contentLength = blobRes.headers['content-length'];
-    if (contentLength) {
-      res.setHeader('Content-Length', contentLength);
-    } else {
-      console.warn('Content-Length header is missing');
-    }
-
-    // Stream the response to the client
-    blobRes.pipe(res);
-  }).on('error', (err) => {
-    console.error(err);
-    res.status(500).send('Error streaming the file');
-  });
-
-
-});
 
 //global error handler
 app.use(globalErrorController);

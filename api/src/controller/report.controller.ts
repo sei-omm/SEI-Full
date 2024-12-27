@@ -4,6 +4,7 @@ import {
   admissionReportValidator,
   courseTrendReportValidator,
   dgsIndosReportValidator,
+  occupancyReportValidator,
   receiptReportValidator,
   studentBirthdateReportValidator,
   studentBirthdateWishValidator,
@@ -1194,5 +1195,47 @@ export const testController = asyncErrorHandler(
     jsonStream.pipe(res);
 
     // res.status(200).json(new ApiResponse(200, "All Payments"));
+  }
+);
+
+export const getOccupancyReport = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { error, value } = occupancyReportValidator.validate(req.query);
+    if (error) throw new ErrorHandler(400, error.message);
+
+    const { rows } = await pool.query(`
+      SELECT
+        c.course_id,
+        c.course_name,
+        c.course_code,
+        c.institute,
+        COUNT(cb.batch_id) AS total_batch_conducted,
+        SUM(cb.batch_total_seats) AS total_candidate_strength,
+        COUNT(ebc.batch_id) AS occupency,
+        mb.max_batch AS max_batch_per_month,
+        ROUND((COUNT(ebc.batch_id)::DECIMAL / NULLIF(mb.max_batch * SUM(cb.batch_total_seats), 0) * 100), 2) AS occupency_percentage
+      FROM courses AS c
+
+      LEFT JOIN course_batches AS cb
+      ON cb.course_id = c.course_id
+
+      LEFT JOIN enrolled_batches_courses AS ebc
+      ON ebc.batch_id = cb.batch_id AND ebc.enrollment_status = 'Approve'
+
+      LEFT JOIN fillup_forms AS ff
+      ON ff.form_id = ebc.form_id
+
+      LEFT JOIN (
+        SELECT DISTINCT ON (course_id) course_id, max_batch
+        FROM course_with_max_batch_per_month
+        ORDER BY course_id, created_month DESC
+      ) mb ON c.course_id = mb.course_id
+
+      WHERE cb.end_date BETWEEN $1 AND $2 AND c.institute = $3
+
+      GROUP BY c.course_id, c.course_name, c.course_code, mb.max_batch
+    `, [value.start_date, value.end_date, value.institute]);
+
+    res.status(200).json(new ApiResponse(200, "Occupancy Report", rows));
   }
 );

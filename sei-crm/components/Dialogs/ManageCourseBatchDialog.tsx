@@ -12,6 +12,7 @@ import { queryClient } from "@/redux/MyProvider";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { getDate } from "@/app/utils/getDate";
 import Input from "../Input";
+import { beautifyDate } from "@/app/utils/beautifyDate";
 
 export default function ManageCourseBatchDialog() {
   const { extraValue } = useSelector((state: RootState) => state.dialogs);
@@ -79,16 +80,20 @@ export default function ManageCourseBatchDialog() {
       <form onSubmit={handleFormSubmit} className="mt-5 space-y-4">
         <div className="flex items-start gap-4 flex-wrap *:basis-40 *:flex-grow">
           <DateInput
+            viewOnly={!isNewBatch}
             required
             name="start_date"
             label="Batch Start Date *"
             date={start_date ? getDate(new Date(start_date)) : ""}
+            viewOnlyText={start_date ? beautifyDate(start_date) : undefined}
           />
           <DateInput
             required
+            viewOnly={!isNewBatch}
             name="end_date"
             label="Batch End Date *"
             date={end_date ? getDate(new Date(end_date)) : ""}
+            viewOnlyText={end_date ? beautifyDate(end_date) : undefined}
           />
 
           <Input

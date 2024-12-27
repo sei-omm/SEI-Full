@@ -202,8 +202,9 @@ CREATE TABLE course_batches (
     visibility VARCHAR(20) CHECK (visibility IN ('Public', 'Private')),
 
     course_id INTEGER NOT NULL,
-    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE enrolled_batches_courses (
@@ -475,20 +476,11 @@ CREATE TABLE inventory_stock_info (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE notification (
-    notification_id SERIAL PRIMARY KEY,
-    notification_title VARCHAR(255),
-    notification_description TEXT,
-    from_role VARCHAR(255), -- Send Notification From Which Role
-    to_role VARCHAR(255), -- Send Notifiaction To Which Role
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE maintence_record (
     record_id SERIAL PRIMARY KEY,
 
     item_id INTEGER,
-    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE SET NULL,
+    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE CASCADE,
 
     maintence_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     work_station VARCHAR(255),
@@ -504,6 +496,61 @@ CREATE TABLE maintence_record (
     institute VARCHAR(100),
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- New DBS -> 27 Dec 2024
+
+-- Course Table
+CREATE TABLE course_with_max_batch_per_month (
+    course_id INTEGER,
+    created_date DATE DEFAULT CURRENT_DATE,
+    created_month DATE NOT NULL DEFAULT DATE_TRUNC('month', CURRENT_DATE),  -- This ensures we store first day of month
+    max_batch INTEGER DEFAULT 0,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
+    UNIQUE (course_id, created_month)
+);
+
+CREATE TABLE faculty_with_course_subject (
+    faculty_id INTEGER,
+    FOREIGN KEY (faculty_id) REFERENCES employee(id) ON DELETE CASCADE,
+
+    course_id INTEGER,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
+
+    subject TEXT,
+
+    UNIQUE (faculty_id, course_id)
+);
+
+-- Planned Maintenance System
+CREATE TABLE planned_maintenance_system (
+    planned_maintenance_system_id SERIAL PRIMARY KEY,
+    item_id INTEGER,
+    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE CASCADE,
+    frequency VARCHAR(255),
+    last_done DATE,
+    next_due DATE,
+    description TEXT,
+    remark TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notification (
+    notification_id SERIAL PRIMARY KEY,
+    notification_title VARCHAR(255),
+    notification_description TEXT,
+    from_id INTEGER,
+    from_role VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notification_to (
+    notification_id INTEGER,
+    FOREIGN KEY (notification_id) REFERENCES notification(notification_id) ON DELETE CASCADE,
+
+    to_id INTEGER,
+    to_role VARCHAR(255)
 );
 
 -- fro clering all table of db

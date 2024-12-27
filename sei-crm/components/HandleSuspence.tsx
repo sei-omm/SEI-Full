@@ -13,7 +13,8 @@ export default function HandleSuspence<K>({
   error,
   dataLength,
 }: IProps<K>) {
-  if (isLoading) return <h1>Loading...</h1>;
+  if (isLoading)
+    return <h1 className="text-center text-sm text-gray-500">Loading...</h1>;
 
   if (errorMsg)
     return <h1 className="text-center text-sm text-gray-500">{errorMsg}</h1>;
@@ -24,21 +25,11 @@ export default function HandleSuspence<K>({
     return (
       <h1 className="text-center text-sm text-gray-500">Nothing To Show</h1>
     );
+    // return <></>;
 
   if (dataLength === 0)
     return <h1 className="text-center text-sm text-gray-500">No Data Found</h1>;
+    // return <></>;
 
   return children;
-
-  // return (
-  //   <>
-  //     {isLoading ? (
-  //       <h1>Loading..</h1>
-  //     ) : errorMsg ? (
-  //       <h1 className="text-center text-sm text-gray-500">{errorMsg}</h1>
-  //     ) : (
-  //       children
-  //     )}
-  //   </>
-  // );
 }

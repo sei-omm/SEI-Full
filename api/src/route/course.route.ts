@@ -18,25 +18,27 @@ import {
   enrollToBatch,
   getCoursesRequiredDocuments,
   getCoursesForDropDown,
+  getCourseWithBatchStudents,
+  getCoursesWithSubject,
 } from "../controller/course.controller";
-import { upload } from "../middleware/multer";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 
 export const courseRouter = Router();
 
 courseRouter
   .get("/", getAllCourse)
+  .get("/with-batches/student", getCourseWithBatchStudents)
   .get("/with-batches", getCoursesWithBatch)
+  .get("/with-subjects", getCoursesWithSubject)
   .get("/search", searchCourse)
   .get("/required-documents", isAuthenticated, getCoursesRequiredDocuments)
   .get("/get-multi-course-price", getMultiCoursesPrices)
   .get("/get-multi-batch-price", getMultiBatchPrices)
   .get("/drop-down", getCoursesForDropDown)
   .get("/:course_id", getSingleCourse)
-  .post("/", upload.fields([{ name: "course_pdf", maxCount: 1 }]), addNewCourse)
+  .post("/", addNewCourse)
   .put(
     "/:course_id",
-    upload.fields([{ name: "course_pdf", maxCount: 1 }]),
     updateCourseInfo
   )
   .delete("/:course_id", deleteCourse)

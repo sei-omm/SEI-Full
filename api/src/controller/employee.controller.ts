@@ -5,6 +5,7 @@ import { pool } from "../config/db";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import {
+  assignFacultyCourseSubjectValidator,
   employeeLoginValidator,
   employeeSchema,
   getEmployeeDocumentValidator,
@@ -17,11 +18,11 @@ import {
   objectToSqlConverterUpdate,
   objectToSqlInsert,
 } from "../utils/objectToSql";
-import { reqFilesToKeyValue } from "../utils/reqFilesToKeyValue";
 import { TEmployeeDocs } from "../types";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import { transaction } from "../utils/transaction";
 import { tryCatch } from "../utils/tryCatch";
+import { filterToSql } from "../utils/filterToSql";
 
 const table_name = "employee";
 
@@ -81,7 +82,11 @@ export const getHrDashboardInfo = asyncErrorHandler(
 
 export const getEmployee = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const employee_type = req.query.employee_type;
+    // const employee_type = req.query.employee_type;
+    const { filterQuery, filterValues, placeholderNum } = filterToSql(
+      req.query,
+      "e"
+    );
 
     let query = `
         SELECT 
@@ -96,19 +101,16 @@ export const getEmployee = asyncErrorHandler(
         LEFT JOIN 
             attendance a 
             ON e.id = a.employee_id
-            AND a.date = $1
+            AND a.date = $${placeholderNum}
         LEFT JOIN 
             department d 
             ON e.department_id = d.id
-        ${employee_type !== undefined ? "WHERE employee_type = $2" : ""}
+        ${filterQuery}
         ORDER BY 
             e.name;
     `;
 
-    const queryValues = [getDate(date)];
-    if (employee_type !== undefined) {
-      queryValues.push(employee_type.toString());
-    }
+    const queryValues = [...filterValues, getDate(date)];
 
     const { rows } = await pool.query(query, queryValues);
 
@@ -360,7 +362,7 @@ export const loginEmployee = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
 
     const { rowCount, rows } = await pool.query(
-      `SELECT login_email, login_password, employee_role, name, profile_image FROM ${table_name} WHERE login_email = $1`,
+      `SELECT login_email, id, institute, login_password, employee_role, name, profile_image FROM ${table_name} WHERE login_email = $1`,
       [value.login_email]
     );
 
@@ -377,7 +379,8 @@ export const loginEmployee = asyncErrorHandler(
 
     const accessToken = createToken(
       {
-        login_email: value.login_email,
+        employee_id: rows[0].id,
+        login_email: rows[0].login_email,
         role: rows[0].employee_role,
         institute: rows[0].institute,
       },
@@ -495,3 +498,52 @@ export const getEmployeeDocuments = asyncErrorHandler(
 //     fetchNextBatch();
 //   }
 // );
+
+export const getFacultyCourseSubject = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { rows } = await pool.query(
+      `SELECT 
+       fwcs.*,
+       c.course_name
+      FROM faculty_with_course_subject fwcs
+      LEFT JOIN courses AS c
+        ON fwcs.course_id = c.course_id
+      WHERE faculty_id = $1`,
+      [req.params.faculty_id]
+    );
+    res.status(200).json(new ApiResponse(200, "", rows));
+  }
+);
+
+export const assignFacultyCourseSubject = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { error, value } = assignFacultyCourseSubjectValidator.validate(
+      req.body
+    );
+    if (error) throw new ErrorHandler(400, error.message);
+
+    await pool.query(
+      `INSERT INTO faculty_with_course_subject (faculty_id, course_id, subject) 
+        VALUES ($1, $2, $3)
+        ON CONFLICT (faculty_id, course_id) 
+        DO UPDATE SET subject = faculty_with_course_subject.subject || ',' || EXCLUDED.subject`,
+      [value.faculty_id, value.course_id, value.subject]
+    );
+
+    res
+      .status(201)
+      .json(new ApiResponse(201, "Faculty Course Subject Assigned"));
+  }
+);
+
+export const removeFacultyCourseSubject = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    await pool.query(
+      `DELETE FROM faculty_with_course_subject WHERE faculty_id = $1 AND course_id = $2`,
+      [req.params.faculty_id, req.params.course_id]
+    );
+    res
+      .status(200)
+      .json(new ApiResponse(200, "Faculty Course & Subject Removed"));
+  }
+);

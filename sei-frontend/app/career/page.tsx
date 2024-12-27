@@ -131,14 +131,12 @@ export default async function page({ searchParams }: IProps) {
                 </div>
               </div>
               <OpenDialogButton
-                // className="flex items-center text-2xl basis-72 !mt-3"
                 className="mt-3"
                 dialogKey="apply-job-dialog"
                 type="OPEN"
+                extraValue={{ job_id: job.id }}
               >
-                {/* <span>Apply now</span>
-<GoArrowDownRight className="-rotate-90" /> */}
-                <Button className="!text-foreground !bg-[#e9b858] w-full !py-1 !min-w-max !px-5 border-gray-600 hover:!bg-background">
+                <Button className="!text-foreground !bg-[#e9b858] w-full !py-1 !min-w-max !px-5 border-gray-600 hover:!bg-background hover:!border-gray-600">
                   <span>Apply Now</span>
                   <GoArrowDownRight className="-rotate-90" />
                 </Button>

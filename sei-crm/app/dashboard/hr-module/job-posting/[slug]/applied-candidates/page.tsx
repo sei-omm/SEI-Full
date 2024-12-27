@@ -18,7 +18,9 @@ interface IProps {
 }
 
 export default async function page({ params }: IProps) {
-  const response = await fetch(BASE_API + "/hr/job/apply/" + params.slug);
+  const response = await fetch(BASE_API + "/hr/job/apply/" + params.slug, {
+    cache: "no-store",
+  });
   if (!response.ok) return notFound();
 
   const result = (await response.json()) as ISuccess<IJobAppliedCandidate[]>;
@@ -33,8 +35,10 @@ export default async function page({ params }: IProps) {
         <ul className="w-full space-y-10 p-5 card-shdow rounded-2xl">
           {result.data.map((candidateInfo) => (
             <li key={candidateInfo.id}>
-              <div className="flex items-start gap-4">
-                <div className="w-5 h-12 rounded-xl bg-red-500 p-3"></div>
+              <div className="flex items-center justify-start gap-4">
+                <div className="size-12 bg-gray-300 rounded-full flex-center text-xl font-medium">
+                  {candidateInfo.name.slice(0, 1).toUpperCase()}
+                </div>
                 <div>
                   <h2 className="font-semibold">{candidateInfo.name}</h2>
                   <div className="flex items-center gap-2">
@@ -84,10 +88,7 @@ export default async function page({ params }: IProps) {
                         candidateInfo.application_status as ApplicationStatusType
                       }
                     />
-                    <Link
-                      href={BASE_API + "/" + candidateInfo.resume}
-                      target="_blank"
-                    >
+                    <Link href={candidateInfo.resume} target="_blank">
                       <MdOutlineFileDownload
                         title="Download Resume"
                         className="cursor-pointer"

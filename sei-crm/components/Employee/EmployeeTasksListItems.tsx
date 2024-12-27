@@ -2,9 +2,9 @@
 
 import { ICourse, OptionsType } from "@/types";
 import DropDown from "../DropDown";
-import TagInput from "../TagInput";
 import { AiOutlineDelete } from "react-icons/ai";
 import { useEffect, useState } from "react";
+import DropDownTag from "../DropDownTag";
 
 interface IProps {
   data: ICourse[];
@@ -42,12 +42,12 @@ export default function EmployeeTasksListItems({
         }
         defaultValue={data[0].course_name}
       />
-      <TagInput
+      <DropDownTag
         wrapperCss="flex-grow basic-46"
-        disabled
-        label="Subjects"
-        hideInput={true}
-        defaultValue={selectedCourseSubjects}
+        label="Choose Faculty Subject"
+        options={selectedCourseSubjects
+          .split(",")
+          .map((item) => ({ text: item, value: item }))}
       />
 
       <AiOutlineDelete

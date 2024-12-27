@@ -118,7 +118,7 @@ export const updateMaintenceRecordValidator =
 export const updateMaintenceRecordStatusValidator = Joi.object({
   record_id: Joi.number().required(),
   status: Joi.string().valid("Completed", "Pending").required(),
-})
+});
 
 //durable
 export const addNewDurableValidator = Joi.object({
@@ -189,4 +189,18 @@ export const updateVendorValidator = addNewVendorValidator.keys({
 
 export const deleteVendorValidator = Joi.object({
   vendor_id: Joi.number().required(),
+});
+
+//planned maintenance system
+export const addNewPlannedMaintenanceSystemValidator = Joi.object({
+  item_id: Joi.number().required(),
+  frequency: Joi.string().required(),
+  last_done: Joi.string().required(),
+  next_due: Joi.string().required(),
+  description: Joi.string().required(),
+  remark: Joi.string().optional().allow(""),
+});
+
+export const updatePlannedMaintenanceSystemValidator = addNewPlannedMaintenanceSystemValidator.keys({
+  planned_maintenance_system_id: Joi.number().required(),
 });

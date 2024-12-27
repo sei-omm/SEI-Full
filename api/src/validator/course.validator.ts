@@ -22,9 +22,10 @@ export const addNewCourseValidator = Joi.object({
     }),
     otherwise: Joi.optional(),
   }),
-  course_pdf: Joi.string(),
+  course_pdf: Joi.string().optional().allow(""),
   course_showing_order: Joi.number().optional().min(1),
-  concern_marketing_executive_id : Joi.number().required()
+  concern_marketing_executive_id: Joi.number().required(),
+  max_batch: Joi.number().required(),
 });
 
 export const getSingleCourseValidator = Joi.object({
@@ -61,9 +62,10 @@ export const updateCourseValidator = Joi.object({
     }),
     otherwise: Joi.optional(),
   }),
-  course_pdf: Joi.string(),
+  course_pdf: Joi.string().optional().allow(""),
   course_showing_order: Joi.number().optional().min(1),
-  concern_marketing_executive_id : Joi.number().required()
+  concern_marketing_executive_id: Joi.number().required(),
+  max_batch: Joi.number().required(),
 });
 
 export const fillUpCourseFormValidator = Joi.object({

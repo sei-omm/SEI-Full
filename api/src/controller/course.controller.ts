@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import {
   objectToSqlConverterUpdate,
@@ -10,7 +10,6 @@ import {
   addNewCourseValidator,
   deleteCourseBatchValidator,
   enrollBatchValidator,
-  enrollCourseValidator,
   getMultiBatchPricesValidator,
   getMultiCoursesPricesValidator,
   getRequiredDocumentsValidator,
@@ -24,8 +23,9 @@ import { ErrorHandler } from "../utils/ErrorHandler";
 import { getAuthToken } from "../utils/getAuthToken";
 import { verifyToken } from "../utils/token";
 import { createOrder } from "../service/razorpay.service";
-import { reqFilesToKeyValue } from "../utils/reqFilesToKeyValue";
 import { transaction } from "../utils/transaction";
+import { filterToSql } from "../utils/filterToSql";
+import { tryCatch } from "../utils/tryCatch";
 
 const table_name = "courses";
 
@@ -78,47 +78,118 @@ export const getAllCourse = asyncErrorHandler(
   }
 );
 
-export const getCoursesWithBatch = asyncErrorHandler(
+export const getCoursesWithSubject = asyncErrorHandler(async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT course_id, course_name, subjects FROM courses WHERE institute = $1`,
+    [req.query.institute]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Course Info With Subjects", rows));
+});
+
+// export const getCoursesWithBatch = asyncErrorHandler(
+//   async (req: Request, res: Response) => {
+//     const center = req.query.center;
+
+//     const token = getAuthToken(req);
+//     let whereCondition = `WHERE c.course_visibility = 'Public' ${
+//       center ? "AND institute = $1" : ""
+//     }`;
+
+//     if (token) {
+//       const { error, data } = await verifyToken<{ role: string }>(token);
+//       if (error) throw new ErrorHandler(400, error.message);
+
+//       if (data?.role !== "Student") {
+//         whereCondition = center ? "WHERE institute = $1" : "";
+//       }
+//     }
+
+//     const sql = `
+//         SELECT
+//         c.*,
+//         COALESCE(
+//             json_agg(
+//                 b.*
+//             ) FILTER (WHERE b.batch_id IS NOT NULL), '[]'
+//         ) AS batches
+//     FROM
+//         courses c
+//     LEFT JOIN
+//         course_batches b ON c.course_id = b.course_id
+
+//     ${whereCondition}
+
+//     GROUP BY
+//         c.course_id, c.course_name ORDER BY course_showing_order ASC;
+//     `;
+
+//     const sqlValues: any[] = [];
+//     if (center) {
+//       sqlValues.push(center);
+//     }
+
+//     const { rows } = await pool.query(sql, sqlValues);
+//     res.status(200).json(new ApiResponse(200, "All Date", rows));
+//   }
+// );
+
+export const getCoursesWithBatch = asyncErrorHandler(async (req, res) => {
+  const { filterQuery, filterValues } = filterToSql(req.query, "c");
+
+  const sql = `
+          SELECT 
+          c.*,
+          COALESCE(
+              json_agg(
+                  b.*
+              ) FILTER (WHERE b.batch_id IS NOT NULL), '[]'
+          ) AS batches
+      FROM 
+          courses c
+      LEFT JOIN 
+          course_batches b ON c.course_id = b.course_id
+
+          ${filterQuery}
+
+      GROUP BY 
+          c.course_id, c.course_name ORDER BY course_showing_order ASC;
+      `;
+
+  const { rows } = await pool.query(sql, filterValues);
+  res.status(200).json(new ApiResponse(200, "All Date", rows));
+});
+
+export const getCourseWithBatchStudents = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const center = req.query.center;
-
-    const token = getAuthToken(req);
-    let whereCondition = `WHERE c.course_visibility = 'Public' ${center ? "AND institute = $1" : ""}`;
-
-    if (token) {
-      const { error, data } = await verifyToken<{ role: string }>(token);
-      if (error) throw new ErrorHandler(400, error.message);
-
-      if (data?.role !== "Student") {
-        whereCondition = center ? "WHERE institute = $1" : "";
-      }
-    }
+    const { filterQuery, filterValues } = filterToSql(
+      {
+        ...req.query,
+        course_visibility: "Public",
+      },
+      "c"
+    );
 
     const sql = `
-        SELECT 
-        c.*,
-        COALESCE(
-            json_agg(
-                b.*
-            ) FILTER (WHERE b.batch_id IS NOT NULL), '[]'
-        ) AS batches
-    FROM 
-        courses c
-    LEFT JOIN 
-        course_batches b ON c.course_id = b.course_id
-        
-    ${whereCondition}
+            SELECT 
+            c.*,
+            COALESCE(
+                json_agg(
+                    b.*
+                ) FILTER (WHERE b.batch_id IS NOT NULL), '[]'
+            ) AS batches
+        FROM 
+            courses c
+        LEFT JOIN 
+            course_batches b ON c.course_id = b.course_id
 
-    GROUP BY 
-        c.course_id, c.course_name ORDER BY course_showing_order ASC;
-    `;
+            ${filterQuery} AND b.end_date >= CURRENT_DATE
 
-    const sqlValues: any[] = [];
-    if (center) {
-      sqlValues.push(center);
-    }
+        GROUP BY 
+            c.course_id, c.course_name ORDER BY course_showing_order ASC;
+        `;
 
-    const { rows } = await pool.query(sql, sqlValues);
+    const { rows } = await pool.query(sql, filterValues);
     res.status(200).json(new ApiResponse(200, "All Date", rows));
   }
 );
@@ -154,11 +225,18 @@ export const getSingleCourse = asyncErrorHandler(
 
     const sql = `
       SELECT 
-      *
+      c.*,
+      d.*,
+      cwmbpm.max_batch
       FROM ${table_name} AS c
       LEFT JOIN department AS d
             ON d.id = c.concern_marketing_executive_id
-      WHERE course_id = $1
+      LEFT JOIN course_with_max_batch_per_month AS cwmbpm
+            ON cwmbpm.course_id = c.course_id
+      WHERE c.course_id = $1
+
+      ORDER BY cwmbpm.created_date DESC
+      LIMIT 1
     `;
 
     const { rowCount, rows } = await pool.query(sql, [value.course_id]);
@@ -285,16 +363,46 @@ export const addNewCourse = asyncErrorHandler(
     const { error } = addNewCourseValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
-    const fileOBJ = reqFilesToKeyValue(req);
-    const { columns, params, values } = objectToSqlInsert({
-      ...req.body,
-      ...fileOBJ,
+    const client = await pool.connect();
+
+    const { error: tryError } = await tryCatch(async () => {
+      await client.query("BEGIN");
+
+      const max_batch = req.body.max_batch;
+      delete req.body.max_batch;
+
+      const { columns, params, values } = objectToSqlInsert(req.body);
+      const { rows } = await client.query(
+        `INSERT INTO ${table_name} ${columns} VALUES ${params} RETURNING course_id`,
+        values
+      );
+
+      const newCreatedCourseId = rows[0].course_id;
+
+      await client.query(
+        `
+          INSERT INTO course_with_max_batch_per_month
+          (course_id, max_batch)
+          VALUES ($1, $2)
+          
+          ON CONFLICT (course_id, created_month)
+          DO NOTHING;
+        `,
+        [newCreatedCourseId, max_batch]
+      );
+
+      await client.query("COMMIT");
+      client.release();
     });
 
-    await pool.query(
-      `INSERT INTO ${table_name} ${columns} VALUES ${params}`,
-      values
-    );
+    if (tryError) {
+      await client.query("ROLLBACK");
+      client.release();
+      throw new ErrorHandler(
+        500,
+        "Some Problem Occurred While Processing Your Request"
+      );
+    }
 
     res.status(201).json(new ApiResponse(201, "New Courses Added"));
   }
@@ -309,16 +417,46 @@ export const updateCourseInfo = asyncErrorHandler(
 
     if (error) throw new ErrorHandler(400, error.message);
 
-    const fileOBJ = reqFilesToKeyValue(req);
-    const { keys, paramsNum, values } = objectToSqlConverterUpdate({
-      ...req.body,
-      ...fileOBJ,
+    const client = await pool.connect();
+
+    const { error: tryError } = await tryCatch(async () => {
+      await client.query("BEGIN");
+
+      const max_batch = req.body.max_batch;
+      delete req.body.max_batch;
+
+      const { keys, paramsNum, values } = objectToSqlConverterUpdate(req.body);
+      await pool.query(
+        `UPDATE ${table_name} SET ${keys} WHERE course_id = $${paramsNum}`,
+        [...values, req.params.course_id]
+      );
+
+      await client.query(
+        `
+          INSERT INTO course_with_max_batch_per_month
+          (course_id, max_batch, created_month)
+          VALUES ($1, $2, DATE_TRUNC('month', CURRENT_DATE))
+          ON CONFLICT (course_id, created_month)
+          
+          DO UPDATE SET
+              max_batch = EXCLUDED.max_batch;
+        `,
+        [req.params.course_id, max_batch]
+      );
+
+      await client.query("COMMIT");
+      client.release();
     });
 
-    await pool.query(
-      `UPDATE ${table_name} SET ${keys} WHERE course_id = $${paramsNum}`,
-      [...values, req.params.course_id]
-    );
+    if (tryError) {
+      await client.query("ROLLBACK");
+      client.release();
+      console.log(tryError);
+      throw new ErrorHandler(
+        500,
+        "Some Problem Occurred While Processing Your Request"
+      );
+    }
 
     res
       .status(201)
@@ -574,7 +712,17 @@ export const getCourseBatch = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
 
     const { rows } = await pool.query(
-      `SELECT * FROM course_batches WHERE course_id = $1`,
+      `
+      SELECT 
+          *, 
+          CASE 
+              WHEN end_date < CURRENT_DATE THEN 'Over' 
+              ELSE visibility 
+          END AS visibility
+      FROM course_batches 
+      WHERE course_id = $1 
+      ORDER BY created_at DESC;
+    `,
       [req.params.course_id]
     );
 
@@ -604,6 +752,9 @@ export const updateCourseBatchInfo = asyncErrorHandler(
       ...req.params,
     });
     if (error) throw new ErrorHandler(400, error.message);
+
+    delete req.body.start_date;
+    delete req.body.end_date;
 
     const { keys, values, paramsNum } = objectToSqlConverterUpdate(value);
     values.push(req.params.batch_id);
@@ -678,18 +829,22 @@ export const getCoursesForDropDown = asyncErrorHandler(
     }
 
     const { rows } = await pool.query(
-      `SELECT 
-        c.course_id, 
-        c.course_name,
-        COALESCE(JSON_AGG(cb.start_date) FILTER (WHERE cb.course_id IS NOT NULL), '[]'::json) AS course_batches
-      FROM ${table_name} AS c
+      `
+        SELECT 
+          c.course_id, 
+          c.course_name,
+          COALESCE(
+            JSON_AGG(cb.start_date ORDER BY cb.created_at DESC) 
+            FILTER (WHERE cb.course_id IS NOT NULL), 
+            '[]'::json
+          ) AS course_batches
+        FROM ${table_name} AS c
+        LEFT JOIN course_batches AS cb
+        ON cb.course_id = c.course_id
 
-      LEFT JOIN course_batches AS cb
-      ON cb.course_id = c.course_id
-
-      ${filter}
-
-      GROUP BY c.course_id
+        ${filter}
+        
+        GROUP BY c.course_id
       `,
       valueToStore
     );

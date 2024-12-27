@@ -7,6 +7,7 @@ import {
   addNewItemStock,
   addNewList,
   addNewMaintenceRecord,
+  addNewPlannedMaintenanceSystem,
   addNewVendorItem,
   calcluteStockInfo,
   consumeStock,
@@ -21,11 +22,13 @@ import {
   getDurableInfo,
   getItemsForDropDown,
   getMaintenceRecords,
+  getPlannedMaintenanceSystem,
   getPreviousOpeningStock,
   getSingleConsumableInfo,
   getSingleDurableInfo,
   getSingleItemInfo,
   getSingleMaintenceRecord,
+  getSinglePlannedMaintenanceSystem,
   getSingleStockInfo,
   getSingleVendorInfo,
   getVendorFiltersItemInfo,
@@ -38,6 +41,7 @@ import {
   updateItemStock,
   updateMaintenceRecord,
   updateMaintenceRecordStatus,
+  updatePlannedMaintenanceSystem,
   updateVendorItem,
 } from "../controller/inventory.controller";
 import { streamMaintenceRecordExcelReport } from "../controller/stream.report";
@@ -65,6 +69,11 @@ inventoryRoute
   .post("/maintence-record", addNewMaintenceRecord)
   .patch("/maintence-record/:record_id", updateMaintenceRecordStatus)
   // .put("/maintence-record/:record_id", updateMaintenceRecord)
+
+  .get("/planned-maintenance-system", getPlannedMaintenanceSystem)
+  .get("/planned-maintenance-system/:planned_maintenance_system_id", getSinglePlannedMaintenanceSystem)
+  .post("/planned-maintenance-system", addNewPlannedMaintenanceSystem)
+  .put("/planned-maintenance-system/:planned_maintenance_system_id", updatePlannedMaintenanceSystem)
 
   .get("/durable", getDurableInfo)
   .get("/durable/filter-items", getDurableFiltersItemInfo)

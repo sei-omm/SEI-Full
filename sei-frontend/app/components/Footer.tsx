@@ -108,17 +108,17 @@ export default function Footer() {
               <div className="flex flex-col gap-y-2 text-sm text-gray-300 mt-3">
                 <span>
                   Mobile:{" "}
-                  <Link href={"tel:+91-9643502955"}>+91-9643502955</Link> /{" "}
-                  <Link href={"tel:9643512955"}>9643512955</Link>
+                  <Link href={"tel:9643512955"}>9643512955</Link> /{" "}
+                  <Link href={"tel:9643502955"}>9643502955</Link>
                 </span>
-                <span>
+                {/* <span>
                   Phone:{" "}
                   <Link href={"tel:+91-129-4002955"}>+91-129-4002955</Link>
-                </span>
+                </span> */}
                 <span>
                   Email:{" "}
-                  <Link href={"mailto:fbd.seiedutrust@gmail.com"}>
-                    fbd.seiedutrust@gmail.com
+                  <Link href={"mailto:fbd@seiedutrust.com"}>
+                    fbd@seiedutrust.com
                   </Link>
                 </span>
               </div>

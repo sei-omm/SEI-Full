@@ -1,13 +1,16 @@
 import { Router } from "express";
 import {
   addNewEmployee,
+  assignFacultyCourseSubject,
   generateAllEmployeeExcelSheet,
   getEmployee,
   getEmployeeDocuments,
+  getFacultyCourseSubject,
   getMarketingTeam,
   getSingleEmployeeInfo,
   loginEmployee,
   removeEmployee,
+  removeFacultyCourseSubject,
   updateEmployee,
   updateEmployeeActiveStatus,
 } from "../controller/employee.controller";
@@ -38,4 +41,7 @@ employeeRoute
   .put("/:id", updateEmployee)
   .patch("/:id", updateEmployeeActiveStatus)
   .delete("/:id", removeEmployee)
-  .post("/login", loginEmployee);
+  .post("/login", loginEmployee)
+  .get("/faculty-assign-course/:faculty_id", getFacultyCourseSubject)
+  .post("/faculty-assign-course", assignFacultyCourseSubject)
+  .delete("/faculty-assign-course/:faculty_id/:course_id", removeFacultyCourseSubject);

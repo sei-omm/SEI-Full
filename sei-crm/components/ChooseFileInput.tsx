@@ -46,6 +46,7 @@ export default function ChooseFileInput({
   onFileDelete,
 }: IProps) {
   const [file, setFile] = useState<File | null>(null);
+  const [uploadFileUrl, setUploadedFileUrl] = useState<string>("");
 
   const handleViewFile = () => {
     if (file) {
@@ -96,6 +97,7 @@ export default function ChooseFileInput({
         // onUploadedCompleted(blob, setUploadStatus);
         setUploadStatus({ progress: 0, status: "done" });
         onUploaded?.(blob[0], setUploadStatus);
+        setUploadedFileUrl(blob[0].url);
       },
       onError(error) {
         toast.error(error.message);
@@ -114,8 +116,8 @@ export default function ChooseFileInput({
         hidden
         id={id}
         type="file"
-        name={name}
       />
+      <input type="text" name={name} className="hidden" value={uploadFileUrl}/>
       <span className="block font-semibold text-sm pl-1">{label}</span>
       <label
         htmlFor={uploadStatus.status === "done" ? id : ""}

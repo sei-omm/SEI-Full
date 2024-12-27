@@ -9,9 +9,10 @@ import { LuFileSpreadsheet } from "react-icons/lu";
 interface IProps {
   apiPath: string;
   hidden?: boolean;
+  text?: string;
 }
 
-export default function GenarateExcelReportBtn({ apiPath, hidden }: IProps) {
+export default function GenarateExcelReportBtn({ apiPath, hidden, text }: IProps) {
   return (
     <DownloadFormUrl
       className={hidden ? "hidden" : "block"}
@@ -19,7 +20,7 @@ export default function GenarateExcelReportBtn({ apiPath, hidden }: IProps) {
     >
       <Button type="button" className="!bg-[#34A853] flex-center gap-4">
         <LuFileSpreadsheet size={20} />
-        Generate Excel Sheet
+        {text || "Generate Excel Sheet"}
       </Button>
     </DownloadFormUrl>
   );

@@ -171,9 +171,11 @@ export default function CourseBatch({ courseId }: IProps) {
                             </Button>
                           </div>
                         ) : value === "Public" ? (
-                          <TagsBtn type="SUCCESS">Public</TagsBtn>
+                          <TagsBtn type="SUCCESS">Active</TagsBtn>
                         ) : value === "Private" ? (
                           <TagsBtn type="FAILED">Private</TagsBtn>
+                        ) : value === "Over" ? (
+                          <TagsBtn type="PENDING">Completed</TagsBtn>
                         ) : columnIndex === 0 || columnIndex === 1 ? (
                           beautifyDate(value)
                         ) : (

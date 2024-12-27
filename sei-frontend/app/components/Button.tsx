@@ -24,7 +24,7 @@ export default function Button(props: IProps) {
           : "bg-transparent text-white hover:bg-white hover:text-black border border-white"
       } rounded-full min-w-48 flex-center gap-x-3 py-[0.70rem] shadow-xl transition-all hover:duration-300 hover:delay-0 relative ${
         props.className
-      }`}
+      } ${props.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       {props.isLoading && props.isLoading === true ? (
         <SpinnerSvg size={props.spinnerSize ?? "23px"} />

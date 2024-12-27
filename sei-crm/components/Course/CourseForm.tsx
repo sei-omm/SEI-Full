@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef } from "react";
 import ChooseFileInput from "../ChooseFileInput";
 import Button from "../Button";
 import Input from "../Input";
 import DropDown from "../DropDown";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
-import { useQuery } from "react-query";
-import { ICourse, ISuccess, OptionsType } from "@/types";
+import { useQueries, UseQueryResult } from "react-query";
+import { ICourse, ISuccess } from "@/types";
 import HandleSuspence from "../HandleSuspence";
 import { getFileName } from "@/app/utils/getFileName";
 import { useDoMutation } from "@/app/utils/useDoMutation";
@@ -16,7 +16,6 @@ import { AiOutlineDelete } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 import DeleteCourseBtn from "./DeleteCourseBtn";
 import TagInput from "../TagInput";
-// import { upload } from "@vercel/blob/client";
 
 interface IProps {
   slug: "add-course" | number;
@@ -27,37 +26,35 @@ type TMarketingTeam = {
   name: string;
 };
 
-async function fetchDate(url: string) {
-  const response = await axios.get(url);
-  return response.data;
-}
+
 export default function CourseForm({ slug }: IProps) {
   const isNewCourse = slug === "add-course";
   const route = useRouter();
 
-  const [scheduleInputVisibility, setScheduleInputVisibility] = useState(false);
   const whichBtnClicked = useRef<"add-update" | "delete">("add-update");
   const formRef = useRef<HTMLFormElement>(null);
 
   //mute the server
   const { mutate, isLoading } = useDoMutation();
 
-  //get response form server
-  const { isLoading: isQuerying, data: course } = useQuery<ISuccess<ICourse>>(
-    "get-course-with-id",
-    () => fetchDate(`${BASE_API}/course/${slug}`),
+  const [marketingTeam, course] = useQueries<
+    [
+      UseQueryResult<ISuccess<TMarketingTeam[]>>,
+      UseQueryResult<ISuccess<ICourse>>
+    ]
+  >([
     {
-      enabled: !isNewCourse,
+      queryKey: "get-marketing-team",
+      queryFn: async () =>
+        (await axios.get(BASE_API + "/employee/marketing-team")).data,
       refetchOnMount: true,
-      cacheTime: 0,
-    }
-  );
-
-  const { data: marketingTeam } = useQuery<ISuccess<TMarketingTeam[]>>({
-    queryKey: "get-marketing-team",
-    queryFn: async () =>
-      (await axios.get(BASE_API + "/employee/marketing-team")).data,
-  });
+    },
+    {
+      queryKey: "get-course-with-id",
+      queryFn: async () => (await axios.get(BASE_API + "/course/" + slug)).data,
+      refetchOnMount: true,
+    },
+  ]);
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -96,35 +93,13 @@ export default function CourseForm({ slug }: IProps) {
     });
   };
 
-  const handleCourseVisibilityDropdown = (item: OptionsType) => {
-    if (item.value === "Schedule") return setScheduleInputVisibility(true);
-    setScheduleInputVisibility(false);
-  };
-
-  const handleFilePicked = async () => {
-    if(!confirm("Are you sure ?")) return;
-
-    // const blob = await upload(`myfolder/${file.name}`, file, {
-    //   access: "public",
-    //   handleUploadUrl: "http://192.168.0.192:8081/api/v1/student/upload", // Endpoint on your server
-    //   clientPayload: JSON.stringify({ size: file.size }),
-    // });
-  };
-
-  useEffect(() => {
-    handleCourseVisibilityDropdown({
-      text: course?.data.course_visibility || "",
-      value: course?.data.course_visibility || "",
-    });
-  }, [course]);
-
   return (
-    <HandleSuspence isLoading={isQuerying} dataLength={1}>
+    <HandleSuspence isLoading={course.isFetching} dataLength={1}>
       <form ref={formRef} onSubmit={handleFormSubmit}>
         <div className="flex items-start flex-wrap *:basis-80 *:flex-grow gap-x-3 gap-y-4">
           <Input
-            disabled={course?.data.course_code ? true : false}
-            defaultValue={course?.data.course_code}
+            disabled={course.data?.data.course_code ? true : false}
+            defaultValue={course.data?.data.course_code}
             name="course_code"
             placeholder="HV(OP)"
             label="Course Code"
@@ -134,7 +109,7 @@ export default function CourseForm({ slug }: IProps) {
             name="course_name"
             placeholder="HIGH VOLTAGE (Operation level)"
             label="Course Name *"
-            defaultValue={course?.data.course_name}
+            defaultValue={course.data?.data.course_name}
           />
 
           <DropDown
@@ -145,7 +120,7 @@ export default function CourseForm({ slug }: IProps) {
               { text: "Kolkata", value: "Kolkata" },
               { text: "Faridabad", value: "Faridabad" },
             ]}
-            defaultValue={course?.data.institute}
+            defaultValue={course.data?.data.institute}
           />
           <DropDown
             key="course_type"
@@ -155,7 +130,7 @@ export default function CourseForm({ slug }: IProps) {
               { text: "DGS Approved", value: "DGS Approved" },
               { text: "Value Added", value: "Value Added" },
             ]}
-            defaultValue={course?.data.course_type}
+            defaultValue={course.data?.data.course_type}
           />
           <TagInput
             required
@@ -163,7 +138,7 @@ export default function CourseForm({ slug }: IProps) {
             wrapperCss="!basis-[50rem]"
             label="Require Documents *"
             placeholder="Enter required documents and press enter"
-            defaultValue={course?.data.require_documents}
+            defaultValue={course.data?.data.require_documents}
           />
           <TagInput
             required
@@ -171,14 +146,14 @@ export default function CourseForm({ slug }: IProps) {
             wrapperCss="!basis-[50rem]"
             label="Subjects *"
             placeholder="Enter Subjects and press enter"
-            defaultValue={course?.data.subjects}
+            defaultValue={course.data?.data.subjects}
           />
           <Input
             required
             name="course_duration"
             label="Course Duration *"
             placeholder="3 days"
-            defaultValue={course?.data.course_duration}
+            defaultValue={course.data?.data.course_duration}
           />
           <Input
             required
@@ -186,14 +161,14 @@ export default function CourseForm({ slug }: IProps) {
             label="Course Fee *"
             type="number"
             placeholder="2800"
-            defaultValue={course?.data.course_fee}
+            defaultValue={course.data?.data.course_fee}
           />
           <Input
             name="min_pay_percentage"
             label="Minimum To Pay In Percentage"
             type="number"
             placeholder="100"
-            defaultValue={course?.data.min_pay_percentage || 100}
+            defaultValue={course.data?.data.min_pay_percentage || 100}
           />
           <Input
             required
@@ -201,7 +176,7 @@ export default function CourseForm({ slug }: IProps) {
             label="Total Seats *"
             type="number"
             placeholder="10"
-            defaultValue={course?.data.total_seats}
+            defaultValue={course.data?.data.total_seats}
           />
           <Input
             required
@@ -209,7 +184,7 @@ export default function CourseForm({ slug }: IProps) {
             label="Remain Seats *"
             type="number"
             placeholder="10"
-            defaultValue={course?.data.remain_seats}
+            defaultValue={course.data?.data.remain_seats}
           />
 
           <DropDown
@@ -218,31 +193,15 @@ export default function CourseForm({ slug }: IProps) {
             options={[
               { text: "Public", value: "Public" },
               { text: "Private", value: "Private" },
-              // { text: "Schedule", value: "Schedule" },
             ]}
-            onChange={handleCourseVisibilityDropdown}
-            defaultValue={course?.data.course_visibility}
+            defaultValue={course.data?.data.course_visibility}
           />
-
-          {scheduleInputVisibility ? (
-            <Input
-              required
-              name="course_update_time"
-              label="Schedule Time"
-              type="datetime-local"
-              defaultValue={new Date(
-                course?.data.course_update_time || Date.now()
-              )
-                .toISOString()
-                .slice(0, 16)}
-            />
-          ) : null}
 
           <DropDown
             label="Concern Marketing Executive *"
             name="concern_marketing_executive_id"
             options={
-              marketingTeam?.data.map((item) => ({
+              marketingTeam.data?.data.map((item) => ({
                 text: item.name,
                 value: item.employee_id,
               })) || []
@@ -253,20 +212,29 @@ export default function CourseForm({ slug }: IProps) {
             label="Course Showing Order"
             name="course_showing_order"
             placeholder="1"
-            defaultValue={course?.data.course_showing_order}
+            defaultValue={course.data?.data.course_showing_order}
+          />
+
+          <Input
+            name="max_batch"
+            type="number"
+            placeholder="Maximum Batch To Be Conducted This Month"
+            label="Maximum Batch / Month"
+            defaultValue={course.data?.data.max_batch || 0}
           />
 
           <ChooseFileInput
-            onFilePicked={handleFilePicked}
             accept=".pdf"
-            fileName={getFileName(course?.data.course_pdf) || "Choose Your Pdf"}
+            fileName={
+              getFileName(course.data?.data.course_pdf) || "Choose Your Pdf"
+            }
             key="choose_pdf"
             id="choose_pdf"
             label="Upload Course Module"
             name="course_pdf"
             viewLink={
-              course?.data.course_pdf
-                ? BASE_API + "/" + course?.data.course_pdf
+              course.data?.data.course_pdf
+                ? course.data?.data.course_pdf
                 : undefined
             }
           />

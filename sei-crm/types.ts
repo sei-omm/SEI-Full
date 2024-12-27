@@ -159,14 +159,17 @@ export type TBatches = {
   course_id: number;
 };
 
-export interface ICourse {
+export type ICourseWithSubject = {
   course_id: number;
-  course_code: string;
   course_name: string;
+  subjects: string;
+};
+
+export interface ICourse extends ICourseWithSubject {
+  course_code: string;
   institute: string;
   course_type: string;
   require_documents: string;
-  subjects: string;
   course_duration: string;
   course_fee: number;
   min_pay_percentage: number;
@@ -177,6 +180,7 @@ export interface ICourse {
   created_at: string;
   course_pdf?: string;
   course_showing_order: number;
+  max_batch: number;
   batches?: TBatches[];
 }
 
@@ -404,7 +408,7 @@ export type TInventoryItem = {
   used_by: string;
   description: string;
   minimum_quantity: number;
-  institute: string;  
+  institute: string;
   created_at: string;
 };
 
@@ -437,7 +441,7 @@ export type TInventoryWithStockItem = {
   current_status: string | null;
   current_purchase_date: string;
   current_vendor_id: number | null;
-  current_vendor_name : string | null;
+  current_vendor_name: string | null;
   cost_per_unit_current: string | null;
   cost_per_unit_previous: string | null;
   total_value: string | null;
@@ -459,4 +463,27 @@ export type TMaintenanceRecord = {
   remark: string;
   created_at: string;
   institute: string;
+};
+
+export type TOccupancyReport = {
+  course_id: number;
+  course_name: string;
+  course_code: string;
+  total_batch_conducted: string;
+  total_candidate_strength: string;
+  occupency: string;
+  max_batch_per_month: number;
+  occupency_percentage: string;
+};
+
+export type TPlannedMaintenanceSystem = {
+  planned_maintenance_system_id: number;
+  item_id: number;
+  item_name: string;
+  frequency: string;
+  last_done: string;
+  next_due: string;
+  description: string;
+  remark: string;
+  created_at: string;
 };

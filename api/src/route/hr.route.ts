@@ -20,7 +20,6 @@ import {
   updateCandidateApplicationStatus,
   updateJobPosting,
 } from "../controller/job.controller";
-import { upload } from "../middleware/multer";
 import {
   addNewEmployeeAttendance,
   generateAttendanceSheet,
@@ -52,7 +51,7 @@ hrRouter
   .get("/job/apply/:job_id", getCandidateJobApplication)
   .patch("/job/apply/:application_list_id", updateCandidateApplicationStatus)
   .get("/job/apply/track/:application_id", trackJobApplication)
-  .post("/job/apply", upload.single("resume"), applyJobAsCandidate)
+  .post("/job/apply", applyJobAsCandidate)
 
   //for attendance system
   .get("/attendance", getAllEmployeeAllAttendances)

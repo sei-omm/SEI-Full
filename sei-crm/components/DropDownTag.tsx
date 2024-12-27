@@ -35,7 +35,6 @@ function DropDownTag({
       setTags(options.filter((item) => defaultValues?.includes(item.value)))
     }
   }, [defaultValues])
-  console.log(tags)
 
   const checkClickOutside = (event: MouseEvent) => {
     if (isOpen && !modalRef.current?.contains(event.target as Node)) {
@@ -70,7 +69,7 @@ function DropDownTag({
         {label}
       </span>
 
-      <ul className="w-full flex items-center flex-wrap gap-4 mb-2">
+      <ul className={`w-full ${tags.length === 0 ? "hidden" : "flex"} items-center flex-wrap gap-4 mb-2`}>
         {tags.map((option, index) => (
           <li
             className="text-xs flex text-nowrap items-center gap-2 bg-gray-200 py-1 px-3 rounded-xl"

@@ -17,6 +17,8 @@ export const isAuthenticated = asyncErrorHandler(
     if (error) throw new ErrorHandler(401, error.message);
 
     res.locals.student_id = data?.student_id;
+    res.locals.employee_id = data?.employee_id;
+    res.locals.role = data?.role;
 
     next();
   }

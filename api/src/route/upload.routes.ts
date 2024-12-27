@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { uploadDocsFromCRM, uploadStudentDocument, uploadToComplianceRecord } from "../controller/upload.controller";
+import { uploadCandidateResume, uploadDocsFromCRM, uploadStudentDocument, uploadToComplianceRecord } from "../controller/upload.controller";
 
 export const uploadRoute = Router();
 
@@ -9,3 +9,4 @@ uploadRoute
   .post("/employee-profile", uploadStudentDocument)
   .post("/crm-documents", uploadDocsFromCRM)
   .post("/compliance-record", uploadToComplianceRecord)
+  .post("/candidate-resume", uploadCandidateResume);

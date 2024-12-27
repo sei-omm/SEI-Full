@@ -6,9 +6,12 @@ import {
   admissionReportValidator,
   courseTrendReportValidator,
   dgsIndosReportValidator,
+  occupancyExcelReportValidator,
+  occupancyReportValidator,
   receiptReportValidator,
 } from "../validator/report.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
+import { ApiResponse } from "../utils/ApiResponse";
 
 export const streamMaintenceRecordExcelReport = asyncErrorHandler(
   async (req, res) => {
@@ -522,7 +525,11 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
   // Row styling (header row)
   worksheet.getRow(3).eachCell((cell, cellNumber) => {
     cell.style = {
-      font: { bold: true, size: 14, color: { argb: cellNumber === 5 ? "FFFFFF" : "000000" } },
+      font: {
+        bold: true,
+        size: 14,
+        color: { argb: cellNumber === 5 ? "FFFFFF" : "000000" },
+      },
       alignment: { horizontal: "center", vertical: "middle" },
       fill: {
         type: "pattern",
@@ -906,6 +913,229 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
             top: { style: "thin" },
             left: { style: "thin" },
             right: { style: "thin" },
+            bottom: { style: "thin" },
+          },
+        };
+      });
+    });
+
+    pgStream.on("end", () => {
+      workbook.commit();
+      client.release(); // Release the client when done
+    });
+
+    pgStream.on("error", (err) => {
+      client.release();
+    });
+  }
+);
+
+export const streamOccupancyExcelReport = asyncErrorHandler(
+  async (req, res) => {
+    const { error, value } = occupancyExcelReportValidator.validate(req.query);
+    if (error) throw new ErrorHandler(400, error.message);
+
+    // Set response headers for streaming
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="Occupancy_Report.xlsx"'
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+      stream: res,
+      useStyles: true,
+    });
+    const worksheet = workbook.addWorksheet("Occupancy Report");
+
+    const date = new Date(value.end_date);
+    const formattedDate = new Intl.DateTimeFormat("en-GB", {
+      month: "short",
+      year: "numeric",
+    }).format(date);
+
+    //first heading
+    worksheet.mergeCells("A1:K1");
+    worksheet.getCell("A1").value = `${formattedDate} - Occupancy Report`;
+    worksheet.getCell("A1").font = {
+      size: 16,
+      bold: true,
+      color: { argb: "000000" },
+    };
+    worksheet.getCell("A1").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFFF00" }
+    };
+    worksheet.getRow(1).height = 30;
+    worksheet.getCell("A1").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    //secound heading kolkata
+    worksheet.mergeCells("A2:F2");
+    worksheet.getCell("A2").value = "SEIET, KOLKATA";
+    worksheet.getCell("A2").font = {
+      size: 11,
+      bold: true,
+      color: { argb: "000000" },
+    };
+    worksheet.getCell("A2").fill = {
+      type: "pattern",
+      pattern: "solid",
+      // fgColor: { argb: "FFFF00" },
+      fgColor: { argb: "C3D0CF" },
+    };
+    worksheet.getRow(1).height = 20;
+    worksheet.getCell("A2").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+    worksheet.getCell("A2").border = {
+      right: { style: "medium", color: { argb: "000000" } },
+    };
+
+    //secound heading faridabad
+    worksheet.mergeCells("G2:K2");
+    worksheet.getCell("G2").value = "SEIET, FARIDABAD";
+    worksheet.getCell("G2").font = {
+      size: 11,
+      bold: true,
+      color: { argb: "000000" },
+    };
+    worksheet.getCell("G2").fill = {
+      type: "pattern",
+      pattern: "solid",
+      // fgColor: { argb: "FFFF00" },
+      fgColor: { argb: "C3D0CF" },
+    };
+    worksheet.getRow(1).height = 20;
+    worksheet.getCell("G2").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    worksheet.addRow([
+      "COURSE",
+      "MAXIMUM BATCHES/MONTH",
+      "CANDIDATE STRENGTH",
+      "BATCH CONDUCTED",
+      "OCCUPENCY",
+      "% OF OCCUPENCY",
+
+      "MAXIMUM BATCHES/MONTH",
+      "CANDIDATE STRENGTH",
+      "BATCH CONDUCTED",
+      "OCCUPENCY",
+      "% OF OCCUPENCY",
+    ]);
+
+    // Row styling (header row)
+    worksheet.getRow(3).eachCell((cell, cellNumber) => {
+      cell.style = {
+        font: {
+          size: 9,
+          color: { argb: "DC2626" },
+        },
+        alignment: { horizontal: "center", vertical: "middle" },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: cellNumber === 6 ? "medium" : "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+
+    const client = await pool.connect();
+    const query = new QueryStream(
+      `
+        SELECT
+            c.course_id,
+            c.course_name,
+            c.course_code,
+            c.institute,
+            COUNT(cb.batch_id) AS total_batch_conducted,
+            SUM(cb.batch_total_seats) AS total_candidate_strength,
+            COUNT(ebc.batch_id) AS occupency,
+            mb.max_batch AS max_batch_per_month,
+            ROUND((COUNT(ebc.batch_id)::DECIMAL / NULLIF(mb.max_batch * SUM(cb.batch_total_seats), 0) * 100), 2) AS occupency_percentage
+          FROM courses AS c
+
+          -- LEFT JOIN course_batches AS cb
+          -- ON cb.course_id = c.course_id
+          LEFT JOIN (SELECT * FROM course_batches WHERE end_date BETWEEN $1 AND $2) AS cb ON cb.course_id = c.course_id
+
+          LEFT JOIN enrolled_batches_courses AS ebc
+          ON ebc.batch_id = cb.batch_id AND ebc.enrollment_status = 'Approve'
+
+          LEFT JOIN fillup_forms AS ff
+          ON ff.form_id = ebc.form_id
+
+          LEFT JOIN (
+            SELECT DISTINCT ON (course_id) course_id, max_batch
+            FROM course_with_max_batch_per_month
+            ORDER BY course_id, created_month DESC
+          ) mb ON c.course_id = mb.course_id
+
+          GROUP BY c.course_id, c.course_name, c.course_code, mb.max_batch
+    `,
+      [value.start_date, value.end_date],
+      {
+        batchSize: 10,
+      }
+    );
+
+    const pgStream = client.query(query);
+
+    // Process PostgreSQL stream data and append to Excel sheet
+    pgStream.on("data", (data) => {
+      const excelRow = worksheet.addRow([
+        data.course_code,
+        data.institute === "Kolkata" && data.max_batch_per_month
+          ? data.max_batch_per_month
+          : "x",
+        data.institute === "Kolkata" && data.total_candidate_strength
+          ? data.total_candidate_strength
+          : "x",
+        data.institute === "Kolkata" && data.total_batch_conducted
+          ? data.total_batch_conducted
+          : "x",
+        data.institute === "Kolkata" && data.occupency ? data.occupency : "x",
+        data.institute === "Kolkata" && data.occupency_percentage
+          ? data.occupency_percentage + "%"
+          : "x",
+
+        data.institute === "Faridabad" && data.max_batch_per_month
+          ? data.max_batch_per_month
+          : "x",
+        data.institute === "Faridabad" && data.total_candidate_strength
+          ? data.total_candidate_strength
+          : "x",
+        data.institute === "Faridabad" && data.total_batch_conducted
+          ? data.total_batch_conducted
+          : "x",
+        data.institute === "Faridabad" && data.occupency ? data.occupency : "x",
+        data.institute === "Faridabad" && data.occupency_percentage
+          ? data.occupency_percentage + "%"
+          : "x",
+      ]);
+      // Style the data rows
+      excelRow.eachCell((cell, cellNumber) => {
+        cell.style = {
+          font: {
+            size: 9,
+            color: { argb: "000000" },
+          },
+          alignment: { horizontal: "center" },
+          border: {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: cellNumber === 6 ? "medium" : "thin" },
             bottom: { style: "thin" },
           },
         };

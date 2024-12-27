@@ -96,6 +96,8 @@ export default function EmployeeInfo({ employeeID }: IProps) {
     employeeInfo?.dob ? calculateAge(employeeInfo.dob) : ""
   );
 
+  const employeeInstitute = useRef<string | null>(null);
+
   const [salaryValues, setSalaryValues] = useState([0, 0, 0, 0, 0, 0, 0]);
 
   const whichFormBtnClicked = useRef<"add-or-update" | "deactive-employee">(
@@ -210,6 +212,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
         setEmployeeType(employeeInfo.employee_type as EmployeeType);
       }
       setAge(employeeInfo?.dob ? calculateAge(employeeInfo?.dob) : "");
+      employeeInstitute.current = employeeInfo?.institute || null;
     }
   }, [fetchResults[1].isLoading]);
 
@@ -577,6 +580,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 </>
               ) : null}
               <DropDown
+                onChange={(value) => (employeeInstitute.current = value.value)}
                 key={"institute"}
                 label="Institute"
                 options={[
@@ -590,7 +594,12 @@ export default function EmployeeInfo({ employeeID }: IProps) {
           </div>
 
           {/* Employee Task */}
-          {employeeType === "Faculty" ? <EmployeeTask /> : null}
+          {employeeType === "Faculty" && !isNewEmployee ? (
+            <EmployeeTask
+              employeeInstitute={employeeInstitute.current || ""}
+              employeeId={employeeID as number}
+            />
+          ) : null}
 
           {/* Bank Info */}
           <div className="p-10 border card-shdow rounded-3xl">
@@ -645,108 +654,6 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   : employeeID
               }
             />
-            {/* <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-              <ChooseFileInput
-                fileName={getFileName(employeeInfo?.resume) ?? "Choose Resume"}
-                id="resume-picker"
-                label="Resume"
-                name="resume"
-                viewLink={
-                  employeeInfo?.resume
-                    ? BASE_API + "/" + employeeInfo?.resume
-                    : undefined
-                }
-              />
-
-              <ChooseFileInput
-                fileName={
-                  getFileName(employeeInfo?.pan_card) ?? "Choose Pan Card"
-                }
-                id="pan-card-picker"
-                label="Pan Card"
-                name="pan_card"
-                viewLink={
-                  employeeInfo?.pan_card
-                    ? BASE_API + "/" + employeeInfo?.pan_card
-                    : undefined
-                }
-              />
-
-              <ChooseFileInput
-                fileName={
-                  getFileName(employeeInfo?.aadhaar_card) ??
-                  "Choose Aadhar Card"
-                }
-                id="aadhaar-card-picker"
-                label="Aadhaar Card"
-                name="aadhaar_card"
-                viewLink={
-                  employeeInfo?.aadhaar_card
-                    ? BASE_API + "/" + employeeInfo?.aadhaar_card
-                    : undefined
-                }
-              />
-
-              <ChooseFileInput
-                fileName={
-                  getFileName(employeeInfo?.ten_pass_certificate) ??
-                  "Choose 10th Pass Certificate"
-                }
-                id="ten-pass-certificate-picker"
-                label="10th Pass Certificate"
-                name="ten_pass_certificate"
-                viewLink={
-                  employeeInfo?.ten_pass_certificate
-                    ? BASE_API + "/" + employeeInfo?.ten_pass_certificate
-                    : undefined
-                }
-              />
-
-              <ChooseFileInput
-                fileName={
-                  getFileName(employeeInfo?.twelve_pass_certificate) ??
-                  "Choose 12th Pass Certificate"
-                }
-                id="twelve-pass-certificate-picker"
-                label="12th Pass Certificate"
-                name="twelve_pass_certificate"
-                viewLink={
-                  employeeInfo?.twelve_pass_certificate
-                    ? BASE_API + "/" + employeeInfo?.twelve_pass_certificate
-                    : undefined
-                }
-              />
-
-              <ChooseFileInput
-                fileName={
-                  getFileName(employeeInfo?.graduation_certificate) ??
-                  "Choose Graduation Certificate"
-                }
-                id="graduation-certificate-picker"
-                label="Choose Graduation Certificate"
-                name="graduation_certificate"
-                viewLink={
-                  employeeInfo?.graduation_certificate
-                    ? BASE_API + "/" + employeeInfo?.graduation_certificate
-                    : undefined
-                }
-              />
-
-              <ChooseFileInput
-                fileName={
-                  getFileName(employeeInfo?.other_certificate) ??
-                  "Choose Other Certificate"
-                }
-                id="other-certificate-picker"
-                label="Choose Other Certificate"
-                name="other_certificate"
-                viewLink={
-                  employeeInfo?.other_certificate
-                    ? BASE_API + "/" + employeeInfo?.other_certificate
-                    : undefined
-                }
-              />
-            </div> */}
           </div>
 
           {/* Salary Info */}

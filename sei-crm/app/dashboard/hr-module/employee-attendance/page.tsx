@@ -24,12 +24,9 @@ export default async function page({ searchParams }: IProps) {
     body: [],
   };
 
-  const response = await fetch(
-    BASE_API + "/hr/attendance?" + sParams.toString(),
-    {
-      cache: "no-cache",
-    }
-  );
+  const response = await fetch(BASE_API + "/hr/attendance?" + sParams.toString(), {
+    cache: "no-cache",
+  });
   const result = (await response.json()) as ISuccess<any[]>;
 
   result.data?.forEach((item, index) => {
@@ -48,15 +45,15 @@ export default async function page({ searchParams }: IProps) {
   return (
     <section className="w-full space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-xl text-foreground">
+        {/* <h2 className="font-semibold text-xl text-foreground">
           Employee&apos;s Attendance
-        </h2>
-        <SelectDate searchParams={searchParams} />
+        </h2> */}
+        <SelectDate />
       </div>
 
       <div className="flex items-center justify-end">
         <DownloadFormUrl
-          urlToDownload={BASE_API + "/hr/attendance/export-sheet"}
+          urlToDownload={BASE_API + "/hr/attendance/export-sheet?" + sParams.toString()}
         >
           <Button className="!bg-[#34A853] flex-center gap-4">
             <LuFileSpreadsheet size={20} />

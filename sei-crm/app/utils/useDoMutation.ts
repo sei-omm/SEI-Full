@@ -22,7 +22,8 @@ async function submitInformationToServer<T>(params: ParamsType) {
     headers: params.headers
       ? { ...params.headers }
       : {
-          "Content-Type": "multipart/form-data",
+          // "Content-Type": "multipart/form-data",
+          "Content-Type" : "application/json"
         },
   });
 

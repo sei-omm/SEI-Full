@@ -31,13 +31,12 @@ export default function ManageAdmissionFilter() {
       (await axios.get(`${BASE_API}/course/drop-down?institute=${institute}`))
         .data,
     onSuccess(data) {
-      setCurrentBatchDate(searchParams.get("batch_date") || currentBatches[0]);
-      setCurrentBatches(
-        data.data.find(
-          (fItem) =>
-            fItem.course_id == parseInt(searchParams.get("course_id") || "")
-        )?.course_batches || []
-      );
+      const batchesInfo = data.data.find(
+        (fItem) =>
+          fItem.course_id == parseInt(searchParams.get("course_id") || data.data[0].course_id.toString())
+      )?.course_batches || [];
+      setCurrentBatches(batchesInfo);
+      setCurrentBatchDate(searchParams.get("batch_date") || batchesInfo[0]);
     },
     refetchOnMount: true,
   });
@@ -76,7 +75,7 @@ export default function ManageAdmissionFilter() {
         label="Course Type"
         options={[
           { text: "DGS Approved", value: "DGS Approved" },
-          { text: "Faridabad", value: "Value Added" },
+          { text: "Value Added", value: "Value Added" },
         ]}
         defaultValue={searchParams.get("course_type") || "DGS Approved"}
       />
@@ -85,10 +84,10 @@ export default function ManageAdmissionFilter() {
         {(course) => (
           <DropDown
             onChange={(item) => {
-              setCurrentBatches(
-                course.data.find((fItem) => fItem.course_id == item.value)
-                  ?.course_batches || []
-              );
+              const batchesInfo = course.data.find((fItem) => fItem.course_id == item.value)
+              ?.course_batches || []
+              setCurrentBatchDate(searchParams.get("batch_date") || batchesInfo[0]);
+              setCurrentBatches(batchesInfo);
             }}
             key={"course_id"}
             name="course_id"
@@ -97,7 +96,9 @@ export default function ManageAdmissionFilter() {
               text: item.course_name,
               value: item.course_id,
             }))}
-            defaultValue={searchParams.get("course_id")}
+            defaultValue={
+              searchParams.get("course_id") || course.data[0].course_id
+            }
           />
         )}
       </HandleDataSuspense>

@@ -8,6 +8,7 @@ import {
   addNewItemValidator,
   addNewListValidator,
   addNewMaintenceRecordValidator,
+  addNewPlannedMaintenanceSystemValidator,
   addNewVendorValidator,
   calcluteStockInfoValidator,
   consumeStockValidator,
@@ -24,6 +25,7 @@ import {
   updateItemValidator,
   updateMaintenceRecordStatusValidator,
   updateMaintenceRecordValidator,
+  updatePlannedMaintenanceSystemValidator,
   updateVendorValidator,
 } from "../validator/inventory.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
@@ -57,7 +59,7 @@ export const addNewList = asyncErrorHandler(
 //for inventory item basic info
 export const getAllItemInfo = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { filterQuery, filterValues } = filterToSql(req, "iii");
+    const { filterQuery, filterValues } = filterToSql(req.query, "iii");
 
     const { rows } = await pool.query(
       `
@@ -450,6 +452,78 @@ export const updateMaintenceRecordStatus = asyncErrorHandler(
 
 export const getMaintenceRecordsExcel = asyncErrorHandler(
   async (req: Request, res: Response) => {}
+);
+
+//for planned maintenance system
+export const getPlannedMaintenanceSystem = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { rows } = await pool.query(
+      `
+      SELECT 
+      pm.*,
+      iii.item_name
+      FROM planned_maintenance_system AS pm
+
+      LEFT JOIN inventory_item_info AS iii
+      ON iii.item_id = pm.item_id
+      `
+    );
+    res.status(200).json(new ApiResponse(200, "", rows));
+  }
+);
+
+export const getSinglePlannedMaintenanceSystem = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { rows, rowCount } = await pool.query(
+      `SELECT * FROM planned_maintenance_system WHERE planned_maintenance_system_id = $1`,
+      [req.params.planned_maintenance_system_id] //planned_maintenance_system_id
+    );
+
+    if (rowCount === 0)
+      throw new ErrorHandler(400, "No Planned Maintenance System Found");
+
+    res.status(200).json(new ApiResponse(200, "", rows[0]));
+  }
+);
+
+export const addNewPlannedMaintenanceSystem = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { error } = addNewPlannedMaintenanceSystemValidator.validate(
+      req.body
+    );
+    if (error) throw new ErrorHandler(400, error.message);
+
+    const { columns, params, values } = objectToSqlInsert(req.body);
+    await pool.query(
+      `INSERT INTO planned_maintenance_system ${columns} VALUES ${params}`,
+      values
+    );
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, "New Planned Maintenance System Has Added"));
+  }
+);
+
+export const updatePlannedMaintenanceSystem = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { error } = updatePlannedMaintenanceSystemValidator.validate({
+      ...req.body,
+      ...req.params,
+    });
+    if (error) throw new ErrorHandler(400, error.message);
+
+    const { keys, values, paramsNum } = objectToSqlConverterUpdate(req.body);
+    values.push(req.params.planned_maintenance_system_id);
+    await pool.query(
+      `UPDATE planned_maintenance_system SET ${keys} WHERE planned_maintenance_system_id = $${paramsNum}`,
+      values
+    );
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, "Planned Maintenance System Has Updated"));
+  }
 );
 
 //for durable

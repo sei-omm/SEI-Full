@@ -22,8 +22,8 @@ const table_name = "job";
 
 export const getAllJobs = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const {error, value} = getJobsValidator.validate(req.query);
-    if(error) return res.status(200).json(new ApiResponse(200, "", []));
+    const { error, value } = getJobsValidator.validate(req.query);
+    if (error) return res.status(200).json(new ApiResponse(200, "", []));
 
     const department = value.department;
     const queryValues: string[] = [];
@@ -117,10 +117,6 @@ export const removeJobPosting = asyncErrorHandler(
 //candidate job application controllers
 export const applyJobAsCandidate = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    if (!req.file) {
-      throw new ErrorHandler(400, "'resume' is required");
-    }
-
     const { error, value } = applyJobValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
@@ -128,8 +124,8 @@ export const applyJobAsCandidate = asyncErrorHandler(
 
     const bodyData = {
       ...value,
-      resume: req.file.path.replace("\\", "/"),
       application_id: `SEI${uniqueNumber}`,
+      application_status: "pending",
     };
 
     const { columns, params, values } = objectToSqlInsert(bodyData);
@@ -141,7 +137,7 @@ export const applyJobAsCandidate = asyncErrorHandler(
 
     res
       .status(201)
-      .json(new ApiResponse(201, "Job Successfully Applied", rows));
+      .json(new ApiResponse(201, "Job Application Successfully Submitted", rows));
   }
 );
 

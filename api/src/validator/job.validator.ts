@@ -32,6 +32,7 @@ export const applyJobValidator = Joi.object({
   dob: Joi.date().required(), //yyyy-mm-dd
   work_experience: Joi.string().required(),
   job_id: Joi.number().required(),
+  resume : Joi.string().required()
 });
 
 export const getCandidateJobApplicationValidator = Joi.object({

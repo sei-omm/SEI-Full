@@ -22,7 +22,7 @@ import {
   IoListSharp,
   IoPersonAddOutline,
 } from "react-icons/io5";
-import { GrVend } from "react-icons/gr";
+import { GrHostMaintenance, GrVend } from "react-icons/gr";
 import { BsReverseLayoutTextSidebarReverse } from "react-icons/bs";
 
 const sidebarOptions = [
@@ -115,6 +115,12 @@ const sidebarOptions = [
         name: "Maintence Record",
         slug: "/dashboard/inventory/maintence-record",
       },
+      {
+        id: "7-3",
+        icon: <GrHostMaintenance />,
+        name: "Planned Maintenance System",
+        slug: "/dashboard/inventory/planned-maintenance-system",
+      }
     ],
   },
 
@@ -144,7 +150,7 @@ const sidebarOptions = [
         icon: <TbCategory2 />,
         name: "Course",
         slug: "/dashboard/course/manage-course",
-      },
+      }
     ],
   },
 
@@ -223,6 +229,12 @@ const sidebarOptions = [
         icon: <TbReportSearch />,
         name: "Receipt Report",
         slug: "/dashboard/report/receipt",
+      },
+      {
+        id: "5-7",
+        icon: <TbReportSearch />,
+        name: "Occupancy Report",
+        slug: "/dashboard/report/occupancy",
       },
     ],
   },

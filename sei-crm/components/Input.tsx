@@ -9,6 +9,7 @@ interface IProps extends InputTypes {
   defaultValue?: any;
   moneyInput?: boolean;
   viewOnly?: boolean;
+  viewOnlyText?: string;
 }
 
 export default function Input(props: IProps) {
@@ -25,7 +26,7 @@ export default function Input(props: IProps) {
         {props.moneyInput ? <span>₹</span> : null}
 
         <span className={props.viewOnly ? "block" : "hidden"}>
-          {props.defaultValue || props.value}
+          {props.viewOnlyText ?? props.defaultValue ?? props.value}
         </span>
         <input
           type="text"

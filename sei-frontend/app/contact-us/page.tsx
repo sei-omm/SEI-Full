@@ -90,8 +90,8 @@ export default function page({ searchParams }: IProps) {
                 <h2 className="text-xl font-semibold">Faridabad</h2>
                 <div>
                   <span className="block text-[#1F1F1FA1]">Email us</span>
-                  <Link href={"mailt:fbd.seiedutrust@gmail.com"}>
-                    fbd.seiedutrust@gmail.com
+                  <Link href={"mailt:fbd@seiedutrust.com"}>
+                  fbd@seiedutrust.com
                   </Link>
                 </div>
 

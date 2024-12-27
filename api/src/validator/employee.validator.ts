@@ -121,3 +121,9 @@ export const employeeLoginValidator = Joi.object({
 export const getEmployeeDocumentValidator = Joi.object({
   employee_id: Joi.number().required(),
 });
+
+export const assignFacultyCourseSubjectValidator = Joi.object({
+  faculty_id: Joi.number().required(),
+  course_id: Joi.number().required(),
+  subject: Joi.string().required(),
+});

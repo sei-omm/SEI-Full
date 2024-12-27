@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import Input from "./Input";
 
 interface IProps {
-  viewOnly ? : boolean;
+  viewOnly?: boolean;
+  viewOnlyText?: string;
   name?: string;
   label?: string;
   date?: string | null;
@@ -25,6 +26,13 @@ export default function DateInput(props: IProps) {
   };
 
   return (
-    <Input viewOnly = {props.viewOnly} {...props} onChange={handleDateChange} type="date" value={date} />
+    <Input
+      viewOnly={props.viewOnly}
+      viewOnlyText={props.viewOnlyText}
+      {...props}
+      onChange={handleDateChange}
+      type="date"
+      value={date}
+    />
   );
 }

@@ -9,6 +9,7 @@ import {
 import { ErrorHandler } from "../utils/ErrorHandler";
 import XLSX from "xlsx";
 import { months } from "../constant";
+import { filterToSql } from "../utils/filterToSql";
 
 const date = new Date();
 const table_name = "attendance";
@@ -17,6 +18,14 @@ async function generateEmployeeAttendance(req: Request) {
   let loopDate = 1;
   const currentYear = req.query.year ?? date.getFullYear();
   const currentMoth = req.query.month ?? date.getMonth() + 1;
+
+  const queryForFilter = { ...req.query } as any;
+  delete queryForFilter.month;
+  delete queryForFilter.year;
+  const { filterQuery, filterValues, placeholderNum } = filterToSql(
+    queryForFilter,
+    "e"
+  );
 
   const thisMonthLastDate = new Date(
     parseInt(`${currentYear}`),
@@ -61,15 +70,20 @@ async function generateEmployeeAttendance(req: Request) {
       FROM 
           employee e
       LEFT JOIN 
-          attendance a ON e.id = a.employee_id AND a.date BETWEEN $1 AND $2
+          attendance a ON e.id = a.employee_id AND a.date BETWEEN $${placeholderNum} AND $${
+    placeholderNum + 1
+  }
       LEFT JOIN
           leave l ON e.id = l.employee_id
+
+       ${filterQuery}
+
       GROUP BY 
           e.id, e.name
       ORDER BY 
           e.id;
     `;
-  return await pool.query(sql, [startDate, endDate]);
+  return await pool.query(sql, [...filterValues, startDate, endDate]);
 }
 
 export const getAllEmployeeAllAttendances = asyncErrorHandler(
@@ -227,7 +241,9 @@ export const generateAttendanceSheet = asyncErrorHandler(
 
     if (rowCount === 0) throw new ErrorHandler(400, "No Employee Found");
 
-    const excelSheetName = `${months[(currentMoth as number) - 1]}-Attendance-Sheet-Report.xlsx`;
+    const excelSheetName = `${
+      months[(currentMoth as number) - 1]
+    }-Attendance-Sheet-Report.xlsx`;
 
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.json_to_sheet(rows);
