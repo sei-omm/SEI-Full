@@ -81,7 +81,7 @@ export default function ApplyJobDialog() {
   }
 
   return (
-    <DialogBody className="relative overflow-hidden min-w-[50rem]">
+    <DialogBody className="relative overflow-hidden min-w-[50rem] sm:min-w-[90%] sm:max-h-[90%] sm:overflow-y-auto">
       <div className="space-y-1">
         <h2 className="font-bold text-gray-700 text-2xl">
           Upload Your <span className="text-[#e9b858]">Resume</span>

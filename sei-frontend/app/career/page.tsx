@@ -116,7 +116,7 @@ export default async function page({ searchParams }: IProps) {
                 <p className="text-gray-500">{job.job_description}</p>
               </div>
 
-              <div className="mt-2 flex items-center gap-6 flex-wrap">
+              <div className="mt-2 flex items-center gap-x-6 gap-y-2 flex-wrap">
                 <div>
                   <HiOutlineLocationMarker className="float-left mr-1 mt-1" />
                   <span className="text-sm">{job.address}</span>
