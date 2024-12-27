@@ -498,7 +498,6 @@ CREATE TABLE maintence_record (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
 -- New DBS -> 27 Dec 2024
 
 -- Course Table
