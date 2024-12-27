@@ -11,7 +11,7 @@ interface IProps {
 
 export default async function CoursesPage({ centerName }: IProps) {
   const response = await fetch(
-    `${BASE_API}/course/with-batches?center=${capitalizeFirstChar(
+    `${BASE_API}/course/with-batches?institute=${capitalizeFirstChar(
       centerName || ""
     )}`,
     {
