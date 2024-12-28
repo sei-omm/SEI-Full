@@ -20,6 +20,7 @@ import { storageRouter } from "./route/storage.routes";
 import { inventoryRoute } from "./route/inventory.routes";
 import { notificationRoutes } from "./route/notification.routes";
 import { receiptRoutes } from "./route/receipt.routes";
+import path from "path";
 
 dotenv.config();
 const app = express();
@@ -27,7 +28,7 @@ const PORT = 8080;
 
 app.use(express.static("public"));
 app.set("view engine", "ejs");
-app.set("views", "public/views");
+app.set("views", path.resolve("public/views"));
 app.use(express.json());
 app.use(
   cors({
