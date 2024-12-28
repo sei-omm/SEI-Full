@@ -17,6 +17,8 @@ export const verifyDueOnlinePaymentValidator = Joi.object({
 export const addPaymentValidator = Joi.object({
   student_id: Joi.number().required(),
   paid_amount: Joi.number().optional(),
+  discount_amount: Joi.number().optional(),
+  discount_remark: Joi.string().optional().allow(""),
   payment_type: Joi.optional().allow(""),
   remark: Joi.string().optional().allow(""),
   misc_payment: Joi.number().optional(),

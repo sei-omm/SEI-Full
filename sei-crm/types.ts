@@ -203,6 +203,8 @@ export type TStudentPayment = {
   order_id: null | string;
   misc_payment: number;
   misc_remark: string;
+  discount_amount: number;
+  discount_remark: string;
   created_at: string;
   payment_type: string;
 };
@@ -212,6 +214,7 @@ export type TPaymentInfo = {
   total_paid: number;
   total_due: number;
   total_misc_payment: number;
+  total_discount: number;
   payments: TStudentPayment[];
 };
 

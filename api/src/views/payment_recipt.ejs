@@ -1,0 +1,969 @@
+<html lang="en" ng-app="indexApp">
+
+<head>
+    <title>Receipt</title>
+
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700|Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic">
+    <!-- <link rel="stylesheet" href="https://seiedutrust.com/Content/bootstrap/css/bootstrap.css"> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <style>
+        .receipt_main_div {
+            width: 1000px;
+            margin: 0 auto;
+        }
+
+        .receipt_border_bottom {
+            border-bottom: 1px dotted #222;
+        }
+
+        .receipt_box {
+            border: 2px solid #222;
+        }
+
+        .receipt_box_right {
+            border-right: 2px solid #222;
+            height: 200px;
+        }
+
+        .check {
+            width: auto;
+            float: right;
+            background: #215b89;
+            padding: 10px 15px;
+            font-size: 12px !important;
+            font-weight: bold;
+            color: #fff !important;
+            margin-right: 5px;
+            margin-top: -5px;
+        }
+
+        #p {
+            font-size: 8px;
+        }
+    </style>
+
+</head>
+
+<body style="font-size:9px;" ng-controller="indexController" ng-init="PrintReceipt_fninit();">
+
+    <div class="receipt_main_div">
+
+
+        <div class="col-xs-6" style="border-right:1px dashed;">
+
+            <div class="row" style="margin-top:20px;">
+
+
+                <div class="col-xs-12">
+
+                    <div class="row">
+
+                        <div class="col-xs-6">
+
+                            <strong>
+                                <p>Receipt No: <span>15454548</span></p>
+                            </strong>
+
+                        </div>
+
+
+                        <div class="col-xs-6" style="text-align:right; float:right;">
+
+                            <strong>
+                                <p>Payment Date : <span>17 Dec 2000</span></p>
+                            </strong>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="form-group col-xs-12" style="text-align:center"
+                    ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==1 ">
+
+                    <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
+                        SEI EDUCATIONAL TRUST, KOLKATA<br>
+                    </label>
+                    <label style="font-size:xx-small; text-align:center;">
+                        'Debamita',B.B.T Road, Village - Gopalpur,P.O. Sarkarpool,<br>
+                        P.S - Maheshtala,Kolkata - 700141, India<br>
+                        MTI No.: 303014 Phone/Fax: +91-33-24019955, AOH: +91-9830782955<br>
+                        Email: seitrust.edu@gmail; kol@seiedutrust.com Website: seiedutrust.com
+
+                    </label>
+                </div>
+                <!-- <div class="form-group col-xs-12" style="text-align:center"
+                    ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==2 ">
+                    <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
+                        SEI EDUCATIONAL TRUST, FARIDABAD<br>
+                    </label>
+                    <label style="font-size:xx-small; text-align:center;">
+                        Scf (s)- 13 Sector-11D Market, Faridabad-121006<br>
+                        MTI No.: 103011 Phone/Fax: +91-129-4002955, AOH: +91-9643512955<br>
+                        Email: seitrust.edu@gmail; fbd@seiedutrust.com Website: seiedutrust.com
+
+                    </label>
+                </div> -->
+
+
+            </div>
+
+
+
+            <div class="col-xs-12" style="margin-top: 5px;">
+
+                <div class="row">
+                    <div class="col-xs-2">
+                        <strong>
+                            <p>Mr./Mrs</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-10 ">
+                        <p style="text-decoration:underline">Somnath Gupta</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-2">
+                        <strong>
+                            <p>InDoSNo</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-2 ">
+                        <p style="text-decoration:underline">OKFJ11FC</p>
+                    </div>
+
+                    <div class="col-xs-2">
+                        <strong>
+                            <p>Contact</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-2 ">
+                        <p style="text-decoration:underline">8784578454</p>
+                    </div>
+
+                    <div class="col-xs-1">
+                        <strong>
+                            <p>Email</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-3 ">
+                        <p style="text-decoration:underline">somnathgupta@gmail.com</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-4">
+                        <strong>
+                            <p>For the month of</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-8 ">
+                        <p style="text-decoration:underline">1-December-2024</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div style="margin:10px 0px 15px; border-top:2px solid #222; width: 100%; float: left;">
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-3">
+                        <strong>
+                            <p>Course</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-5 ">
+                        <span style="text-decoration:underline;" ng-repeat="x in PaymentReceiptValue.Courses">
+                            MEO CLASS II, MEO CLASS III
+                        </span>
+                    </div>
+                    <div class="col-xs-4" style="text-align:center">
+                        <strong>
+                            <p>Amount (Rs.)</p>
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Admission Fee<br> (Part-Payment)</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-4" style="text-align:center;">
+                        <p>Rs 1000 /-</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Tuition Fee</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <p></p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Development Fee</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <p></p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Form Charge</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <p></p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Cost of Study Material</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <p></p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Meal/Food Charge</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <p></p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Miscellaneous Charges<br> (NULL)</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-4" style="text-align:center;">
+                        <p>Rs 0 /-</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="col-xs-12" style="margin-top:15px;">
+
+                <div class="row">
+                    <div class="col-xs-6">
+                        <strong>
+                            <p style="text-transform:uppercase;">Money not Refundable</p>
+                        </strong>
+                    </div>
+
+
+
+                    <div class="col-xs-3" style="text-align: right; padding-right: 30px;">
+                        <strong>
+                            <p>TOTAL</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-3" style="text-align:center;">
+                        <p>Rs 1000 /-</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div style="margin:10px 0px; border-top:2px solid #222; width: 100%; float: left;">
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-10">
+
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <strong>
+                            <p>Collector</p>
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-3">
+                        <strong>
+                            <p>Remarks :</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-9" style="">
+                        10000/- PART PAYMENT IN ICICI BANK ON 25-11-24
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="col-xs-12" style="border: 1px solid;">
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <strong>
+                            <p>Course Fees Info:</p>
+                        </strong>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-4">
+                        <strong>
+                            <p>Course Fee :- Rs 21000 /-</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-4">
+                        <strong>
+                            <p>Misc Fee :- Rs 0 /-</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-4">
+                        <strong>
+                            <p>Disc Applied :- Rs 0 /-</p>
+                        </strong>
+                    </div>
+                </div>
+                <div class="row">
+
+                    <div class="col-xs-6">
+                        <strong>
+                            <p>Total Paid Till Now :- Rs 1500 /-</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-6">
+                        <strong>
+                            <p>Due :- Rs 100 /-</p>
+                        </strong>
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- Same Or Right Side -->
+
+        <div class="col-xs-6" style="border-right:1px dashed;">
+
+            <div class="row" style="margin-top:20px;">
+
+
+                <div class="col-xs-12">
+
+                    <div class="row">
+
+                        <div class="col-xs-6">
+
+                            <strong>
+                                <p>Receipt No: <span>15454548</span></p>
+                            </strong>
+
+                        </div>
+
+
+                        <div class="col-xs-6" style="text-align:right; float:right;">
+
+                            <strong>
+                                <p>Payment Date : <span>17 Dec 2000</span></p>
+                            </strong>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="form-group col-xs-12" style="text-align:center"
+                    ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==1 ">
+
+                    <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
+                        SEI EDUCATIONAL TRUST, KOLKATA<br>
+                    </label>
+                    <label style="font-size:xx-small; text-align:center;">
+                        'Debamita',B.B.T Road, Village - Gopalpur,P.O. Sarkarpool,<br>
+                        P.S - Maheshtala,Kolkata - 700141, India<br>
+                        MTI No.: 303014 Phone/Fax: +91-33-24019955, AOH: +91-9830782955<br>
+                        Email: seitrust.edu@gmail; kol@seiedutrust.com Website: seiedutrust.com
+
+                    </label>
+                </div>
+                <!-- <div class="form-group col-xs-12" style="text-align:center"
+                    ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==2 ">
+                    <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
+                        SEI EDUCATIONAL TRUST, FARIDABAD<br>
+                    </label>
+                    <label style="font-size:xx-small; text-align:center;">
+                        Scf (s)- 13 Sector-11D Market, Faridabad-121006<br>
+                        MTI No.: 103011 Phone/Fax: +91-129-4002955, AOH: +91-9643512955<br>
+                        Email: seitrust.edu@gmail; fbd@seiedutrust.com Website: seiedutrust.com
+
+                    </label>
+                </div> -->
+
+
+            </div>
+
+
+
+            <div class="col-xs-12" style="margin-top: 5px;">
+
+                <div class="row">
+                    <div class="col-xs-2">
+                        <strong>
+                            <p>Mr./Mrs</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-10 ">
+                        <p style="text-decoration:underline">Somnath Gupta</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-2">
+                        <strong>
+                            <p>InDoSNo</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-2 ">
+                        <p style="text-decoration:underline">OKFJ11FC</p>
+                    </div>
+
+                    <div class="col-xs-2">
+                        <strong>
+                            <p>Contact</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-2 ">
+                        <p style="text-decoration:underline">8784578454</p>
+                    </div>
+
+                    <div class="col-xs-1">
+                        <strong>
+                            <p>Email</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-3 ">
+                        <p style="text-decoration:underline">somnathgupta@gmail.com</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-4">
+                        <strong>
+                            <p>For the month of</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-8 ">
+                        <p style="text-decoration:underline">1-December-2024</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div style="margin:10px 0px 15px; border-top:2px solid #222; width: 100%; float: left;">
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-3">
+                        <strong>
+                            <p>Course</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-5 ">
+                        <span style="text-decoration:underline;" ng-repeat="x in PaymentReceiptValue.Courses">
+                            MEO CLASS II, MEO CLASS III
+                        </span>
+                    </div>
+                    <div class="col-xs-4" style="text-align:center">
+                        <strong>
+                            <p>Amount (Rs.)</p>
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Admission Fee<br> (Part-Payment)</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-4" style="text-align:center;">
+                        <p>Rs 1000 /-</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Tuition Fee</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <p></p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Development Fee</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <p></p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Form Charge</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <p></p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Cost of Study Material</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <p></p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Meal/Food Charge</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <p></p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-5">
+                        <strong>
+                            <p>Miscellaneous Charges<br> (NULL)</p>
+                        </strong>
+                    </div>
+
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-1 receipt_border_bottom">
+                        <p></p>
+                    </div>
+                    <div class="col-xs-4" style="text-align:center;">
+                        <p>Rs 0 /-</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="col-xs-12" style="margin-top:15px;">
+
+                <div class="row">
+                    <div class="col-xs-6">
+                        <strong>
+                            <p style="text-transform:uppercase;">Money not Refundable</p>
+                        </strong>
+                    </div>
+
+
+
+                    <div class="col-xs-3" style="text-align: right; padding-right: 30px;">
+                        <strong>
+                            <p>TOTAL</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-3" style="text-align:center;">
+                        <p>Rs 1000 /-</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div style="margin:10px 0px; border-top:2px solid #222; width: 100%; float: left;">
+
+            </div>
+
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-10">
+
+                    </div>
+                    <div class="col-xs-2" style="text-align:center;">
+                        <strong>
+                            <p>Collector</p>
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="col-xs-12">
+
+                <div class="row">
+                    <div class="col-xs-3">
+                        <strong>
+                            <p>Remarks :</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-9" style="">
+                        10000/- PART PAYMENT IN ICICI BANK ON 25-11-24
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="col-xs-12" style="border: 1px solid;">
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <strong>
+                            <p>Course Fees Info:</p>
+                        </strong>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-4">
+                        <strong>
+                            <p>Course Fee :- Rs 21000 /-</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-4">
+                        <strong>
+                            <p>Misc Fee :- Rs 0 /-</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-4">
+                        <strong>
+                            <p>Disc Applied :- Rs 0 /-</p>
+                        </strong>
+                    </div>
+                </div>
+                <div class="row">
+
+                    <div class="col-xs-6">
+                        <strong>
+                            <p>Total Paid Till Now :- Rs 1500 /-</p>
+                        </strong>
+                    </div>
+                    <div class="col-xs-6">
+                        <strong>
+                            <p>Due :- Rs 100 /-</p>
+                        </strong>
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+
+
+        <div class="col-xs-12">
+
+            <img style="width:100%;" src="https://seiedutrust.com/content/images/cut2.png" alt="" />
+
+        </div>
+
+
+
+
+
+    </div>
+
+    <div id="printOption" style="position:fixed;bottom:30px;width:100%">
+        <button class="check no-print"
+            onclick="document.getElementById('printOption').style.visibility = 'hidden'; window.print(); return true;">Print</button>
+    </div>
+
+</body>
+
+</html>

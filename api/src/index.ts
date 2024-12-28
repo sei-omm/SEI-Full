@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
 import { globalErrorController } from "./controller/error.controller";
 import { ApiResponse } from "./utils/ApiResponse";
 import { hrRouter } from "./route/hr.route";
@@ -19,6 +20,7 @@ import cookieParser from "cookie-parser";
 import { storageRouter } from "./route/storage.routes";
 import { inventoryRoute } from "./route/inventory.routes";
 import { notificationRoutes } from "./route/notification.routes";
+import { receiptRoutes } from "./route/receipt.routes";
 
 // import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 
@@ -28,6 +30,9 @@ const app = express();
 const PORT = 8080;
 
 app.use(express.static("public"));
+app.use(express.static(path.resolve("./src/views")));
+app.set("views", path.resolve("./src/views"));
+app.set("view engine", "ejs");
 app.use(express.json());
 app.use(
   cors({
@@ -52,6 +57,7 @@ app.use("/api/v1/subject", subjectRoute);
 app.use("/api/v1/storage", storageRouter);
 app.use("/api/v1/inventory", inventoryRoute);
 app.use("/api/v1/notification", notificationRoutes);
+app.use("/api/v1/receipt", receiptRoutes);
 app.use("/api/v1/db", setupDbRoute);
 
 //global error handler

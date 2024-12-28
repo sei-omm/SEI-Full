@@ -629,6 +629,8 @@ export const addPayment = asyncErrorHandler(
     const { error, value } = await addPaymentValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
+    console.log(value);
+
     const paymentID = Date.now();
     // delete value.payment_type;
 
@@ -638,6 +640,7 @@ export const addPayment = asyncErrorHandler(
         p.course_id,
         p.batch_id,
         -- SUM(p.paid_amount) as total_paid,
+        SUM(p.paid_amount) as paid_amount,
         cb.batch_fee - SUM(p.paid_amount) as due_amount
       FROM payments AS p
 
@@ -666,11 +669,36 @@ export const addPayment = asyncErrorHandler(
           item.course_id, //course id
           item.batch_id, //batch id
           value.form_id,
-          value.payment_type
+          value.payment_type,
+          0.0,
+          ""
+        );
+      });
+    } else if (value.payment_type === "Discount") {
+      rows.forEach((item) => {
+        valuesToStore.push(
+          value.student_id,
+          0,
+          paymentID,
+          "",
+          value.mode,
+          "",
+          0.0,
+          "",
+          item.course_id,
+          item.batch_id,
+          value.form_id,
+          value.payment_type,
+          parseInt(value.discount_amount ?? 0) / rows.length,
+          value.discount_remark
         );
       });
     } else {
-      const result = distributeAmountEfficiently(rows, value.paid_amount);
+      const result = distributeAmountEfficiently(
+        rows,
+        value.paid_amount,
+        value.paid_amount < 0 ? "paid_amount" : "due_amount"
+      );
       result.forEach((item) => {
         valuesToStore.push(
           value.student_id,
@@ -679,21 +707,22 @@ export const addPayment = asyncErrorHandler(
           value.remark ?? "",
           value.mode,
           "",
-          // parseInt(value.misc_payment ?? 0) / rows.length,
           0,
           value.misc_remark,
           item.course_id,
           item.batch_id,
           value.form_id,
-          value.payment_type
+          value.payment_type,
+          0.0,
+          ""
         );
       });
     }
 
     await pool.query(
-      `INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, batch_id, form_id, payment_type)
+      `INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, batch_id, form_id, payment_type, discount_amount, discount_remark)
        VALUES ${
-         sqlPlaceholderCreator(12, valuesToStore.length / 12).placeholder
+         sqlPlaceholderCreator(14, valuesToStore.length / 14).placeholder
        }
       `,
       valuesToStore

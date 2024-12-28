@@ -552,6 +552,13 @@ CREATE TABLE notification_to (
     to_role VARCHAR(255)
 );
 
+
+-- New DBS -> 28 Dec 2024
+
+ALTER TABLE payments
+ADD discount_amount DECIMAL(10, 2) DEFAULT 0.0,
+ADD discount_remark TEXT;
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

@@ -165,12 +165,14 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
     total_fee: number;
     total_due: number;
     total_misc_payment: number;
+    total_discount: number;
     payments: any[];
   } = {
     total_paid: 0,
     total_fee: 0,
     total_due: 0,
     total_misc_payment: 0,
+    total_discount : 0,
     payments: [],
   };
 
@@ -183,19 +185,20 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
         parseFloat(tempPayInfo.paid_amount) + parseFloat(item.paid_amount);
       tempPayInfo.misc_payment =
         parseFloat(tempPayInfo.misc_payment) + parseFloat(item.misc_payment);
+      tempPayInfo.discount_amount =
+        parseFloat(tempPayInfo.discount_amount) + parseFloat(item.discount_amount);
     } else {
       paymentInfo.payments.push(item);
       existedPaymentIds.set(item.payment_id, paymentInfo.payments.length - 1);
     }
-    paymentInfo.total_paid =
-      parseFloat(`${paymentInfo.total_paid}`) + parseFloat(item.paid_amount);
-    paymentInfo.total_misc_payment += parseInt(item.misc_payment || 0.0);
+    // paymentInfo.total_paid = parseFloat(paymentInfo.total_paid.toString()) + parseFloat(item.paid_amount);
+    paymentInfo.total_misc_payment += parseFloat(item.misc_payment || 0.0);
+    paymentInfo.total_paid += parseFloat(item.paid_amount) + parseFloat(item.misc_payment || 0.0);
+    paymentInfo.total_discount += parseFloat(item.discount_amount || 0.0);
   });
 
   paymentInfo.total_fee = parseFloat(response[2].rows[0].total_fee);
-  paymentInfo.total_due = parseFloat(
-    `${paymentInfo.total_fee - paymentInfo.total_paid}`
-  );
+  paymentInfo.total_due = parseFloat((paymentInfo.total_fee - paymentInfo.total_paid + paymentInfo.total_misc_payment).toString());
 
   return {
     course_and_student_info: response[0].rows[0],

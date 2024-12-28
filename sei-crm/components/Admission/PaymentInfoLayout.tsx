@@ -46,6 +46,8 @@ export default function PaymentInfoLayout({ paymentsInfo }: IProps) {
         item.remark,
         item.misc_payment,
         item.misc_remark,
+        item.discount_amount,
+        item.discount_remark,
         item.order_id,
         "actionBtn",
       ]);
@@ -60,6 +62,8 @@ export default function PaymentInfoLayout({ paymentsInfo }: IProps) {
       "Remark",
       "Misc Payment",
       "Misc Remark",
+      "Discount",
+      "Discount Remark",
       "Online Order Id",
       "Action",
     ],
@@ -98,6 +102,11 @@ export default function PaymentInfoLayout({ paymentsInfo }: IProps) {
           <LiaMoneyCheckSolid />
           Total Misc Payment : ₹{paymentsInfo?.total_misc_payment}
         </span>
+
+        <span className="font-semibold">
+          <LiaMoneyCheckSolid />
+          Total Discount : ₹{paymentsInfo?.total_discount}
+        </span>
       </div>
 
       <div className="flex items-center gap-3">
@@ -112,6 +121,16 @@ export default function PaymentInfoLayout({ paymentsInfo }: IProps) {
           type="button"
         >
           Manage Misc Payments
+        </Button>
+        <Button
+          onClick={() =>
+            dispatch(
+              setDialog({ type: "OPEN", dialogId: "add-discount-dialog" })
+            )
+          }
+          type="button"
+        >
+          Add Discount
         </Button>
       </div>
 
@@ -168,7 +187,9 @@ export default function PaymentInfoLayout({ paymentsInfo }: IProps) {
                                 <TagsBtn type="PENDING">Pending</TagsBtn>
                               ) : columnIndex === 0 ? (
                                 beautifyDate(value as string)
-                              ) : columnIndex === 2 ? parseFloat(`${value}`) :  (
+                              ) : columnIndex === 2 ? (
+                                parseFloat(`${value}`)
+                              ) : (
                                 value
                               )}
                             </span>
