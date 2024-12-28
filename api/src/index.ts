@@ -26,9 +26,6 @@ dotenv.config();
 const app = express();
 const PORT = 8080;
 
-console.log(__dirname)
-console.log(path.resolve(__dirname, "../public/views"))
-
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", path.resolve(__dirname, "../public/views"));
