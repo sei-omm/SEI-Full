@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import path from "path";
 import { globalErrorController } from "./controller/error.controller";
 import { ApiResponse } from "./utils/ApiResponse";
 import { hrRouter } from "./route/hr.route";
@@ -27,7 +26,8 @@ const app = express();
 const PORT = 8080;
 
 app.use(express.static("public"));
-app.use(express.static(path.resolve(__dirname, "./views")));
+app.set("view engine", "ejs");
+app.set("views", "public/views");
 app.use(express.json());
 app.use(
   cors({
