@@ -28,7 +28,7 @@ const PORT = 8080;
 
 app.use(express.static("public"));
 app.set("view engine", "ejs");
-app.set("views", path.resolve("public/views"));
+app.set("views", path.resolve("./public/views"));
 app.use(express.json());
 app.use(
   cors({
