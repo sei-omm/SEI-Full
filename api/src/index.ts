@@ -22,17 +22,12 @@ import { inventoryRoute } from "./route/inventory.routes";
 import { notificationRoutes } from "./route/notification.routes";
 import { receiptRoutes } from "./route/receipt.routes";
 
-// import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
-
-
 dotenv.config();
 const app = express();
 const PORT = 8080;
 
 app.use(express.static("public"));
-app.use(express.static(path.resolve("./src/views")));
-app.set("views", path.resolve("./src/views"));
-app.set("view engine", "ejs");
+app.use(express.static(path.resolve(__dirname, "./views")));
 app.use(express.json());
 app.use(
   cors({
