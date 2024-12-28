@@ -1,0 +1,641 @@
+<html lang="en" ng-app="indexApp">
+
+<head>
+    <title>FormFillUp</title>
+
+    <!-- <link rel="stylesheet" href="https://www.seiedutrust.com/Content/css/style.css"> -->
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700|Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://www.seiedutrust.com/Content/bootstrap/css/neon-forms.css">
+
+    <style>
+        .main_div {
+            width: 1000px;
+            margin: 0 auto;
+            border-top: 5px solid #215b89;
+        }
+
+        .check {
+            width: auto;
+            float: right;
+            background: #215b89;
+            padding: 10px 15px;
+            font-size: 12px !important;
+            font-weight: bold;
+            color: #fff !important;
+            margin-right: 5px;
+            margin-top: -5px;
+        }
+
+        #p {
+            font-size: 8px;
+        }
+    </style>
+
+</head>
+
+<body ng-controller="indexController" style="background:#fff;">
+
+    <div ng-init="ShowAdmissionForm_fninit()">
+        <br />
+        <br />
+
+        <div class="main_div" style="padding-left:25px;padding-right:30px;border:none;color:#222;">
+
+            <div class="row">
+                <div class="form-group col-xs-3" style="text-align:left;">
+                    <img src="/logo_sei_dark.jpg" alt="" width="40" height="40">
+                </div>
+                <div class="form-group col-xs-6" style="text-align:center">
+                    <label style="font-size:large;">
+
+                        <b>SEI EDUCATIONAL TRUST, KOLKATA</b>
+
+                    </label>
+                </div>
+                <div class="form-group col-xs-3" style="text-align:left;">
+                    <label>
+
+
+                        FORM ID :- KOL/FORM/2024/119150<br />
+                        <span class="no-print">FORM Status :- Cancelled</span>
+
+                    </label>
+                </div>
+            </div>
+
+
+            <div class="row" style="margin:0px;">
+
+                <div class="col-xs-12">
+                    <div style="border:1px solid ;" class="row">
+                        <div class="col-xs-4">
+                            <label style="width:100%; text-align:center; padding-top: 6px;">SEIET</label>
+                        </div>
+
+                        <div style="border-right: 1px solid ;border-left: 1px solid ;" class="col-xs-4">
+
+                            <label style="width:100%; text-align:left; padding-top: 6px;">Date effective: 01 Apr
+                                2018</label>
+                        </div>
+
+                        <div class="col-xs-4">
+
+                            <label style="width:100%; text-align:left; padding-top: 6px;">Prepared by:(QSC)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xs-12">
+                    <div style="border-bottom:1px solid ; border-right:1px solid ; border-left:1px solid ;" class="row">
+                        <div class="col-xs-4">
+                            <label style="width:100%; text-align:center; padding-top: 6px;">QUALITY SYSTEM FORMS</label>
+                        </div>
+
+                        <div style="border-right: 1px solid ;border-left: 1px solid ;" class="col-xs-4">
+
+                            <label style="width:100%; text-align:left; padding-top: 6px;">Rev. 00</label>
+                        </div>
+
+                        <div class="col-xs-4">
+
+                            <label style="width:100%; text-align:left; padding-top: 6px;">Checked by:(QCC)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xs-12">
+                    <div style="border-bottom:1px solid ; border-right:1px solid ; border-left:1px solid ;" class="row">
+                        <div class="col-xs-4">
+                            <label style="width:100%; text-align:center;margin-top:5px;">
+                                QSF-ADM-01-A<br />
+                                Admission Form DGS Approved Course
+                                <!-- Admission Form {{(ShowAdmissionFormValue.Courses[0].CourseType==1) ? 'DGS Approved
+                                Course' : 'Non DGS Course' }} -->
+                                <br />
+                            </label>
+                        </div>
+
+                        <div style="border-right: 1px solid ;border-left: 1px solid ;" class="col-xs-4">
+                            <label style="width:100%; text-align:left; padding-top: 10px;">
+                                Page 1 of 1<br />
+                                &nbsp;
+                            </label>
+                        </div>
+
+                        <div class="col-xs-4">
+                            <label style="width:100%; text-align:left; padding-top: 10px;">Approved by:(HOI)</label>
+
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+
+            <div class="row" style="margin-top:10px;">
+                <div class="col-xs-12" style="text-align:center">
+                    <label for="ADMISSIONFORM">
+                        ADMISSION FORM
+                    </label>
+                </div>
+            </div>
+            <div style="margin-top:15px;" class="row">
+
+                <div class="col-xs-12">
+
+                    <div class="row bottom_form">
+
+                        <div class="col-xs-3">
+                            <label for="Course">
+                                Courses Applied for :
+                            </label>
+                        </div>
+
+                        <div class="col-xs-9">
+                            <span ng-repeat="x in ShowAdmissionFormValue.Courses" ng-if="x.Status==2">
+
+                                MEO CLASS II, MEO CLASS II <span class="no-print"></span>,
+
+                            </span>
+                        </div>
+
+                    </div>
+
+
+
+
+
+                    <br />
+                    <div class="row bottom_form">
+
+                        <div class="col-xs-2">
+                            <label for="Course">
+                                1. Full Name* :<br />
+                                (Block Letters)
+                            </label>
+                        </div>
+
+                        <div class="col-xs-5">
+                            <div style="text-transform:uppercase;text-decoration:underline;">
+                                Somnath Gupta</div>
+                        </div>
+
+                        <div class="col-xs-5">
+
+                            <div style="text-transform:uppercase;text-decoration:underline;">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row bottom_form">
+
+                        <div class="col-xs-2">
+                            <label for="Course">
+                                2. Rank /<br />Designation :
+                            </label>
+                        </div>
+
+                        <div class="col-xs-4">
+                            <div style="text-decoration:underline;">
+                                FOURTH ENGINEER
+                            </div>
+                        </div>
+
+                        <div class="col-xs-2">
+                            <label for="Course">
+                                3. InDoS No* :
+                            </label>
+                        </div>
+                        <div class="col-xs-4">
+                            <div style="text-decoration:underline;">
+                                14EL2384
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-xs-3" style="text-align:center;">
+                    <div class="form_blank">
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <br />
+            <div class="row bottom_row">
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        4. Date of Birth :
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <div style="text-decoration:underline;">
+                        13/May/96
+                    </div>
+                </div>
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        5. Nationality :
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <div style="text-decoration:underline;">
+                        Indian
+                    </div>
+                </div>
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        Employer :
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <div style="text-decoration:underline;">
+                        no
+                    </div>
+                </div>
+
+
+            </div>
+
+            <div class="row bottom_row">
+                <div class="col-xs-2">
+                    <label for="Course">
+                        6. Permanent Address:
+                    </label>
+                </div>
+
+                <div class="col-xs-4">
+                    <div style="text-decoration:underline;">
+                        vill-dhobwalia post-jigrawan dist-siwan bihar 841238
+                    </div>
+                </div>
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        7. Present Address :
+                    </label>
+                </div>
+
+                <div class="col-xs-4">
+                    <div style="text-decoration:underline;">
+                        same as above
+                    </div>
+                </div>
+
+
+            </div>
+
+            <div class="row bottom_row">
+                <div class="col-xs-2">
+                    <label for="Course">
+                        Email ID* :
+                    </label>
+                </div>
+
+                <div class="col-xs-4">
+                    <div style="text-decoration:underline;">
+                        sarvda4573js@gmail.com
+                    </div>
+                </div>
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        Phone Number :
+                    </label>
+                </div>
+
+                <div class="col-xs-4">
+                    <div style="text-decoration:underline;">
+                        8289968192
+                    </div>
+                </div>
+
+            </div>
+            <div style="width:100%;height:4px ;border-bottom:2px dotted;margin-top:10px ;margin-bottom:10px"></div>
+            <div class="row bottom_row">
+
+                <div class="col-xs-3">
+                    <label>
+                        We want you safe - however for any unexpected Emergency situation please provide the following
+                        information
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <label>
+                        Blood Group :
+                    </label>
+                </div>
+
+                <div class="col-xs-1">
+                    <div style="text-decoration:underline;">
+                        <label>
+                            b+
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-xs-2">
+                    <label>
+                        Whether allergic to any medication (Y/N) :
+                    </label>
+                </div>
+
+                <div class="col-xs-1">
+                    <label>
+                        <input type="radio" name="Allergic" id="optionsRadios1" ng-disabled="true" value="1"
+                            ng-model="ShowAdmissionFormValue.FormDetails.Allergic" checked>&nbsp;&nbsp;Yes
+                    </label>
+                    <label>
+                        <input type="radio" name="Allergic" id="optionsRadios2" ng-disabled="true" value="0"
+                            ng-model="ShowAdmissionFormValue.FormDetails.Allergic">&nbsp;&nbsp;No
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <label>
+                        If yes,whether any details submitted :
+                    </label>
+                </div>
+
+                <div class="col-xs-1">
+                    <label>
+                        <input type="radio" name="AllergicDetails" id="optionsRadios1" ng-disabled="true" value="1"
+                            ng-model="ShowAdmissionFormValue.FormDetails.AllergicDetails" checked>&nbsp;&nbsp;Yes
+                    </label>
+                    <label>
+                        <input type="radio" name="AllergicDetails" id="optionsRadios2" ng-disabled="true" value="0"
+                            ng-model="ShowAdmissionFormValue.FormDetails.AllergicDetails">
+                        &nbsp;&nbsp;No
+                    </label>
+                </div>
+
+            </div>
+            <br />
+            <div class="row bottom_row">
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        Next of kin name :
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <div style="text-decoration:underline;">
+                        Vivekanand kushwaha
+                    </div>
+                </div>
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        Relation to self :
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <div style="text-decoration:underline;">
+                        Father
+                    </div>
+                </div>
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        Telephone Contact Nos.in Emergency :
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <div style="text-decoration:underline;">
+                        9006446641
+                    </div>
+                </div>
+
+
+            </div>
+
+
+            <div style="width:100%;height:4px ;border-bottom:2px dotted;margin-top:10px ;margin-bottom:10px"></div>
+            <div class="row bottom_row">
+                <div class="col-xs-12">
+                    <label>Additionally for canditates of Refresher Courses.</label>
+                </div>
+            </div>
+
+            <div class="row bottom_row">
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        8. Number of the Cert.which is being refreshed :
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <div style="text-decoration:underline;">
+                        <!-- Value WIll Here -->
+                    </div>
+                </div>
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        Issued by (name of the Institute) :
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <div style="text-decoration:underline;">
+                        <!-- Value WIll Here -->
+                    </div>
+                </div>
+
+                <div class="col-xs-2">
+                    <label for="Course">
+                        INDoS no :<br />
+                        (Institute)
+                    </label>
+                </div>
+
+                <div class="col-xs-2">
+                    <div style="text-decoration:underline;">
+                        <!-- Value WIll Here -->
+                    </div>
+                </div>
+
+
+            </div>
+
+
+
+            <div class="row bottom_row">
+                <div class="col-xs-12">
+                    <label>Declaration to be made by the applicant: I hereby declare that the particulars furnished
+                        above are correct and true to the best of my knowledge and belief. I further indemnify the
+                        institute against the consequences resulting from my submission of false or untrue
+                        statements/documents.</label>
+                </div>
+            </div>
+            <br />
+            <br />
+
+            <div style="margin-bottom:15px;" class="row">
+                <div style="float:right" class="col-xs-4">
+                    <p style="border-bottom:2px solid #222;"></p>
+                    <label style="text-align:center; width:100%;">Signature of the Applicant</label>
+                </div>
+            </div>
+
+            <div style="width:100%;height:4px ;border-bottom:2px dotted;margin-top:10px ;margin-bottom:10px"></div>
+            <div class="row">
+
+                <div class="col-xs-12" style="text-align:center"><label>For Office use only</label></div>
+            </div>
+            <br />
+
+
+            <div style="border:1px solid ; padding: 15px 0; margin:0px;" class="row">
+
+                <div style="border-right: 1px solid ;
+                         height: 275px;" class="col-xs-6">
+                    <div class="row bottom_form">
+                        <div class="col-xs-12">
+                            <label>Eligibility Verification (to be done by Course in Charge)</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- <div class="col-xs-6">
+                            <label>Eligibility Criteria</label>
+
+                            <p><label style="font-size:9px;" ng-repeat="x in ShowAdmissionFormValue.Courses">&middot;
+                                    &nbsp;{{x.Eligibilty}}</label></p>
+
+                        </div> -->
+                        <div class="col-xs-6">
+                            <div class="row">
+                                <div style="margin-top: 35px;" class="col-xs-12 bottom_y_n">
+                                    <p style="border-bottom:2px solid ;"></p>
+                                    <label style="text-align:center; width:100%;">Verified (Signature)</label>
+                                </div>
+                                <div style="margin-top: 35px;" class="col-xs-12 bottom_y_n">
+                                    <p style="border-bottom:2px solid ;"></p>
+                                    <label style="text-align:center; width:100%;">Name of CIC/Person verifying the
+                                        documents</label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div style="border-right: 1px solid ;
+    height: 275px;" class="col-xs-3">
+                    <div class="row">
+                        <div class="col-xs-12 bottom_form" style="text-align:center;">
+                            <label>Indemnity</label>
+                        </div>
+
+                        <div class="col-xs-12 bottom_form">
+                            <label>Additionally for candidates of PST/PSCRB/FPFF/AFF Courses</label>
+                        </div>
+
+                        <div class="col-xs-12 bottom_form">
+                            <div class="row">
+                                <div class="col-xs-8">
+                                    <label>1. Indemnity Form Submitted (Y/N)</label>
+                                </div>
+                                <div class="col-xs-4">
+                                    <div style="border:1px solid ; height:40px; width:50px;"></div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xs-8">
+                                    <label>2. Medical Fitness Certificate (Y/N)</label>
+                                </div>
+                                <div class="col-xs-4">
+                                    <div style="border:1px solid ; height:40px; width:50px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-xs-3">
+                    <div class="row">
+
+                        <div class="col-xs-12 bottom_form" style="text-align:center;">
+                            <label>Accounts</label>
+                        </div>
+
+                        <div class="col-xs-12 bottom_form">
+                            <div class="row">
+                                <div class="col-xs-5">
+                                    <label>Fee Receipt no.</label>
+                                </div>
+                                <div class="col-xs-7">
+                                    <div style="border:1px solid ; height:40px; width:100%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="col-xs-12 bottom_form">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <p style="border-bottom:2px solid;margin-top:40px;"></p>
+                                    <label style="text-align:center; width:100%;">Sign (Accounts officer)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 bottom_form">
+                            <label>CANDIDATE'S REGISTRATION NO.</label>
+                        </div>
+
+                        <div class="col-xs-12">
+                            <div style="border:1px solid ; height:40px; width:100%;"></div>
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+    </div>
+    <div id="printOption" style="position:fixed;bottom:30px;width:100%">
+        <button class="check no-print"
+            onclick="document.getElementById('printOption').style.visibility = 'hidden'; window.print(); return true;">Print</button>
+    </div>
+</body>
+
+</html>

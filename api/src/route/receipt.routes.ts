@@ -1,6 +1,11 @@
 import { Router } from "express";
-import { getPaymentReceipt } from "../controller/receipt.controller";
+import {
+  getAdmissionFormReceipt,
+  getPaymentReceipt,
+} from "../controller/receipt.controller";
 
 export const receiptRoutes = Router();
 
-receiptRoutes.get("/payment", getPaymentReceipt);
+receiptRoutes
+  .get("/payment", getPaymentReceipt)
+  .get("/admission", getAdmissionFormReceipt);

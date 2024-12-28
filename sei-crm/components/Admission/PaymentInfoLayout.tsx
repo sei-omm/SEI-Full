@@ -11,6 +11,7 @@ import TagsBtn from "../TagsBtn";
 import { TPaymentInfo } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { MdAvTimer } from "react-icons/md";
+import { BASE_API } from "@/app/constant";
 
 interface IProps {
   paymentsInfo?: TPaymentInfo;
@@ -172,7 +173,7 @@ export default function PaymentInfoLayout({ paymentsInfo }: IProps) {
                             <span className="line-clamp-1 inline-flex gap-x-3">
                               {value === "actionBtn" ? (
                                 <div className="flex-center gap-4">
-                                  <Link href={""} title="Print Form">
+                                  <Link href={BASE_API + "/receipt/payment"} target="__blank" title="Print Form">
                                     <IoPrint title="Print Receipt" size={18} />
                                   </Link>
                                   <Link href={""} title="Send Receipt To Email">

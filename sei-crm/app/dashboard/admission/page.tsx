@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { GrEdit } from "react-icons/gr";
-import { IoCloseSharp, IoDocumentTextOutline } from "react-icons/io5";
+import { IoCloseSharp, IoDocumentTextOutline, IoPrint } from "react-icons/io5";
 import { MdOutlineDone } from "react-icons/md";
 import { useQuery } from "react-query";
 import { useDispatch } from "react-redux";
@@ -65,7 +65,7 @@ export default function Admission() {
       ]);
       setTableDatas(oldTDatas);
     },
-    refetchOnMount : true
+    refetchOnMount: true,
   });
 
   const whichStatusBtn = useRef<"Approve" | "Cancel">("Approve");
@@ -219,6 +219,14 @@ export default function Admission() {
                                     <IoCloseSharp />
                                   </button>
                                 )}
+
+                                <Link
+                                  href={BASE_API + "/receipt/admission"}
+                                  target="__blank"
+                                  title="Print Admission Form"
+                                >
+                                  <IoPrint title="Print Admission Form" size={18} />
+                                </Link>
                               </div>
                             ) : columnIndex === 0 ? (
                               <div className="flex items-center gap-2">
