@@ -3,7 +3,7 @@
 import { LiaMoneyCheckSolid } from "react-icons/lia";
 import Input from "../Input";
 import DialogBody from "./DialogBody";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import Button from "../Button";
 import { useDispatch, useSelector } from "react-redux";
 import { setDialog } from "@/redux/slices/dialogs.slice";
@@ -12,11 +12,12 @@ import { useSearchParams } from "next/navigation";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
 import RadioInput from "../RadioInput";
+import RefundForm from "../RefundForm";
 
 const paymentTypes = [
   { id: 1, text: "Part Payment" },
   { id: 2, text: "Clear Due" },
-  { id: 3, text: "Revert" },
+  { id: 3, text: "Refund" },
 ];
 
 const paymentModes = [
@@ -24,13 +25,16 @@ const paymentModes = [
   { id: 2, text: "ICICI BANK" },
   { id: 3, text: "CANARA BANK" },
   { id: 4, text: "SWIPE CARD" },
+  { id: 5, text: "ONLINE" },
 ];
 
 export default function AdmissionPaymentDialog() {
   const dispatch = useDispatch();
   const { extraValue } = useSelector((state: RootState) => state.dialogs);
 
-  const [selectedPaymentTypeIndex, setSelectedPaymentTypeIndex] = useState(0);
+  const [selectedPaymentTypeIndex, setSelectedPaymentTypeIndex] = useState(
+    extraValue?.selected_tab_index || 0
+  );
   const [selectedPaymentModeIndex, setSelectedPaymentModeIndex] = useState(0);
   const [currentAmount] = useState(0);
 
@@ -38,10 +42,30 @@ export default function AdmissionPaymentDialog() {
 
   const searchParams = useSearchParams();
 
-  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleFormSubmit = (formData: FormData) => {
+    formData.set("student_id", `${searchParams.get("student-id")}`);
+    formData.set("form_id", `${searchParams.get("form-id")}`);
 
-    const formData = new FormData(event.currentTarget);
+    if (formData.get("refund_id") === "") {
+      formData.delete("refund_id");
+    }
+
+    if (selectedPaymentTypeIndex === 2) {
+      formData.delete("payment_type");
+
+      // if refund radio selected
+      mutate({
+        apiPath: "/payment/refund",
+        method: "post",
+        formData,
+        onSuccess: () => {
+          queryClient.invalidateQueries(["fetch-admission-details"]);
+          dispatch(setDialog({ type: "CLOSE", dialogId: "" }));
+        },
+      });
+
+      return;
+    }
 
     if (formData.get("misc_payment") === "") {
       formData.set("misc_payment", "0");
@@ -52,10 +76,6 @@ export default function AdmissionPaymentDialog() {
       const result = -Math.abs(parseInt(paidAmount.toString()));
       formData.set("paid_amount", `${result}`);
     }
-
-    formData.append("student_id", `${searchParams.get("student-id")}`);
-    // formData.append("course_id", `${searchParams.get("course-id")}`);
-    formData.append("form_id", `${searchParams.get("form-id")}`);
 
     mutate({
       headers: {
@@ -72,8 +92,8 @@ export default function AdmissionPaymentDialog() {
   };
 
   return (
-    <DialogBody className="w-[45rem]">
-      <form onSubmit={handleFormSubmit} className="space-y-5">
+    <DialogBody className="w-[45rem] max-h-[35rem] overflow-y-scroll">
+      <form action={handleFormSubmit} className="space-y-5">
         {extraValue.payment_type === "add-misc-payment" ? null : (
           <div className="flex items-center gap-x-10 gap-y-4 flex-wrap *:flex *:items-center *:gap-2">
             <span className="font-semibold text-green-500">
@@ -110,79 +130,90 @@ export default function AdmissionPaymentDialog() {
           </div>
         )}
 
-        <div className="w-full grid grid-cols-2 gap-4">
-          {extraValue.payment_type === "add-misc-payment" ? (
-            <>
-              <Input
-                disabled={isMutating}
-                name="misc_payment"
-                label="Misc Payment(if any)"
-                type="number"
-                placeholder="1"
-                min={1}
-              />
-              <Input
-                disabled={isMutating}
-                name="misc_remark"
-                label="Misc Payment Remark (if any)"
-                type="text"
-                placeholder="Enter remark"
-              />
-            </>
-          ) : (
-            <>
-              {selectedPaymentTypeIndex === 1 ? (
-                <input
-                  className="hidden"
-                  key={"HiddenPaymentInput" + selectedPaymentTypeIndex}
-                  name="paid_amount"
-                  defaultValue={extraValue.total_due}
+        {selectedPaymentTypeIndex === 2 ? (
+          <RefundForm
+            student_course_info={extraValue.student_course_info}
+            selected_batch_id={extraValue?.selected_batch_id}
+          />
+        ) : (
+          <div className="w-full grid grid-cols-2 gap-4">
+            {extraValue.payment_type === "add-misc-payment" ? (
+              <>
+                <Input
+                  disabled={isMutating}
+                  name="misc_payment"
+                  label="Misc Payment(if any)"
+                  type="number"
+                  placeholder="1"
+                  min={1}
                 />
-              ) : null}
-              <Input
-                key={"PaymentInput" + selectedPaymentTypeIndex}
-                required
-                name="paid_amount"
-                className={selectedPaymentTypeIndex === 1 ? "bg-gray-200" : ""}
-                disabled={
-                  selectedPaymentTypeIndex != 1 && !isMutating ? false : true
-                }
-                defaultValue={
-                  selectedPaymentTypeIndex === 1 ? extraValue.total_due : 0
-                }
-                label="Amount *"
-                type="number"
-                placeholder="1"
-                min={1}
-                max={
-                  selectedPaymentTypeIndex === 2
-                    ? 500000000
-                    : extraValue.total_due
-                }
-              />
-              <Input
-                disabled={isMutating}
-                name="remark"
-                label="Remark (if any)"
-                type="text"
-                placeholder="Enter remark"
-              />
-            </>
-          )}
-        </div>
+                <Input
+                  disabled={isMutating}
+                  name="misc_remark"
+                  label="Misc Payment Remark (if any)"
+                  type="text"
+                  placeholder="Enter remark"
+                />
+              </>
+            ) : (
+              <>
+                {selectedPaymentTypeIndex === 1 ? (
+                  <input
+                    className="hidden"
+                    key={"HiddenPaymentInput" + selectedPaymentTypeIndex}
+                    name="paid_amount"
+                    defaultValue={extraValue.total_due}
+                  />
+                ) : null}
+                <Input
+                  key={"PaymentInput" + selectedPaymentTypeIndex}
+                  required
+                  name="paid_amount"
+                  className={
+                    selectedPaymentTypeIndex === 1 ? "bg-gray-200" : ""
+                  }
+                  disabled={
+                    selectedPaymentTypeIndex != 1 && !isMutating ? false : true
+                  }
+                  defaultValue={
+                    selectedPaymentTypeIndex === 1 ? extraValue.total_due : 0
+                  }
+                  label="Amount *"
+                  type="number"
+                  placeholder="1"
+                  min={1}
+                  max={
+                    selectedPaymentTypeIndex === 2
+                      ? 500000000
+                      : extraValue.total_due
+                  }
+                />
+                <Input
+                  disabled={isMutating}
+                  name="remark"
+                  label="Remark (if any)"
+                  type="text"
+                  placeholder="Enter remark"
+                />
+              </>
+            )}
+          </div>
+        )}
 
         {/* payment mode */}
         <div className="flex items-center justify-between *:cursor-pointer">
-          {paymentModes.map((item, index) => (
-            <RadioInput
-              disabled={isMutating}
-              name="mode"
-              key={item.id}
-              label={item.text}
-              onClick={() => setSelectedPaymentModeIndex(index)}
-              checked={selectedPaymentModeIndex === index ? true : false}
-            />
-          ))}
+          {paymentModes.map((item, index) =>
+            item.id === 5 && selectedPaymentTypeIndex !== 2 ? null : (
+              <RadioInput
+                disabled={isMutating}
+                name="mode"
+                key={item.id}
+                label={item.text}
+                onClick={() => setSelectedPaymentModeIndex(index)}
+                checked={selectedPaymentModeIndex === index ? true : false}
+              />
+            )
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -192,7 +223,7 @@ export default function AdmissionPaymentDialog() {
             loading={isMutating}
             className="border border-foreground"
           >
-            Add
+            {selectedPaymentTypeIndex === 2 ? "Refund" : "Add"}
           </Button>
           <Button
             disabled={isMutating}

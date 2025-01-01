@@ -45,3 +45,14 @@ export const occupancyExcelReportValidator = occupancyReportValidator
   .fork(["institute"], (schema) => schema.optional())
   .unknown(false)
   .prefs({ stripUnknown: { objects: true } });
+
+export const refundReportValidator = Joi.object({
+  institute: Joi.string().required().label("Institute"),
+  course_type: Joi.string().required(),
+
+  course_id: Joi.number().required().optional(),
+  batch_date: Joi.string().required().optional(),
+
+  start_date: Joi.string().required().label("From Date").optional(),
+  end_date: Joi.string().required().label("To Date").optional(),
+});

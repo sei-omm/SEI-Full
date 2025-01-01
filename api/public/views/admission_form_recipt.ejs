@@ -60,8 +60,8 @@
                     <label>
 
 
-                        FORM ID :- KOL/FORM/2024/119150<br />
-                        <span class="no-print">FORM Status :- Cancelled</span>
+                        FORM ID :- <%= form_id %><br />
+                        <span class="no-print">FORM Status :- <%= form_status %></span>
 
                     </label>
                 </div>
@@ -159,7 +159,8 @@
                         <div class="col-xs-9">
                             <span ng-repeat="x in ShowAdmissionFormValue.Courses" ng-if="x.Status==2">
 
-                                MEO CLASS II, MEO CLASS II <span class="no-print"></span>,
+                                <!-- MEO CLASS II, MEO CLASS II <span class="no-print"></span>, -->
+                                <%= enrolled_courses %>
 
                             </span>
                         </div>
@@ -182,7 +183,7 @@
 
                         <div class="col-xs-5">
                             <div style="text-transform:uppercase;text-decoration:underline;">
-                                Somnath Gupta</div>
+                                <%= name %></div>
                         </div>
 
                         <div class="col-xs-5">
@@ -203,7 +204,7 @@
 
                         <div class="col-xs-4">
                             <div style="text-decoration:underline;">
-                                FOURTH ENGINEER
+                                <%= rank %>
                             </div>
                         </div>
 
@@ -214,7 +215,7 @@
                         </div>
                         <div class="col-xs-4">
                             <div style="text-decoration:underline;">
-                                14EL2384
+                                <%= indos_number %>
                             </div>
                         </div>
 
@@ -244,7 +245,7 @@
 
                 <div class="col-xs-2">
                     <div style="text-decoration:underline;">
-                        13/May/96
+                        <%= dob %>
                     </div>
                 </div>
 
@@ -256,7 +257,7 @@
 
                 <div class="col-xs-2">
                     <div style="text-decoration:underline;">
-                        Indian
+                        <%= nationality %>
                     </div>
                 </div>
 
@@ -284,7 +285,7 @@
 
                 <div class="col-xs-4">
                     <div style="text-decoration:underline;">
-                        vill-dhobwalia post-jigrawan dist-siwan bihar 841238
+                        <%= permanent_address %>
                     </div>
                 </div>
 
@@ -296,7 +297,7 @@
 
                 <div class="col-xs-4">
                     <div style="text-decoration:underline;">
-                        same as above
+                        <%= present_address %>
                     </div>
                 </div>
 
@@ -312,7 +313,7 @@
 
                 <div class="col-xs-4">
                     <div style="text-decoration:underline;">
-                        sarvda4573js@gmail.com
+                        <%= email %>
                     </div>
                 </div>
 
@@ -324,7 +325,7 @@
 
                 <div class="col-xs-4">
                     <div style="text-decoration:underline;">
-                        8289968192
+                        <%= mobile_number %>
                     </div>
                 </div>
 
@@ -348,7 +349,7 @@
                 <div class="col-xs-1">
                     <div style="text-decoration:underline;">
                         <label>
-                            b+
+                            <%= blood_group %>
                         </label>
                     </div>
                 </div>
@@ -361,12 +362,12 @@
 
                 <div class="col-xs-1">
                     <label>
-                        <input type="radio" name="Allergic" id="optionsRadios1" ng-disabled="true" value="1"
-                            ng-model="ShowAdmissionFormValue.FormDetails.Allergic" checked>&nbsp;&nbsp;Yes
+                        <input type="radio" disabled name="Allergic" id="optionsRadios1" ng-disabled="true" value="1"
+                            ng-model="ShowAdmissionFormValue.FormDetails.Allergic" <%= allergic_or_medication == 'Y' ? 'checked' : '' %>>&nbsp;&nbsp;Yes
                     </label>
                     <label>
-                        <input type="radio" name="Allergic" id="optionsRadios2" ng-disabled="true" value="0"
-                            ng-model="ShowAdmissionFormValue.FormDetails.Allergic">&nbsp;&nbsp;No
+                        <input type="radio" disabled name="Allergic" id="optionsRadios2" ng-disabled="true" value="0"
+                            ng-model="ShowAdmissionFormValue.FormDetails.Allergic" <%= allergic_or_medication == 'Y' ? '' : 'checked' %>>&nbsp;&nbsp;No
                     </label>
                 </div>
 
@@ -378,11 +379,11 @@
 
                 <div class="col-xs-1">
                     <label>
-                        <input type="radio" name="AllergicDetails" id="optionsRadios1" ng-disabled="true" value="1"
+                        <input type="radio" name="AllergicDetails" id="optionsRadios1" ng-disabled="true" disabled value="1"
                             ng-model="ShowAdmissionFormValue.FormDetails.AllergicDetails" checked>&nbsp;&nbsp;Yes
                     </label>
                     <label>
-                        <input type="radio" name="AllergicDetails" id="optionsRadios2" ng-disabled="true" value="0"
+                        <input type="radio" name="AllergicDetails" id="optionsRadios2" ng-disabled="true" disabled value="0"
                             ng-model="ShowAdmissionFormValue.FormDetails.AllergicDetails">
                         &nbsp;&nbsp;No
                     </label>
@@ -400,7 +401,7 @@
 
                 <div class="col-xs-2">
                     <div style="text-decoration:underline;">
-                        Vivekanand kushwaha
+                        <%= next_of_kin_name %>
                     </div>
                 </div>
 
@@ -412,7 +413,7 @@
 
                 <div class="col-xs-2">
                     <div style="text-decoration:underline;">
-                        Father
+                        <%= relation_to_sel %>
                     </div>
                 </div>
 
@@ -424,7 +425,7 @@
 
                 <div class="col-xs-2">
                     <div style="text-decoration:underline;">
-                        9006446641
+                        <%= emergency_number %>
                     </div>
                 </div>
 
@@ -450,6 +451,7 @@
                 <div class="col-xs-2">
                     <div style="text-decoration:underline;">
                         <!-- Value WIll Here -->
+                         <%= number_of_the_cert %>
                     </div>
                 </div>
 
@@ -462,6 +464,7 @@
                 <div class="col-xs-2">
                     <div style="text-decoration:underline;">
                         <!-- Value WIll Here -->
+                         <%= issued_by_institute %>
                     </div>
                 </div>
 
@@ -475,6 +478,7 @@
                 <div class="col-xs-2">
                     <div style="text-decoration:underline;">
                         <!-- Value WIll Here -->
+                         <%= issued_by_institute_indos_number %>
                     </div>
                 </div>
 

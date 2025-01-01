@@ -4,16 +4,26 @@ import Button from "../Button";
 import { IoPricetagOutline } from "react-icons/io5";
 import { MdOutlineDateRange, MdUpdate } from "react-icons/md";
 import { beautifyDate } from "@/app/utils/beautifyDate";
-import { TEnrollCourses } from "@/types";
+import { TEnrollCourses, TPaymentInfo } from "@/types";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
+import { useDispatch } from "react-redux";
+import { setDialog } from "@/redux/slices/dialogs.slice";
 
 interface IProps {
   enroll_course_info: TEnrollCourses;
+  paymentsInfo: TPaymentInfo;
+  student_course_info : TEnrollCourses[] | undefined
 }
 
-export default function AppliedCourseListItem({ enroll_course_info }: IProps) {
+export default function AppliedCourseListItem({
+  enroll_course_info,
+  paymentsInfo,
+  student_course_info
+}: IProps) {
   const { mutate, isLoading: isMutating } = useDoMutation();
+
+  const dispatch = useDispatch();
 
   const currentBtn = useRef<
     "enrollment-status-cancel" | "enrollment-status-approve"
@@ -23,6 +33,23 @@ export default function AppliedCourseListItem({ enroll_course_info }: IProps) {
     if (status === "Approve") {
       currentBtn.current = "enrollment-status-approve";
     } else {
+      dispatch(
+        setDialog({
+          type: "OPEN",
+          dialogId: "admission-payment",
+          extraValue: {
+            payment_type: "add-payment",
+            total_paid: paymentsInfo?.total_paid,
+            total_due: paymentsInfo?.total_due,
+            student_course_info: student_course_info,
+            selected_tab_index : 2,
+            selected_batch_id : enroll_course_info.batch_id
+          },
+        })
+      );
+
+      return;
+
       currentBtn.current = "enrollment-status-cancel";
     }
 

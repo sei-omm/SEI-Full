@@ -8,16 +8,24 @@ import Link from "next/link";
 import { IoPrint } from "react-icons/io5";
 import { BiMailSend } from "react-icons/bi";
 import TagsBtn from "../TagsBtn";
-import { TPaymentInfo } from "@/types";
+import { TEnrollCourses, TPaymentInfo } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { MdAvTimer } from "react-icons/md";
 import { BASE_API } from "@/app/constant";
 
 interface IProps {
   paymentsInfo?: TPaymentInfo;
+  form_id: string;
+  student_id: number;
+  student_course_info : TEnrollCourses[] | undefined
 }
 
-export default function PaymentInfoLayout({ paymentsInfo }: IProps) {
+export default function PaymentInfoLayout({
+  paymentsInfo,
+  form_id,
+  student_id,
+  student_course_info
+}: IProps) {
   const dispatch = useDispatch();
 
   const handlePaymentDialogBtn = (
@@ -31,6 +39,7 @@ export default function PaymentInfoLayout({ paymentsInfo }: IProps) {
           payment_type: btnType,
           total_paid: paymentsInfo?.total_paid,
           total_due: paymentsInfo?.total_due,
+          student_course_info : student_course_info
         },
       })
     );
@@ -173,7 +182,11 @@ export default function PaymentInfoLayout({ paymentsInfo }: IProps) {
                             <span className="line-clamp-1 inline-flex gap-x-3">
                               {value === "actionBtn" ? (
                                 <div className="flex-center gap-4">
-                                  <Link href={BASE_API + "/receipt/payment"} target="__blank" title="Print Form">
+                                  <Link
+                                    href={`${BASE_API}/receipt/payment?form_id=${form_id}&student_id=${student_id}&payment_id=${paymentsInfo.payments[rowIndex].payment_id}`}
+                                    target="__blank"
+                                    title="Print Form"
+                                  >
                                     <IoPrint title="Print Receipt" size={18} />
                                   </Link>
                                   <Link href={""} title="Send Receipt To Email">

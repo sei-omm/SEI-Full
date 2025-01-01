@@ -3,6 +3,7 @@ import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import {
   addPaymentValidator,
   payDueAmountValidator,
+  refundPaymentValidator,
   verifyDueOnlinePaymentValidator,
   verifyPaymentValidator,
 } from "../validator/payment.validator";
@@ -340,7 +341,7 @@ export const verifyPayment = asyncErrorHandler(
     const studentId = res.locals.student_id;
 
     // verify the payment
-    const { amount, status } = await fetchAnOrderInfo(orderId);
+    const { amount, status, id } = await fetchAnOrderInfo(orderId);
     const isPaymentSuccess = status === "paid";
 
     if (!isPaymentSuccess)
@@ -407,7 +408,11 @@ export const verifyPayment = asyncErrorHandler(
         [customFormIdPrefix, studentId, "Pending"]
       );
 
-      const paymentID = Date.now();
+      // const paymentID = Date.now();
+      const paymentID = id;
+      const receiptNoPrefix = `${
+        value.institute === "Kolkata" ? "KOL" : "FDB"
+      }/${date.getFullYear()}/`;
       batchIds?.forEach((bId, index) => {
         const currentBatchPriceInfo = batchPriceInDb.find(
           (item) => item.batch_id == bId
@@ -438,7 +443,8 @@ export const verifyPayment = asyncErrorHandler(
           courseIds[index],
           rows[0].form_id,
           bId,
-          paymentType
+          paymentType,
+          receiptNoPrefix
         );
       });
 
@@ -453,21 +459,14 @@ export const verifyPayment = asyncErrorHandler(
       // payments_values[9] = rows[0].form_id;
       await client.query(
         `
-        INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, form_id, batch_id, payment_type)
-        VALUES ${sqlPlaceholderCreator(12, batchIds.length).placeholder}
+        INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, form_id, batch_id, payment_type, receipt_no)
+        VALUES ${
+          sqlPlaceholderCreator(13, batchIds.length, {
+            placeHolderNumber: 13,
+            value: " || nextval('receipt_no_seq')::TEXT",
+          }).placeholder
+        }
         `,
-        // [
-        //   studentId,
-        //   convartPaidAmount,
-        //   Date.now(),
-        //   "User Pay In Online",
-        //   "Online",
-        //   orderId,
-        //   0,
-        //   "",
-        //   rows[0].form_id,
-        //   paymentType,
-        // ]
         payments_values
       );
 
@@ -501,29 +500,45 @@ export const payDueAmount = asyncErrorHandler(
     const { error, value } = payDueAmountValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
+    // const { rows, rowCount } = await pool.query(
+    //   `
+    //   WITH aggregated_payments AS (
+    //       SELECT
+    //           batch_id,
+    //           COALESCE(SUM(paid_amount), 0) AS total_paid
+    //       FROM
+    //           payments
+    //       GROUP BY
+    //           batch_id
+    //   )
+    //   SELECT
+    //     cb.batch_fee,
+    //     cb.batch_fee - COALESCE(ap.total_paid, 0) AS due_amount
+    //   FROM course_batches AS cb
+
+    //   LEFT JOIN
+    //       aggregated_payments AS ap ON ap.batch_id = cb.batch_id
+
+    //   WHERE cb.batch_id = $1
+    //   GROUP BY cb.batch_fee, ap.total_paid
+    //   `,
+    //   [value.batch_id]
+    // );
+
     const { rows, rowCount } = await pool.query(
       `
-      WITH aggregated_payments AS (
-          SELECT
-              batch_id,
-              COALESCE(SUM(paid_amount), 0) AS total_paid
-          FROM
-              payments
-          GROUP BY
-              batch_id
-      )
       SELECT 
-        cb.batch_fee,
-        cb.batch_fee - COALESCE(ap.total_paid, 0) AS due_amount
-      FROM course_batches AS cb
-      
-      LEFT JOIN
-          aggregated_payments AS ap ON ap.batch_id = cb.batch_id
+      COALESCE(cb.batch_fee - SUM(p.paid_amount), 0.00) AS due_amount
+      FROM payments AS p
 
-      WHERE cb.batch_id = $1
-      GROUP BY cb.batch_fee, ap.total_paid
-      `,
-      [value.batch_id]
+      LEFT JOIN course_batches AS cb
+      ON cb.batch_id = $1
+
+      WHERE p.batch_id = $1 AND p.student_id = $2
+
+      GROUP BY cb.batch_fee
+    `,
+      [value.batch_id, res.locals.student_id]
     );
 
     if (rowCount === 0)
@@ -552,42 +567,68 @@ export const verifyOnlineDuePayment = asyncErrorHandler(
 
     const studentId = res.locals.student_id;
 
-    const { amount, status } = await fetchAnOrderInfo(value.order_id);
+    const { amount, status, id } = await fetchAnOrderInfo(value.order_id);
     const isPaymentSuccess = status === "paid";
 
     if (!isPaymentSuccess)
       throw new ErrorHandler(400, "Payment has not done yet");
 
-    //get the due amount from db
+    // //get the due amount from db
+    // const { rows, rowCount } = await pool.query(
+    //   `
+    //   WITH aggregated_payments AS (
+    //       SELECT
+    //           batch_id,
+    //           form_id,
+    //           COALESCE(SUM(paid_amount), 0) AS total_paid
+    //       FROM
+    //           payments
+    //       GROUP BY
+    //           batch_id, form_id
+    //   )
+    //   SELECT
+    //     cb.batch_fee,
+    //     ap.form_id,
+    //     cb.course_id,
+    //     cb.batch_fee - COALESCE(ap.total_paid, 0) AS due_amount
+    //   FROM course_batches AS cb
+
+    //   LEFT JOIN
+    //       aggregated_payments AS ap ON ap.batch_id = cb.batch_id
+
+    //   WHERE cb.batch_id = $1
+    //   GROUP BY cb.batch_fee, ap.total_paid, ap.form_id, cb.course_id
+    //   `,
+    //   [value.batch_id]
+    // );
+
     const { rows, rowCount } = await pool.query(
       `
-      WITH aggregated_payments AS (
-          SELECT
-              batch_id,
-              form_id,
-              COALESCE(SUM(paid_amount), 0) AS total_paid
-          FROM
-              payments
-          GROUP BY
-              batch_id, form_id
-      )
       SELECT 
-        cb.batch_fee,
-        ap.form_id,
-        cb.course_id,
-        cb.batch_fee - COALESCE(ap.total_paid, 0) AS due_amount
-      FROM course_batches AS cb
-      
-      LEFT JOIN
-          aggregated_payments AS ap ON ap.batch_id = cb.batch_id
+      COALESCE(cb.batch_fee - SUM(p.paid_amount), 0.00) AS due_amount,
+      c.institute,
+      cb.course_id,
+      p.form_id
+      FROM payments AS p
 
-      WHERE cb.batch_id = $1
-      GROUP BY cb.batch_fee, ap.total_paid, ap.form_id, cb.course_id
-      `,
-      [value.batch_id]
+      LEFT JOIN course_batches AS cb
+      ON cb.batch_id = $1
+
+      LEFT JOIN courses AS c
+      ON c.course_id = cb.course_id
+
+      WHERE p.batch_id = $1 AND p.student_id = $2
+
+      GROUP BY cb.batch_fee, c.institute, cb.course_id, p.form_id
+    `,
+      [value.batch_id, res.locals.student_id]
     );
 
     const convartPaidAmount = parseInt(amount.toString()) / 100;
+
+    const receiptNoPrefix = `${
+      rows[0].institute === "Kolkata" ? "KOL" : "FDB"
+    }/${date.getFullYear()}/`;
 
     if (
       parseFloat(rows[0].due_amount) > convartPaidAmount ||
@@ -596,24 +637,33 @@ export const verifyOnlineDuePayment = asyncErrorHandler(
       throw new ErrorHandler(400, "Payment Mismatch Please Contact Us");
     }
 
-    const { columns, params, values } = objectToSqlInsert({
-      student_id: studentId,
-      paid_amount: convartPaidAmount,
-      payment_id: Date.now(),
-      remark: "Student Paid Due Amount",
-      mode: "Online",
-      order_id: value.order_id,
-      misc_payment: 0.0,
-      misc_remark: "",
-      course_id: rows[0].course_id,
-      batch_id: value.batch_id,
-      form_id: rows[0].form_id,
-      payment_type: "Clear Due",
-    });
+    const valuesToStore = [
+      studentId,
+      convartPaidAmount,
+      id,
+      "Student Paid Due Amount",
+      "Online",
+      value.order_id,
+      0.0,
+      "",
+      rows[0].course_id,
+      value.batch_id,
+      rows[0].form_id,
+      "Clear Due",
+      receiptNoPrefix,
+    ];
 
     await pool.query(
-      `INSERT INTO payments ${columns} VALUES ${params}`,
-      values
+      `
+      INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, batch_id, form_id, payment_type, receipt_no)
+      VALUES ${
+        sqlPlaceholderCreator(13, 1, {
+          placeHolderNumber: 13,
+          value: " || nextval('receipt_no_seq')::TEXT",
+        }).placeholder
+      }
+      `,
+      valuesToStore
     );
 
     res
@@ -629,8 +679,6 @@ export const addPayment = asyncErrorHandler(
     const { error, value } = await addPaymentValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
-    console.log(value);
-
     const paymentID = Date.now();
     // delete value.payment_type;
 
@@ -641,15 +689,19 @@ export const addPayment = asyncErrorHandler(
         p.batch_id,
         -- SUM(p.paid_amount) as total_paid,
         SUM(p.paid_amount) as paid_amount,
+        c.institute,
         cb.batch_fee - SUM(p.paid_amount) as due_amount
       FROM payments AS p
 
       LEFT JOIN course_batches AS cb
-              ON cb.batch_id = p.batch_id
+         ON cb.batch_id = p.batch_id
+
+      LEFT JOIN courses AS c
+      ON c.course_id = p.course_id
       
       WHERE form_id = $1
 
-      GROUP BY p.course_id, p.batch_id, cb.batch_fee
+      GROUP BY p.course_id, p.batch_id, c.institute, cb.batch_fee
       `,
       [value.form_id]
     );
@@ -657,6 +709,10 @@ export const addPayment = asyncErrorHandler(
     const valuesToStore: any[] = [];
     if (value.payment_type === "Misc Payment") {
       rows.forEach((item) => {
+        const receiptNoPrefix = `${
+          item.institute === "Kolkata" ? "KOL" : "FDB"
+        }/${date.getFullYear()}/`;
+
         valuesToStore.push(
           value.student_id,
           0,
@@ -671,11 +727,16 @@ export const addPayment = asyncErrorHandler(
           value.form_id,
           value.payment_type,
           0.0,
-          ""
+          "",
+          receiptNoPrefix
         );
       });
     } else if (value.payment_type === "Discount") {
       rows.forEach((item) => {
+        const receiptNoPrefix = `${
+          item.institute === "Kolkata" ? "KOL" : "FDB"
+        }/${date.getFullYear()}/`;
+
         valuesToStore.push(
           value.student_id,
           0,
@@ -690,7 +751,8 @@ export const addPayment = asyncErrorHandler(
           value.form_id,
           value.payment_type,
           parseInt(value.discount_amount ?? 0) / rows.length,
-          value.discount_remark
+          value.discount_remark,
+          receiptNoPrefix
         );
       });
     } else {
@@ -699,7 +761,11 @@ export const addPayment = asyncErrorHandler(
         value.paid_amount,
         value.paid_amount < 0 ? "paid_amount" : "due_amount"
       );
-      result.forEach((item) => {
+      result.forEach((item, index) => {
+        const receiptNoPrefix = `${
+          rows[index].institute === "Kolkata" ? "KOL" : "FDB"
+        }/${date.getFullYear()}/`;
+
         valuesToStore.push(
           value.student_id,
           item.distributedAmount ?? 0,
@@ -714,19 +780,94 @@ export const addPayment = asyncErrorHandler(
           value.form_id,
           value.payment_type,
           0.0,
-          ""
+          "",
+          receiptNoPrefix
         );
       });
     }
 
     await pool.query(
-      `INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, batch_id, form_id, payment_type, discount_amount, discount_remark)
+      `INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, batch_id, form_id, payment_type, discount_amount, discount_remark, receipt_no)
        VALUES ${
-         sqlPlaceholderCreator(14, valuesToStore.length / 14).placeholder
+         sqlPlaceholderCreator(15, valuesToStore.length / 15, {
+           placeHolderNumber: 15,
+           value: " || nextval('receipt_no_seq')::TEXT",
+         }).placeholder
        }
       `,
       valuesToStore
     );
     res.status(201).json(new ApiResponse(201, "New Payment Added"));
+  }
+);
+
+export const refundPayment = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { error, value } = refundPaymentValidator.validate(req.body);
+    if (error) throw new ErrorHandler(400, error.message);
+
+    await transaction([
+      {
+        sql: `
+        INSERT INTO refund_details (student_id, course_id, batch_id, refund_amount, refund_reason, bank_details, executive_name, refund_id, mode)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        values: [
+          value.student_id,
+          value.course_id,
+          value.batch_id,
+          value.refund_amount,
+          value.refund_reason,
+          value.bank_details,
+          value.executive_name,
+          value.refund_id ?? Date.now(),
+          value.mode,
+        ],
+      },
+
+      {
+        sql: `
+          INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, batch_id, form_id, payment_type, discount_amount, discount_remark)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        `,
+        values: [
+          value.student_id,
+          -Math.abs(value.refund_amount),
+          value.refund_id ?? Date.now(),
+          value.refund_reason,
+          value.mode,
+          value.refund_id ?? Date.now(),
+          0,
+          "",
+          value.course_id,
+          value.batch_id,
+          value.form_id,
+          "Refund",
+          0,
+          "",
+        ],
+      },
+
+      {
+        sql: `UPDATE enrolled_batches_courses SET enrollment_status = 'Cancel' WHERE course_id = $1 AND batch_id = $2 AND student_id = $3`,
+        values: [value.course_id, value.batch_id, value.student_id],
+      },
+    ]);
+
+    res.status(201).json(new ApiResponse(201, "Refund Payment Added"));
+  }
+);
+
+export const getStudentPaidPayment = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { rows } = await pool.query(
+      `SELECT SUM(paid_amount) AS amount FROM payments WHERE student_id = $1 AND batch_id = $2`,
+      [req.query.student_id, req.query.batch_id]
+    );
+
+    res.status(200).json(
+      new ApiResponse(200, "Student Paid Payment", {
+        amount: rows[0]?.amount || 0,
+      })
+    );
   }
 );

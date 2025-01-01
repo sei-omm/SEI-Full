@@ -25,3 +25,12 @@ export const inventoryItemStatuList = [
   { item_status_id: 3, item_status_name: "Working" },
   { item_status_id: 4, item_status_name: "Damaged" },
 ];
+
+export const paymentModes = [
+  { id: 1, text: "CASH" },
+  { id: 2, text: "ICICI BANK" },
+  { id: 3, text: "CANARA BANK" },
+  { id: 4, text: "SWIPE CARD" },
+  { id: 5, text: "ONLINE" },
+];
+

@@ -9,6 +9,7 @@ import {
   occupancyExcelReportValidator,
   occupancyReportValidator,
   receiptReportValidator,
+  refundReportValidator,
 } from "../validator/report.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { ApiResponse } from "../utils/ApiResponse";
@@ -876,7 +877,7 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
             ON EC.course_id = PAY.course_id AND EC.student_id = PAY.student_id
         LEFT JOIN course_batches AS CB
             ON CB.batch_id = EC.batch_id
-        WHERE C.institute = $1 AND DATE(EC.created_at) BETWEEN $2 AND $3
+        WHERE C.institute = $1 AND EC.enrollment_status = 'Approve' AND DATE(EC.created_at) BETWEEN $2 AND $3
         GROUP BY 
             EC.created_at,
             C.course_name,
@@ -968,7 +969,7 @@ export const streamOccupancyExcelReport = asyncErrorHandler(
     worksheet.getCell("A1").fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFFF00" }
+      fgColor: { argb: "FFFF00" },
     };
     worksheet.getRow(1).height = 30;
     worksheet.getCell("A1").alignment = {
@@ -1152,3 +1153,165 @@ export const streamOccupancyExcelReport = asyncErrorHandler(
     });
   }
 );
+
+export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
+  const { error, value } = refundReportValidator.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  // Set response headers for streaming
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="Refund_Report.xlsx"'
+  );
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+    stream: res,
+    useStyles: true,
+  });
+  const worksheet = workbook.addWorksheet("Refund Report");
+
+  worksheet.mergeCells("A1:P1");
+  worksheet.getCell("A1").value = `Refund Report (${value.institute})`;
+  worksheet.getCell("A1").font = {
+    size: 20,
+    bold: true,
+    color: { argb: "000000" },
+  };
+  worksheet.getCell("A1").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFF00" },
+  };
+  worksheet.getRow(1).height = 30;
+  worksheet.getCell("A1").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+
+  worksheet.addRow([
+    "SR NUMBER",
+    "CANDIDATE NAME",
+    "COURSE",
+    "BATCH DATE",
+    "PAYMENT DETAILS",
+    "TOTAL AMOUNT",
+    "ORDER ID",
+    "PAYMENT DATE",
+    "RECEIPT NO",
+    "PAYMENT TYPE",
+    "REFUND AMOUNT",
+    "REASON",
+    "BANK DETAILS",
+    "REFUND DATE",
+    "EXECUTIVE NAME",
+    "REFUND ID",
+  ]);
+
+  // Row styling (header row)
+  worksheet.getRow(2).eachCell((cell) => {
+    cell.style = {
+      font: {
+        bold: true,
+        size: 12,
+        color: { argb: "000000" },
+      },
+      alignment: { horizontal: "center", vertical: "middle" },
+      fill: {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F4A460" },
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+  });
+
+  const filters = value.start_date
+    ? "WHERE c.institute = $1 AND c.course_type = $2 AND p.paid_amount > 0 AND r.created_at BETWEEN $3::timestamp AND $4::timestamp + INTERVAL '1 day' - INTERVAL '1 second'"
+    : "WHERE c.institute = $1 AND c.course_type = $2 AND p.paid_amount > 0 AND r.course_id = $3 AND cb.start_date = $4";
+
+  const filtersValues = value.start_date
+    ? [value.institute, value.course_type, value.start_date, value.end_date]
+    : [value.institute, value.course_type, value.course_id, value.batch_date];
+
+  const client = await pool.connect();
+  const query = new QueryStream(
+    `
+        SELECT
+        row_number() OVER () AS sr_no,
+        s.name, 
+        c.course_name,
+        cb.start_date,
+        STRING_AGG(p.remark, ', ') AS payment_details,
+        SUM(p.paid_amount) AS total_amount,
+        STRING_AGG(p.order_id, ', ') AS order_ids,
+        STRING_AGG(TO_CHAR(p.created_at, 'YYYY-MM-DD'), ', ') AS payment_dates,
+        STRING_AGG(p.receipt_no, ', ') AS receipt_nos,
+        STRING_AGG(p.payment_type, ', ') AS payment_types,
+        r.refund_amount,
+        r.refund_reason,
+        r.bank_details,
+        r.created_at,
+        r.executive_name,
+        r.refund_id
+        FROM refund_details AS r
+
+        LEFT JOIN courses AS c
+        ON c.course_id = r.course_id
+
+        LEFT JOIN students AS s
+        ON s.student_id = r.student_id
+
+        LEFT JOIN course_batches AS cb
+        ON cb.batch_id = r.batch_id
+
+        LEFT JOIN payments AS p
+        ON p.batch_id = r.batch_id AND p.course_id = r.course_id AND p.student_id = r.student_id
+
+        ${filters}
+
+        GROUP BY s.name, c.course_name, cb.start_date, r.refund_amount, r.refund_reason, r.bank_details, r.created_at, r.executive_name, r.refund_id
+    `,
+    filtersValues,
+    {
+      batchSize: 10,
+    }
+  );
+
+  const pgStream = client.query(query);
+
+  // Process PostgreSQL stream data and append to Excel sheet
+  pgStream.on("data", (data) => {
+    const excelRow = worksheet.addRow(Object.values(data));
+    // Style the data rows
+    excelRow.eachCell((cell) => {
+      cell.style = {
+        font: { size: 11 },
+        alignment: { horizontal: "center" },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+  });
+
+  pgStream.on("end", () => {
+    workbook.commit();
+    client.release(); // Release the client when done
+  });
+
+  pgStream.on("error", (err) => {
+    client.release();
+  });
+});

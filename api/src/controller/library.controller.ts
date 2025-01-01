@@ -105,7 +105,7 @@ export const getLibraryInfoForStudent = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error } = getLibraryStudentValidator.validate({
       ...req.query,
-      ...res.locals,
+      student_id : res.locals?.student_id,
     });
 
     if (error) throw new ErrorHandler(400, error.message);

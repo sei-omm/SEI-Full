@@ -80,7 +80,7 @@ export default function CourseItem({
     >
       <span className="hidden">{withoutEnrollBtn}</span>
       <div className="flex items-start gap-5 flex-wrap *:flex-grow">
-        <div className="space-y-2 min-w-[20rem] max-w-[28rem]">
+        <div className="space-y-2 min-w-[20rem] max-w-[28rem] sm:max-w-full sm:min-w-full sm:mt-3">
           <div className="flex items-center gap-x-1 text-[#bd9037]">
             <CgTimelapse size={14} />
             <span className="text-[0.82rem]">
@@ -88,7 +88,7 @@ export default function CourseItem({
             </span>
           </div>
 
-          <h2 className="font-semibold text-gray-700 text-xl line-clamp-2 max-w-[80%] sm:max-w-full">
+          <h2 className="font-semibold text-gray-700 text-xl line-clamp-2 max-w-[80%] sm:max-w-full sm:w-full">
             {course.course_name}
           </h2>
 

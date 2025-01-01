@@ -559,6 +559,35 @@ ALTER TABLE payments
 ADD discount_amount DECIMAL(10, 2) DEFAULT 0.0,
 ADD discount_remark TEXT;
 
+
+-- New DBS -> 30 Dec 2024
+CREATE TABLE refund_details (
+    student_id INTEGER,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
+
+    course_id INTEGER,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
+
+    batch_id INTEGER,
+    FOREIGN KEY (batch_id) REFERENCES course_batches(batch_id) ON DELETE CASCADE,
+
+    refund_amount DECIMAL(10,2) DEFAULT 0.0,
+    refund_reason TEXT,
+    bank_details TEXT,
+
+    executive_name VARCHAR(255),
+    refund_id VARCHAR(255),
+
+    mode VARCHAR(255),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE SEQUENCE receipt_no_seq START 1;
+ALTER TABLE payments
+ADD receipt_no TEXT PRIMARY KEY DEFAULT 'KOL/2024/' || nextval('receipt_no_seq');
+
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN
@@ -568,3 +597,4 @@ ADD discount_remark TEXT;
 --         WHERE schemaname = 'public'
 --     );
 -- END $$;
+

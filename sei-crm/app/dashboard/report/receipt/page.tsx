@@ -28,7 +28,6 @@ export default function ReceiptReport() {
     data: report,
     error,
     isFetching,
-    // refetch,
   } = useQuery<ISuccess<any[]>, AxiosError<IError>>(
     ["get-receipt-report", searchParams.toString()],
     async () =>

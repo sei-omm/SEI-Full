@@ -63,7 +63,7 @@
                         <div class="col-xs-6">
 
                             <strong>
-                                <p>Receipt No: <span>15454548</span></p>
+                                <p>Receipt No: <span><%= receipt_no %></span></p>
                             </strong>
 
                         </div>
@@ -72,40 +72,43 @@
                         <div class="col-xs-6" style="text-align:right; float:right;">
 
                             <strong>
-                                <p>Payment Date : <span>17 Dec 2000</span></p>
+                                <p>Payment Date : <span><%= payment_date %></span></p>
                             </strong>
 
                         </div>
                     </div>
 
                 </div>
-                <div class="form-group col-xs-12" style="text-align:center"
-                    ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==1 ">
 
-                    <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
-                        SEI EDUCATIONAL TRUST, KOLKATA<br>
-                    </label>
-                    <label style="font-size:xx-small; text-align:center;">
-                        'Debamita',B.B.T Road, Village - Gopalpur,P.O. Sarkarpool,<br>
-                        P.S - Maheshtala,Kolkata - 700141, India<br>
-                        MTI No.: 303014 Phone/Fax: +91-33-24019955, AOH: +91-9830782955<br>
-                        Email: seitrust.edu@gmail; kol@seiedutrust.com Website: seiedutrust.com
+                <% if(institute==="Kolkata" ){ %>
+                    <div class="form-group col-xs-12" style="text-align:center"
+                        ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==1 ">
 
-                    </label>
-                </div>
-                <!-- <div class="form-group col-xs-12" style="text-align:center"
-                    ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==2 ">
-                    <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
-                        SEI EDUCATIONAL TRUST, FARIDABAD<br>
-                    </label>
-                    <label style="font-size:xx-small; text-align:center;">
-                        Scf (s)- 13 Sector-11D Market, Faridabad-121006<br>
-                        MTI No.: 103011 Phone/Fax: +91-129-4002955, AOH: +91-9643512955<br>
-                        Email: seitrust.edu@gmail; fbd@seiedutrust.com Website: seiedutrust.com
+                        <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
+                            SEI EDUCATIONAL TRUST, KOLKATA<br>
+                        </label>
+                        <label style="font-size:xx-small; text-align:center;">
+                            'Debamita',B.B.T Road, Village - Gopalpur,P.O. Sarkarpool,<br>
+                            P.S - Maheshtala,Kolkata - 700141, India<br>
+                            MTI No.: 303014 Phone/Fax: +91-33-24019955, AOH: +91-9830782955<br>
+                            Email: seitrust.edu@gmail; kol@seiedutrust.com Website: seiedutrust.com
 
-                    </label>
-                </div> -->
+                        </label>
+                    </div>
+                    <% } else { %>
+                        <div class="form-group col-xs-12" style="text-align:center"
+                            ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==2 ">
+                            <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
+                                SEI EDUCATIONAL TRUST, FARIDABAD<br>
+                            </label>
+                            <label style="font-size:xx-small; text-align:center;">
+                                Scf (s)- 13 Sector-11D Market, Faridabad-121006<br>
+                                MTI No.: 103011 Phone/Fax: +91-129-4002955, AOH: +91-9643512955<br>
+                                Email: seitrust.edu@gmail; fbd@seiedutrust.com Website: seiedutrust.com
 
+                            </label>
+                        </div>
+                        <% } %>
 
             </div>
 
@@ -120,7 +123,9 @@
                         </strong>
                     </div>
                     <div class="col-xs-10 ">
-                        <p style="text-decoration:underline">Somnath Gupta</p>
+                        <p style="text-decoration:underline">
+                            <%= student_name %>
+                        </p>
                     </div>
 
                 </div>
@@ -136,7 +141,9 @@
                         </strong>
                     </div>
                     <div class="col-xs-2 ">
-                        <p style="text-decoration:underline">OKFJ11FC</p>
+                        <p style="text-decoration:underline">
+                            <%= indos_number %>
+                        </p>
                     </div>
 
                     <div class="col-xs-2">
@@ -145,7 +152,9 @@
                         </strong>
                     </div>
                     <div class="col-xs-2 ">
-                        <p style="text-decoration:underline">8784578454</p>
+                        <p style="text-decoration:underline">
+                            <%= mobile_number %>
+                        </p>
                     </div>
 
                     <div class="col-xs-1">
@@ -154,7 +163,9 @@
                         </strong>
                     </div>
                     <div class="col-xs-3 ">
-                        <p style="text-decoration:underline">somnathgupta@gmail.com</p>
+                        <p style="text-decoration:underline">
+                            <%= email %>
+                        </p>
                     </div>
 
                 </div>
@@ -171,7 +182,9 @@
                         </strong>
                     </div>
                     <div class="col-xs-8 ">
-                        <p style="text-decoration:underline">1-December-2024</p>
+                        <p style="text-decoration:underline">
+                            <%= batch_dates %>
+                        </p>
                     </div>
 
                 </div>
@@ -193,7 +206,7 @@
                     </div>
                     <div class="col-xs-5 ">
                         <span style="text-decoration:underline;" ng-repeat="x in PaymentReceiptValue.Courses">
-                            MEO CLASS II, MEO CLASS III
+                            <%= course_codes %>
                         </span>
                     </div>
                     <div class="col-xs-4" style="text-align:center">
@@ -212,7 +225,7 @@
                 <div class="row">
                     <div class="col-xs-5">
                         <strong>
-                            <p>Admission Fee<br> (Part-Payment)</p>
+                            <p>Admission Fee<br> (<%= payment_type %>)</p>
                         </strong>
                     </div>
 
@@ -226,7 +239,7 @@
                         <p></p>
                     </div>
                     <div class="col-xs-4" style="text-align:center;">
-                        <p>Rs 1000 /-</p>
+                        <p>Rs <%= admission_fee %> /-</p>
                     </div>
 
                 </div>
@@ -383,7 +396,7 @@
                         <p></p>
                     </div>
                     <div class="col-xs-4" style="text-align:center;">
-                        <p>Rs 0 /-</p>
+                        <p>Rs <%= misc_payment %> /-</p>
                     </div>
 
                 </div>
@@ -409,7 +422,7 @@
                         </strong>
                     </div>
                     <div class="col-xs-3" style="text-align:center;">
-                        <p>Rs 1000 /-</p>
+                        <p>Rs <%= admission_fee %> /-</p>
                     </div>
 
                 </div>
@@ -445,7 +458,7 @@
                         </strong>
                     </div>
                     <div class="col-xs-9" style="">
-                        10000/- PART PAYMENT IN ICICI BANK ON 25-11-24
+                        <%= payment_remark %>
                     </div>
 
                 </div>
@@ -463,7 +476,7 @@
                 <div class="row">
                     <div class="col-xs-4">
                         <strong>
-                            <p>Course Fee :- Rs 21000 /-</p>
+                            <p>Course Fee :- Rs <%= course_fee %> /-</p>
                         </strong>
                     </div>
                     <div class="col-xs-4">
@@ -473,7 +486,7 @@
                     </div>
                     <div class="col-xs-4">
                         <strong>
-                            <p>Disc Applied :- Rs 0 /-</p>
+                            <p>Disc Applied :- Rs <%= discount %> /-</p>
                         </strong>
                     </div>
                 </div>
@@ -481,12 +494,12 @@
 
                     <div class="col-xs-6">
                         <strong>
-                            <p>Total Paid Till Now :- Rs 1500 /-</p>
+                            <p>Total Paid Till Now :- Rs <%= total_paid_till_now %> /-</p>
                         </strong>
                     </div>
                     <div class="col-xs-6">
                         <strong>
-                            <p>Due :- Rs 100 /-</p>
+                            <p>Due :- Rs <%= due_amount %> /-</p>
                         </strong>
                     </div>
                 </div>
@@ -511,7 +524,7 @@
                         <div class="col-xs-6">
 
                             <strong>
-                                <p>Receipt No: <span>15454548</span></p>
+                                <p>Receipt No: <span><%= receipt_no %></span></p>
                             </strong>
 
                         </div>
@@ -520,40 +533,43 @@
                         <div class="col-xs-6" style="text-align:right; float:right;">
 
                             <strong>
-                                <p>Payment Date : <span>17 Dec 2000</span></p>
+                                <p>Payment Date : <span><%= payment_date %></span></p>
                             </strong>
 
                         </div>
                     </div>
 
                 </div>
-                <div class="form-group col-xs-12" style="text-align:center"
-                    ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==1 ">
 
-                    <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
-                        SEI EDUCATIONAL TRUST, KOLKATA<br>
-                    </label>
-                    <label style="font-size:xx-small; text-align:center;">
-                        'Debamita',B.B.T Road, Village - Gopalpur,P.O. Sarkarpool,<br>
-                        P.S - Maheshtala,Kolkata - 700141, India<br>
-                        MTI No.: 303014 Phone/Fax: +91-33-24019955, AOH: +91-9830782955<br>
-                        Email: seitrust.edu@gmail; kol@seiedutrust.com Website: seiedutrust.com
+                <% if(institute==="Kolkata" ){ %>
+                    <div class="form-group col-xs-12" style="text-align:center"
+                        ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==1 ">
 
-                    </label>
-                </div>
-                <!-- <div class="form-group col-xs-12" style="text-align:center"
-                    ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==2 ">
-                    <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
-                        SEI EDUCATIONAL TRUST, FARIDABAD<br>
-                    </label>
-                    <label style="font-size:xx-small; text-align:center;">
-                        Scf (s)- 13 Sector-11D Market, Faridabad-121006<br>
-                        MTI No.: 103011 Phone/Fax: +91-129-4002955, AOH: +91-9643512955<br>
-                        Email: seitrust.edu@gmail; fbd@seiedutrust.com Website: seiedutrust.com
+                        <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
+                            SEI EDUCATIONAL TRUST, KOLKATA<br>
+                        </label>
+                        <label style="font-size:xx-small; text-align:center;">
+                            'Debamita',B.B.T Road, Village - Gopalpur,P.O. Sarkarpool,<br>
+                            P.S - Maheshtala,Kolkata - 700141, India<br>
+                            MTI No.: 303014 Phone/Fax: +91-33-24019955, AOH: +91-9830782955<br>
+                            Email: seitrust.edu@gmail; kol@seiedutrust.com Website: seiedutrust.com
 
-                    </label>
-                </div> -->
+                        </label>
+                    </div>
+                    <% } else { %>
+                        <div class="form-group col-xs-12" style="text-align:center"
+                            ng-show="PaymentReceiptValue.Courses[0].CourseInstituteID ==2 ">
+                            <label style="font-size:x-small; text-align:center; font-family:'Arial Black'; width: 90%;">
+                                SEI EDUCATIONAL TRUST, FARIDABAD<br>
+                            </label>
+                            <label style="font-size:xx-small; text-align:center;">
+                                Scf (s)- 13 Sector-11D Market, Faridabad-121006<br>
+                                MTI No.: 103011 Phone/Fax: +91-129-4002955, AOH: +91-9643512955<br>
+                                Email: seitrust.edu@gmail; fbd@seiedutrust.com Website: seiedutrust.com
 
+                            </label>
+                        </div>
+                        <% } %>
 
             </div>
 
@@ -568,7 +584,9 @@
                         </strong>
                     </div>
                     <div class="col-xs-10 ">
-                        <p style="text-decoration:underline">Somnath Gupta</p>
+                        <p style="text-decoration:underline">
+                            <%= student_name %>
+                        </p>
                     </div>
 
                 </div>
@@ -584,7 +602,9 @@
                         </strong>
                     </div>
                     <div class="col-xs-2 ">
-                        <p style="text-decoration:underline">OKFJ11FC</p>
+                        <p style="text-decoration:underline">
+                            <%= indos_number %>
+                        </p>
                     </div>
 
                     <div class="col-xs-2">
@@ -593,7 +613,9 @@
                         </strong>
                     </div>
                     <div class="col-xs-2 ">
-                        <p style="text-decoration:underline">8784578454</p>
+                        <p style="text-decoration:underline">
+                            <%= mobile_number %>
+                        </p>
                     </div>
 
                     <div class="col-xs-1">
@@ -602,7 +624,9 @@
                         </strong>
                     </div>
                     <div class="col-xs-3 ">
-                        <p style="text-decoration:underline">somnathgupta@gmail.com</p>
+                        <p style="text-decoration:underline">
+                            <%= email %>
+                        </p>
                     </div>
 
                 </div>
@@ -619,7 +643,9 @@
                         </strong>
                     </div>
                     <div class="col-xs-8 ">
-                        <p style="text-decoration:underline">1-December-2024</p>
+                        <p style="text-decoration:underline">
+                            <%= batch_dates %>
+                        </p>
                     </div>
 
                 </div>
@@ -641,7 +667,7 @@
                     </div>
                     <div class="col-xs-5 ">
                         <span style="text-decoration:underline;" ng-repeat="x in PaymentReceiptValue.Courses">
-                            MEO CLASS II, MEO CLASS III
+                            <%= course_codes %>
                         </span>
                     </div>
                     <div class="col-xs-4" style="text-align:center">
@@ -660,7 +686,7 @@
                 <div class="row">
                     <div class="col-xs-5">
                         <strong>
-                            <p>Admission Fee<br> (Part-Payment)</p>
+                            <p>Admission Fee<br> (<%= payment_type %>)</p>
                         </strong>
                     </div>
 
@@ -674,7 +700,7 @@
                         <p></p>
                     </div>
                     <div class="col-xs-4" style="text-align:center;">
-                        <p>Rs 1000 /-</p>
+                        <p>Rs <%= admission_fee %> /-</p>
                     </div>
 
                 </div>
@@ -831,7 +857,7 @@
                         <p></p>
                     </div>
                     <div class="col-xs-4" style="text-align:center;">
-                        <p>Rs 0 /-</p>
+                        <p>Rs <%= misc_payment %> /-</p>
                     </div>
 
                 </div>
@@ -857,7 +883,7 @@
                         </strong>
                     </div>
                     <div class="col-xs-3" style="text-align:center;">
-                        <p>Rs 1000 /-</p>
+                        <p>Rs <%= admission_fee %> /-</p>
                     </div>
 
                 </div>
@@ -893,7 +919,7 @@
                         </strong>
                     </div>
                     <div class="col-xs-9" style="">
-                        10000/- PART PAYMENT IN ICICI BANK ON 25-11-24
+                        <%= payment_remark %>
                     </div>
 
                 </div>
@@ -911,7 +937,7 @@
                 <div class="row">
                     <div class="col-xs-4">
                         <strong>
-                            <p>Course Fee :- Rs 21000 /-</p>
+                            <p>Course Fee :- Rs <%= course_fee %> /-</p>
                         </strong>
                     </div>
                     <div class="col-xs-4">
@@ -921,7 +947,7 @@
                     </div>
                     <div class="col-xs-4">
                         <strong>
-                            <p>Disc Applied :- Rs 0 /-</p>
+                            <p>Disc Applied :- Rs <%= discount %> /-</p>
                         </strong>
                     </div>
                 </div>
@@ -929,12 +955,12 @@
 
                     <div class="col-xs-6">
                         <strong>
-                            <p>Total Paid Till Now :- Rs 1500 /-</p>
+                            <p>Total Paid Till Now :- Rs <%= total_paid_till_now %> /-</p>
                         </strong>
                     </div>
                     <div class="col-xs-6">
                         <strong>
-                            <p>Due :- Rs 100 /-</p>
+                            <p>Due :- Rs <%= due_amount %> /-</p>
                         </strong>
                     </div>
                 </div>

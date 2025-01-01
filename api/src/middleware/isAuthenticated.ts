@@ -16,9 +16,15 @@ export const isAuthenticated = asyncErrorHandler(
     const { error, data } = await verifyToken<TTokenDataType>(token);
     if (error) throw new ErrorHandler(401, error.message);
 
-    res.locals.student_id = data?.student_id;
-    res.locals.employee_id = data?.employee_id;
-    res.locals.role = data?.role;
+    if(data?.student_id) {
+      res.locals.student_id = data.student_id;
+    }
+    if(data?.employee_id) {
+      res.locals.employee_id = data.employee_id;
+    }
+    if(data?.role) {
+      res.locals.role = data.role;
+    }
 
     next();
   }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google"
+import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/app/components/Header";
@@ -8,6 +8,8 @@ import HeaderHolder from "./components/HeaderHolder";
 import MyProvider from "./redux/MyProvider";
 import DialogWrapper from "./components/Dialogs/DialogWrapper";
 import PreventRightClick from "./components/PreventRightClick";
+import MobileNavigation from "./components/MobileNavigation";
+import MobileNavigationHolder from "./components/MobileNavigationHolder";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -52,9 +54,9 @@ const futura = localFont({
 });
 
 const inter = Inter({
-  weight: ['400', '700'], 
-  subsets: ['latin'],    
-  variable: '--font-inter',
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export default function RootLayout({
@@ -64,7 +66,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${futura.variable} ${inter.variable} font-futura antialiased w-full`}>
+      <body
+        className={`${futura.variable} ${inter.variable} font-futura antialiased w-full`}
+      >
         <MyProvider>
           <DialogWrapper />
           <PreventRightClick />
@@ -73,6 +77,9 @@ export default function RootLayout({
           </HeaderHolder>
           {children}
           <Footer />
+          <MobileNavigationHolder>
+            <MobileNavigation />
+          </MobileNavigationHolder>
         </MyProvider>
       </body>
     </html>

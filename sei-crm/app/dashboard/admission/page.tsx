@@ -221,7 +221,7 @@ export default function Admission() {
                                 )}
 
                                 <Link
-                                  href={BASE_API + "/receipt/admission"}
+                                  href={BASE_API + "/receipt/admission?form_id=" + admissions?.data[rowIndex]?.form_id}
                                   target="__blank"
                                   title="Print Admission Form"
                                 >

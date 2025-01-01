@@ -236,6 +236,12 @@ const sidebarOptions = [
         name: "Occupancy Report",
         slug: "/dashboard/report/occupancy",
       },
+      {
+        id: "5-8",
+        icon: <TbReportSearch />,
+        name: "Refund Report",
+        slug: "/dashboard/report/refund",
+      },
     ],
   },
   {

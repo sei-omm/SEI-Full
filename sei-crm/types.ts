@@ -227,6 +227,7 @@ export type TEnrollCourses = {
   batch_end_date: string;
   batch_fee: number;
   enrollment_status: string;
+  batch_id: number;
 };
 
 export type TOneAdmission = {
@@ -490,3 +491,22 @@ export type TPlannedMaintenanceSystem = {
   remark: string;
   created_at: string;
 };
+
+
+export type TRefundReport = {
+  name: string;
+  course_name: string;
+  start_date: string;  // ISO date string, can be adjusted if a Date object is preferred
+  payment_details: string;
+  total_amount: string;  // Assuming this is a string for the sake of precision (e.g., to handle currency formats)
+  order_ids: string;
+  payment_dates: string;  // Assuming this is a date string
+  receipt_nos: string;
+  payment_types: string;
+  refund_amount: string;  // Same as total_amount, typically represented as a string to avoid floating point precision issues
+  refund_reason: string;
+  bank_details: string;
+  created_at: string;  // ISO date string
+  executive_name: string;
+  refund_id: string;
+}

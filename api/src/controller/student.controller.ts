@@ -397,7 +397,7 @@ export const saveProfileImage = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error, value } = saveProfileImageValidator.validate({
       ...req.body,
-      ...res.locals,
+      student_id: res.locals?.student_id,
     });
     if (error) throw new ErrorHandler(400, error.message);
 
@@ -460,11 +460,12 @@ export const saveStudentDocument = asyncErrorHandler(
 
     // Will Fix This Code While Securing The Routes Code Start
     let studentId = 0;
-    if(res.locals.student_id) {
+    if (res.locals.student_id) {
       studentId = parseInt(res.locals.student_id);
     } else {
-        if(!req.query.student_id) throw new ErrorHandler(400, "student_id is required");
-        studentId = parseInt(req.query.student_id.toString());
+      if (!req.query.student_id)
+        throw new ErrorHandler(400, "student_id is required");
+      studentId = parseInt(req.query.student_id.toString());
     }
     // Will Fix This Code While Securing The Routes Code End
 

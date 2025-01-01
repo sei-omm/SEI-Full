@@ -6,6 +6,7 @@ import {
   dgsIndosReportValidator,
   occupancyReportValidator,
   receiptReportValidator,
+  refundReportValidator,
   studentBirthdateReportValidator,
   studentBirthdateWishValidator,
 } from "../validator/report.validator";
@@ -84,7 +85,7 @@ export const createAdmissionReport = asyncErrorHandler(
             ON EC.course_id = PAY.course_id AND EC.student_id = PAY.student_id
         LEFT JOIN course_batches AS CB
             ON CB.batch_id = EC.batch_id
-        WHERE C.institute = $1 AND DATE(EC.created_at) BETWEEN $2 AND $3
+        WHERE C.institute = $1 AND EC.enrollment_status = 'Approve' AND DATE(EC.created_at) BETWEEN $2 AND $3
         GROUP BY 
             EC.created_at,
             C.course_name,
@@ -1060,7 +1061,8 @@ export const getReceiptReport = asyncErrorHandler(
     const { error, value } = receiptReportValidator.validate(req.query);
     if (error) throw new ErrorHandler(400, error.message);
 
-    const { rows } = await pool.query(`
+    const { rows } = await pool.query(
+      `
       SELECT
       s.name,
       s.indos_number,
@@ -1085,7 +1087,9 @@ export const getReceiptReport = asyncErrorHandler(
       ON c.course_id = p.course_id
       
       WHERE c.institute = $1 AND DATE(p.created_at) BETWEEN $2 AND $3
-    `, [value.institute, value.from_date, value.to_date]);
+    `,
+      [value.institute, value.from_date, value.to_date]
+    );
     res.status(200).json(new ApiResponse(200, "", rows));
   }
 );
@@ -1203,7 +1207,8 @@ export const getOccupancyReport = asyncErrorHandler(
     const { error, value } = occupancyReportValidator.validate(req.query);
     if (error) throw new ErrorHandler(400, error.message);
 
-    const { rows } = await pool.query(`
+    const { rows } = await pool.query(
+      `
       SELECT
         c.course_id,
         c.course_name,
@@ -1234,8 +1239,64 @@ export const getOccupancyReport = asyncErrorHandler(
       WHERE cb.end_date BETWEEN $1 AND $2 AND c.institute = $3
 
       GROUP BY c.course_id, c.course_name, c.course_code, mb.max_batch
-    `, [value.start_date, value.end_date, value.institute]);
+    `,
+      [value.start_date, value.end_date, value.institute]
+    );
 
     res.status(200).json(new ApiResponse(200, "Occupancy Report", rows));
   }
 );
+
+export const getRefundReport = asyncErrorHandler(async (req, res) => {
+  const { error, value } = refundReportValidator.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const filters = value.start_date
+    ? "WHERE c.institute = $1 AND c.course_type = $2 AND p.paid_amount > 0 AND r.created_at BETWEEN $3::timestamp AND $4::timestamp + INTERVAL '1 day' - INTERVAL '1 second'"
+    : "WHERE c.institute = $1 AND c.course_type = $2 AND p.paid_amount > 0 AND r.course_id = $3 AND cb.start_date = $4";
+
+  const filtersValues = value.start_date
+    ? [value.institute, value.course_type, value.start_date, value.end_date]
+    : [value.institute, value.course_type, value.course_id, value.batch_date];
+
+  const { rows } = await pool.query(
+    `
+        SELECT
+        s.name, 
+        c.course_name,
+        cb.start_date,
+        STRING_AGG(p.remark, ', ') AS payment_details,
+        SUM(p.paid_amount) AS total_amount,
+        STRING_AGG(p.order_id, ', ') AS order_ids,
+        STRING_AGG(TO_CHAR(p.created_at, 'YYYY-MM-DD'), ', ') AS payment_dates,
+        STRING_AGG(p.receipt_no, ', ') AS receipt_nos,
+        STRING_AGG(p.payment_type, ', ') AS payment_types,
+        r.refund_amount,
+        r.refund_reason,
+        r.bank_details,
+        r.created_at,
+        r.executive_name,
+        r.refund_id
+        FROM refund_details AS r
+
+        LEFT JOIN courses AS c
+        ON c.course_id = r.course_id
+
+        LEFT JOIN students AS s
+        ON s.student_id = r.student_id
+
+        LEFT JOIN course_batches AS cb
+        ON cb.batch_id = r.batch_id
+
+        LEFT JOIN payments AS p
+        ON p.batch_id = r.batch_id AND p.course_id = r.course_id AND p.student_id = r.student_id
+
+        ${filters}
+
+        GROUP BY s.name, c.course_name, cb.start_date, r.refund_amount, r.refund_reason, r.bank_details, r.created_at, r.executive_name, r.refund_id
+  `,
+    filtersValues
+  );
+
+  res.status(200).json(new ApiResponse(200, "Refund Report", rows));
+});

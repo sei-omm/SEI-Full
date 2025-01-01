@@ -19,13 +19,6 @@ import { useDispatch } from "react-redux";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { useSearchParams } from "next/navigation";
 
-// interface IProps {
-//   searchParams: {
-//     "form-id": string;
-//     "student-id": string;
-//   };
-// }
-
 async function fetchData(url: string) {
   return (await axios.get(url)).data;
 }
@@ -35,17 +28,15 @@ export default function ManageStudentAdmissionForm() {
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
 
-  const { data, isLoading, error } = useQuery<ISuccess<TOneAdmission>>(
-    {
-      queryKey: "fetch-admission-details",
-      queryFn: () =>
-        fetchData(`${BASE_API}/admission?form-id=${searchParams.get("form-id")}`),
+  const { data, isLoading, error } = useQuery<ISuccess<TOneAdmission>>({
+    queryKey: "fetch-admission-details",
+    queryFn: () =>
+      fetchData(`${BASE_API}/admission?form-id=${searchParams.get("form-id")}`),
 
-      staleTime: 0,
-      cacheTime: 0,
-      refetchOnMount: true,
-    }
-  );
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: true,
+  });
 
   const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -62,8 +53,6 @@ export default function ManageStudentAdmissionForm() {
     });
   };
 
-  // console.log(data)
-
   return (
     <form onSubmit={handleFormSubmit} className="w-full main-layout space-y-4">
       <h2 className="text-2xl font-semibold">Course Form</h2>
@@ -77,6 +66,8 @@ export default function ManageStudentAdmissionForm() {
             {data?.data.course_and_student_info.enrolled_courses_info?.map(
               (item) => (
                 <AppliedCourseListItem
+                  student_course_info={data?.data.course_and_student_info.enrolled_courses_info}
+                  paymentsInfo={data?.data.student_payment_info}
                   key={item.enroll_id}
                   enroll_course_info={item}
                 />
@@ -259,7 +250,7 @@ export default function ManageStudentAdmissionForm() {
                       data?.data.course_and_student_info.enrolled_courses_info
                         .map((item) => item.course_id)
                         .join(","),
-                    studentId : data?.data.course_and_student_info.student_id
+                    studentId: data?.data.course_and_student_info.student_id,
                   },
                 })
               );
@@ -271,7 +262,14 @@ export default function ManageStudentAdmissionForm() {
         </div>
 
         {/* Payment Info */}
-        <PaymentInfoLayout paymentsInfo={data?.data.student_payment_info} />
+        <PaymentInfoLayout
+          paymentsInfo={data?.data.student_payment_info}
+          form_id={searchParams.get("form-id") || ""}
+          student_id={parseInt(searchParams.get("student-id") || "0")}
+          student_course_info={
+            data?.data.course_and_student_info.enrolled_courses_info
+          }
+        />
 
         <div className="p-10 border card-shdow rounded-3xl space-y-3">
           <h2 className="text-2xl font-semibold">Form Status *</h2>
