@@ -13,6 +13,7 @@ export default function page({ params } : IProps) {
       <iframe
         className="w-full min-h-screen"
         src={`${BASE_API}/library/view-file/${params.file_name}`}
+        sandbox="allow-same-origin allow-scripts allow-forms"
       ></iframe>
     </div>
   );

@@ -33,9 +33,10 @@ app.use(express.json());
 app.use(
   cors({
     exposedHeaders: ["Content-Disposition", "Content-Type"],
+    credentials: true,
   })
 );
-app.use(cookieParser())
+app.use(cookieParser());
 // app.use(express.urlencoded({ extended: true }));
 
 //parent routes
