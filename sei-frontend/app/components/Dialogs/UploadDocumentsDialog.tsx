@@ -165,7 +165,7 @@ export default function UploadDocumentsDialog() {
   return (
     <DialogBody
       preventToClose={extraValue?.preventToClose}
-      className="w-[45rem] min-h-[50vh] max-h-[90vh] sm:rounded-none overflow-y-auto relative"
+      className="w-[45rem] min-h-[50vh] max-h-[90vh] overflow-y-auto relative sm:rounded-none sm:w-full"
     >
       <div
         className={`absolute size-full inset-0 bg-[#000000bd] z-20 gap-2 text-white ${

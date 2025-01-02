@@ -16,6 +16,7 @@ import OpenDialogButton from "../components/OpenDialogButton";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import MyLibrary from "../components/MyAccount/MyLibrary";
 import UnAuthorizedPage from "../components/UnAuthorizedPage";
+import ProfileLogoutBtn from "../components/MyAccount/ProfileLogoutBtn";
 
 interface IProps {
   searchParams: TMyLibrarySearchParams;
@@ -59,8 +60,8 @@ export default async function page({ searchParams }: IProps) {
         </div>
       </div>
 
-      <div className="main-layout pt-10 space-y-12">
-        <div className="flex items-start justify-between flex-wrap gap-6">
+      <div className="main-layout pt-10 space-y-12 sm:pt-0 sm:space-y-0">
+        <div className="flex items-start justify-between flex-wrap gap-6 sm:hidden">
           <div className="flex items-start gap-8 flex-wrap">
             <StudentProfileImage imageUrl={result.data.profile_image} />
 
@@ -120,6 +121,70 @@ export default async function page({ searchParams }: IProps) {
               </Button>
             </OpenDialogButton>
           </div>
+        </div>
+
+        <div className="hidden sm:block -translate-y-10 space-y-5">
+          <StudentProfileImage imageUrl={result.data.profile_image} />
+          <div className="flex justify-center flex-col gap-3 relative">
+            <h1 className="font-semibold text-2xl">{result.data?.name}</h1>
+
+            <div className="flex items-center gap-x-6 gap-y-3 flex-wrap">
+              <h2 className="flex items-center gap-2">
+                <HiOutlineMail className="mt-[0.17rem]" />
+                {result.data?.email}
+              </h2>
+              <h2 className="flex items-center gap-2">
+                <MdOutlinePhone />
+                {result.data?.mobile_number}
+              </h2>
+              <h2 className="flex items-center gap-2">
+                <MdOutlineDateRange />
+                {new Date(result.data?.dob).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </h2>
+              <h2 className="flex items-center gap-2 *:cursor-pointer">
+                <PiBuildingOfficeLight />
+                {result.data?.indos_number ||
+                result.data.indos_number !== "" ? (
+                  result.data.indos_number + " (INDOS)"
+                ) : (
+                  <>
+                    <span>Add Indos Number</span>
+                    <OpenDialogButton
+                      type="OPEN"
+                      dialogKey="edit-indos-num-dialog"
+                    >
+                      <CiEdit className="cursor-pointer active:scale-90" />
+                    </OpenDialogButton>
+                  </>
+                )}
+              </h2>
+            </div>
+
+            <div className="absolute -top-10 right-0">
+              <ProfileLogoutBtn />
+            </div>
+          </div>
+
+          <OpenDialogButton
+            className="sm:w-full"
+            type="OPEN"
+            dialogKey="upload-documents-dialog"
+            extraValue={{
+              courseIds: result.data.courses
+                ?.map((item) => item.course_id)
+                .join(","),
+              preventToClose: false,
+            }}
+          >
+            <Button className="shadow-none !border-gray-500 !px-5 !text-black active:scale-95 sm:w-full">
+              <IoDocumentTextOutline />
+              Your Documents
+            </Button>
+          </OpenDialogButton>
         </div>
 
         <div>

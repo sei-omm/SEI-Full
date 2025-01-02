@@ -9,8 +9,8 @@ export const setCookie = async (key: string, value: string) => {
   (await cookies()).set(key, value, {
     expires,
     httpOnly: true,
-    secure : true,
-    sameSite: "none",
+    // secure : process.env.NODE_ENV === "production" ? true : false,
+    // sameSite: "none",
   });
 };
 

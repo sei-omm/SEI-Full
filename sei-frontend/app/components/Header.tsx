@@ -9,15 +9,13 @@ import { CiLogin, CiLogout } from "react-icons/ci";
 import { CgMenu } from "react-icons/cg";
 import { VscClose } from "react-icons/vsc";
 import OpenDialogButton from "./OpenDialogButton";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { useIsAuthenticated } from "../hooks/useIsAuthenticated";
 import { MdOutlineAccountCircle } from "react-icons/md";
-import { setProfileImage } from "../redux/slice/profileImage.slice";
-import { removeInfo } from "../utils/saveInfo";
-import { usePathname, useRouter } from "next/navigation";
-import { setLoginStatus } from "../redux/slice/loginStatus";
+import { usePathname } from "next/navigation";
 import SpinnerSvg from "./SpinnerSvg";
+import { useDoLogout } from "../hooks/useDoLogout";
 
 const nav_items = [
   {
@@ -54,33 +52,20 @@ const nav_items = [
 
 export default function Header() {
   const [mobileNavVisibility, setMobileNevVisibility] = useState(false);
-  const [isLogouting, setIsLogouting] = useState(false);
   const [accountBtnClicked, setAccountBtnClicked] = useState(false);
   const accountBtnRef = useRef<HTMLLIElement>(null);
-  const route = useRouter();
   const pathname = usePathname();
-  const dispatch = useDispatch();
   const { status: loginStatus } = useSelector(
     (state: RootState) => state.loginStatus
   );
+
+  const { logout, isLogouting } = useDoLogout();
 
   const { isAuthenticated, userInfo } = useIsAuthenticated([loginStatus]);
 
   const { image: profileImage } = useSelector(
     (state: RootState) => state.profileImage
   );
-
-  const logout = async () => {
-    setIsLogouting(true);
-    // await removeInfo("login-token");
-    // await removeInfo("profile-image");
-    await removeInfo("login-info");
-    localStorage.clear();
-    dispatch(setProfileImage({ image: null }));
-    dispatch(setLoginStatus({ status: "logout" }));
-    route.push("/");
-    setIsLogouting(false);
-  };
 
   const checkClickOutside = (event: MouseEvent) => {
     if (
