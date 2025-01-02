@@ -7,10 +7,8 @@ import { getAuthToken } from "../utils/getAuthToken";
 
 export const isAuthenticated = asyncErrorHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.headers);
     const token = getAuthToken(req);
-
-    console.log(req.headers.cookie);
-    console.log(req.cookies);
 
     if (!token) {
       throw new ErrorHandler(404, "Authorization Token missing");
