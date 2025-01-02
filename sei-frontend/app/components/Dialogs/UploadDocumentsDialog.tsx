@@ -210,7 +210,7 @@ export default function UploadDocumentsDialog() {
           <div className="flex items-start flex-wrap gap-5 size-full">
             {requireDocuments.length != 0
               ? requireDocuments[currentIndex].documentsNeeded.map((item) => (
-                  <div key={item.name} className="flex-grow basis-52">
+                  <div key={item.name} className="flex-grow min-w-52 sm:min-w-full">
                     <ChooseFileInput
                       onFilePicked={(file) => handleFilePicked(file, item.name)}
                       id={item.name}

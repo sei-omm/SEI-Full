@@ -48,7 +48,7 @@ export default function SRegister() {
   };
 
   return (
-    <DialogBody className="min-w-[40rem] sm:min-w-full">
+    <DialogBody className="min-w-[40rem] sm:min-w-full" preventToCloseOnSideClick>
       <div className="space-y-1">
         <h2 className="font-bold text-gray-700 text-2xl">
           Student <span className="text-[#e9b858]">Registration</span>

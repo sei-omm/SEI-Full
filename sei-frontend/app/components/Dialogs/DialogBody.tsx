@@ -8,20 +8,25 @@ import { useDispatch } from "react-redux";
 interface IProps {
   children: React.ReactNode;
   className?: string;
-  preventToClose?: boolean;
+  preventToClose?: boolean | undefined;
+  preventToCloseOnSideClick?: boolean | undefined;
 }
 
 export default function DialogBody({
   children,
   className,
   preventToClose = false,
+  preventToCloseOnSideClick = false
 }: IProps) {
   const dispatch = useDispatch();
 
-  const closeDialog = () => {
+  const closeDialog = (whoClicked : "side" | "close-btn") => {
     if (preventToClose) {
       return;
     }
+
+    if(preventToCloseOnSideClick && whoClicked === "side") return;
+
     dispatch(
       setDialog({
         type: "CLOSE",
@@ -32,7 +37,7 @@ export default function DialogBody({
 
   return (
     <div
-      onClick={closeDialog}
+      onClick={() => closeDialog("side")}
       className="size-full flex justify-center items-center"
     >
       <div
@@ -41,7 +46,7 @@ export default function DialogBody({
       >
         {preventToClose ? null : (
           <IoCloseOutline
-            onClick={closeDialog}
+            onClick={() => closeDialog("close-btn")}
             size={20}
             className="absolute top-6 right-6 cursor-pointer active:scale-75"
           />

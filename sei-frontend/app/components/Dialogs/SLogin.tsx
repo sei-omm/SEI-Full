@@ -43,7 +43,7 @@ export default function SLogin() {
   };
 
   return (
-    <DialogBody>
+    <DialogBody preventToCloseOnSideClick>
       <div className="space-y-1">
         <h2 className="font-bold text-gray-700 text-2xl">
           Student <span className="text-[#e9b858]">Login</span>

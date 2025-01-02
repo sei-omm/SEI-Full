@@ -17,6 +17,7 @@ import { IoDocumentTextOutline } from "react-icons/io5";
 import MyLibrary from "../components/MyAccount/MyLibrary";
 import UnAuthorizedPage from "../components/UnAuthorizedPage";
 import ProfileLogoutBtn from "../components/MyAccount/ProfileLogoutBtn";
+import { CustomErrorPage } from "../components/CustomErrorPage";
 
 interface IProps {
   searchParams: TMyLibrarySearchParams;
@@ -31,7 +32,8 @@ export default async function page({ searchParams }: IProps) {
     },
   });
 
-  if (!response.ok) return <UnAuthorizedPage />;
+  if (response.status === 401) return <UnAuthorizedPage />;
+  if (!response.ok) return <CustomErrorPage message={await response.text()} />;
 
   const result = (await response.json()) as IResponse<IStudent>;
 

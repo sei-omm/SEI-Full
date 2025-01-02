@@ -144,6 +144,7 @@ export const getStudentInfo = asyncErrorHandler(
                         -- 'due_amount', cb.batch_fee - COALESCE(ap.total_paid, 0)
                         'due_amount', cb.batch_fee - ( SELECT SUM(paid_amount) FROM payments WHERE batch_id = cb.batch_id AND student_id = ebc.student_id )
                     )
+                    ORDER BY ebc.created_at DESC
                 ) FILTER (WHERE c.course_id IS NOT NULL), 
                 '[]'::json
             ) AS courses

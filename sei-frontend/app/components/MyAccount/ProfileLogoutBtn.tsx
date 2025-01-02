@@ -9,7 +9,10 @@ export default function ProfileLogoutBtn() {
 
   return (
     <button
-      onClick={logout}
+      onClick={() => {
+        if (!confirm("Are you sure you want to logout ?")) return;
+        logout();
+      }}
       disabled={isLogouting}
       className={`flex items-center active:scale-90 gap-2 border py-1 px-5 !border-gray-500 rounded-full ${
         isLogouting ? "opacity-50" : "opacity-100"
