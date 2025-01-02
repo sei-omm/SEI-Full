@@ -30,9 +30,13 @@ app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", path.resolve(__dirname, "../public/views"));
 app.use(express.json());
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : [];
 app.use(
   cors({
     exposedHeaders: ["Content-Disposition", "Content-Type"],
+    origin: ALLOWED_ORIGINS,
     credentials: true,
   })
 );
