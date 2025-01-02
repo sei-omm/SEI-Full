@@ -7,7 +7,6 @@ import { getAuthToken } from "../utils/getAuthToken";
 
 export const isAuthenticated = asyncErrorHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.headers);
     const token = getAuthToken(req);
 
     if (!token) {

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Button from "./Button";
 import { CiLogin, CiLogout } from "react-icons/ci";
 
@@ -55,6 +55,8 @@ const nav_items = [
 export default function Header() {
   const [mobileNavVisibility, setMobileNevVisibility] = useState(false);
   const [isLogouting, setIsLogouting] = useState(false);
+  const [accountBtnClicked, setAccountBtnClicked] = useState(false);
+  const accountBtnRef = useRef<HTMLLIElement>(null);
   const route = useRouter();
   const pathname = usePathname();
   const dispatch = useDispatch();
@@ -79,6 +81,21 @@ export default function Header() {
     route.push("/");
     setIsLogouting(false);
   };
+
+  const checkClickOutside = (event: MouseEvent) => {
+    if (
+      accountBtnClicked &&
+      !accountBtnRef.current?.contains(event.target as Node)
+    ) {
+      setAccountBtnClicked(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("click", checkClickOutside);
+
+    return () => document.removeEventListener("click", checkClickOutside);
+  }, [accountBtnClicked]);
 
   return (
     <div className="w-full h-[100px] flex justify-center flex-col">
@@ -129,12 +146,13 @@ export default function Header() {
                 ></div>
               </li>
             ))}
-            <li className="relative">
+            <li
+              ref={accountBtnRef}
+              onClick={() => setAccountBtnClicked(!accountBtnClicked)}
+              className="relative"
+            >
               {isAuthenticated ? (
-                <Link
-                  href={"/account"}
-                  className="size-10 group/profileMenu inline-block cursor-pointer overflow-hidden rounded-full border-2 border-[#E9B858] bg-slate-200"
-                >
+                <div className="size-10 inline-block cursor-pointer overflow-hidden rounded-full border-2 border-[#E9B858] bg-slate-200 sm:hidden">
                   <Image
                     src={
                       profileImage
@@ -151,7 +169,13 @@ export default function Header() {
                     className="size-full object-cover"
                   />
 
-                  <div className="absolute right-4 top-16 translate-y-20 opacity-0 invisible group-hover/profileMenu:translate-y-0 group-hover/profileMenu:visible group-hover/profileMenu:opacity-100 transition-all duration-300">
+                  <div
+                    className={`absolute right-4 top-16 ${
+                      accountBtnClicked
+                        ? "visible opacity-100 translate-y-0"
+                        : "translate-y-20 opacity-0 invisible"
+                    } transition-all duration-300`}
+                  >
                     <div className="bg-white text-black rounded-xl shadow-xl overflow-hidden">
                       <Link
                         href={"/account"}
@@ -173,7 +197,7 @@ export default function Header() {
                       </button>
                     </div>
                   </div>
-                </Link>
+                </div>
               ) : (
                 <OpenDialogButton type="OPEN" dialogKey="student-login-dialog">
                   <div>
