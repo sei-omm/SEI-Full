@@ -30,6 +30,7 @@ app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", path.resolve(__dirname, "../public/views"));
 app.use(express.json());
+app.use(cookieParser());
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
   : [];
@@ -40,7 +41,6 @@ app.use(
     credentials: true,
   })
 );
-app.use(cookieParser());
 // app.use(express.urlencoded({ extended: true }));
 
 //parent routes
