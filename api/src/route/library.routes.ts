@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   downloadLibraryFile,
+  generateFileLink,
   getLibraryInfo,
   getLibraryInfoForStudent,
   getLibraryInfoWithFilter,
@@ -15,7 +16,12 @@ import { isAuthenticated } from "../middleware/isAuthenticated";
 export const libraryRouter = Router();
 
 libraryRouter
-  .get("/view-file/:file_name", isAuthenticated, streamBlobLibraryFileForStudnets)
+  .get(
+    "/view-file/:file_name",
+    isAuthenticated,
+    streamBlobLibraryFileForStudnets
+  )
+  .get("/generate-link", isAuthenticated, generateFileLink)
   .get("/download-file/:library_item_id", isAuthenticated, downloadLibraryFile)
   .get("/student", isAuthenticated, getLibraryInfoForStudent)
   .get("/", getLibraryInfo) //this should be procted for crm only

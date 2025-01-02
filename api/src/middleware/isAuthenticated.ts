@@ -2,12 +2,15 @@ import { NextFunction, Request, Response } from "express";
 import asyncErrorHandler from "./asyncErrorHandler";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { verifyToken } from "../utils/token";
-import { StudentLoginTokenDataType, TTokenDataType } from "../types";
+import { TTokenDataType } from "../types";
 import { getAuthToken } from "../utils/getAuthToken";
 
 export const isAuthenticated = asyncErrorHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const token = getAuthToken(req);
+
+    console.log(req.headers.cookie);
+    console.log(req.cookies);
 
     if (!token) {
       throw new ErrorHandler(404, "Authorization Token missing");

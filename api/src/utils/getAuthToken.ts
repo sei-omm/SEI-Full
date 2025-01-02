@@ -3,8 +3,6 @@ import { Request } from "express";
 export const getAuthToken = (req: Request) => {
   const authHeader = req.headers["authorization"];
 
-  console.log(req.headers)
-
   if (!authHeader) {
     if (req.cookies && req.cookies["login-info"]) {
       try {

@@ -10,7 +10,8 @@ export const setCookie = async (key: string, value: string) => {
     expires,
     httpOnly: true,
     secure : true,
-    sameSite: "none"
+    sameSite: "none",
+    domain : process.env.NODE_ENV === 'production' ? ".vercel.app" : "localhost"
   });
 };
 
