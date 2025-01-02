@@ -16,7 +16,7 @@ export default function MobileNavigationHolder({ children }: IProps) {
   return (
     <div
       style={{
-        translate: `0% ${scrollingDirection === "DOWN" ? "100%" : "-30%"}`,
+        translate: `0% ${scrollingDirection === "DOWN" ? "100%" : "0%"}`,
       }}
       className={`w-full hidden sm:block fixed bottom-0 z-50 transition-all duration-500`}
     >

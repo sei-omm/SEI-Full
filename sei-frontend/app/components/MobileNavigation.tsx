@@ -37,17 +37,17 @@ const mobileNavigationPanel = [
 export default function MobileNavigation() {
   const pathname = usePathname();
   const isCurrentPath = (path: string) => {
-    return pathname === path || pathname.startsWith(path + '/')
+    return pathname === path || pathname.startsWith(path + "/");
   };
-  
+
   return (
     <div className="w-full">
-      <ul className="main-layout h-16 rounded-xl bg-[#E9B858] overflow-hidden shadow-2xl border border-gray-600 flex items-center">
+      <ul className="w-full h-16 bg-white mobile-navigation-shdow  overflow-hidden shadow-2xl flex items-center">
         {mobileNavigationPanel.map((item) => (
           <li
             key={item.id}
             className={`flex-grow h-full ${
-              isCurrentPath(item.path) ? "bg-[#e958d644]" : ""
+              isCurrentPath(item.path) ? "bg-[#e9b95844]" : ""
             }`}
           >
             <Link

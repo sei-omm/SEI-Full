@@ -37,7 +37,7 @@ export default function UnAuthorizedPage() {
           Account
         </p>
 
-        <div className="flex items-center gap-6 mt-6">
+        <div className="flex items-center gap-6 mt-6 sm:flex-col">
           <OpenDialogButton type="OPEN" dialogKey="student-login-dialog">
             <Button
               className="!bg-[#e9b858] border !border-gray-400 !text-black !py-2 active:scale-90"
