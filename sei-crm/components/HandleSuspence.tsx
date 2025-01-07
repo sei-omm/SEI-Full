@@ -1,3 +1,5 @@
+import React from "react";
+
 interface IProps<K> {
   isLoading: boolean;
   children: React.ReactNode;
@@ -11,7 +13,7 @@ export default function HandleSuspence<K>({
   children,
   errorMsg,
   error,
-  dataLength,
+  dataLength
 }: IProps<K>) {
   if (isLoading)
     return <h1 className="text-center text-sm text-gray-500">Loading...</h1>;

@@ -6,6 +6,7 @@ import ManageAdmissionFilter from "@/components/Admission/ManageAdmissionFilter"
 import Button from "@/components/Button";
 import DownloadFormUrl from "@/components/DownloadFormUrl";
 import HandleSuspence from "@/components/HandleSuspence";
+import Pagination from "@/components/Pagination";
 import { IError, ISuccess } from "@/types";
 import axios, { AxiosError } from "axios";
 import { useSearchParams } from "next/navigation";
@@ -212,6 +213,8 @@ export default function CourseTrendReport() {
           </div>
         </div>
       </HandleSuspence>
+
+      <Pagination dataLength={report?.data.length} />
     </div>
   );
 }

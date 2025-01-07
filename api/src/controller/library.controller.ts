@@ -19,17 +19,14 @@ import https from "https";
 import { tryCatch } from "../utils/tryCatch";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import { getLibraryStudentValidator } from "../validator/student.validator";
+import { parsePagination } from "../utils/parsePagination";
 
 export const streamBlobLibraryFileForStudnets = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const fileName = req.params.file_name;
     if (!fileName) throw new ErrorHandler(400, "file-name is required");
 
-    if (
-      process.env.HOST_URL?.includes(req.headers.referer || "") ||
-      req.headers.referer?.includes(process.env.HOST_URL || "") ||
-      !req.headers.referer?.includes(process.env.FRONTEND_HOST || "")
-    ) {
+    if (process.env.HOST_URL?.includes(req.headers.referer || "") || req.headers.referer?.includes(process.env.HOST_URL || "")) {
       throw new ErrorHandler(400, "You are not able to access this resources");
     }
 
@@ -66,11 +63,6 @@ export const streamBlobLibraryFileForStudnets = asyncErrorHandler(
   }
 );
 
-export const generateFileLink = asyncErrorHandler(async (req, res) => {
-  console.log(req.headers);
-  res.status(200).json(new ApiResponse(200, "", "New URL"));
-})
-
 export const downloadLibraryFile = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error } = downloadFileValidator.validate(req.params);
@@ -99,11 +91,8 @@ export const downloadLibraryFile = asyncErrorHandler(
         }
 
         // const fileName = resourcesLink.split("/").
-        const fileName = new URL(resourcesLink).pathname.split("/").pop();
-        res.setHeader(
-          "Content-Disposition",
-          `attachment; filename=${fileName}`
-        );
+        const fileName = new URL(resourcesLink).pathname.split('/').pop();
+        res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
         blobRes.pipe(res);
       })
       .on("error", (err) => {
@@ -117,7 +106,7 @@ export const getLibraryInfoForStudent = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error } = getLibraryStudentValidator.validate({
       ...req.query,
-      student_id: res.locals?.student_id,
+      student_id : res.locals.student_id,
     });
 
     if (error) throw new ErrorHandler(400, error.message);
@@ -240,6 +229,8 @@ export const getLibraryInfoForStudent = asyncErrorHandler(
 
 export const getLibraryInfo = asyncErrorHandler(
   async (req: Request, res: Response) => {
+    const { LIMIT, OFFSET } = parsePagination(req);
+
     const { rows } = await pool.query(`
         SELECT
         l.*
@@ -258,6 +249,8 @@ export const getLibraryInfo = asyncErrorHandler(
         -- ON c.course_id = lwc.course_id
 
         GROUP BY l.library_id
+
+        LIMIT ${LIMIT} OFFSET ${OFFSET}
     `);
     res.status(200).json(new ApiResponse(200, "Done", rows));
   }
@@ -491,11 +484,12 @@ export const updateLibraryItem = asyncErrorHandler(
 
 export const getLibraryInfoWithFilter = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    // await new Promise(resolve => setTimeout(() => resolve(""), 3000))
     const { error, value } = getLibraryInfoWithFilterValidator.validate(
       req.query
     );
     if (error) throw new ErrorHandler(400, error.message);
+    
+    const { LIMIT, OFFSET } = parsePagination(req);
 
     const courseID = value.course_id;
     const subjectID = value.subject_id;
@@ -517,6 +511,8 @@ export const getLibraryInfoWithFilter = asyncErrorHandler(
         } AND l.created_at BETWEEN $2 AND $3 AND institute = $4
 
         GROUP BY l.library_id
+
+        LIMIT ${LIMIT} OFFSET ${OFFSET}
     `,
       [courseID ?? subjectID, value.date_from, value.date_to, value.institute]
     );

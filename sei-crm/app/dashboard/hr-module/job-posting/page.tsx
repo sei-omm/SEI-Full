@@ -12,13 +12,15 @@ import { IJob, ISuccess } from "@/types";
 import { IoLocationOutline } from "react-icons/io5";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import { MdOutlineWorkHistory } from "react-icons/md";
+import Pagination from "@/components/Pagination";
 
-// interface IProps {
-//   searchParams: string;
-// }
+interface IProps {
+  searchParams: any;
+}
 
-export default async function page() {
-  const API_TO_HIT = BASE_API + "/hr/job";
+export default async function page({ searchParams }: IProps) {
+  const urlSearchParams = new URLSearchParams(searchParams);
+  const API_TO_HIT = BASE_API + "/hr/job?" + urlSearchParams.toString();
   const response = await fetch(API_TO_HIT, { cache: "no-cache" });
 
   if (!response.ok) {
@@ -100,6 +102,8 @@ export default async function page() {
           </ul>
         )}
       </div>
+
+      <Pagination dataLength={result?.data.length} />
     </section>
   );
 }

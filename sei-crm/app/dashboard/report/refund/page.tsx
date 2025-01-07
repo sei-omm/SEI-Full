@@ -6,6 +6,7 @@ import CourseWithBatchFilter from "@/components/Filters/CourseWithBatchFilter";
 import CourseWithDateRange from "@/components/Filters/CourseWithDateRange";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
+import Pagination from "@/components/Pagination";
 import { ISuccess, TRefundReport } from "@/types";
 import axios from "axios";
 import Link from "next/link";
@@ -141,6 +142,7 @@ export default function RefundReport() {
           </div>
         </div>
       </HandleSuspence>
+      <Pagination dataLength={report?.data.length} />
     </div>
   );
 }

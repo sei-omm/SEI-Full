@@ -1,7 +1,8 @@
 import Joi from "joi";
 
 export const getJobsValidator = Joi.object({
-  department : Joi.number().optional()
+  department : Joi.number().optional(),
+  page : Joi.number().optional(),
 })
 
 export const createJobValidator = Joi.object({
@@ -37,6 +38,7 @@ export const applyJobValidator = Joi.object({
 
 export const getCandidateJobApplicationValidator = Joi.object({
   job_id: Joi.number().required(),
+  page : Joi.number().optional(),
 });
 
 export const trackJobApplicationValidator = Joi.object({

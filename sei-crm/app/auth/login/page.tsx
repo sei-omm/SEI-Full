@@ -37,7 +37,7 @@ export default function Login() {
           })
         );
 
-        route.push("/dashboard");
+        route.push("/account?tab=informations");
       },
     });
   };

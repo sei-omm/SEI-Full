@@ -26,6 +26,7 @@ import { createOrder } from "../service/razorpay.service";
 import { transaction } from "../utils/transaction";
 import { filterToSql } from "../utils/filterToSql";
 import { tryCatch } from "../utils/tryCatch";
+import { parsePagination } from "../utils/parsePagination";
 
 const table_name = "courses";
 
@@ -135,6 +136,8 @@ export const getCoursesWithSubject = asyncErrorHandler(async (req, res) => {
 // );
 
 export const getCoursesWithBatch = asyncErrorHandler(async (req, res) => {
+  const { LIMIT, OFFSET } = parsePagination(req);
+
   const { filterQuery, filterValues } = filterToSql(req.query, "c");
 
   const sql = `
@@ -153,7 +156,9 @@ export const getCoursesWithBatch = asyncErrorHandler(async (req, res) => {
           ${filterQuery}
 
       GROUP BY 
-          c.course_id, c.course_name ORDER BY course_showing_order ASC;
+          c.course_id, c.course_name ORDER BY course_showing_order ASC
+
+      LIMIT ${LIMIT} OFFSET ${OFFSET};
       `;
 
   const { rows } = await pool.query(sql, filterValues);
@@ -711,6 +716,8 @@ export const getCourseBatch = asyncErrorHandler(
     const { error } = getScheduleCourseBatchValidator.validate(req.params);
     if (error) throw new ErrorHandler(400, error.message);
 
+    const { LIMIT, OFFSET } = parsePagination(req);
+
     const { rows } = await pool.query(
       `
       SELECT 
@@ -721,7 +728,8 @@ export const getCourseBatch = asyncErrorHandler(
           END AS visibility
       FROM course_batches 
       WHERE course_id = $1 
-      ORDER BY created_at DESC;
+      ORDER BY created_at DESC
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
     `,
       [req.params.course_id]
     );

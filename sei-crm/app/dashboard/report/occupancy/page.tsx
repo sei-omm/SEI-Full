@@ -6,6 +6,7 @@ import DateInput from "@/components/DateInput";
 import DropDown from "@/components/DropDown";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
+import Pagination from "@/components/Pagination";
 import { IError, ISuccess, TOccupancyReport } from "@/types";
 import { AxiosError } from "axios";
 import Link from "next/link";
@@ -50,7 +51,7 @@ export default function OccupancyReport() {
     body: [],
   });
 
-  const { error, isFetching } = useQuery<
+  const { data: report, error, isFetching } = useQuery<
     ISuccess<TOccupancyReport[]>,
     AxiosError<IError>
   >(
@@ -176,6 +177,8 @@ export default function OccupancyReport() {
           </div>
         </div>
       </HandleSuspence>
+
+      <Pagination dataLength={report?.data.length} />
     </div>
   );
 }

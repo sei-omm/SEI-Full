@@ -4,9 +4,11 @@ import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import Button from "@/components/Button";
 import HandleSuspence from "@/components/HandleSuspence";
+import Pagination from "@/components/Pagination";
 import { ISuccess, TPlannedMaintenanceSystem } from "@/types";
 import axios from "axios";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { CiEdit } from "react-icons/ci";
 import { IoIosAdd } from "react-icons/io";
@@ -28,14 +30,20 @@ export default function PlannedMaintenanceSystem() {
     ],
     body: [],
   });
+  const searchParams = useSearchParams();
 
   const { data, isFetching, error } = useQuery<
     ISuccess<TPlannedMaintenanceSystem[]>
   >({
-    queryKey: ["get-planned-maintenance-system"],
+    queryKey: ["get-planned-maintenance-system", searchParams.toString()],
     queryFn: async () =>
-      (await axios.get(BASE_API + "/inventory/planned-maintenance-system"))
-        .data,
+      (
+        await axios.get(
+          BASE_API +
+            "/inventory/planned-maintenance-system?" +
+            searchParams.toString()
+        )
+      ).data,
     onSuccess: (data) => {
       setTableDatas({
         ...tableDatas,
@@ -117,7 +125,8 @@ export default function PlannedMaintenanceSystem() {
                               .slice(0, 2)
                               .map((item, index) => (
                                 <p key={index}>{item}</p>
-                              ))}...
+                              ))}
+                            ...
                           </div>
                         ) : (
                           value
@@ -131,6 +140,7 @@ export default function PlannedMaintenanceSystem() {
           </div>
         </div>
       </HandleSuspence>
+      <Pagination dataLength={data?.data.length} />
     </div>
   );
 }

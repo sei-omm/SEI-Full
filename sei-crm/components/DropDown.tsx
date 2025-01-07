@@ -1,7 +1,7 @@
 "use client";
 
 import { OptionsType } from "@/types";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaAngleDown } from "react-icons/fa6";
 
@@ -34,6 +34,8 @@ export default function DropDown({
   const [selectedItem, setSelectedItem] = useState<OptionsType | null>(null);
 
   const route = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const checkClickOutside = (event: MouseEvent) => {
     if (isOpen && !modalRef.current?.contains(event.target as Node)) {
@@ -52,12 +54,6 @@ export default function DropDown({
     }
   }, [defaultValue]);
 
-  // useEffect(() => {
-  //   const findTextFromValue = options.find(
-  //     (item) => item.value == defaultValue
-  //   );
-  //   setSelectedItem(findTextFromValue || null);
-  // }, [defaultValue])
 
   useEffect(() => {
     document.addEventListener("click", checkClickOutside);
@@ -94,10 +90,9 @@ export default function DropDown({
                     <li
                       onClick={() => {
                         if (changeSearchParamsOnChange) {
-                          const url = new URL(window.location.href);
-                          route.push(
-                            `${url.protocol}//${url.host}${url.pathname}?${name}=${option.value}`
-                          );
+                          const urlSearchParams = new URLSearchParams(searchParams);
+                          urlSearchParams.set(name || "", option.value);
+                          route.push(`${pathname}?${urlSearchParams.toString()}`)
                         }
                         setSelectedItem(option);
                         onChange?.(option);

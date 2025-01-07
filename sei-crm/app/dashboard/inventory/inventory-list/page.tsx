@@ -9,6 +9,7 @@ import { beautifyDate } from "@/app/utils/beautifyDate";
 import Button from "@/components/Button";
 import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
+import Pagination from "@/components/Pagination";
 import { ISuccess, TInventoryWithStockItem } from "@/types";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -239,6 +240,7 @@ export default function InventoryList() {
           </div>
         </div>
       </HandleSuspence>
+      <Pagination dataLength={data?.data.length} />
     </div>
   );
 }

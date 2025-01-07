@@ -3,6 +3,8 @@ import { ErrorHandler } from "../utils/ErrorHandler";
 import { transaction } from "../utils/transaction";
 import { pool } from "../config/db";
 import { getAdmissionsValidator } from "../validator/admission.validator";
+import { parsePagination } from "../utils/parsePagination";
+import { Request } from "express";
 
 // export const getAdmissionsService = async (courseId?: string) => {
 //   let sql1 = `
@@ -59,9 +61,11 @@ import { getAdmissionsValidator } from "../validator/admission.validator";
 //   };
 // };
 
-export const getAdmissionsService = async (query: QueryString.ParsedQs) => {
+export const getAdmissionsService = async (query: QueryString.ParsedQs, req: Request) => {
   const { error } = getAdmissionsValidator.validate(query);
   if (error) throw new ErrorHandler(400, error.message);
+
+  const { LIMIT, OFFSET } = parsePagination(req);
 
   const { rows } = await pool.query(
     `
@@ -88,6 +92,7 @@ export const getAdmissionsService = async (query: QueryString.ParsedQs) => {
     WHERE c.course_id = $1 AND c.institute = $2 AND c.course_type = $3 AND cb.start_date = $4
 
     GROUP BY ebc.course_id, ff.form_id, s.profile_image, s.name, s.student_id
+    LIMIT ${LIMIT} OFFSET ${OFFSET}
   `,
     [query.course_id, query.institute, query.course_type, query.batch_date]
   );

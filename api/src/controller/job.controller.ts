@@ -17,6 +17,7 @@ import {
   objectToSqlConverterUpdate,
   objectToSqlInsert,
 } from "../utils/objectToSql";
+import { parsePagination } from "../utils/parsePagination";
 
 const table_name = "job";
 
@@ -24,6 +25,8 @@ export const getAllJobs = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error, value } = getJobsValidator.validate(req.query);
     if (error) return res.status(200).json(new ApiResponse(200, "", []));
+
+    const { LIMIT, OFFSET } = parsePagination(req);
 
     const department = value.department;
     const queryValues: string[] = [];
@@ -41,6 +44,7 @@ export const getAllJobs = asyncErrorHandler(
       LEFT JOIN department AS d
         ON d.id = j.department
       ${department ? "WHERE d.id = $1" : ""}
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
     `,
       queryValues
     );
@@ -137,7 +141,9 @@ export const applyJobAsCandidate = asyncErrorHandler(
 
     res
       .status(201)
-      .json(new ApiResponse(201, "Job Application Successfully Submitted", rows));
+      .json(
+        new ApiResponse(201, "Job Application Successfully Submitted", rows)
+      );
   }
 );
 
@@ -168,8 +174,16 @@ export const getCandidateJobApplication = asyncErrorHandler(
     const { error } = getCandidateJobApplicationValidator.validate(req.params);
     if (error) throw new ErrorHandler(400, error.message);
 
+    const { LIMIT, OFFSET } = parsePagination(req);
+
     const { rows } = await pool.query(
-      `SELECT * FROM candidate_job_application WHERE job_id = $1`,
+      `
+      SELECT
+      * 
+      FROM candidate_job_application
+      WHERE job_id = $1
+      ORDER BY id DESC
+      LIMIT ${LIMIT} OFFSET ${OFFSET}`,
       [req.params.job_id]
     );
     res

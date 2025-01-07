@@ -39,6 +39,7 @@ import { transaction } from "../utils/transaction";
 import { tryCatch } from "../utils/tryCatch";
 import { filterToSql } from "../utils/filterToSql";
 import { apiPaginationSql } from "../utils/apiPaginationSql";
+import { parsePagination } from "../utils/parsePagination";
 
 //inventory list
 export const addNewList = asyncErrorHandler(
@@ -59,6 +60,7 @@ export const addNewList = asyncErrorHandler(
 //for inventory item basic info
 export const getAllItemInfo = asyncErrorHandler(
   async (req: Request, res: Response) => {
+    const { LIMIT, OFFSET } = parsePagination(req);
     const { filterQuery, filterValues } = filterToSql(req.query, "iii");
 
     const { rows } = await pool.query(
@@ -90,6 +92,7 @@ export const getAllItemInfo = asyncErrorHandler(
         GROUP BY iii.item_id, v.vendor_name
 
         ORDER BY iii.created_at DESC
+        LIMIT ${LIMIT} OFFSET ${OFFSET}
    `,
       filterValues
     );
@@ -344,6 +347,7 @@ export const updateItemStock = asyncErrorHandler(
 //for maintence-record
 export const getMaintenceRecords = asyncErrorHandler(
   async (req: Request, res: Response) => {
+    const { LIMIT, OFFSET } = parsePagination(req);
     let filterQuery = "WHERE";
     const filterValues: string[] = [];
 
@@ -378,7 +382,7 @@ export const getMaintenceRecords = asyncErrorHandler(
         ON iii.item_id = mr.item_id
         ${filterQuery}
         ORDER BY mr.created_at DESC
-        ${apiPaginationSql(req.query.page)}
+        LIMIT ${LIMIT} OFFSET ${OFFSET}
         `,
       filterValues
     );
@@ -457,6 +461,7 @@ export const getMaintenceRecordsExcel = asyncErrorHandler(
 //for planned maintenance system
 export const getPlannedMaintenanceSystem = asyncErrorHandler(
   async (req: Request, res: Response) => {
+    const { LIMIT, OFFSET } = parsePagination(req);
     const { rows } = await pool.query(
       `
       SELECT 
@@ -466,6 +471,7 @@ export const getPlannedMaintenanceSystem = asyncErrorHandler(
 
       LEFT JOIN inventory_item_info AS iii
       ON iii.item_id = pm.item_id
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
       `
     );
     res.status(200).json(new ApiResponse(200, "", rows));
@@ -769,6 +775,8 @@ export const getVendorIdName = asyncErrorHandler(
 
 export const getVendorInfo = asyncErrorHandler(
   async (req: Request, res: Response) => {
+    const { LIMIT, OFFSET } = parsePagination(req);
+
     //for filters
     let filter = "";
     const filterValues: any[] = [];
@@ -798,6 +806,7 @@ export const getVendorInfo = asyncErrorHandler(
       FROM vendor
       ${filter}
       ORDER BY created_at DESC
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
       `,
       filterValues
     );

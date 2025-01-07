@@ -27,6 +27,7 @@ import {
   updateEmployeeAttendance,
 } from "../controller/attendance.controller";
 import { getHrDashboardInfo } from "../controller/employee.controller";
+import { roles } from "../middleware/roles";
 
 export const hrRouter = Router();
 
@@ -38,7 +39,7 @@ hrRouter
   .patch("/department/:id", updateDepartment)
   .delete("/department/:id", deleteDepartment)
 
-  .get("/leave", getRequestedLeaveLists)
+  .get("/leave", roles(["Admin"]), getRequestedLeaveLists)
   // .post("/leave", createLeaveRequest) //this will done by employee
   .patch("/leave/:id", updateLeaveStatus)
 

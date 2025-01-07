@@ -44,7 +44,7 @@ export const getAdmissions = asyncErrorHandler(
         new ApiResponse(
           200,
           "",
-          await getAdmissionsService(req.query)
+          await getAdmissionsService(req.query, req)
         )
       );
   }

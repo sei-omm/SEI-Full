@@ -14,6 +14,8 @@ import { ICourse, ISuccess, TBatches } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
+import Pagination from "../Pagination";
+import { useSearchParams } from "next/navigation";
 
 // const tableDatas = {
 //   heads: ["Start Date", "End Date", "Visibility", "Action"],
@@ -30,10 +32,16 @@ export default function CourseBatch({ courseId }: IProps) {
     body: [[]],
   });
 
+  const searchParams = useSearchParams();
+
   const { data, isFetching, refetch } = useQuery<ISuccess<TBatches[]>>({
     queryKey: ["get-course-batches"],
     queryFn: async () =>
-      (await axios.get(`${BASE_API}/course/batch/${courseId}`)).data,
+      (
+        await axios.get(
+          `${BASE_API}/course/batch/${courseId}?${searchParams.toString()}`
+        )
+      ).data,
 
     onSuccess(data) {
       const oldTableInfo = { ...tableDatas };
@@ -190,6 +198,7 @@ export default function CourseBatch({ courseId }: IProps) {
           </table>
         </div>
       </HandleSuspence>
+      <Pagination dataLength={data?.data.length} />
     </div>
   );
 }

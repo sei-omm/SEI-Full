@@ -17,6 +17,7 @@ import XLSX from "xlsx-js-style";
 import { sendEmail } from "../utils/sendEmail";
 import Cursor from "pg-cursor";
 import { Readable } from "node:stream";
+import { parsePagination } from "../utils/parsePagination";
 
 // const sqlForAdmissionReport = `
 //         SELECT
@@ -60,6 +61,10 @@ export const createAdmissionReport = asyncErrorHandler(
       3) To Date
      */
 
+    const { error, value } = admissionReportValidator.validate(req.query);
+    if (error) throw new ErrorHandler(400, error.message);
+    const { LIMIT, OFFSET } = parsePagination(req);
+
     const sqlForAdmissionReport = `
         SELECT 
             EC.created_at,
@@ -97,10 +102,8 @@ export const createAdmissionReport = asyncErrorHandler(
             STU.profile_image,
             STU.email,
             STU.mobile_number
+        LIMIT ${LIMIT} OFFSET ${OFFSET}
     `;
-
-    const { error, value } = admissionReportValidator.validate(req.query);
-    if (error) throw new ErrorHandler(400, error.message);
 
     const { rows } = await pool.query(sqlForAdmissionReport, [
       value.institute,
@@ -383,6 +386,7 @@ export const getDgsIndosReport = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error, value } = dgsIndosReportValidator.validate(req.query);
     if (error) throw new ErrorHandler(400, error.message);
+    const { LIMIT, OFFSET } = parsePagination(req);
 
     const sqlForDgsReport = `
       SELECT 
@@ -406,6 +410,7 @@ export const getDgsIndosReport = asyncErrorHandler(
           AND ff.form_status = 'Approve'
           AND c.institute = $3
           AND cb.start_date = $4
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
     `;
 
     const { rows } = await pool.query(sqlForDgsReport, [
@@ -620,6 +625,7 @@ export const getCourseTrendReport = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error, value } = courseTrendReportValidator.validate(req.query);
     if (error) throw new ErrorHandler(400, error.message);
+    const { LIMIT, OFFSET } = parsePagination(req);
 
     const courseTrendReportSql = `
         SELECT
@@ -637,7 +643,7 @@ export const getCourseTrendReport = asyncErrorHandler(
       WHERE c.course_id = $1 AND c.course_type = $2 AND c.institute = $3 AND cb.start_date = $4
       GROUP BY cb.batch_id
       ORDER BY cb.start_date DESC
-      -- LIMIT $4`;
+      LIMIT ${LIMIT} OFFSET ${OFFSET};`;
 
     const { rows } = await pool.query(courseTrendReportSql, [
       value.course_id,
@@ -841,6 +847,8 @@ export const getBatchReport = asyncErrorHandler(
     const { error, value } = dgsIndosReportValidator.validate(req.query);
     if (error) throw new ErrorHandler(400, error.message);
 
+    const { LIMIT, OFFSET } = parsePagination(req);
+
     const { rows } = await pool.query(
       `
         SELECT 
@@ -877,6 +885,7 @@ export const getBatchReport = asyncErrorHandler(
               AND c.course_type = $4
                       
         GROUP BY p.student_id, ebc.form_id, s.name, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email
+        LIMIT ${LIMIT} OFFSET ${OFFSET};
       `,
       [value.course_id, value.batch_date, value.institute, value.course_type]
     );
@@ -1061,6 +1070,8 @@ export const getReceiptReport = asyncErrorHandler(
     const { error, value } = receiptReportValidator.validate(req.query);
     if (error) throw new ErrorHandler(400, error.message);
 
+    const { LIMIT, OFFSET } = parsePagination(req);
+
     const { rows } = await pool.query(
       `
       SELECT
@@ -1087,6 +1098,7 @@ export const getReceiptReport = asyncErrorHandler(
       ON c.course_id = p.course_id
       
       WHERE c.institute = $1 AND DATE(p.created_at) BETWEEN $2 AND $3
+      LIMIT ${LIMIT} OFFSET ${OFFSET};
     `,
       [value.institute, value.from_date, value.to_date]
     );
@@ -1207,6 +1219,8 @@ export const getOccupancyReport = asyncErrorHandler(
     const { error, value } = occupancyReportValidator.validate(req.query);
     if (error) throw new ErrorHandler(400, error.message);
 
+    const { LIMIT, OFFSET } = parsePagination(req);
+
     const { rows } = await pool.query(
       `
       SELECT
@@ -1239,6 +1253,7 @@ export const getOccupancyReport = asyncErrorHandler(
       WHERE cb.end_date BETWEEN $1 AND $2 AND c.institute = $3
 
       GROUP BY c.course_id, c.course_name, c.course_code, mb.max_batch
+      LIMIT ${LIMIT} OFFSET ${OFFSET};
     `,
       [value.start_date, value.end_date, value.institute]
     );
@@ -1250,6 +1265,8 @@ export const getOccupancyReport = asyncErrorHandler(
 export const getRefundReport = asyncErrorHandler(async (req, res) => {
   const { error, value } = refundReportValidator.validate(req.query);
   if (error) throw new ErrorHandler(400, error.message);
+
+  const { LIMIT, OFFSET } = parsePagination(req);
 
   const filters = value.start_date
     ? "WHERE c.institute = $1 AND c.course_type = $2 AND p.paid_amount > 0 AND r.created_at BETWEEN $3::timestamp AND $4::timestamp + INTERVAL '1 day' - INTERVAL '1 second'"
@@ -1294,7 +1311,8 @@ export const getRefundReport = asyncErrorHandler(async (req, res) => {
         ${filters}
 
         GROUP BY s.name, c.course_name, cb.start_date, r.refund_amount, r.refund_reason, r.bank_details, r.created_at, r.executive_name, r.refund_id
-  `,
+        LIMIT ${LIMIT} OFFSET ${OFFSET};
+        `,
     filtersValues
   );
 

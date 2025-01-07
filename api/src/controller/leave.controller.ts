@@ -10,27 +10,49 @@ import {
 import { objectToSqlInsert } from "../utils/objectToSql";
 import { getDate } from "../utils/getDate";
 import { dbTransaction } from "../utils/dbTransaction";
+import { parsePagination } from "../utils/parsePagination";
 
 const table_name = "leave";
 
 export const getRequestedLeaveLists = asyncErrorHandler(
   async (req: Request, res: Response) => {
+    const { LIMIT, OFFSET } = parsePagination(req);
     const { rows } = await pool.query(`
       SELECT l.*, e.name AS employee_name, e.profile_image AS employee_profile_image FROM ${table_name} AS l
       JOIN employee AS e
       ON l.employee_id = e.id
+
+      ORDER BY id DESC
+
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
     `);
     res.status(200).json(new ApiResponse(200, "All Leave Requests", rows));
   }
 );
 
+export const getEmployeeLeaveRequest = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { rows } = await pool.query(
+      `SELECT * FROM ${table_name} WHERE employee_id = $1 ORDER BY id DESC`,
+      [res.locals?.employee_id]
+    );
+    res.status(200).json(new ApiResponse(200, "Employee Leave Request", rows));
+  }
+);
+
 export const createEmployeeLeaveRequest = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { error } = createLeaveRequestValidator.validate(req.body);
+    const { error } = createLeaveRequestValidator.validate({
+      ...req.body,
+      employee_id: res.locals?.employee_id,
+    });
 
     if (error) throw new ErrorHandler(400, error.message);
 
-    const { columns, params, values } = objectToSqlInsert(req.body);
+    const { columns, params, values } = objectToSqlInsert({
+      ...req.body,
+      employee_id: res.locals?.employee_id,
+    });
 
     const sql = `INSERT INTO ${table_name} ${columns} VALUES ${params}`;
 

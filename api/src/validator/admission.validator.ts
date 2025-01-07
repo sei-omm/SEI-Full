@@ -44,5 +44,6 @@ export const getAdmissionsValidator = Joi.object({
   course_id : Joi.number().required(),
   institute : Joi.string().required(),
   course_type : Joi.string().required(),
-  batch_date : Joi.string().required()
+  batch_date : Joi.string().required(),
+  page: Joi.number().optional(),
 });

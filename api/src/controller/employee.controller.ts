@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import XLSX from "xlsx-js-style";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import { pool } from "../config/db";
@@ -23,6 +23,9 @@ import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import { transaction } from "../utils/transaction";
 import { tryCatch } from "../utils/tryCatch";
 import { filterToSql } from "../utils/filterToSql";
+import { isAuthenticated } from "../middleware/isAuthenticated";
+import { parseNullOrUndefined } from "../utils/parseNullOrUndefined";
+import { parsePagination } from "../utils/parsePagination";
 
 const table_name = "employee";
 
@@ -83,6 +86,9 @@ export const getHrDashboardInfo = asyncErrorHandler(
 export const getEmployee = asyncErrorHandler(
   async (req: Request, res: Response) => {
     // const employee_type = req.query.employee_type;
+
+    const { OFFSET, LIMIT } = parsePagination(req);
+
     const { filterQuery, filterValues, placeholderNum } = filterToSql(
       req.query,
       "e"
@@ -107,9 +113,10 @@ export const getEmployee = asyncErrorHandler(
             ON e.department_id = d.id
         ${filterQuery}
         ORDER BY 
-            e.name;
+            e.name
+        OFFSET ${OFFSET}
+        LIMIT ${LIMIT};
     `;
-
     const queryValues = [...filterValues, getDate(date)];
 
     const { rows } = await pool.query(query, queryValues);
@@ -120,7 +127,10 @@ export const getEmployee = asyncErrorHandler(
 
 export const getSingleEmployeeInfo = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const employee_id = req.params.id || null;
+    const employee_id =
+      parseNullOrUndefined(req.params.id) ||
+      parseNullOrUndefined(res.locals.employee_id) ||
+      null;
     if (!employee_id) throw new ErrorHandler(400, "Employee Id Is Required");
 
     const query = `
@@ -420,7 +430,13 @@ export const getMarketingTeam = asyncErrorHandler(
 
 export const getEmployeeDocuments = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { error, value } = getEmployeeDocumentValidator.validate(req.params);
+    const { error, value } = getEmployeeDocumentValidator.validate({
+      ...req.params,
+      employee_id:
+        parseNullOrUndefined(req.params.employee_id) ||
+        parseNullOrUndefined(res.locals.employee_id),
+    });
+
     if (error) throw new ErrorHandler(400, error.message);
 
     const { rows } = await pool.query(

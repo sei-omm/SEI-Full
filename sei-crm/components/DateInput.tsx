@@ -11,6 +11,9 @@ interface IProps {
   date?: string | null;
   onChange?: (value: string) => void;
   required?: boolean;
+  type?: React.HTMLInputTypeAttribute;
+  max?: number | string;
+  min?: number | string;
 }
 
 export default function DateInput(props: IProps) {
@@ -31,8 +34,10 @@ export default function DateInput(props: IProps) {
       viewOnlyText={props.viewOnlyText}
       {...props}
       onChange={handleDateChange}
-      type="date"
+      type={props.type || "date"}
       value={date}
+      max={props.max}
+      min={props.min}
     />
   );
 }

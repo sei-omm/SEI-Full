@@ -23,6 +23,7 @@ import {
 } from "chart.js";
 import DateDurationFilter from "@/components/DateDurationFilter";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
+import Pagination from "@/components/Pagination";
 
 ChartJS.register(
   CategoryScale,
@@ -79,7 +80,7 @@ export default function AdmissionReport() {
   const {
     data: report,
     error,
-    isFetching
+    isFetching,
   } = useQuery<ISuccess<TAdmissionReport[]>, AxiosError<IError>>(
     ["fetch-admission-report", searchParams.toString()],
     () =>
@@ -325,6 +326,8 @@ export default function AdmissionReport() {
           </div>
         </div>
       </HandleSuspence>
+
+      <Pagination dataLength={report?.data.length} />
     </div>
   );
 }

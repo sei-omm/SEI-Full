@@ -4,6 +4,7 @@ import { BASE_API } from "@/app/constant";
 import Button from "@/components/Button";
 import HandleSuspence from "@/components/HandleSuspence";
 import VendorFilter from "@/components/Inventory/VendorFilter";
+import Pagination from "@/components/Pagination";
 import { ISuccess, TVendor } from "@/types";
 import axios from "axios";
 import Link from "next/link";
@@ -132,6 +133,8 @@ export default function Vendor() {
           </div>
         </div>
       </HandleSuspence>
+
+      <Pagination dataLength={durableFetchedData?.data.length} />
     </div>
   );
 }

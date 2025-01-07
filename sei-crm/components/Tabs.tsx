@@ -2,15 +2,16 @@
 
 import { ITabItems } from "@/types";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 interface IProps {
   tabs: ITabItems[];
-  className ? : string;
+  className?: string;
 }
 
 export default function Tabs({ tabs, className }: IProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   return (
     <div className={`w-full ${className}`}>
@@ -19,7 +20,10 @@ export default function Tabs({ tabs, className }: IProps) {
           <li key={index}>
             <Link
               className={`block h-full text-sm py-2 px-5 font-semibold rounded-lg cursor-pointer ${
-                pathname.includes(tab.slug) ? "bg-white" : "bg-transparent"
+                pathname.includes(tab.slug) ||
+                tab.slug.includes(searchParams.get("tab") || "")
+                  ? "bg-white"
+                  : "bg-transparent"
               } transition-all duration-500`}
               href={tab.slug}
             >

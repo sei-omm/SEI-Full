@@ -34,3 +34,5 @@ export type TEmployeeDocs = {
   doc_uri: string | null;
   doc_name: string | null;
 };
+
+export type TRoles = "Admin" | "Employee" | "Student" | "Own" | "Faculty";

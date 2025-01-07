@@ -587,6 +587,14 @@ CREATE SEQUENCE receipt_no_seq START 1;
 ALTER TABLE payments
 ADD receipt_no TEXT PRIMARY KEY DEFAULT 'KOL/2024/' || nextval('receipt_no_seq');
 
+-- New DBS -> 06 Jan 2025
+ALTER TABLE employee
+ALTER COLUMN employee_role TYPE VARCHAR(20),
+ALTER COLUMN employee_role SET DEFAULT 'Employee';
+
+ALTER TABLE employee
+DROP CONSTRAINT employee_employee_role_check;
+
 
 -- fro clering all table of db
 -- DO $$ 

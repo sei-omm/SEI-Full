@@ -4,6 +4,7 @@ import { BASE_API } from "@/app/constant";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import ManageAdmissionFilter from "@/components/Admission/ManageAdmissionFilter";
 import HandleSuspence from "@/components/HandleSuspence";
+import Pagination from "@/components/Pagination";
 import Spinner from "@/components/Spinner";
 import TagsBtn from "@/components/TagsBtn";
 import { setDialog } from "@/redux/slices/dialogs.slice";
@@ -268,6 +269,8 @@ export default function Admission() {
           </div>
         </div>
       </HandleSuspence>
+
+      <Pagination dataLength={admissions?.data.length} />
     </>
   );
 }

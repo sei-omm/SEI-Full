@@ -7,6 +7,7 @@ import DateDurationFilter from "@/components/DateDurationFilter";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import MaintenceStatusBtns from "@/components/Inventory/MaintenceStatusBtns";
+import Pagination from "@/components/Pagination";
 import { ISuccess, TMaintenanceRecord } from "@/types";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -143,6 +144,7 @@ export default function MaintenceRecord() {
           </div>
         </div>
       </HandleSuspence>
+      <Pagination dataLength={data?.data.length} />
     </div>
   );
 }

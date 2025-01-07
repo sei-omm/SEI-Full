@@ -2,6 +2,7 @@ import { BASE_API } from "@/app/constant";
 import Button from "@/components/Button";
 import CourseListItem from "@/components/CourseListItem";
 import DropDown from "@/components/DropDown";
+import Pagination from "@/components/Pagination";
 import { ICourse, ISuccess } from "@/types";
 import Link from "next/link";
 import React from "react";
@@ -10,13 +11,17 @@ import { IoIosAdd } from "react-icons/io";
 interface IProps {
   searchParams: {
     institute?: string;
+    page?: string;
   };
 }
 
 export default async function page({ searchParams }: IProps) {
-  const institute = searchParams.institute;
+  const urlSearchParams = new URLSearchParams();
+  urlSearchParams.set("institute", searchParams.institute || "Kolkata");
+  urlSearchParams.set("page", searchParams.page || "1");
+
   const response = await fetch(
-    `${BASE_API}/course/with-batches${institute ? `?institute=${institute}` : "?institute=Kolkata"}`,
+    `${BASE_API}/course/with-batches?${urlSearchParams.toString()}`,
     {
       headers: {
         Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3MzA0NTYwMTl9.NCC5Jo3AyoOlR6VP8WTZgnI2uyTBTq4EzO_1IaRF23Y`,
@@ -40,7 +45,7 @@ export default async function page({ searchParams }: IProps) {
               { text: "Kolkata", value: "Kolkata" },
               { text: "Faridabad", value: "Faridabad" },
             ]}
-            changeSearchParamsOnChange = {true}
+            changeSearchParamsOnChange={true}
           />
           <Link href={"manage-course/add-course"}>
             <Button className="flex-center gap-x-2">
@@ -61,6 +66,8 @@ export default async function page({ searchParams }: IProps) {
             ))}
           </ul>
         )}
+
+        <Pagination dataLength={courses?.data.length} />
       </section>
     </div>
   );

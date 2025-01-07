@@ -6,6 +6,7 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import Button from "@/components/Button";
 import HandleSuspence from "@/components/HandleSuspence";
 import LibraryFilters from "@/components/LibraryFilters";
+import Pagination from "@/components/Pagination";
 import TagsBtn from "@/components/TagsBtn";
 import { IError, ISuccess, TLibrary } from "@/types";
 import axios from "axios";
@@ -199,6 +200,8 @@ export default function LibraryManagement() {
           </div>
         </div>
       </HandleSuspence>
+
+      <Pagination dataLength={tableData?.data.length} />
     </div>
   );
 }

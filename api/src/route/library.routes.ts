@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   downloadLibraryFile,
-  generateFileLink,
+  // generateFileLink,
   getLibraryInfo,
   getLibraryInfoForStudent,
   getLibraryInfoWithFilter,
@@ -21,7 +21,7 @@ libraryRouter
     isAuthenticated,
     streamBlobLibraryFileForStudnets
   )
-  .get("/generate-link", isAuthenticated, generateFileLink)
+  // .get("/generate-link", isAuthenticated, generateFileLink)
   .get("/download-file/:library_item_id", isAuthenticated, downloadLibraryFile)
   .get("/student", isAuthenticated, getLibraryInfoForStudent)
   .get("/", getLibraryInfo) //this should be procted for crm only

@@ -6,6 +6,7 @@ import SelectDate from "@/components/SelectDate";
 import DownloadFormUrl from "@/components/DownloadFormUrl";
 import Button from "@/components/Button";
 import { LuFileSpreadsheet } from "react-icons/lu";
+import Pagination from "@/components/Pagination";
 
 interface IProps {
   searchParams: string;
@@ -24,9 +25,12 @@ export default async function page({ searchParams }: IProps) {
     body: [],
   };
 
-  const response = await fetch(BASE_API + "/hr/attendance?" + sParams.toString(), {
-    cache: "no-cache",
-  });
+  const response = await fetch(
+    BASE_API + "/hr/attendance?" + sParams.toString(),
+    {
+      cache: "no-cache",
+    }
+  );
   const result = (await response.json()) as ISuccess<any[]>;
 
   result.data?.forEach((item, index) => {
@@ -53,7 +57,9 @@ export default async function page({ searchParams }: IProps) {
 
       <div className="flex items-center justify-end">
         <DownloadFormUrl
-          urlToDownload={BASE_API + "/hr/attendance/export-sheet?" + sParams.toString()}
+          urlToDownload={
+            BASE_API + "/hr/attendance/export-sheet?" + sParams.toString()
+          }
         >
           <Button className="!bg-[#34A853] flex-center gap-4">
             <LuFileSpreadsheet size={20} />
@@ -124,6 +130,8 @@ export default async function page({ searchParams }: IProps) {
           </tbody>
         </table>
       </div>
+
+      <Pagination dataLength={result?.data.length} />
     </section>
   );
 }

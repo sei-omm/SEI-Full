@@ -32,6 +32,7 @@ import EmployeeTask from "./EmployeeTask";
 import EmployeeDocuments from "./Employee/EmployeeDocuments";
 import { uploadToVercel } from "@/utils/uploadToVercel";
 import Spinner from "./Spinner";
+import { getAuthToken } from "@/app/utils/getAuthToken";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -45,7 +46,12 @@ const fetchDepartments = async () => {
 };
 
 const fetchEmployeeInfo = async (employeeID: string) => {
-  const response = await axios.get(BASE_API + "/employee/" + employeeID);
+  const response = await axios.get(BASE_API + "/employee/" + employeeID, {
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthToken(),
+    },
+  });
   return response.data;
 };
 
@@ -171,20 +177,31 @@ export default function EmployeeInfo({ employeeID }: IProps) {
     setSalaryValues(newArray);
   };
 
-  const netSalary = salaryValues.reduce(
-    (accumulator, currentValue, currentIndex) => {
-      if (
-        currentIndex === 3 ||
-        currentIndex === 4 ||
-        currentIndex === 5 ||
-        currentIndex === 6
-      ) {
-        return accumulator - currentValue;
-      }
-      return accumulator + currentValue;
-    },
-    0
-  );
+  // const netSalary = salaryValues.reduce(
+  //   (accumulator, currentValue, currentIndex) => {
+  //     if (
+  //       currentIndex === 3 ||
+  //       currentIndex === 4 ||
+  //       currentIndex === 5 ||
+  //       currentIndex === 6
+  //     ) {
+  //       return accumulator - currentValue;
+  //     }
+  //     return accumulator + currentValue;
+  //   },
+  //   0
+  // );
+
+  const totalSalary = salaryValues.reduce((accumulator, currentValue) => {
+    return accumulator + currentValue;
+  }, 0);
+
+  const deductions = salaryValues.reduce((accumulator, currentValue, index) => {
+    if (index > 2) return accumulator + currentValue;
+    return 0;
+  }, 0);
+
+  const newSalary = totalSalary - deductions;
 
   const onNameTextBoxChange = (event: React.FormEvent<HTMLInputElement>) => {
     setEmployeeName(event.currentTarget.value);
@@ -738,20 +755,16 @@ export default function EmployeeInfo({ employeeID }: IProps) {
 
                 <h2 className="text-sm">
                   Total Deductions :{" "}
-                  <span className="font-semibold">
-                    ₹
-                    {salaryValues[salaryValues.length - 1] +
-                      salaryValues[salaryValues.length - 2] +
-                      salaryValues[salaryValues.length - 3] +
-                      salaryValues[salaryValues.length - 4]}
-                  </span>
+                  <span className="font-semibold">₹{deductions}</span>
                 </h2>
                 <div className="w-full h-[1px] bg-gray-300"></div>
 
                 <h2 className="text-sm">
                   Net Salary :{" "}
                   <span className="font-semibold">
-                    ₹{netSalary + salaryValues[salaryValues.length - 1]}
+                    {/* ₹{netSalary + salaryValues[salaryValues.length - 1]} */}
+                    {newSalary}
+                    {/* ₹{totalSalary - deductions} */}
                   </span>
                 </h2>
                 {/* <h2 className="text-xs text-gray-500">
@@ -763,7 +776,10 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   <span className="font-semibold text-gray-500">
                     IN HAND SALARY / month&apos;s
                   </span>{" "}
-                  :<span className="font-semibold">₹{netSalary}</span>
+                  :
+                  <span className="font-semibold">
+                    ₹{(newSalary / 12).toFixed(2)}
+                  </span>
                 </h2>
               </div>
               <div className="basis-[60%] flex-center mt-20">

@@ -16,8 +16,8 @@ export default function Button(props: IProps) {
   return (
     <button
       {...props}
-      className={`bg-foreground text-background tracking-wider rounded-lg px-6 py-[0.60rem] shadow-md text-sm active:scale-95 ${
-        props.disabled ? "opacity-40" : "opacity-100"
+      className={`bg-foreground text-background tracking-wider rounded-lg px-6 py-[0.60rem] shadow-md text-sm ${
+        props.disabled ? "opacity-40 cursor-not-allowed" : "opacity-100 active:scale-95"
       } ${props.className}`}
     >
       {props.loading ? (

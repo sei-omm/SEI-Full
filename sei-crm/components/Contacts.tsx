@@ -9,6 +9,7 @@ import TagsBtn from "./TagsBtn";
 import { LuFileSpreadsheet } from "react-icons/lu";
 import DownloadFormUrl from "./DownloadFormUrl";
 import EmployeeTypeFilter from "./Employee/EmployeeTypeFilter";
+import Pagination from "./Pagination";
 
 const tableDatas = {
   heads: ["Name", "Job Title", "Department", "Status", "Action"],
@@ -147,6 +148,7 @@ export default async function Contacts({ searchParams }: IProps) {
           </table>
         </div>
       </section>
+      <Pagination />
     </>
   );
 }

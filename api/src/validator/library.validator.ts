@@ -54,6 +54,7 @@ export const getLibraryInfoWithFilterValidator = Joi.object({
   }),
   date_from: Joi.string().required(),
   date_to: Joi.string().required(),
+  page: Joi.number().optional(),
 });
 
 export const updateVisibilityValidator = Joi.object({

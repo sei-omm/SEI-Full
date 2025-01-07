@@ -4,6 +4,7 @@ export const admissionReportValidator = Joi.object({
   institute: Joi.string().required().label("Institute"),
   from_date: Joi.string().required().label("From Date"),
   to_date: Joi.string().required().label("To Date"),
+  page: Joi.number().optional(),
 });
 
 export const studentBirthdateReportValidator = Joi.object({
@@ -19,6 +20,7 @@ export const dgsIndosReportValidator = Joi.object({
   course_type: Joi.string().required(),
   course_id: Joi.number().required(),
   batch_date: Joi.string().required(),
+  page: Joi.number().optional(),
 });
 
 export const courseTrendReportValidator = Joi.object({
@@ -27,18 +29,21 @@ export const courseTrendReportValidator = Joi.object({
   course_id: Joi.string().required(),
   // last_no_of_batches: Joi.number().required(),
   batch_date: Joi.string().required(),
+  page: Joi.number().optional(),
 });
 
 export const receiptReportValidator = Joi.object({
   institute: Joi.string().required().label("Institute"),
   from_date: Joi.string().required().label("From Date"),
   to_date: Joi.string().required().label("To Date"),
+  page: Joi.number().optional(),
 });
 
 export const occupancyReportValidator = Joi.object({
   institute: Joi.string().required().label("Institute"),
   start_date: Joi.string().required().label("Start Date"),
   end_date: Joi.string().required().label("End Date"),
+  page: Joi.number().optional(),
 });
 
 export const occupancyExcelReportValidator = occupancyReportValidator
@@ -55,4 +60,5 @@ export const refundReportValidator = Joi.object({
 
   start_date: Joi.string().required().label("From Date").optional(),
   end_date: Joi.string().required().label("To Date").optional(),
+  page: Joi.number().optional(),
 });

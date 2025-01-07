@@ -10,15 +10,18 @@ import { BASE_API } from "@/app/constant";
 import { notFound } from "next/navigation";
 import { ApplicationStatusType, IJobAppliedCandidate, ISuccess } from "@/types";
 import ApplicationStatusDropDown from "@/components/ApplicationStatusDropDown";
+import Pagination from "@/components/Pagination";
 
 interface IProps {
   params: {
     slug: string;
   };
+  searchParams: any;
 }
 
-export default async function page({ params }: IProps) {
-  const response = await fetch(BASE_API + "/hr/job/apply/" + params.slug, {
+export default async function page({ params, searchParams }: IProps) {
+  const urlSearchParams = new URLSearchParams(searchParams);
+  const response = await fetch(`${BASE_API}/hr/job/apply/${params.slug}?${urlSearchParams.toString()}`, {
     cache: "no-store",
   });
   if (!response.ok) return notFound();
@@ -102,6 +105,8 @@ export default async function page({ params }: IProps) {
           ))}
         </ul>
       )}
+
+      <Pagination dataLength={result?.data.length} />
     </section>
   );
 }

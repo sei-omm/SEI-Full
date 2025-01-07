@@ -10,11 +10,13 @@ import { ErrorHandler } from "../utils/ErrorHandler";
 import XLSX from "xlsx";
 import { months } from "../constant";
 import { filterToSql } from "../utils/filterToSql";
+import { parsePagination } from "../utils/parsePagination";
 
 const date = new Date();
 const table_name = "attendance";
 
 async function generateEmployeeAttendance(req: Request) {
+  const { LIMIT, OFFSET } = parsePagination(req);
   let loopDate = 1;
   const currentYear = req.query.year ?? date.getFullYear();
   const currentMoth = req.query.month ?? date.getMonth() + 1;
@@ -81,7 +83,8 @@ async function generateEmployeeAttendance(req: Request) {
       GROUP BY 
           e.id, e.name
       ORDER BY 
-          e.id;
+          e.id
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
     `;
   return await pool.query(sql, [...filterValues, startDate, endDate]);
 }

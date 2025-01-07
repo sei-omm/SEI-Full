@@ -15,7 +15,12 @@ import {
   updateEmployeeActiveStatus,
 } from "../controller/employee.controller";
 import { upload } from "../middleware/multer";
-import { createEmployeeLeaveRequest } from "../controller/leave.controller";
+import {
+  createEmployeeLeaveRequest,
+  getEmployeeLeaveRequest,
+} from "../controller/leave.controller";
+import { isAuthenticated } from "../middleware/isAuthenticated";
+import { roles } from "../middleware/roles";
 
 export const employeeRoute = Router();
 
@@ -34,14 +39,18 @@ employeeRoute
   .get("/", getEmployee)
   .get("/export-sheet", generateAllEmployeeExcelSheet)
   .get("/marketing-team", getMarketingTeam)
-  .get("/:employee_id/document", getEmployeeDocuments)
-  .get("/:id", getSingleEmployeeInfo)
+  .get("/leave", isAuthenticated, getEmployeeLeaveRequest)
+  .get("/:employee_id/document", roles(["Admin", "Own"]), getEmployeeDocuments)
+  .get("/:id", roles(["Admin", "Own"]), getSingleEmployeeInfo)
   .post("/", upload.fields(uploadFileFilds), addNewEmployee)
-  .post("/leave", createEmployeeLeaveRequest)
+  .post("/leave", isAuthenticated, createEmployeeLeaveRequest)
   .put("/:id", updateEmployee)
   .patch("/:id", updateEmployeeActiveStatus)
   .delete("/:id", removeEmployee)
   .post("/login", loginEmployee)
   .get("/faculty-assign-course/:faculty_id", getFacultyCourseSubject)
   .post("/faculty-assign-course", assignFacultyCourseSubject)
-  .delete("/faculty-assign-course/:faculty_id/:course_id", removeFacultyCourseSubject);
+  .delete(
+    "/faculty-assign-course/:faculty_id/:course_id",
+    removeFacultyCourseSubject
+  );

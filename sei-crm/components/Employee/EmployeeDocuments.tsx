@@ -13,6 +13,7 @@ import { useQuery } from "react-query";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
 import HandleSuspence from "../HandleSuspence";
+import { getAuthToken } from "@/app/utils/getAuthToken";
 
 interface IProps {
   employeeId: number;
@@ -37,30 +38,35 @@ export default function EmployeeDocuments({
     { doc_id: "Choose Other Certificate", doc_uri: null, doc_name: null },
   ]);
 
-  const { isFetching, error } = useQuery<ISuccess<TEmployeeDocsFromDB[]>>(
-    {
-      queryKey: "employee_documents",
-      queryFn: async () =>
-        (await axios.get(`${BASE_API}/employee/${employeeId}/document`)).data,
-      onSuccess: (data) => {
-        const newEmployeeInfo = [...employeeDocsInfo];
-        data.data.forEach((item) => {
-          const indexToChange = employeeDocsInfo.findIndex(
-            (findIndexItem) => findIndexItem.doc_id === item.doc_id
-          );
-          newEmployeeInfo[indexToChange] = {
-            doc_id: item.doc_id,
-            doc_name: item.doc_name,
-            doc_uri: item.doc_uri,
-          };
-        });
-        setEmployeeDocsInfo(newEmployeeInfo);
-      },
+  const { isFetching, error } = useQuery<ISuccess<TEmployeeDocsFromDB[]>>({
+    queryKey: "employee_documents",
+    queryFn: async () =>
+      (
+        await axios.get(`${BASE_API}/employee/${employeeId}/document`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthToken(),
+          },
+        })
+      ).data,
+    onSuccess: (data) => {
+      const newEmployeeInfo = [...employeeDocsInfo];
+      data.data.forEach((item) => {
+        const indexToChange = employeeDocsInfo.findIndex(
+          (findIndexItem) => findIndexItem.doc_id === item.doc_id
+        );
+        newEmployeeInfo[indexToChange] = {
+          doc_id: item.doc_id,
+          doc_name: item.doc_name,
+          doc_uri: item.doc_uri,
+        };
+      });
+      setEmployeeDocsInfo(newEmployeeInfo);
+    },
 
-      refetchOnMount: true,
-      enabled: employeeId !== -1,
-    }
-  );
+    refetchOnMount: true,
+    enabled: employeeId !== -1,
+  });
 
   async function onUploadedCompleted(
     blob: PutBlobResult,
@@ -82,11 +88,7 @@ export default function EmployeeDocuments({
   }
 
   return (
-    <HandleSuspence
-      isLoading={isFetching}
-      dataLength={1}
-      error={error}
-    >
+    <HandleSuspence isLoading={isFetching} dataLength={1} error={error}>
       <ul className="grid grid-cols-2 gap-x-3 gap-y-4">
         {employeeDocsInfo.map((docs) => (
           <li key={docs.doc_id}>
@@ -98,10 +100,9 @@ export default function EmployeeDocuments({
               fileName={docs.doc_name ?? `Choose ${docs.doc_id}`}
               viewLink={docs.doc_uri}
               uploadFolderName="employee-documents"
-              onUploaded={(blob, setUploadStatus) =>{
-                onUploadedCompleted(blob, setUploadStatus, docs)
-              }
-              }
+              onUploaded={(blob, setUploadStatus) => {
+                onUploadedCompleted(blob, setUploadStatus, docs);
+              }}
               onFileDelete={(id) => {
                 const index = employeeDocsInfo.findIndex(
                   (item) => item.doc_id === id

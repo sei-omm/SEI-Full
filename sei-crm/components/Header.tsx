@@ -1,33 +1,17 @@
 "use client";
 
 import { useIsAuthenticated } from "@/app/hooks/useIsAuthenticated";
-import { removeInfo } from "@/app/utils/saveInfo";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
 import { CiLogout } from "react-icons/ci";
 import Spinner from "./Spinner";
-import { useDispatch } from "react-redux";
-import { setDialog } from "@/redux/slices/dialogs.slice";
 import Notification from "./Notification";
+import { MdOutlineAccountCircle } from "react-icons/md";
+import Link from "next/link";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function Header() {
-  const [isPending, startTransition] = useTransition();
-  const dispatch = useDispatch();
-
   const { userInfo } = useIsAuthenticated();
-  const route = useRouter();
-
-  function handleLogoutBtn() {
-    //remove user and send him to login page
-    dispatch(setDialog({ type: "OPEN", dialogId: "progress-dialog" }));
-    startTransition(async () => {
-      await removeInfo("login-token");
-      await removeInfo("employee-info");
-      dispatch(setDialog({ type: "CLOSE", dialogId: "progress-dialog" }));
-      route.push("/auth/login");
-    });
-  }
+  const { isPending, handleLogoutBtn } = useLogout();
 
   return (
     <header className="w-full flex justify-between items-center border-b border-[#c4c4c44f] py-3 px-6">
@@ -53,10 +37,19 @@ export default function Header() {
           </div>
 
           <div className="absolute right-0 invisible translate-y-10 opacity-0 group-hover/profile:visible group-hover/profile:translate-y-0 group-hover/profile:opacity-100 transition-all duration-300">
-            <div className="card-shdow relative border right-5 z-10 top-1 bg-white">
-              <div
+            <ul className="card-shdow relative border right-5 z-10 top-1 bg-white min-w-40">
+              <li className="cursor-pointer hover:bg-slate-200">
+                <Link
+                  href={"/account?tab=informations"}
+                  className="flex items-center gap-2 p-2"
+                >
+                  <MdOutlineAccountCircle />
+                  <span className="text-sm font-semibold">My Account</span>
+                </Link>
+              </li>
+              <li
                 onClick={handleLogoutBtn}
-                className="flex-center gap-2 cursor-pointer p-2"
+                className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-200"
               >
                 {isPending ? (
                   <Spinner size="12px" />
@@ -65,8 +58,8 @@ export default function Header() {
                 )}
 
                 <span className="text-sm font-semibold">Logout</span>
-              </div>
-            </div>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

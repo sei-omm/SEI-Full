@@ -107,6 +107,7 @@ export const fillUpCourseFormValidator = Joi.object({
 
 export const getScheduleCourseBatchValidator = Joi.object({
   course_id: Joi.number().required(),
+  page: Joi.number().optional(),
 });
 
 export const enrollCourseValidator = Joi.object({
