@@ -605,4 +605,3 @@ DROP CONSTRAINT employee_employee_role_check;
 --         WHERE schemaname = 'public'
 --     );
 -- END $$;
-

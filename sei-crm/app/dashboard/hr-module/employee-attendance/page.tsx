@@ -103,15 +103,17 @@ export default async function page({ searchParams }: IProps) {
                     <span className="line-clamp-1 inline-flex gap-x-3">
                       {childItemIndex === 0 ? (
                         <div className="flex items-center gap-2">
-                          <div className="size-10 border border-gray-300 overflow-hidden rounded-full">
-                            <Image
-                              className="size-full object-cover"
-                              src={result.data[index].profile_image}
-                              alt="Employee Image"
-                              height={90}
-                              width={90}
-                              quality={100}
-                            />
+                          <div className="size-12">
+                            <div className="size-10 border border-gray-300 overflow-hidden rounded-full">
+                              <Image
+                                className="size-full object-cover"
+                                src={result.data[index].profile_image}
+                                alt="Employee Image"
+                                height={100}
+                                width={100}
+                                quality={100}
+                              />
+                            </div>
                           </div>
                           {value}
                         </div>

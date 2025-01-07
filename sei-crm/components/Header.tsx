@@ -36,12 +36,12 @@ export default function Header() {
             />
           </div>
 
-          <div className="absolute right-0 invisible translate-y-10 opacity-0 group-hover/profile:visible group-hover/profile:translate-y-0 group-hover/profile:opacity-100 transition-all duration-300">
-            <ul className="card-shdow relative border right-5 z-10 top-1 bg-white min-w-40">
+          <div className="absolute right-0 invisible translate-y-10 z-50 opacity-0 group-hover/profile:visible group-hover/profile:translate-y-0 group-hover/profile:opacity-100 transition-all duration-300">
+            <ul className="card-shdow relative border right-5 z-10 top-1 bg-white min-w-40 rounded-xl overflow-hidden">
               <li className="cursor-pointer hover:bg-slate-200">
                 <Link
                   href={"/account?tab=informations"}
-                  className="flex items-center gap-2 p-2"
+                  className="flex items-center gap-2 p-3"
                 >
                   <MdOutlineAccountCircle />
                   <span className="text-sm font-semibold">My Account</span>
@@ -49,7 +49,7 @@ export default function Header() {
               </li>
               <li
                 onClick={handleLogoutBtn}
-                className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-200"
+                className="flex items-center gap-2 cursor-pointer p-3 hover:bg-slate-200"
               >
                 {isPending ? (
                   <Spinner size="12px" />
