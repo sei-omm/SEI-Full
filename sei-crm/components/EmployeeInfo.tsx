@@ -33,6 +33,7 @@ import EmployeeDocuments from "./Employee/EmployeeDocuments";
 import { uploadToVercel } from "@/utils/uploadToVercel";
 import Spinner from "./Spinner";
 import { getAuthToken } from "@/app/utils/getAuthToken";
+import { useRouter } from "next/navigation";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -56,6 +57,7 @@ const fetchEmployeeInfo = async (employeeID: string) => {
 };
 
 export default function EmployeeInfo({ employeeID }: IProps) {
+  const route = useRouter();
   const isNewEmployee =
     employeeID === "add-employee" || employeeID === "add-faculty"
       ? true
@@ -291,6 +293,9 @@ export default function EmployeeInfo({ employeeID }: IProps) {
         apiPath: "/employee",
         method: "post",
         formData,
+        onSuccess: () => {
+          route.push("/dashboard/hr-module/manage-employee");
+        },
       });
     } else {
       mutate({
@@ -301,6 +306,9 @@ export default function EmployeeInfo({ employeeID }: IProps) {
         },
         formData,
         id: employeeInfo?.id,
+        onSuccess: () => {
+          route.push("/dashboard/hr-module/manage-employee");
+        },
       });
     }
   };
