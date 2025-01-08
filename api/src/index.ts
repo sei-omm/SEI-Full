@@ -41,7 +41,6 @@ app.use(
     credentials: true,
   })
 );
-// app.use(express.urlencoded({ extended: true }));
 
 //parent routes
 app.use("/api/v1/hr", hrRouter);
