@@ -8,9 +8,9 @@ export const setCookie = async (key: string, value: string) => {
 
   (await cookies()).set(key, value, {
     expires,
-    httpOnly: true,
-    secure : process.env.NODE_ENV === "production" ? true : false,
-    sameSite: "none"
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: "none",
+    domain: ".snehangshubiswas.in",
   });
 };
 
