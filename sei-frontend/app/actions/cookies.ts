@@ -11,7 +11,7 @@ export const setCookie = async (key: string, value: string) => {
     httpOnly: true,
     secure : process.env.NODE_ENV === "production" ? true : false,
     sameSite: "none",
-    domain : ".vercel.app"
+    // domain : ".vercel.app"
   });
 };
 
