@@ -203,7 +203,7 @@ export default async function page({ searchParams }: IProps) {
               },
               {
                 isSelected: searchParams.tab === "library" ? true : false,
-                text: "library",
+                text: "Library",
                 slug: "/account?tab=library",
               },
             ]}
