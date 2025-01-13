@@ -36,7 +36,7 @@ export const uploadDocsFromCRM = asyncErrorHandler(
             "image/png",
             "image/webp",
           ],
-          token: vercelBlobToken as string,
+          token: vercelBlobToken as string
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {},

@@ -10,7 +10,7 @@ import Image from "next/image";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { useQueries, UseQueryResult } from "react-query";
 import axios from "axios";
-import { BASE_API } from "@/app/constant";
+import { BASE_API, employeeAuthority } from "@/app/constant";
 import {
   EmployeeType,
   IDepartment,
@@ -82,12 +82,15 @@ export default function EmployeeInfo({ employeeID }: IProps) {
     },
   ]);
 
-  const employeeInfo = fetchResults[1]?.data?.data[0];
   const departements = fetchResults[0].data?.data;
+  const employeeInfo = fetchResults[1]?.data?.data[0];
 
   const [stateProfileUpload, setStateProfileUpload] = useState<
     "done" | "uploading"
   >("done");
+  const [currentDepartment, setCurrentDepartment] = useState<
+    number | undefined
+  >(undefined);
 
   const employeeDocsInfoState = useRef<TEmployeeDocs[]>([]);
 
@@ -179,21 +182,6 @@ export default function EmployeeInfo({ employeeID }: IProps) {
     setSalaryValues(newArray);
   };
 
-  // const netSalary = salaryValues.reduce(
-  //   (accumulator, currentValue, currentIndex) => {
-  //     if (
-  //       currentIndex === 3 ||
-  //       currentIndex === 4 ||
-  //       currentIndex === 5 ||
-  //       currentIndex === 6
-  //     ) {
-  //       return accumulator - currentValue;
-  //     }
-  //     return accumulator + currentValue;
-  //   },
-  //   0
-  // );
-
   const totalSalary = salaryValues.reduce((accumulator, currentValue) => {
     return accumulator + currentValue;
   }, 0);
@@ -232,6 +220,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
       }
       setAge(employeeInfo?.dob ? calculateAge(employeeInfo?.dob) : "");
       employeeInstitute.current = employeeInfo?.institute || null;
+      setCurrentDepartment(employeeInfo?.department_id);
     }
   }, [fetchResults[1].isLoading]);
 
@@ -243,11 +232,11 @@ export default function EmployeeInfo({ employeeID }: IProps) {
     const formData = new FormData(event.currentTarget);
 
     //find department_id using department_name
-    const departmentName = formData.get("department_name");
-    const singleDepartmentInfo = departements?.find(
-      (item) => item.name === departmentName
-    );
-    formData.set("department_id", `${singleDepartmentInfo?.id}`);
+    // const departmentName = formData.get("department_name");
+    // const singleDepartmentInfo = departements?.find(
+    //   (item) => item.name === departmentName
+    // );
+    // formData.set("department_id", `${singleDepartmentInfo?.id}`);
     if (employeeID === "add-employee") {
       formData.set("employee_type", "Office Staff");
     } else if (employeeID === "add-faculty") {
@@ -473,6 +462,43 @@ export default function EmployeeInfo({ employeeID }: IProps) {
               Official Informations
             </h2>
             <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+              <DropDown
+                key={"department_id"}
+                label="Select Department"
+                options={
+                  departements?.map((item) => ({
+                    text: item.name,
+                    value: item.id,
+                  })) || []
+                }
+                onChange={(item) => {
+                  setCurrentDepartment(item.value);
+                }}
+                name="department_id"
+                defaultValue={employeeInfo?.department_id}
+              />
+
+              <DropDown
+                name="designation"
+                key="Designation"
+                label={"Designation " + employeeInfo?.designation}
+                options={
+                  departements
+                    ?.find((item) => item.id === currentDepartment)
+                    ?.designation.split(",")
+                    .map((deg) => ({ text: deg, value: deg })) || []
+                }
+                defaultValue={employeeInfo?.designation}
+              />
+              <DropDown
+                name="authority"
+                label="Authority"
+                options={employeeAuthority.map((item) => ({
+                  text: item.name,
+                  value: item.score,
+                }))}
+                defaultValue={employeeInfo?.authority}
+              />
               <Input
                 defaultValue={employeeInfo?.job_title || ""}
                 required
@@ -502,19 +528,6 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 type="password"
                 placeholder="adminSom@123"
               />
-              <DropDown
-                key={"department_name"}
-                label="Select Department"
-                options={
-                  departements?.map((item) => ({
-                    text: item.name,
-                    value: item.name,
-                  })) || []
-                }
-                name="department_name"
-                defaultValue={employeeInfo?.department_name}
-              />
-
               <Input
                 required
                 name="rank"

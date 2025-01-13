@@ -15,6 +15,7 @@ interface IProps {
   onChange?: (item: OptionsType) => void;
   changeSearchParamsOnChange?: boolean;
   viewOnly?: boolean;
+  valueRef?: React.RefObject<HTMLInputElement>;
 }
 
 export default function DropDown({
@@ -27,11 +28,14 @@ export default function DropDown({
   onChange,
   changeSearchParamsOnChange,
   viewOnly,
+  valueRef,
 }: IProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<OptionsType | null>(null);
+  const [selectedItem, setSelectedItem] = useState<OptionsType | null>(
+    null
+  );
 
   const route = useRouter();
   const pathname = usePathname();
@@ -52,8 +56,10 @@ export default function DropDown({
     } else {
       setSelectedItem(options[0]);
     }
+    // setSelectedItem(
+    //   options.find((item) => item.value == defaultValue) || options[0]
+    // );
   }, [defaultValue]);
-
 
   useEffect(() => {
     document.addEventListener("click", checkClickOutside);
@@ -84,15 +90,24 @@ export default function DropDown({
                   isOpen ? "block" : "hidden"
                 } left-0 right-0 top-2 absolute z-20`}
               >
-                <input hidden name={name} defaultValue={selectedItem?.value} />
+                <input
+                  ref={valueRef}
+                  hidden
+                  name={name}
+                  defaultValue={selectedItem?.value}
+                />
                 <ul className="bg-white border rounded-xl drop_down_sidebar overflow-x-hidden relative top-11 max-h-60 overflow-y-auto">
                   {options?.map((option, index) => (
                     <li
                       onClick={() => {
                         if (changeSearchParamsOnChange) {
-                          const urlSearchParams = new URLSearchParams(searchParams);
+                          const urlSearchParams = new URLSearchParams(
+                            searchParams
+                          );
                           urlSearchParams.set(name || "", option.value);
-                          route.push(`${pathname}?${urlSearchParams.toString()}`)
+                          route.push(
+                            `${pathname}?${urlSearchParams.toString()}`
+                          );
                         }
                         setSelectedItem(option);
                         onChange?.(option);

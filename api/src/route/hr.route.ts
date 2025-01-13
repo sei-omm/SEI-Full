@@ -1,8 +1,11 @@
 import { Router } from "express";
 import {
+  addDesignation,
   addNewDepartment,
   deleteDepartment,
   getAllDepartments,
+  getAllDesignation,
+  getSingleDepartment,
   updateDepartment,
 } from "../controller/department.controllers";
 import {
@@ -35,9 +38,10 @@ hrRouter
   .get("/dashboard", getHrDashboardInfo)
 
   .get("/department", getAllDepartments)
+  .get("/department/:department_id", getSingleDepartment)
   .post("/department", addNewDepartment)
-  .patch("/department/:id", updateDepartment)
-  .delete("/department/:id", deleteDepartment)
+  .put("/department/:department_id", updateDepartment)
+  .delete("/department/:department_id", deleteDepartment)
 
   .get("/leave", roles(["Admin"]), getRequestedLeaveLists)
   // .post("/leave", createLeaveRequest) //this will done by employee
@@ -58,4 +62,7 @@ hrRouter
   .get("/attendance", getAllEmployeeAllAttendances)
   .get("/attendance/export-sheet", generateAttendanceSheet)
   .post("/attendance", addNewEmployeeAttendance)
-  .patch("/attendance/:employee_id", updateEmployeeAttendance);
+  .patch("/attendance/:employee_id", updateEmployeeAttendance)
+
+  .get("/designation", getAllDesignation)
+  .post("/designation", addDesignation);

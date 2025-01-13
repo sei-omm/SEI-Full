@@ -222,11 +222,18 @@ export default function Admission() {
                                 )}
 
                                 <Link
-                                  href={BASE_API + "/receipt/admission?form_id=" + admissions?.data[rowIndex]?.form_id}
+                                  href={
+                                    BASE_API +
+                                    "/receipt/admission?form_id=" +
+                                    admissions?.data[rowIndex]?.form_id
+                                  }
                                   target="__blank"
                                   title="Print Admission Form"
                                 >
-                                  <IoPrint title="Print Admission Form" size={18} />
+                                  <IoPrint
+                                    title="Print Admission Form"
+                                    size={18}
+                                  />
                                 </Link>
                               </div>
                             ) : columnIndex === 0 ? (

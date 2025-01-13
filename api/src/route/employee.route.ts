@@ -2,15 +2,19 @@ import { Router } from "express";
 import {
   addNewEmployee,
   assignFacultyCourseSubject,
+  createAppraisal,
   generateAllEmployeeExcelSheet,
+  getAppraisalList,
   getEmployee,
   getEmployeeDocuments,
   getFacultyCourseSubject,
   getMarketingTeam,
+  getSingleAppraisal,
   getSingleEmployeeInfo,
   loginEmployee,
   removeEmployee,
   removeFacultyCourseSubject,
+  updateAppraisalReport,
   updateEmployee,
   updateEmployeeActiveStatus,
 } from "../controller/employee.controller";
@@ -40,8 +44,15 @@ employeeRoute
   .get("/export-sheet", generateAllEmployeeExcelSheet)
   .get("/marketing-team", getMarketingTeam)
   .get("/leave", isAuthenticated, getEmployeeLeaveRequest)
-  .get("/:employee_id/document", roles(["Admin", "Own"]), getEmployeeDocuments)
+
+  .get("/appraisal", isAuthenticated, getAppraisalList)
+  .get("/appraisal/:appraisal_id", getSingleAppraisal)
+  .post("/appraisal", isAuthenticated, createAppraisal)
+  .put("/appraisal/:appraisal_id", isAuthenticated, updateAppraisalReport)
+
+  .get("/:employee_id/document", roles(["Admin", "Own"]), getEmployeeDocuments) //roles not working properly
   .get("/:id", roles(["Admin", "Own"]), getSingleEmployeeInfo)
+  
   .post("/", upload.fields(uploadFileFilds), addNewEmployee)
   .post("/leave", isAuthenticated, createEmployeeLeaveRequest)
   .put("/:id", updateEmployee)

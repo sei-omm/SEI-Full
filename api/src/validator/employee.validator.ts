@@ -103,6 +103,8 @@ export const employeeSchema = Joi.object({
   faculty_attendance_type: Joi.string().valid("Regular", "Visiting"),
   employee_type: Joi.string().valid("Office Staff", "Faculty"),
   institute: Joi.string().optional().allow(""),
+  designation: Joi.string().optional().allow(""),
+  authority: Joi.number().optional(),
 });
 
 export const employeeLoginValidator = Joi.object({
@@ -126,4 +128,37 @@ export const assignFacultyCourseSubjectValidator = Joi.object({
   faculty_id: Joi.number().required(),
   course_id: Joi.number().required(),
   subject: Joi.string().required(),
+});
+
+//Appraisal
+export const createAppraisalValidator = Joi.object({
+  employee_id: Joi.number().required(),
+  discipline: Joi.string().required(),
+  duties: Joi.string().required(),
+  targets: Joi.string().required(),
+  achievements: Joi.string().required(),
+});
+
+export const getAppraisalListValidator = Joi.object({
+  employee_id: Joi.number().required(),
+  type: Joi.string().valid("own", "others").required(),
+});
+
+export const getSingleAppraisalValidator = Joi.object({
+  appraisal_id: Joi.number().required(),
+});
+
+export const updateAppraisalValidator = Joi.object({
+  appraisal_id: Joi.number().required(),
+
+  employee_id: Joi.number().required(),
+
+  discipline: Joi.string().required(),
+  duties: Joi.string().required(),
+  targets: Joi.string().required(),
+  achievements: Joi.string().required(),
+
+  appraisal_options: Joi.string().required(),
+  state_of_health: Joi.string().required(),
+  integrity: Joi.string().required(),
 });

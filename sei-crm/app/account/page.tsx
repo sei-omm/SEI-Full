@@ -21,6 +21,7 @@ import { getAuthToken } from "../utils/getAuthToken";
 import { useLogout } from "@/hooks/useLogout";
 import { IoOpenOutline } from "react-icons/io5";
 import Link from "next/link";
+import Appraisal from "@/components/Account/Appraisal";
 import AppraisalForm from "@/components/Account/AppraisalForm";
 
 const fetchEmployeeInfo = async (employeeID: string | null) => {
@@ -122,8 +123,12 @@ export default function Account() {
                 slug: "/account/?tab=leave-request",
               },
               {
-                name: "APR",
+                name: "Appraisal",
                 slug: "/account/?tab=appraisal",
+              },
+              {
+                name: "Others Appraisal",
+                slug: "/account/?tab=otherapr",
               },
             ]}
           />
@@ -140,7 +145,9 @@ export default function Account() {
           <PaySlipComp employee_info={data?.data[0]} />
         )}
         {searchParams.get("tab") === "leave-request" && <LeaveRequest />}
-        {searchParams.get("tab") === "appraisal" && <AppraisalForm />}
+        {searchParams.get("tab") === "appraisal" && <Appraisal type="own"/>}
+        {searchParams.get("tab") === "otherapr" && <Appraisal type="others"/>}
+        {searchParams.get("tab") === "appraisalform" && <AppraisalForm />}
       </div>
     </HandleSuspence>
   );

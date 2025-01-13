@@ -24,6 +24,8 @@ import ConsumeStockDialog from "./ConsumeStockDialog";
 import FacultyAssignCoursesDialog from "./FacultyAssignCoursesDialog";
 import AddDiscountDialog from "./AddDiscountDialog";
 import AddLeaveRequest from "./AddLeaveRequest";
+import DesignationDialog from "./DesignationDialog";
+import DepartmentAndDesignation from "./DepartmentAndDesignation";
 
 type DivType = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -124,6 +126,14 @@ const dialogs = [
   {
     id: "add-leave-request",
     component: <AddLeaveRequest />,
+  },
+  {
+    id: "designation-dialog",
+    component: <DesignationDialog />,
+  },
+  {
+    id: "department-designation-dialog",
+    component: <DepartmentAndDesignation />,
   },
 ];
 

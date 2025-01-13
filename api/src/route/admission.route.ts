@@ -7,7 +7,6 @@ import {
   updateFormStatus,
   viewStudentUploadedDocuments,
 } from "../controller/admission.controller";
-import { upload } from "../middleware/multer";
 
 export const admissionRouter = Router();
 
@@ -15,11 +14,6 @@ admissionRouter
   .get("/", getAdmissions)
   .put(
     "/save",
-    upload.fields([
-      { name: "id_proof", maxCount: 1 },
-      { name: "address_proof", maxCount: 1 },
-      { name: "academic_proof", maxCount: 1 },
-    ]),
     saveAdmissionInfo
   )
   .patch("/update-form-status", updateFormStatus)

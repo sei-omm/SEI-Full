@@ -61,11 +61,36 @@ import { Request } from "express";
 //   };
 // };
 
-export const getAdmissionsService = async (query: QueryString.ParsedQs, req: Request) => {
+export const getAdmissionsService = async (
+  query: QueryString.ParsedQs,
+  req: Request
+) => {
   const { error } = getAdmissionsValidator.validate(query);
   if (error) throw new ErrorHandler(400, error.message);
 
   const { LIMIT, OFFSET } = parsePagination(req);
+
+  let FILTER =
+    "WHERE c.course_id = $1 AND c.institute = $2 AND c.course_type = $3 AND cb.start_date = $4";
+  let FILTER_VALUES: any[] = [
+    query.course_id,
+    query.institute,
+    query.course_type,
+    query.batch_date,
+  ];
+  if (req.query.form_id) {
+    FILTER = "WHERE ff.form_id = $1";
+    FILTER_VALUES = [req.query.form_id as string];
+  } else if (req.query.indos_number) {
+    FILTER = "WHERE s.indos_number = $1";
+    FILTER_VALUES = [req.query.indos_number as string];
+  } else if (req.query.cdc_num) {
+    FILTER = "WHERE s.cdc_num = $1";
+    FILTER_VALUES = [req.query.cdc_num as string];
+  } else if (req.query.passport_num) {
+    FILTER = "WHERE s.passport_num = $1";
+    FILTER_VALUES = [req.query.passport_num as string];
+  }
 
   const { rows } = await pool.query(
     `
@@ -89,12 +114,12 @@ export const getAdmissionsService = async (query: QueryString.ParsedQs, req: Req
     LEFT JOIN course_batches AS cb
     ON cb.batch_id = ebc.batch_id
 
-    WHERE c.course_id = $1 AND c.institute = $2 AND c.course_type = $3 AND cb.start_date = $4
+    ${FILTER}
 
     GROUP BY ebc.course_id, ff.form_id, s.profile_image, s.name, s.student_id
     LIMIT ${LIMIT} OFFSET ${OFFSET}
   `,
-    [query.course_id, query.institute, query.course_type, query.batch_date]
+    FILTER_VALUES
   );
 
   return rows;

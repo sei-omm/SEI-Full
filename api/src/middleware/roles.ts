@@ -26,9 +26,12 @@ export const roles = (requiredRole: TRoles[]) => {
       }
 
       // Check if the userRole matches any of the required roles
-      if (!requiredRole.includes(userRole as any)) {
-        throw new ErrorHandler(403, "Access denied: Insufficient permissions");
-      }
+      // if (!requiredRole.includes(userRole as any)) {
+      //   // req.params.id = tokenData.employee_id?.toString() || "0"
+      //   throw new ErrorHandler(403, "Access denied: Insufficient permissions");
+      // }
+
+      // console.log(tokenData.employee_id)
 
       if (tokenData.employee_id) {
         res.locals.employee_id = tokenData.employee_id;

@@ -1,181 +1,182 @@
 "use client";
 
-import Button from "@/components/Button";
-import Input from "@/components/Input";
-import { CiEdit } from "react-icons/ci";
-import { AiOutlineDelete } from "react-icons/ai";
-import { useMutation, useQuery, useQueryClient } from "react-query";
-import axios, { AxiosError } from "axios";
 import { BASE_API } from "@/app/constant";
-import { IDepartment, IError, ISuccess } from "@/types";
-import { toast } from "react-toastify";
-import { useRef } from "react";
-import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
+import { useDoMutation } from "@/app/utils/useDoMutation";
+import Button from "@/components/Button";
 import HandleSuspence from "@/components/HandleSuspence";
+import Spinner from "@/components/Spinner";
+import { queryClient } from "@/redux/MyProvider";
+import { setDialog } from "@/redux/slices/dialogs.slice";
+import { IDepartment, ISuccess } from "@/types";
+import axios from "axios";
+import React, { useRef, useState } from "react";
+import { AiOutlineDelete } from "react-icons/ai";
+import { CiEdit } from "react-icons/ci";
+import { MdAdd } from "react-icons/md";
+import { useQuery } from "react-query";
+import { useDispatch } from "react-redux";
 
-const fetchDepartments = async () => {
-  const { data } = await axios.get(BASE_API + "/hr/department");
-  return data;
+type TTable = {
+  heads: string[];
+  body: (string | null)[][];
 };
 
-interface IParams {
-  method: "post" | "patch" | "delete";
-  id?: number;
-  formData?: FormData;
+async function fetchDepartment() {
+  const { data } = await axios.get(`${BASE_API}/hr/department`);
+  return data;
 }
-const muteDepartment = async ({ method, id, formData }: IParams) => {
-  let url = BASE_API + "/hr/department"; //this default api for creating new department;
 
-  if (method !== "post") {
-    url = url + `/${id}`;
-  }
-
-  const { data } = await axios.request({
-    url,
-    method,
-    data: method === "delete" ? [] : formData,
-    headers: {
-      "Content-Type": "application/json",
-    },
+export default function DepartmentAndDesignation() {
+  const [tableDatas, setTableDatas] = useState<TTable>({
+    heads: ["Department Name", "Designations", "Action"],
+    body: [],
   });
-
-  return data;
-};
-
-export default function Department() {
-  const { closeDialog, openDialog } = useLoadingDialog();
-
-  const queryClient = useQueryClient();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const whichBtnClicked = useRef<"add" | "update">("add");
-  const currentSelectedDepartmentId = useRef(0);
+  const dispatch = useDispatch();
+  const { isLoading, mutate } = useDoMutation();
+  const currentDeleteBtnIndex = useRef<number>(0);
 
   const {
-    isLoading,
+    data: departements,
+    isFetching,
     error,
-    data: response,
-  } = useQuery<ISuccess<IDepartment[]>, AxiosError<IError>>({
-    queryKey: "get-departments",
-    queryFn: fetchDepartments,
-    onSuccess: () => {
-      closeDialog();
-    },
-    onError: () => {
-      closeDialog();
-    },
-  });
+  } = useQuery<ISuccess<IDepartment[]>>({
+    queryKey: "get-department",
+    queryFn: fetchDepartment,
+    refetchOnMount: true,
+    onSuccess(data) {
+      const tempTableInfo = { ...tableDatas };
+      tempTableInfo.body = data.data.map((item) => [
+        item.name,
+        item.designation,
+        "actionBtn",
+      ]);
 
-  const { mutate } = useMutation(muteDepartment, {
-    onSuccess: (data: ISuccess) => {
-      queryClient.invalidateQueries(["get-departments"]);
-      toast.success(data.message);
-      if (inputRef.current) {
-        inputRef.current.value = "";
-      }
-    },
-    onError: (error: AxiosError<IError>) => {
-      closeDialog();
-      toast.error(error.response?.data.message);
+      setTableDatas(tempTableInfo);
     },
   });
-
-  const onFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
-
-    if (formData.get("department_name") === "") {
-      return toast.warn("Enter some department name");
-    }
-
-    openDialog();
-
-    if (whichBtnClicked.current === "add") {
-      mutate({
-        method: "post",
-        id: 0,
-        formData,
-      });
-    } else if (whichBtnClicked.current === "update") {
-      mutate({
-        method: "patch",
-        id: currentSelectedDepartmentId.current,
-        formData,
-      });
-    } else {
-      toast.warning("No Button Selected");
-    }
-  };
-
-  const handleDeleteButton = (id: number) => {
-    if (confirm("Are you sure you want to delete ?")) {
-      mutate({
-        method: "delete",
-        id: id,
-      });
-    }
-  };
-
-  const handleEditButton = (id: number, inputValue: string) => {
-    if (inputRef.current) {
-      currentSelectedDepartmentId.current = id;
-      inputRef.current.value = inputValue;
-    }
-  };
 
   return (
-    <section>
-      <form onSubmit={onFormSubmit} className="flex items-end gap-5 py-5">
-        <div className="flex-grow">
-          <Input
-            referal={inputRef}
-            name="department_name"
-            className="!w-full"
-            type="text"
-            label="Add new department"
-            placeholder="Add new department"
-          />
-        </div>
+    <section className="space-y-10">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">Departments & Designation</h2>
         <Button
-          onClick={() => (whichBtnClicked.current = "add")}
-          className="mb-1"
+          onClick={() => {
+            dispatch(
+              setDialog({
+                dialogId: "department-designation-dialog",
+                type: "OPEN",
+              })
+            );
+          }}
+          className="flex items-center gap-3"
         >
-          Add
+          <MdAdd />
+          Create Departments And Designation
         </Button>
-        <Button
-          onClick={() => (whichBtnClicked.current = "update")}
-          className="mb-1"
-        >
-          Update
-        </Button>
-      </form>
+      </div>
+
       <HandleSuspence
-        isLoading={isLoading}
-        dataLength={response?.data.length}
+        isLoading={isFetching}
         error={error}
+        dataLength={departements?.data.length}
       >
-        <ul className="w-full grid grid-cols-4 py-10 gap-6">
-          {response?.data.map((department) => (
-            <li
-              key={department.id}
-              className="card-shdow p-5 rounded-xl border border-gray-200"
-            >
-              <h2 className="font-semibold">{department.name}</h2>
-              <div className="w-full flex items-center justify-end gap-4 *:cursor-pointer">
-                <CiEdit
-                  onClick={() =>
-                    handleEditButton(department.id, department.name)
-                  }
-                  className="active:scale-90"
-                />
-                <AiOutlineDelete
-                  onClick={() => handleDeleteButton(department.id)}
-                  className="active:scale-90"
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="w-full overflow-hidden card-shdow">
+          <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black">
+            <table className="min-w-max w-full table-auto">
+              <thead className="uppercase w-full border-b border-gray-100">
+                <tr>
+                  {tableDatas.heads?.map?.((item) => (
+                    <th
+                      className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
+                      key={item}
+                    >
+                      {item}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableDatas.body?.map?.((itemArray, rowIndex) => (
+                  <tr
+                    key={rowIndex}
+                    className="hover:bg-gray-100 group/bodyitem"
+                  >
+                    {itemArray.map((value, columnIndex) => (
+                      <td
+                        className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
+                        key={value}
+                      >
+                        {columnIndex === 1 ? (
+                          <div className="flex items-center gap-3 flex-wrap">
+                            {value
+                              ? value.split(",").map((item) => (
+                                  <div
+                                    key={item}
+                                    className="px-2 py-1 bg-lime-200 border rounded-lg border-green-950 text-xs"
+                                  >
+                                    {item}
+                                  </div>
+                                ))
+                              : "NA"}
+                          </div>
+                        ) : value === "actionBtn" ? (
+                          <div className="flex items-center gap-5">
+                            <CiEdit
+                              onClick={() => {
+                                dispatch(
+                                  setDialog({
+                                    dialogId: "department-designation-dialog",
+                                    type: "OPEN",
+                                    extraValue: {
+                                      department_id:
+                                        departements?.data[rowIndex].id,
+                                    },
+                                  })
+                                );
+                              }}
+                              className="cursor-pointer active:scale-90"
+                              size={18}
+                            />
+
+                            {isLoading &&
+                            rowIndex === currentDeleteBtnIndex.current ? (
+                              <Spinner size="15px" />
+                            ) : (
+                              <AiOutlineDelete
+                                onClick={() => {
+                                  currentDeleteBtnIndex.current = rowIndex;
+                                  if (
+                                    !confirm(
+                                      "Are you sure you want to delete ?"
+                                    )
+                                  )
+                                    return;
+                                  mutate({
+                                    apiPath: "/hr/department",
+                                    method: "delete",
+                                    id: departements?.data[rowIndex].id,
+                                    onSuccess() {
+                                      queryClient.invalidateQueries(
+                                        "get-department"
+                                      );
+                                    },
+                                  });
+                                }}
+                                className="cursor-pointer active:scale-90"
+                              />
+                            )}
+                          </div>
+                        ) : (
+                          value
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </HandleSuspence>
     </section>
   );

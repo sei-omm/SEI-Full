@@ -26,6 +26,7 @@ export interface IError extends ISuccess {}
 export interface IDepartment {
   id: number;
   name: string;
+  designation: string;
 }
 
 export interface IJob {
@@ -119,6 +120,9 @@ export interface IEmployee {
   faculty_attendance_type: string;
   employee_type: string;
   institute: string | null;
+
+  designation: string | null;
+  authority: string | null;
 }
 
 export type ILeaveStatus = "pending" | "success" | "decline";
@@ -257,6 +261,8 @@ export type TOneAdmission = {
     academic_proof: null | string;
     form_status: string;
     form_id: string;
+    cdc_num: string | null;
+    passport_num: string | null;
     enrolled_courses_info: TEnrollCourses[];
   };
   student_payment_info: TPaymentInfo;
@@ -492,21 +498,47 @@ export type TPlannedMaintenanceSystem = {
   created_at: string;
 };
 
-
 export type TRefundReport = {
   name: string;
   course_name: string;
-  start_date: string;  // ISO date string, can be adjusted if a Date object is preferred
+  start_date: string; // ISO date string, can be adjusted if a Date object is preferred
   payment_details: string;
-  total_amount: string;  // Assuming this is a string for the sake of precision (e.g., to handle currency formats)
+  total_amount: string; // Assuming this is a string for the sake of precision (e.g., to handle currency formats)
   order_ids: string;
-  payment_dates: string;  // Assuming this is a date string
+  payment_dates: string; // Assuming this is a date string
   receipt_nos: string;
   payment_types: string;
-  refund_amount: string;  // Same as total_amount, typically represented as a string to avoid floating point precision issues
+  refund_amount: string; // Same as total_amount, typically represented as a string to avoid floating point precision issues
   refund_reason: string;
   bank_details: string;
-  created_at: string;  // ISO date string
+  created_at: string; // ISO date string
   executive_name: string;
   refund_id: string;
-}
+};
+
+export type TDesignation = {
+  deg_id: number;
+  department_id: number;
+  deg_name: string;
+  department_name: string;
+};
+
+export type TAppraisalList = {
+  appraisal_id: number;
+  created_at: string;
+  sended_to: { name: string; status: string }[];
+};
+
+export type TAppraisal = {
+  appraisal_id: number;
+  employee_id: number;
+  discipline: string;
+  duties: string;
+  targets: string;
+  achievements: string;
+  appraisal_options: string | null;
+  state_of_health: string | null;
+  integrity: string | null;
+  created_at: string;
+  sended_to: { name: string; status: string }[];
+};

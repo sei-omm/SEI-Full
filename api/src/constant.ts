@@ -12,3 +12,9 @@ export const months = [
   "November",
   "December",
 ];
+
+export const FLOW_OF_APPRAISAL = [
+  "Employee",
+  "Reporting Authority",
+  "Review Authority",
+];

@@ -595,6 +595,54 @@ ALTER COLUMN employee_role SET DEFAULT 'Employee';
 ALTER TABLE employee
 DROP CONSTRAINT employee_employee_role_check;
 
+-- New DBS -> 08 Jan 2025
+
+CREATE TABLE appraisal (
+    appraisal_id SERIAL PRIMARY KEY,
+
+    employee_id INTEGER,
+    FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+
+    discipline TEXT,
+    duties TEXT,
+    targets TEXT,
+    achievements TEXT,
+
+    appraisal_options TEXT,
+
+    state_of_health TEXT,
+    integrity TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE appraisal_and_employee (
+    appraisal_id INTEGER,
+    FOREIGN KEY (appraisal_id) REFERENCES appraisal(appraisal_id) ON DELETE SET NULL,
+
+    from_employee_id INTEGER,
+    FOREIGN KEY (from_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+
+    to_employee_id INTEGER,
+    FOREIGN KEY (to_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+
+    appraisal_status VARCHAR(255) CHECK (appraisal_status IN ('Pending', 'Approved', 'Rejected')) DEFAULT 'Pending',
+    appraisal_remark TEXT,
+
+    UNIQUE(from_employee_id, to_employee_id)
+);
+
+ALTER TABLE department
+ADD designation TEXT DEFAULT '';
+
+ALTER TABLE employee
+ADD designation VARCHAR(255),
+ADD authority INTEGER DEFAULT 0; -- 0 Mean Employee
+
+
+ALTER TABLE students
+ADD cdc_num VARCHAR(255),
+ADD passport_num VARCHAR(255);
 
 -- fro clering all table of db
 -- DO $$ 

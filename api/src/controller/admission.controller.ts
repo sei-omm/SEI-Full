@@ -41,11 +41,7 @@ export const getAdmissions = asyncErrorHandler(
     res
       .status(200)
       .json(
-        new ApiResponse(
-          200,
-          "",
-          await getAdmissionsService(req.query, req)
-        )
+        new ApiResponse(200, "", await getAdmissionsService(req.query, req))
       );
   }
 );
@@ -54,8 +50,6 @@ export const saveAdmissionInfo = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error, value } = saveAdmissionInfoValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
-
-    const filesOBJ = reqFilesToKeyValue(req);
 
     const formStatus = value.form_status;
     delete value.form_status;
@@ -71,10 +65,7 @@ export const saveAdmissionInfo = asyncErrorHandler(
       keys,
       paramsNum,
       values: sqlValues,
-    } = objectToSqlConverterUpdate({
-      ...value,
-      ...filesOBJ,
-    });
+    } = objectToSqlConverterUpdate(value);
     sqlValues.push(studentId);
 
     await transaction([

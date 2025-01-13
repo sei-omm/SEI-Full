@@ -4,10 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { RiSettings3Line } from "react-icons/ri";
-import {
-  MdOutlineDateRange,
-  MdOutlineSubject,
-} from "react-icons/md";
+import { MdOutlineDateRange, MdOutlineSubject } from "react-icons/md";
 import { FaPeopleRoof } from "react-icons/fa6";
 import Image from "next/image";
 import { RxDot } from "react-icons/rx";
@@ -41,7 +38,7 @@ const sidebarOptions = [
       {
         id: "1-2",
         icon: <AiOutlineDeploymentUnit />,
-        name: "Department",
+        name: "Department & Designation",
         slug: "/dashboard/hr-module/department",
       },
       {
@@ -120,7 +117,7 @@ const sidebarOptions = [
         icon: <GrHostMaintenance />,
         name: "Planned Maintenance System",
         slug: "/dashboard/inventory/planned-maintenance-system",
-      }
+      },
     ],
   },
 
@@ -150,7 +147,7 @@ const sidebarOptions = [
         icon: <TbCategory2 />,
         name: "Course",
         slug: "/dashboard/course/manage-course",
-      }
+      },
     ],
   },
 

@@ -65,10 +65,14 @@ export default function Footer() {
                 Our Centers & Contacts
               </h4>
 
-              <Button className="sm:mb-3">
-                <CiLogin size={20} />
-                <span>Employee Login</span>
-              </Button>
+              <Link
+                href={`${process.env.NEXT_PUBLIC_BASE_CRM}/account?tab=informations`}
+              >
+                <Button className="sm:mb-3">
+                  <CiLogin size={20} />
+                  <span>Employee Login</span>
+                </Button>
+              </Link>
             </div>
             <div className="w-[20%] h-[1px] bg-gray-700 "></div>
           </div>
@@ -107,8 +111,7 @@ export default function Footer() {
               <div className="h-[0.5px] w-[30%] bg-gray-700 mt-3"></div>
               <div className="flex flex-col gap-y-2 text-sm text-gray-300 mt-3">
                 <span>
-                  Mobile:{" "}
-                  <Link href={"tel:9643512955"}>9643512955</Link> /{" "}
+                  Mobile: <Link href={"tel:9643512955"}>9643512955</Link> /{" "}
                   <Link href={"tel:9643502955"}>9643502955</Link>
                 </span>
                 {/* <span>

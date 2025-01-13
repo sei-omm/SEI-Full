@@ -22,6 +22,8 @@ export const saveAdmissionInfoValidator = studentRegisterValidator
       .optional()
       .label("Academic Proof"),
     form_id: Joi.string().required(),
+    cdc_num: Joi.string().optional().allow(""),
+    passport_num: Joi.string().optional().allow(""),
   });
 
 export const updateEnrollCourseStatusValidator = Joi.object({
@@ -41,9 +43,14 @@ export const updateFormStatusValidator = Joi.object({
 });
 
 export const getAdmissionsValidator = Joi.object({
-  course_id : Joi.number().required(),
-  institute : Joi.string().required(),
-  course_type : Joi.string().required(),
-  batch_date : Joi.string().required(),
+  course_id: Joi.number().optional(),
+  institute: Joi.string().optional(),
+  course_type: Joi.string().optional(),
+  batch_date: Joi.string().optional(),
   page: Joi.number().optional(),
+
+  form_id: Joi.string().optional(),
+  indos_number: Joi.string().optional(),
+  cdc_num: Joi.string().optional(),
+  passport_num: Joi.string().optional(),
 });

@@ -26,7 +26,10 @@ export const streamBlobLibraryFileForStudnets = asyncErrorHandler(
     const fileName = req.params.file_name;
     if (!fileName) throw new ErrorHandler(400, "file-name is required");
 
-    if (process.env.HOST_URL?.includes(req.headers.referer || "") || req.headers.referer?.includes(process.env.HOST_URL || "")) {
+    if (
+      process.env.HOST_URL?.includes(req.headers.referer || "") ||
+      req.headers.referer?.includes(process.env.HOST_URL || "")
+    ) {
       throw new ErrorHandler(400, "You are not able to access this resources");
     }
 
@@ -91,8 +94,11 @@ export const downloadLibraryFile = asyncErrorHandler(
         }
 
         // const fileName = resourcesLink.split("/").
-        const fileName = new URL(resourcesLink).pathname.split('/').pop();
-        res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
+        const fileName = new URL(resourcesLink).pathname.split("/").pop();
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=${fileName}`
+        );
         blobRes.pipe(res);
       })
       .on("error", (err) => {
@@ -106,7 +112,7 @@ export const getLibraryInfoForStudent = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error } = getLibraryStudentValidator.validate({
       ...req.query,
-      student_id : res.locals.student_id,
+      student_id: res.locals.student_id,
     });
 
     if (error) throw new ErrorHandler(400, error.message);
@@ -488,7 +494,7 @@ export const getLibraryInfoWithFilter = asyncErrorHandler(
       req.query
     );
     if (error) throw new ErrorHandler(400, error.message);
-    
+
     const { LIMIT, OFFSET } = parsePagination(req);
 
     const courseID = value.course_id;

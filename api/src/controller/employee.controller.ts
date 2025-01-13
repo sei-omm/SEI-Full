@@ -6,9 +6,13 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import {
   assignFacultyCourseSubjectValidator,
+  createAppraisalValidator,
   employeeLoginValidator,
   employeeSchema,
+  getAppraisalListValidator,
   getEmployeeDocumentValidator,
+  getSingleAppraisalValidator,
+  updateAppraisalValidator,
   updateEmployeeStatusValidator,
 } from "../validator/employee.validator";
 import { getDate } from "../utils/getDate";
@@ -26,6 +30,7 @@ import { filterToSql } from "../utils/filterToSql";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { parseNullOrUndefined } from "../utils/parseNullOrUndefined";
 import { parsePagination } from "../utils/parsePagination";
+import { FLOW_OF_APPRAISAL } from "../constant";
 
 const table_name = "employee";
 
@@ -563,3 +568,264 @@ export const removeFacultyCourseSubject = asyncErrorHandler(
       .json(new ApiResponse(200, "Faculty Course & Subject Removed"));
   }
 );
+
+//Appraisal
+export const createAppraisal = asyncErrorHandler(async (req, res) => {
+  const { error, value } = createAppraisalValidator.validate({
+    ...req.body,
+    employee_id: res.locals.employee_id,
+  });
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const client = await pool.connect();
+
+  const { error: tryCatchErr } = await tryCatch(async () => {
+    await client.query("BEGIN");
+
+    // const { rows } = await client.query(
+    //   `
+    //     SELECT
+    //       e.id,
+    //       e.department_id,
+    //       e.designation,
+    //       e.authority
+    //     FROM employee AS e
+
+    //     WHERE e.id = $1
+    //   `,
+    //   [value.employee_id]
+    // );
+
+    // const thisEmployeeHightAuthority =
+    //   FLOW_OF_APPRAISAL[FLOW_OF_APPRAISAL.indexOf(rows[0].authority) + 1];
+    // const { rows: highAuthEmployeeInfo } = await client.query(
+    //   `
+    //   SELECT
+    //     e.id
+    //   FROM employee AS e
+    //   WHERE e.department_id = $1 AND e.authority = $2
+
+    //   `,
+    //   [rows[0].department_id, thisEmployeeHightAuthority]
+    // );
+
+    const { rows: employeeInfo } = await pool.query(
+      `
+      SELECT 
+        e1.id AS employee_id,
+        e1.authority,
+        e1.department_id,
+        e1.designation,
+        COALESCE((
+            SELECT e2.id
+            FROM employee e2
+            WHERE e2.department_id = e1.department_id
+              AND e2.authority > e1.authority
+            ORDER BY e2.authority ASC -- Optional: Get the one with the highest authority
+            LIMIT 1
+          ), NULL) AS higher_authority_employee_id
+      FROM employee e1
+      WHERE e1.id = $1;
+      `,
+      [value.employee_id]
+    );
+
+    const { rows: appraisal } = await client.query(
+      `INSERT INTO appraisal (employee_id, discipline, duties, targets, achievements) VALUES ($1, $2, $3, $4, $5) RETURNING appraisal_id`,
+      [
+        value.employee_id,
+        value.discipline,
+        value.duties,
+        value.targets,
+        value.achievements,
+      ]
+    );
+
+    await client.query(
+      `INSERT INTO appraisal_and_employee (appraisal_id, from_employee_id, to_employee_id) VALUES ($1, $2, $3)`,
+      [
+        appraisal[0].appraisal_id,
+        value.employee_id,
+        employeeInfo[0].higher_authority_employee_id,
+      ]
+    );
+
+    await client.query("COMMIT");
+    client.release();
+  });
+
+  if (tryCatchErr) {
+    client.release();
+    await client.query("ROLLBACK");
+    throw new ErrorHandler(400, tryCatchErr.message);
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Appraisal Form Has Sended To Your Higher Authority")
+    );
+});
+
+export const getAppraisalList = asyncErrorHandler(async (req, res) => {
+  const { error, value } = getAppraisalListValidator.validate({
+    ...req.query,
+    employee_id: res.locals.employee_id,
+  });
+  if (error) throw new ErrorHandler(400, error.message);
+
+  if (value.type === "own") {
+    const { rows } = await pool.query(
+      `
+      SELECT 
+        a.appraisal_id,
+        a.created_at,
+        JSON_AGG(JSON_OBJECT('name' : e.name, 'status' : aae.appraisal_status)) as sended_to
+      FROM appraisal AS a
+
+      LEFT JOIN appraisal_and_employee AS aae
+      ON a.appraisal_id = aae.appraisal_id
+
+      LEFT JOIN employee AS e
+      ON aae.to_employee_id = e.id
+
+      WHERE a.employee_id = $1
+
+      GROUP BY a.appraisal_id
+
+      ORDER BY a.appraisal_id DESC
+      `,
+      [value.employee_id]
+    );
+
+    return res.status(200).json(new ApiResponse(200, "Your Appraisals", rows));
+  }
+
+  const { rows } = await pool.query(
+    `
+    SELECT
+      a.appraisal_id,
+      a.created_at,
+      JSON_AGG(JSON_OBJECT('name' : e.name, 'status' : aae.appraisal_status)) as sended_to
+    FROM appraisal_and_employee AS aae
+
+    LEFT JOIN appraisal AS a
+    ON aae.appraisal_id = a.appraisal_id
+
+    LEFT JOIN employee AS e
+    ON aae.from_employee_id = e.id
+
+    WHERE aae.to_employee_id = $1
+
+    GROUP BY a.appraisal_id
+
+    ORDER BY a.appraisal_id DESC
+    `,
+    [value.employee_id]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Other Appraisals", rows));
+});
+
+export const getSingleAppraisal = asyncErrorHandler(async (req, res) => {
+  const { error, value } = getSingleAppraisalValidator.validate(req.params);
+  if (error) if (error) throw new ErrorHandler(400, error.message);
+
+  const { rows } = await pool.query(
+    `
+      SELECT 
+        a.*,
+        JSON_AGG(JSON_OBJECT('name' : e.name, 'remark' : aae.appraisal_remark, 'status' : aae.appraisal_status)) as sended_to
+      FROM appraisal AS a
+
+      LEFT JOIN appraisal_and_employee AS aae
+      ON a.appraisal_id = aae.appraisal_id
+
+      LEFT JOIN employee AS e
+      ON aae.to_employee_id = e.id
+
+      WHERE a.appraisal_id = $1
+
+      GROUP BY a.appraisal_id
+    `,
+    [value.appraisal_id]
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Single Appraisal Info", rows[0]));
+});
+
+export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
+  const { error, value } = updateAppraisalValidator.validate({
+    ...req.params,
+    ...req.body,
+    employee_id: res.locals.employee_id,
+  });
+
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const client = await pool.connect();
+
+  const { error: tryCatchErr } = await tryCatch(async () => {
+    await client.query("BEGIN");
+
+    const { keys, values, paramsNum } = objectToSqlConverterUpdate(req.body);
+    await pool.query(
+      `UPDATE appraisal SET ${keys} WHERE appraisal_id = $${paramsNum}`,
+      [...values, value.appraisal_id]
+    );
+
+    await pool.query(
+      `UPDATE appraisal_and_employee SET appraisal_status = 'Approved' WHERE appraisal_id = $1 AND to_employee_id = $2`,
+      [value.appraisal_id, value.employee_id]
+    );
+
+    const { rows: employeeInfo } = await pool.query(
+      `
+      SELECT 
+        e1.id AS employee_id,
+        e1.authority,
+        e1.department_id,
+        e1.designation,
+        COALESCE((
+            SELECT e2.id
+            FROM employee e2
+            WHERE e2.department_id = e1.department_id
+              AND e2.authority > e1.authority
+            ORDER BY e2.authority ASC -- Optional: Get the one with the highest authority
+            LIMIT 1
+          ), NULL) AS higher_authority_employee_id
+      FROM employee e1
+      WHERE e1.id = $1;
+      `,
+      [value.employee_id]
+    );
+
+    await client.query(
+      `
+      INSERT INTO appraisal_and_employee 
+        (appraisal_id, from_employee_id, to_employee_id) 
+      VALUES 
+        ($1, $2, $3)
+      ON CONFLICT(from_employee_id, to_employee_id) DO NOTHING;
+      `,
+      [
+        value.appraisal_id,
+        value.employee_id,
+        employeeInfo[0].higher_authority_employee_id,
+      ]
+    );
+
+    await client.query("COMMIT");
+    client.release();
+  });
+
+  if (tryCatchErr) {
+    client.release();
+    await client.query("ROLLBACK");
+    throw new ErrorHandler(400, tryCatchErr.message);
+  }
+
+  res.status(200).json(new ApiResponse(200, "Appraisal Status Has Updated"));
+});
