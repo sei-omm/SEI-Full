@@ -37,7 +37,9 @@ interface IProps {
 }
 
 export default async function page({ searchParams }: IProps) {
-  const response = await fetch(`${BASE_API}/hr/dashboard`);
+  const response = await fetch(`${BASE_API}/hr/dashboard`, {
+    cache: "no-store",
+  });
   const result = (await response.json()) as ISuccess<{
     total_employees: string;
     active_employees: string;

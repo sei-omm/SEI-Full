@@ -1,25 +1,25 @@
 "use client";
 
-import Input from "./Input";
 import Button from "./Button";
 import DropDown from "./DropDown";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import DateInput from "./DateInput";
 
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+// const months = [
+//   "January",
+//   "February",
+//   "March",
+//   "April",
+//   "May",
+//   "June",
+//   "July",
+//   "August",
+//   "September",
+//   "October",
+//   "November",
+//   "December",
+// ];
 
 // const date = new Date();
 
@@ -40,7 +40,6 @@ const months = [
 // }
 
 export default function SelectDate() {
-
   const route = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -70,9 +69,12 @@ export default function SelectDate() {
   }
 
   return (
-    <form action={handleSubmit} className="flex items-center gap-5">
+    <form
+      action={handleSubmit}
+      className="flex items-end w-full *:flex-grow gap-5"
+    >
       <DropDown
-        label=""
+        label="Employee Type"
         options={[
           { text: "All", value: "-1" },
           { text: "Faculty", value: "Faculty" },
@@ -82,7 +84,7 @@ export default function SelectDate() {
         defaultValue={searchParams.get("employee_type") || "-1"}
       />
       <DropDown
-        label=""
+        label="Choose Campus"
         options={[
           { text: "All", value: "-1" },
           { text: "Kolkata", value: "Kolkata" },
@@ -91,8 +93,8 @@ export default function SelectDate() {
         name="institute"
         defaultValue={searchParams.get("institute") || "-1"}
       />
-      <DropDown
-        label=""
+      {/* <DropDown
+        label="Choose Month"
         name="month"
         options={months.map((month, index) => ({
           text: month,
@@ -101,15 +103,25 @@ export default function SelectDate() {
         defaultValue={searchParams.get("month") || new Date().getMonth() + 1}
       />
       <Input
+        label="Select Year"
         name="year"
-        className="!rounded-xl"
-        hideLabel={true}
         placeholder="Year"
         type="number"
         defaultValue={searchParams.get("year") || new Date().getFullYear()}
+      /> */}
+
+      <DateInput
+        name="from_date"
+        label="Date From"
+        date={searchParams.get("from_date")}
+      />
+      <DateInput
+        name="to_date"
+        label="To From"
+        date={searchParams.get("to_date")}
       />
 
-      <Button>Filter</Button>
+      <Button className="mb-2">Filter</Button>
     </form>
   );
 }

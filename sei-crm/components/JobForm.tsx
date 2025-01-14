@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import TextArea from "./TextArea";
 import DropDown from "./DropDown";
 import HandleSuspence from "./HandleSuspence";
+import { IoMdArrowBack } from "react-icons/io";
 
 interface IProps {
   action: string; //it could be add or the id of job posting for update
@@ -185,6 +186,16 @@ export default function JobForm({ action }: IProps) {
           />
         </div>
         <div className="space-x-6 flex items-center">
+          <Button
+            type="button"
+            onClick={() => {
+              route.back();
+            }}
+            className="flex items-center gap-2"
+          >
+            <IoMdArrowBack />
+            Back
+          </Button>
           <Button type="submit" className="min-w-48">
             {action === "add" ? "Publish Job" : "Update Job"}
           </Button>

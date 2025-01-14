@@ -1,5 +1,8 @@
 import { Router } from "express";
 import {
+  addMultiMaintenceRecord,
+  addMultiPlannedMaintenanceSystem,
+  addMultipleVendorItem,
   addNewCategory,
   addNewConsumableItem,
   addNewDurable,
@@ -67,13 +70,21 @@ inventoryRoute
   .get("/maintence-record/excel", streamMaintenceRecordExcelReport)
   // .get("/maintence-record/:record_id", getSingleMaintenceRecord)
   .post("/maintence-record", addNewMaintenceRecord)
+  .post("/maintence-record/multi" ,addMultiMaintenceRecord)
   .patch("/maintence-record/:record_id", updateMaintenceRecordStatus)
   // .put("/maintence-record/:record_id", updateMaintenceRecord)
 
   .get("/planned-maintenance-system", getPlannedMaintenanceSystem)
-  .get("/planned-maintenance-system/:planned_maintenance_system_id", getSinglePlannedMaintenanceSystem)
+  .get(
+    "/planned-maintenance-system/:planned_maintenance_system_id",
+    getSinglePlannedMaintenanceSystem
+  )
   .post("/planned-maintenance-system", addNewPlannedMaintenanceSystem)
-  .put("/planned-maintenance-system/:planned_maintenance_system_id", updatePlannedMaintenanceSystem)
+  .post("/planned-maintenance-system/multi", addMultiPlannedMaintenanceSystem)
+  .put(
+    "/planned-maintenance-system/:planned_maintenance_system_id",
+    updatePlannedMaintenanceSystem
+  )
 
   .get("/durable", getDurableInfo)
   .get("/durable/filter-items", getDurableFiltersItemInfo)
@@ -97,5 +108,6 @@ inventoryRoute
   .get("/vendor/filter-items", getVendorFiltersItemInfo)
   .get("/vendor/:vendor_id", getSingleVendorInfo)
   .post("/vendor", addNewVendorItem)
+  .post("/vendor/multi", addMultipleVendorItem)
   .put("/vendor/:vendor_id", updateVendorItem)
   .delete("/vendor/:vendor_id", deleteVendorItem);

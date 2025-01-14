@@ -7,7 +7,7 @@ import { BASE_API } from "@/app/constant";
 import { ISuccess } from "@/types";
 import Button from "../Button";
 import { CiSearch } from "react-icons/ci";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import HandleSuspence from "../HandleSuspence";
 
 type TFiltersInfo = {
@@ -22,6 +22,7 @@ export default function VendorFilter() {
   });
 
   const route = useRouter();
+  const searchParams = useSearchParams();
 
   const handleForm = (formData: FormData) => {
     const urlSearchParams = new URLSearchParams();
@@ -50,6 +51,7 @@ export default function VendorFilter() {
             { text: "Kolkata", value: "Kolkata" },
             { text: "Faridabad", value: "Faridabad" },
           ]}
+          defaultValue={searchParams.get("institute") || -1}
         />
         <DropDown
           name="service_type"
@@ -61,6 +63,7 @@ export default function VendorFilter() {
               value: item,
             })) || []),
           ]}
+          defaultValue={searchParams.get("service_type") || -1}
         />
         <Button className="flex-center gap-3 mb-1">
           <CiSearch />

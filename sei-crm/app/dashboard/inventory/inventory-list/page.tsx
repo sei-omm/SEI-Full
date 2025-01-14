@@ -170,6 +170,7 @@ export default function InventoryList() {
           Edit Record
         </Button>
       </div>
+      {/* <MultiInventoryListForm /> */}
 
       <HandleSuspence
         isLoading={isFetching}

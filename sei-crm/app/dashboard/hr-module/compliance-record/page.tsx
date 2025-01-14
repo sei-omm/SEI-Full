@@ -8,16 +8,17 @@ import FolderItem from "@/components/HR/FolderItem";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { IStorageResponse, ISuccess } from "@/types";
 import axios from "axios";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { BsCloudUpload } from "react-icons/bs";
 import { FiFolderPlus } from "react-icons/fi";
+import { IoMdArrowBack } from "react-icons/io";
 import { useQuery } from "react-query";
 import { useDispatch } from "react-redux";
 
 export default function ComplianceRecord() {
-
   const searchParams = useSearchParams();
+  const route = useRouter();
 
   const { data, isFetching, error } = useQuery<ISuccess<IStorageResponse>>({
     queryKey: ["fetch-files-and-folders", searchParams.toString()],
@@ -45,31 +46,43 @@ export default function ComplianceRecord() {
       setDialog({
         type: "OPEN",
         dialogId: "choose-files-dialog",
-        extraValue : {
-          folderId : searchParams.get("folder_id")
-        }
+        extraValue: {
+          folderId: searchParams.get("folder_id"),
+        },
       })
     );
   };
 
   return (
     <div className="space-y-10">
-      <div className="flex items-center gap-3 justify-end">
+      <div className="flex items-center justify-between">
         <Button
-          onClick={handleMultiFileUpload}
-          className="flex items-center gap-2 !bg-transparent border !shadow-none !text-black"
+          type="button"
+          onClick={() => {
+            route.back();
+          }}
+          className="flex items-center gap-2"
         >
-          <BsCloudUpload size={18} />
-          <span>Upload File</span>
+          <IoMdArrowBack />
+          Back
         </Button>
+        <div className="flex items-center gap-3 justify-end">
+          <Button
+            onClick={handleMultiFileUpload}
+            className="flex items-center gap-2 !bg-transparent border !shadow-none !text-black"
+          >
+            <BsCloudUpload size={18} />
+            <span>Upload File</span>
+          </Button>
 
-        <Button
-          onClick={handleNewFolder}
-          className="flex items-center gap-2 !shadow-none"
-        >
-          <FiFolderPlus size={18} />
-          <span>New Folder</span>
-        </Button>
+          <Button
+            onClick={handleNewFolder}
+            className="flex items-center gap-2 !shadow-none"
+          >
+            <FiFolderPlus size={18} />
+            <span>New Folder</span>
+          </Button>
+        </div>
       </div>
 
       {/* Folders */}
@@ -100,7 +113,7 @@ export default function ComplianceRecord() {
         >
           <ul className="w-full grid grid-cols-4 gap-5">
             {data?.data.files.map((file) => (
-              <FileItem key={file.file_id} fileInfo={file}/>
+              <FileItem key={file.file_id} fileInfo={file} />
             ))}
           </ul>
         </HandleSuspence>

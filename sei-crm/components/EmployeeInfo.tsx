@@ -34,6 +34,7 @@ import { uploadToVercel } from "@/utils/uploadToVercel";
 import Spinner from "./Spinner";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 import { useRouter } from "next/navigation";
+import { IoMdArrowBack } from "react-icons/io";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -379,7 +380,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   type="file"
                 />
                 <Button onClick={handleFilePickBtn} type="button">
-                  Change Logo
+                  Change Photo
                 </Button>
               </div>
             </div>
@@ -814,6 +815,17 @@ export default function EmployeeInfo({ employeeID }: IProps) {
 
         {/* Actions Buttons (Form Buttons) */}
         <div className="flex items-center gap-5">
+          <Button
+            type="button"
+            onClick={() => {
+              route.back();
+            }}
+            className="flex items-center gap-2"
+          >
+            <IoMdArrowBack />
+            Back
+          </Button>
+
           <Button
             loading={
               whichFormBtnClicked.current === "add-or-update" && mutateLoading

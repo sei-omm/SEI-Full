@@ -1,6 +1,35 @@
 import Joi, { number } from "joi";
 
 //inventory list
+
+export const addMultiInventoryItem = Joi.array()
+  .items(
+    Joi.object({
+      item_name: Joi.string().required(),
+      category: Joi.number().required(),
+      sub_category: Joi.number().required(),
+
+      description: Joi.string().optional().allow(""),
+      where_to_use: Joi.string().optional().allow(""),
+
+      used_by: Joi.string().optional().allow(""),
+
+      opening_stock: Joi.number().required(),
+      minimum_quantity: Joi.number().required(),
+      item_consumed: Joi.number().required(),
+      closing_stock: Joi.number().required(),
+
+      item_status: Joi.number().required(),
+
+      vendor_id: Joi.number().required(),
+
+      purchsed_date: Joi.string().required(),
+
+      remark: Joi.string().optional().allow(""),
+    })
+  )
+  .required();
+
 export const addNewListValidator = Joi.object({
   item_name: Joi.string().required(),
 
@@ -104,11 +133,15 @@ export const addNewMaintenceRecordValidator = Joi.object({
   completed_date: Joi.string().when("status", {
     is: "Completed",
     then: Joi.required(),
-    otherwise: Joi.optional(),
+    otherwise: Joi.optional().allow(null),
   }),
   remark: Joi.string().optional().allow(""),
   institute: Joi.string().required(),
 });
+
+export const addMultiMaintenceRecordValidator = Joi.array()
+  .items(addNewMaintenceRecordValidator)
+  .required();
 
 export const updateMaintenceRecordValidator =
   addNewMaintenceRecordValidator.keys({
@@ -177,11 +210,15 @@ export const deleteConsumableItemValidator = Joi.object({
 //vendor
 export const addNewVendorValidator = Joi.object({
   vendor_name: Joi.string().required(),
-  institute: Joi.string().required(),
   service_type: Joi.string().required(),
   address: Joi.string().required(),
   contact_details: Joi.string().required(),
+  institute: Joi.string().required(),
 });
+
+export const addMultipleVendorItemValidator = Joi.array()
+  .items(addNewVendorValidator)
+  .required();
 
 export const updateVendorValidator = addNewVendorValidator.keys({
   vendor_id: Joi.number().required(),
@@ -201,6 +238,12 @@ export const addNewPlannedMaintenanceSystemValidator = Joi.object({
   remark: Joi.string().optional().allow(""),
 });
 
-export const updatePlannedMaintenanceSystemValidator = addNewPlannedMaintenanceSystemValidator.keys({
-  planned_maintenance_system_id: Joi.number().required(),
-});
+export const addMultiPlannedMaintenanceSystemValidator = Joi.array()
+  .items(addNewPlannedMaintenanceSystemValidator)
+  .required();
+
+  
+export const updatePlannedMaintenanceSystemValidator =
+  addNewPlannedMaintenanceSystemValidator.keys({
+    planned_maintenance_system_id: Joi.number().required(),
+  });

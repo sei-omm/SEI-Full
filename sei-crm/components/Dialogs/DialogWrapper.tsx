@@ -26,6 +26,7 @@ import AddDiscountDialog from "./AddDiscountDialog";
 import AddLeaveRequest from "./AddLeaveRequest";
 import DesignationDialog from "./DesignationDialog";
 import DepartmentAndDesignation from "./DepartmentAndDesignation";
+import AddMultipleVendor from "./AddMultipleVendor";
 
 type DivType = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -134,6 +135,10 @@ const dialogs = [
   {
     id: "department-designation-dialog",
     component: <DepartmentAndDesignation />,
+  },
+  {
+    id: "open-multiple-vendor",
+    component: <AddMultipleVendor />,
   },
 ];
 

@@ -4,22 +4,22 @@ import { OptionsType } from "@/types";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaAngleDown } from "react-icons/fa6";
+import { MdOutlineDone } from "react-icons/md";
 
 interface IProps {
   wrapperCss?: string;
   className?: string;
   label: string;
   options: OptionsType[];
-  defaultValue?: any;
+  defaultValue?: any[];
   name?: string;
   onChange?: (item: OptionsType) => void;
   changeSearchParamsOnChange?: boolean;
   viewOnly?: boolean;
   valueRef?: React.RefObject<HTMLInputElement>;
-  dialog? : boolean;
 }
 
-export default function DropDown({
+export default function MultiSelectDropDown({
   wrapperCss,
   className,
   label,
@@ -29,12 +29,12 @@ export default function DropDown({
   onChange,
   changeSearchParamsOnChange,
   viewOnly,
-  valueRef
+  valueRef,
 }: IProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<OptionsType | null>(null);
+  const [selectedItem, setSelectedItem] = useState<OptionsType[]>([]);
 
   const route = useRouter();
   const pathname = usePathname();
@@ -48,16 +48,11 @@ export default function DropDown({
 
   useEffect(() => {
     if (defaultValue !== undefined) {
-      const findTextFromValue = options.find(
-        (item) => item.value == defaultValue
+      const findTextFromValue = options.filter(
+        (item) => defaultValue.includes(item.value)
       );
-      setSelectedItem(findTextFromValue || null);
-    } else {
-      setSelectedItem(options[0]);
+      setSelectedItem(findTextFromValue);
     }
-    // setSelectedItem(
-    //   options.find((item) => item.value == defaultValue) || options[0]
-    // );
   }, [defaultValue]);
 
   useEffect(() => {
@@ -80,20 +75,26 @@ export default function DropDown({
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center justify-between text-sm relative p-2.5"
         >
-          <h2 className="font-semibold line-clamp-1">{selectedItem?.text}</h2>
+          <h2 className="font-semibold line-clamp-1">
+            {selectedItem.length === 0
+              ? "Select Options"
+              : selectedItem.map((item) => item.text).join(", ")}
+          </h2>
           {viewOnly ? null : (
             <>
               <FaAngleDown />
               <div
                 className={`${
                   isOpen ? "block" : "hidden"
-                } left-0 right-0 top-2 absolute z-[10000]`}
+                } left-0 right-0 top-2 absolute z-20`}
               >
                 <input
                   ref={valueRef}
                   hidden
                   name={name}
-                  defaultValue={selectedItem?.value}
+                  defaultValue={selectedItem
+                    .map((item) => item.value)
+                    .join(",")}
                 />
                 <ul className="bg-white border rounded-xl drop_down_sidebar overflow-x-hidden relative top-11 max-h-60 overflow-y-auto">
                   {options?.map((option, index) => (
@@ -108,16 +109,27 @@ export default function DropDown({
                             `${pathname}?${urlSearchParams.toString()}`
                           );
                         }
-                        setSelectedItem(option);
+
+                        const newOptions = [...selectedItem];
+                        const indexToRemove = newOptions.findIndex(
+                          (item) => item.value === option.value
+                        );
+                        if (indexToRemove === -1) {
+                          newOptions.push(option);
+                        } else {
+                          newOptions.splice(indexToRemove, 1);
+                        }
+                        setSelectedItem(newOptions);
                         onChange?.(option);
                       }}
                       key={index}
-                      className={`px-5 py-3 hover:bg-gray-300 ${
-                        selectedItem?.value === option.value
-                          ? "bg-gray-200"
-                          : ""
-                      }`}
+                      className={`px-5 py-3 hover:bg-gray-300 flex items-center gap-3`}
                     >
+                      {selectedItem.findIndex(
+                        (item) => item.value === option.value
+                      ) !== -1 ? (
+                        <MdOutlineDone />
+                      ) : null}
                       {option.text}
                     </li>
                   ))}

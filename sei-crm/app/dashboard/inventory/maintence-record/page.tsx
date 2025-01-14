@@ -2,18 +2,17 @@
 
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
-import Button from "@/components/Button";
 import DateDurationFilter from "@/components/DateDurationFilter";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import MaintenceStatusBtns from "@/components/Inventory/MaintenceStatusBtns";
 import Pagination from "@/components/Pagination";
+import MultiMaintenceForm from "@/components/SingleLineForms/MultiMaintenceForm";
 import { ISuccess, TMaintenanceRecord } from "@/types";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { CiEdit } from "react-icons/ci";
-import { IoIosAdd } from "react-icons/io";
 import { useQuery } from "react-query";
 
 type TTable = {
@@ -72,6 +71,8 @@ export default function MaintenceRecord() {
     <div className="space-y-5">
       <DateDurationFilter />
 
+      <MultiMaintenceForm />
+
       <div className="flex items-center justify-end gap-6">
         <GenarateExcelReportBtn
           hidden={tableDatas.body.length === 0}
@@ -79,12 +80,12 @@ export default function MaintenceRecord() {
             "/inventory/maintence-record/excel?" + searchParams.toString()
           }
         />
-        <Link href={"/dashboard/inventory/maintence-record/add"}>
+        {/* <Link href={"/dashboard/inventory/maintence-record/add"}>
           <Button className="flex-center gap-3">
             <IoIosAdd size={18} />
             Add New Record
           </Button>
-        </Link>
+        </Link> */}
       </div>
 
       <HandleSuspence

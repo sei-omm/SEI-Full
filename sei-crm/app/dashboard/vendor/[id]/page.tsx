@@ -2,12 +2,14 @@
 
 import { BASE_API } from "@/app/constant";
 import { useDoMutation } from "@/app/utils/useDoMutation";
+import BackBtn from "@/components/BackBtn";
 import Button from "@/components/Button";
-import DropDownTag from "@/components/DropDownTag";
 import HandleSuspence from "@/components/HandleSuspence";
 import Input from "@/components/Input";
+import MultiSelectDropDown from "@/components/MultiSelectDropDown";
 import { ISuccess, TVendor } from "@/types";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import { useQuery } from "react-query";
 
 interface IProps {
@@ -24,6 +26,7 @@ export default function VendorForm({ params }: IProps) {
   const isNewItem = params.id === "add";
 
   const { mutate, isLoading } = useDoMutation();
+  const route = useRouter();
 
   const { data, error, isFetching } = useQuery<ISuccess<TVendor>>({
     queryKey: "get-single-vendor",
@@ -40,18 +43,24 @@ export default function VendorForm({ params }: IProps) {
           "Content-Type": "application/json",
         },
         formData,
+        onSuccess() {
+          route.back();
+        },
       });
       return;
     }
 
     mutate({
-      apiPath: "/inventory/vendo",
+      apiPath: "/inventory/vendor",
       method: "put",
       headers: {
         "Content-Type": "application/json",
       },
       formData,
       id: params.id as number,
+      onSuccess() {
+        route.back();
+      },
     });
   };
 
@@ -85,7 +94,7 @@ export default function VendorForm({ params }: IProps) {
               defaultValue={data?.data.contact_details}
             />
           </div>
-          <DropDownTag
+          {/* <DropDownTag
             name="institute"
             label="Institutes"
             options={[
@@ -93,15 +102,27 @@ export default function VendorForm({ params }: IProps) {
               { text: "Faridabad", value: "Faridabad" },
             ]}
             defaultValues={data?.data.institute.split(",")}
+          /> */}
+          <MultiSelectDropDown
+            name="institute"
+            label="Institutes"
+            options={[
+              { text: "Kolkata", value: "Kolkata" },
+              { text: "Faridabad", value: "Faridabad" },
+            ]}
+            defaultValue={data?.data.institute.split(",")}
           />
 
-          <Button
-            disabled={isLoading}
-            loading={isLoading}
-            className={`${isLoading ? "opacity-30" : ""}`}
-          >
-            Save Info
-          </Button>
+          <div className="flex items-center gap-3">
+            <BackBtn />
+            <Button
+              disabled={isLoading}
+              loading={isLoading}
+              className={`${isLoading ? "opacity-30" : ""}`}
+            >
+              Save Info
+            </Button>
+          </div>
         </form>
       </HandleSuspence>
     </div>

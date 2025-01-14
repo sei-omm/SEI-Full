@@ -2,16 +2,15 @@
 
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
-import Button from "@/components/Button";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
+import MultiPlannedMaintenanceSystem from "@/components/SingleLineForms/MultiPlannedMaintenanceSystem";
 import { ISuccess, TPlannedMaintenanceSystem } from "@/types";
 import axios from "axios";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { CiEdit } from "react-icons/ci";
-import { IoIosAdd } from "react-icons/io";
 import { useQuery } from "react-query";
 type TTable = {
   heads: string[];
@@ -64,14 +63,15 @@ export default function PlannedMaintenanceSystem() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-end gap-6">
+      {/* <div className="flex items-center justify-end gap-6">
         <Link href={"/dashboard/inventory/planned-maintenance-system/add"}>
           <Button className="flex-center gap-3">
             <IoIosAdd size={18} />
             Add New Record
           </Button>
         </Link>
-      </div>
+      </div> */}
+      <MultiPlannedMaintenanceSystem />
 
       <HandleSuspence
         isLoading={isFetching}

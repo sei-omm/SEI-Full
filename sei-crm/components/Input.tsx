@@ -10,6 +10,7 @@ interface IProps extends InputTypes {
   moneyInput?: boolean;
   viewOnly?: boolean;
   viewOnlyText?: string;
+  inputLayoutWrapperCss?: string;
 }
 
 export default function Input(props: IProps) {
@@ -21,7 +22,11 @@ export default function Input(props: IProps) {
         </span>
       )}
 
-      <div className={`w-full flex items-center gap-[2px] border-2 border-gray-200 rounded-lg text-sm px-4 py-3 ${props.viewOnly ? "opacity-80" : "opacity-100"}`}>
+      <div
+        className={`w-full flex items-center gap-[2px] border-2 border-gray-200 rounded-lg text-sm px-4 py-3 ${
+          props.viewOnly ? "opacity-80" : "opacity-100"
+        } ${props.inputLayoutWrapperCss}`}
+      >
         {/* <span>₹</span> */}
         {props.moneyInput ? <span>₹</span> : null}
 

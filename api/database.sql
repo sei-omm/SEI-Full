@@ -644,6 +644,42 @@ ALTER TABLE students
 ADD cdc_num VARCHAR(255),
 ADD passport_num VARCHAR(255);
 
+
+-- 14 Jan 2025 New Dbs
+CREATE TABLE new_inventory_list (
+    inventory_item_id SERIAL PRIMARY KEY,
+    item_name VARCHAR(255),
+    category INTEGER,
+    sub_category INTEGER,
+    description TEXT,
+    where_to_use VARCHAR(255),
+    used_by VARCHAR(255),
+
+    minimum_quantity INTEGER,
+    item_consumed INTEGER,
+    closing_stock INTEGER,
+
+    item_status INTEGER,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE new_inventory_stock (
+    inventory_item_id INTEGER,
+    FOREIGN KEY (inventory_item_id) REFERENCES new_inventory_list(inventory_item_id) ON DELETE SET NULL,
+
+    opening_stock INTEGER,
+
+    vendor_id INTEGER,
+    FOREIGN KEY (vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL,
+
+    purchsed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    remark TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

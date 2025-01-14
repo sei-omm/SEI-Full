@@ -16,6 +16,7 @@ import { AiOutlineDelete } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 import DeleteCourseBtn from "./DeleteCourseBtn";
 import TagInput from "../TagInput";
+import { IoMdArrowBack } from "react-icons/io";
 
 interface IProps {
   slug: "add-course" | number;
@@ -25,7 +26,6 @@ type TMarketingTeam = {
   employee_id: number;
   name: string;
 };
-
 
 export default function CourseForm({ slug }: IProps) {
   const isNewCourse = slug === "add-course";
@@ -53,6 +53,7 @@ export default function CourseForm({ slug }: IProps) {
       queryKey: "get-course-with-id",
       queryFn: async () => (await axios.get(BASE_API + "/course/" + slug)).data,
       refetchOnMount: true,
+      enabled : !isNewCourse
     },
   ]);
 
@@ -240,6 +241,16 @@ export default function CourseForm({ slug }: IProps) {
           />
         </div>
         <div className="flex items-center gap-5 mt-5">
+          <Button
+            type="button"
+            onClick={() => {
+              route.back();
+            }}
+            className="flex items-center gap-2"
+          >
+            <IoMdArrowBack />
+            Back
+          </Button>
           <Button
             type="button"
             onClick={() => {

@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import { ApplicationStatusType, IJobAppliedCandidate, ISuccess } from "@/types";
 import ApplicationStatusDropDown from "@/components/ApplicationStatusDropDown";
 import Pagination from "@/components/Pagination";
+import BackBtn from "@/components/BackBtn";
 
 interface IProps {
   params: {
@@ -21,9 +22,12 @@ interface IProps {
 
 export default async function page({ params, searchParams }: IProps) {
   const urlSearchParams = new URLSearchParams(searchParams);
-  const response = await fetch(`${BASE_API}/hr/job/apply/${params.slug}?${urlSearchParams.toString()}`, {
-    cache: "no-store",
-  });
+  const response = await fetch(
+    `${BASE_API}/hr/job/apply/${params.slug}?${urlSearchParams.toString()}`,
+    {
+      cache: "no-store",
+    }
+  );
   if (!response.ok) return notFound();
 
   const result = (await response.json()) as ISuccess<IJobAppliedCandidate[]>;
@@ -106,7 +110,11 @@ export default async function page({ params, searchParams }: IProps) {
         </ul>
       )}
 
-      <Pagination dataLength={result?.data.length} />
+      <div className="flex items-center justify-between">
+        <BackBtn />
+
+        <Pagination dataLength={result?.data.length} />
+      </div>
     </section>
   );
 }

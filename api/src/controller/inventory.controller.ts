@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import {
+  addMultiInventoryItem,
+  addMultiMaintenceRecordValidator,
+  addMultiPlannedMaintenanceSystemValidator,
+  addMultipleVendorItemValidator,
   addNewCategoryValidator,
   addNewConsumableItemValidator,
   addNewDurableValidator,
@@ -40,6 +44,7 @@ import { tryCatch } from "../utils/tryCatch";
 import { filterToSql } from "../utils/filterToSql";
 import { apiPaginationSql } from "../utils/apiPaginationSql";
 import { parsePagination } from "../utils/parsePagination";
+import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 
 //inventory list
 export const addNewList = asyncErrorHandler(
@@ -156,6 +161,71 @@ export const updateItemInfo = asyncErrorHandler(
     res.status(200).json(new ApiResponse(200, "Item Info Has Updated"));
   }
 );
+
+export const addMulipInventoryItem = asyncErrorHandler(async (req, res) => {
+  const { error, value } = addMultiInventoryItem.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const client = await pool.connect();
+
+  const { error: tryCatchError } = await tryCatch(async () => {
+    await client.query("BEGIN");
+
+    const { rows: inventoryInfo } = await client.query(
+      `
+        INSERT INTO new_inventory_list 
+          (item_name, category, sub_category, description, where_to_use, used_by, minimum_quantity, item_consumed, closing_stock, item_status)
+        VALUES
+          ${sqlPlaceholderCreator(10, value.length).placeholder}
+
+        RETURNING inventory_item_id
+      `,
+      value.flatMap((item) => [
+        item.item_name,
+        item.category,
+        item.sub_category,
+        item.description,
+        item.where_to_use,
+        item.used_by,
+        item.minimum_quantity,
+        item.item_consumed,
+        item.closing_stock,
+        item.item_status,
+      ])
+    );
+
+    const itemID = inventoryInfo[0].inventory_item_id;
+
+    await client.query(
+      `
+      INSERT INTO new_inventory_stock
+        (inventory_item_id, opening_stock, vendor_id, purchsed_date, remark)
+      VALUES
+        ${sqlPlaceholderCreator(5, value.length).placeholder}
+      `,
+      value.flatMap((item) => [
+        itemID,
+        item.opening_stock,
+        item.vendor_id,
+        item.purchsed_date,
+        item.remark,
+      ])
+    );
+
+    await client.query("COMMIT");
+    client.release();
+  });
+
+  if (tryCatchError) {
+    await client.query("ROLLBACK");
+    client.release();
+    throw tryCatchError;
+  }
+
+  res
+    .status(201)
+    .json(new ApiResponse(201, "Item Info Has Stored Successfully"));
+});
 
 //item stock
 export const getAllItemStockInfo = asyncErrorHandler(
@@ -418,6 +488,33 @@ export const addNewMaintenceRecord = asyncErrorHandler(
   }
 );
 
+export const addMultiMaintenceRecord = asyncErrorHandler(async (req, res) => {
+  const { error, value } = addMultiMaintenceRecordValidator.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await pool.query(
+    `INSERT INTO maintence_record (item_id, maintence_date, work_station, description_of_work, department, assigned_person, approved_by, cost, status, remark, institute, completed_date) VALUES ${
+      sqlPlaceholderCreator(12, value.length).placeholder
+    }`,
+    value.flatMap((item) => [
+      item.item_id,
+      item.maintence_date,
+      item.work_station,
+      item.description_of_work,
+      item.department,
+      item.assigned_person,
+      item.approved_by,
+      item.cost,
+      item.status,
+      item.remark,
+      item.institute,
+      item.completed_date,
+    ])
+  );
+
+  res.status(200).json(new ApiResponse(200, "Maintence Informations Added"));
+});
+
 export const updateMaintenceRecord = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error } = updateMaintenceRecordValidator.validate({
@@ -471,6 +568,8 @@ export const getPlannedMaintenanceSystem = asyncErrorHandler(
 
       LEFT JOIN inventory_item_info AS iii
       ON iii.item_id = pm.item_id
+
+      ORDER BY planned_maintenance_system_id DESC
       LIMIT ${LIMIT} OFFSET ${OFFSET}
       `
     );
@@ -508,6 +607,34 @@ export const addNewPlannedMaintenanceSystem = asyncErrorHandler(
     res
       .status(200)
       .json(new ApiResponse(200, "New Planned Maintenance System Has Added"));
+  }
+);
+
+export const addMultiPlannedMaintenanceSystem = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { error, value } = addMultiPlannedMaintenanceSystemValidator.validate(
+      req.body
+    );
+    if (error) throw new ErrorHandler(400, error.message);
+
+    await pool.query(
+      `
+      INSERT INTO planned_maintenance_system 
+        (item_id, frequency, last_done, next_due, description, remark)
+      VALUES
+        ${sqlPlaceholderCreator(6, value.length).placeholder}
+      `,
+      value.flatMap((item) => [
+        item.item_id,
+        item.frequency,
+        item.last_done,
+        item.next_due,
+        item.description,
+        item.remark,
+      ])
+    );
+
+    res.status(200).json(new ApiResponse(200, "Rows Are Added"));
   }
 );
 
@@ -836,6 +963,28 @@ export const addNewVendorItem = asyncErrorHandler(
     await pool.query(`INSERT INTO vendor ${columns} VALUES ${params}`, values);
 
     res.status(201).json(new ApiResponse(201, "New Item Has Added"));
+  }
+);
+
+export const addMultipleVendorItem = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { error, value } = addMultipleVendorItemValidator.validate(req.body);
+    if (error) throw new ErrorHandler(400, error.message);
+
+    await pool.query(
+      `INSERT INTO vendor (vendor_name, service_type, address, contact_details, institute) VALUES ${
+        sqlPlaceholderCreator(5, value.length).placeholder
+      }`,
+      value.flatMap((item) => [
+        item.vendor_name,
+        item.service_type,
+        item.address,
+        item.contact_details,
+        item.institute,
+      ])
+    );
+
+    res.status(201).json(new ApiResponse(201, "Vendor Information Saved"));
   }
 );
 

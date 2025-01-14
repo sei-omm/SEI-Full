@@ -1,17 +1,16 @@
 "use client";
 
 import { BASE_API } from "@/app/constant";
-import Button from "@/components/Button";
 import HandleSuspence from "@/components/HandleSuspence";
 import VendorFilter from "@/components/Inventory/VendorFilter";
 import Pagination from "@/components/Pagination";
+import MultiVendorForm from "@/components/SingleLineForms/MultiVendorForm";
 import { ISuccess, TVendor } from "@/types";
 import axios from "axios";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { CiEdit } from "react-icons/ci";
-import { IoIosAdd } from "react-icons/io";
 import { useQuery } from "react-query";
 
 type TTable = {
@@ -32,6 +31,7 @@ export default function Vendor() {
   });
 
   const searchParams = useSearchParams();
+  // const dispatch = useDispatch();
 
   const {
     data: durableFetchedData,
@@ -65,16 +65,32 @@ export default function Vendor() {
     <div className="w-full space-y-5">
       <VendorFilter />
 
-      <div className="flex items-end justify-end">
-        <Link href={"/dashboard/vendor/add"}>
-          <Button className="flex-center gap-3">
-            <IoIosAdd size={18} />
-            Add New Vendor
-          </Button>
-        </Link>
-      </div>
+      {/* <div className="flex items-end justify-end"> */}
+      {/* <Link href={"/dashboard/vendor/add"}> */}
+      {/* <Button
+          onClick={() => {
+            dispatch(
+              setDialog({
+                dialogId: "open-multiple-vendor",
+                type: "OPEN",
+              })
+            );
+          }}
+          className="flex-center gap-3"
+        >
+          <IoIosAdd size={18} />
+          Add New Vendor
+        </Button> */}
+      {/* </Link> */}
+      {/* </div> */}
 
-      <HandleSuspence isLoading={isFetching} error={error} dataLength={durableFetchedData?.data.length}>
+      <MultiVendorForm />
+
+      <HandleSuspence
+        isLoading={isFetching}
+        error={error}
+        dataLength={durableFetchedData?.data.length}
+      >
         <div className="w-full overflow-hidden card-shdow">
           <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black">
             <table className="min-w-max w-full table-auto">
@@ -116,7 +132,7 @@ export default function Vendor() {
                           <div className="flex items-center gap-3">
                             <Link
                               className="active:scale-90"
-                              href={`/dashboard/vendor/${durableFetchedData?.data[rowIndex].vendor_id}`}
+                              href={`/dashboard/vendor/${durableFetchedData?.data[rowIndex]?.vendor_id}`}
                             >
                               <CiEdit className="cursor-pointer" size={18} />
                             </Link>

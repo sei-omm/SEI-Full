@@ -100,7 +100,7 @@ export default async function page({ searchParams }: IProps) {
                     }`}
                     key={childItemIndex}
                   >
-                    <span className="line-clamp-1 inline-flex gap-x-3">
+                    <span className="inline-flex gap-x-3">
                       {childItemIndex === 0 ? (
                         <div className="flex items-center gap-2">
                           <div className="size-12">
