@@ -2,33 +2,33 @@ import Joi, { number } from "joi";
 
 //inventory list
 
-export const addMultiInventoryItem = Joi.array()
-  .items(
-    Joi.object({
-      item_name: Joi.string().required(),
-      category: Joi.number().required(),
-      sub_category: Joi.number().required(),
+// export const addMultiInventoryItem = Joi.array()
+//   .items(
+//     Joi.object({
+//       item_name: Joi.string().required(),
+//       category: Joi.number().required(),
+//       sub_category: Joi.number().required(),
 
-      description: Joi.string().optional().allow(""),
-      where_to_use: Joi.string().optional().allow(""),
+//       description: Joi.string().optional().allow(""),
+//       where_to_use: Joi.string().optional().allow(""),
 
-      used_by: Joi.string().optional().allow(""),
+//       used_by: Joi.string().optional().allow(""),
 
-      opening_stock: Joi.number().required(),
-      minimum_quantity: Joi.number().required(),
-      item_consumed: Joi.number().required(),
-      closing_stock: Joi.number().required(),
+//       opening_stock: Joi.number().required(),
+//       minimum_quantity: Joi.number().required(),
+//       item_consumed: Joi.number().required(),
+//       closing_stock: Joi.number().required(),
 
-      item_status: Joi.number().required(),
+//       item_status: Joi.number().required(),
 
-      vendor_id: Joi.number().required(),
+//       vendor_id: Joi.number().required(),
 
-      purchsed_date: Joi.string().required(),
+//       purchsed_date: Joi.string().required(),
 
-      remark: Joi.string().optional().allow(""),
-    })
-  )
-  .required();
+//       remark: Joi.string().optional().allow(""),
+//     })
+//   )
+//   .required();
 
 export const addNewListValidator = Joi.object({
   item_name: Joi.string().required(),
@@ -70,6 +70,8 @@ export const addNewItemValidator = Joi.object({
 
   institute: Joi.string().required(),
 });
+
+export const addMultiItemValidator = Joi.array().items(addNewItemValidator).required();
 
 export const updateItemValidator = addNewItemValidator.keys({
   item_id: Joi.number().required(),

@@ -180,15 +180,15 @@ export const getCourseWithBatchStudents = asyncErrorHandler(
             c.*,
             COALESCE(
                 json_agg(
-                    b.*
-                ) FILTER (WHERE b.batch_id IS NOT NULL), '[]'
+                    b.* ORDER BY b.start_date DESC
+                ) FILTER (WHERE b.batch_id IS NOT NULL AND b.end_date >= CURRENT_DATE), '[]'
             ) AS batches
         FROM 
             courses c
         LEFT JOIN 
             course_batches b ON c.course_id = b.course_id
 
-            ${filterQuery} AND b.end_date >= CURRENT_DATE
+            ${filterQuery}
 
         GROUP BY 
             c.course_id, c.course_name ORDER BY course_showing_order ASC;

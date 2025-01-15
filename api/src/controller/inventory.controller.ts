@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import {
-  addMultiInventoryItem,
+  addMultiItemValidator,
   addMultiMaintenceRecordValidator,
   addMultiPlannedMaintenanceSystemValidator,
   addMultipleVendorItemValidator,
@@ -162,69 +162,95 @@ export const updateItemInfo = asyncErrorHandler(
   }
 );
 
+// export const addMulipInventoryItem = asyncErrorHandler(async (req, res) => {
+//   const { error, value } = addMultiInventoryItem.validate(req.body);
+//   if (error) throw new ErrorHandler(400, error.message);
+
+//   const client = await pool.connect();
+
+//   const { error: tryCatchError } = await tryCatch(async () => {
+//     await client.query("BEGIN");
+
+//     const { rows: inventoryInfo } = await client.query(
+//       `
+//         INSERT INTO new_inventory_list
+//           (item_name, category, sub_category, description, where_to_use, used_by, minimum_quantity, item_consumed, closing_stock, item_status)
+//         VALUES
+//           ${sqlPlaceholderCreator(10, value.length).placeholder}
+
+//         RETURNING inventory_item_id
+//       `,
+//       value.flatMap((item) => [
+//         item.item_name,
+//         item.category,
+//         item.sub_category,
+//         item.description,
+//         item.where_to_use,
+//         item.used_by,
+//         item.minimum_quantity,
+//         item.item_consumed,
+//         item.closing_stock,
+//         item.item_status,
+//       ])
+//     );
+
+//     const itemID = inventoryInfo[0].inventory_item_id;
+
+//     await client.query(
+//       `
+//       INSERT INTO new_inventory_stock
+//         (inventory_item_id, opening_stock, vendor_id, purchsed_date, remark)
+//       VALUES
+//         ${sqlPlaceholderCreator(5, value.length).placeholder}
+//       `,
+//       value.flatMap((item) => [
+//         itemID,
+//         item.opening_stock,
+//         item.vendor_id,
+//         item.purchsed_date,
+//         item.remark,
+//       ])
+//     );
+
+//     await client.query("COMMIT");
+//     client.release();
+//   });
+
+//   if (tryCatchError) {
+//     await client.query("ROLLBACK");
+//     client.release();
+//     throw tryCatchError;
+//   }
+
+//   res
+//     .status(201)
+//     .json(new ApiResponse(201, "Item Info Has Stored Successfully"));
+// });
+
 export const addMulipInventoryItem = asyncErrorHandler(async (req, res) => {
-  const { error, value } = addMultiInventoryItem.validate(req.body);
+  const { error, value } = addMultiItemValidator.validate(req.body);
   if (error) throw new ErrorHandler(400, error.message);
 
-  const client = await pool.connect();
+  await pool.query(
+    `
+    INSERT INTO inventory_item_info
+      (item_name, category, sub_category, where_to_use, used_by, description, minimum_quantity, institute)
+     VALUES
+      ${sqlPlaceholderCreator(8, value.length).placeholder}
+    `,
+    value.flatMap((item) => [
+      item.item_name,
+      item.category,
+      item.sub_category,
+      item.where_to_use,
+      item.used_by,
+      item.description,
+      item.minimum_quantity,
+      item.institute,
+    ])
+  );
 
-  const { error: tryCatchError } = await tryCatch(async () => {
-    await client.query("BEGIN");
-
-    const { rows: inventoryInfo } = await client.query(
-      `
-        INSERT INTO new_inventory_list 
-          (item_name, category, sub_category, description, where_to_use, used_by, minimum_quantity, item_consumed, closing_stock, item_status)
-        VALUES
-          ${sqlPlaceholderCreator(10, value.length).placeholder}
-
-        RETURNING inventory_item_id
-      `,
-      value.flatMap((item) => [
-        item.item_name,
-        item.category,
-        item.sub_category,
-        item.description,
-        item.where_to_use,
-        item.used_by,
-        item.minimum_quantity,
-        item.item_consumed,
-        item.closing_stock,
-        item.item_status,
-      ])
-    );
-
-    const itemID = inventoryInfo[0].inventory_item_id;
-
-    await client.query(
-      `
-      INSERT INTO new_inventory_stock
-        (inventory_item_id, opening_stock, vendor_id, purchsed_date, remark)
-      VALUES
-        ${sqlPlaceholderCreator(5, value.length).placeholder}
-      `,
-      value.flatMap((item) => [
-        itemID,
-        item.opening_stock,
-        item.vendor_id,
-        item.purchsed_date,
-        item.remark,
-      ])
-    );
-
-    await client.query("COMMIT");
-    client.release();
-  });
-
-  if (tryCatchError) {
-    await client.query("ROLLBACK");
-    client.release();
-    throw tryCatchError;
-  }
-
-  res
-    .status(201)
-    .json(new ApiResponse(201, "Item Info Has Stored Successfully"));
+  res.status(200).json(new ApiResponse(200, "Inventory Items Are Saved"));
 });
 
 //item stock

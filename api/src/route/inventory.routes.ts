@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  addMulipInventoryItem,
   addMultiMaintenceRecord,
   addMultiPlannedMaintenanceSystem,
   addMultipleVendorItem,
@@ -56,6 +57,7 @@ inventoryRoute
   .get("/item/drop-down", getItemsForDropDown)
   .get("/item/:item_id", getSingleItemInfo)
   .post("/item", addNewItemInfo)
+  .post("/item/multi", addMulipInventoryItem)
   .put("/item/:item_id", updateItemInfo)
 
   // .get("/item-stock/calclute/:item_id", calcluteStockInfo)

@@ -27,7 +27,6 @@ interface IProps {
 }
 
 export default function ProductStockInfo({ item_id }: IProps) {
-
   const dispatch = useDispatch();
   const [tableDatas, setTableDatas] = useState<TTable>({
     heads: [
@@ -67,7 +66,7 @@ export default function ProductStockInfo({ item_id }: IProps) {
 
       setTableDatas(newTableData);
     },
-    refetchOnMount : true
+    refetchOnMount: true,
   });
 
   function handleStockDialog(stockId: "add" | number) {
@@ -139,6 +138,8 @@ export default function ProductStockInfo({ item_id }: IProps) {
           Consume Stock
         </Button>
       </div>
+
+      {/* <MultiInventoryItemStockForm /> */}
 
       <HandleSuspence
         isLoading={isFetching}

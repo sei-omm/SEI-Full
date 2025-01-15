@@ -10,12 +10,12 @@ import Button from "@/components/Button";
 import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
+import MultiInventoryItemForm from "@/components/SingleLineForms/MultiInventoryItemForm";
 import { ISuccess, TInventoryWithStockItem } from "@/types";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { CiEdit, CiSearch } from "react-icons/ci";
-import { IoIosAdd } from "react-icons/io";
 import { useQuery } from "react-query";
 
 type TTable = {
@@ -146,7 +146,7 @@ export default function InventoryList() {
         </Button>
       </form>
 
-      <div className="flex items-end gap-6">
+      {/* <div className="flex items-end gap-6">
         <Link href={"/dashboard/inventory/inventory-list/add"}>
           <Button className="flex-center gap-3">
             <IoIosAdd size={18} />
@@ -169,8 +169,9 @@ export default function InventoryList() {
           <CiEdit size={18} />
           Edit Record
         </Button>
-      </div>
+      </div> */}
       {/* <MultiInventoryListForm /> */}
+      <MultiInventoryItemForm selectedCheckboxItemId={selectedCheckboxItemId}/>
 
       <HandleSuspence
         isLoading={isFetching}
