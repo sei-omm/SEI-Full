@@ -45,7 +45,7 @@ export default function VendorFilter() {
       >
         <DropDown
           name="institute"
-          label="Institute"
+          label="Campus"
           options={[
             { text: "Not Selected", value: -1 },
             { text: "Kolkata", value: "Kolkata" },

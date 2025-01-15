@@ -16,7 +16,7 @@ interface IProps {
   changeSearchParamsOnChange?: boolean;
   viewOnly?: boolean;
   valueRef?: React.RefObject<HTMLInputElement>;
-  dialog? : boolean;
+  dialog?: boolean;
 }
 
 export default function DropDown({
@@ -29,7 +29,7 @@ export default function DropDown({
   onChange,
   changeSearchParamsOnChange,
   viewOnly,
-  valueRef
+  valueRef,
 }: IProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -87,7 +87,7 @@ export default function DropDown({
               <div
                 className={`${
                   isOpen ? "block" : "hidden"
-                } left-0 right-0 top-2 absolute z-[10000]`}
+                } absolute left-0 right-0 top-2 z-[10000]`}
               >
                 <input
                   ref={valueRef}

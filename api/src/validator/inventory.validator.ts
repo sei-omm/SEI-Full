@@ -98,6 +98,8 @@ export const addNewItemStockValidator = Joi.object({
   purchase_date: Joi.string().optional(),
 });
 
+export const addMultiItemStockValidator = Joi.array().items(addNewItemStockValidator).required();
+
 export const consumeStockValidator = Joi.object({
   item_id: Joi.number().required(),
   item_consumed: Joi.number().required(),

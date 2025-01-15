@@ -92,7 +92,7 @@ export default function OccupancyReport() {
         className="flex items-end justify-between *:flex-grow gap-4"
       >
         <DropDown
-          label="Institute"
+          label="Campus"
           name="institute"
           options={[
             { text: "Kolkata", value: "Kolkata" },

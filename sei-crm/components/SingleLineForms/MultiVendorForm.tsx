@@ -108,7 +108,7 @@ export default function MultiVendorForm() {
                 />
                 <MultiSelectDropDown
                   key={"Multiple Institute"}
-                  label="Institutes *"
+                  label="Campus *"
                   name="institute"
                   options={[
                     { text: "Kolkata", value: "Kolkata" },

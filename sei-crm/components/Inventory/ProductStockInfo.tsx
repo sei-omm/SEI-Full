@@ -1,8 +1,6 @@
 "use client";
 
 import { useDispatch } from "react-redux";
-import Button from "../Button";
-import { MdOutlineAdd } from "react-icons/md";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { useState } from "react";
 import { useQuery } from "react-query";
@@ -16,6 +14,7 @@ import { BiLayerMinus } from "react-icons/bi";
 import { GiSandsOfTime } from "react-icons/gi";
 import { PiMoney } from "react-icons/pi";
 import { IoMdEye } from "react-icons/io";
+import MultiInventoryItemStockForm from "../SingleLineForms/MultiInventoryItemStockForm";
 
 type TTable = {
   heads: string[];
@@ -30,7 +29,7 @@ export default function ProductStockInfo({ item_id }: IProps) {
   const dispatch = useDispatch();
   const [tableDatas, setTableDatas] = useState<TTable>({
     heads: [
-      "Opening Stock",
+      "Added Stock",
       "Item Consumed",
       "Purchased Date",
       "Remark",
@@ -109,7 +108,7 @@ export default function ProductStockInfo({ item_id }: IProps) {
           <span>Total Spend : ₹{data?.data.stock_calcluction.total_spend}</span>
         </div>
       </div>
-      <div className="flex items-center gap-6">
+      {/* <div className="flex items-center gap-6">
         <Button
           onClick={() => handleStockDialog("add")}
           type="button"
@@ -137,9 +136,12 @@ export default function ProductStockInfo({ item_id }: IProps) {
           <BiLayerMinus size={18} />
           Consume Stock
         </Button>
-      </div>
+      </div> */}
 
-      {/* <MultiInventoryItemStockForm /> */}
+      <MultiInventoryItemStockForm
+        item_id={item_id}
+        remain_stock={data?.data.stock_calcluction.remain_stock}
+      />
 
       <HandleSuspence
         isLoading={isFetching}

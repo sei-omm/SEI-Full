@@ -23,7 +23,7 @@ export default function Vendor() {
     heads: [
       "Name of Suppliers",
       "Type of Service",
-      "Institutes",
+      "Campus",
       "Contact",
       "Action",
     ],

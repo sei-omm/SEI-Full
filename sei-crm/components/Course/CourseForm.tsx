@@ -116,7 +116,7 @@ export default function CourseForm({ slug }: IProps) {
           <DropDown
             key="institute"
             name="institute"
-            label="Institute *"
+            label="Campus *"
             options={[
               { text: "Kolkata", value: "Kolkata" },
               { text: "Faridabad", value: "Faridabad" },

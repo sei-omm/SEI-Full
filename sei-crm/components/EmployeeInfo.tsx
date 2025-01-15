@@ -621,7 +621,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
               <DropDown
                 onChange={(value) => (employeeInstitute.current = value.value)}
                 key={"institute"}
-                label="Institute"
+                label="Campus"
                 options={[
                   { text: "Kolkata", value: "Kolkata" },
                   { text: "Faridabad", value: "Faridabad" },

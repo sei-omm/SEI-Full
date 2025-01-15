@@ -145,8 +145,8 @@ export const getCoursesWithBatch = asyncErrorHandler(async (req, res) => {
           c.*,
           COALESCE(
               json_agg(
-                  b.*
-              ) FILTER (WHERE b.batch_id IS NOT NULL), '[]'
+                  b.* ORDER BY b.start_date DESC
+              ) FILTER (WHERE b.batch_id IS NOT NULL AND b.end_date >= CURRENT_DATE), '[]'
           ) AS batches
       FROM 
           courses c

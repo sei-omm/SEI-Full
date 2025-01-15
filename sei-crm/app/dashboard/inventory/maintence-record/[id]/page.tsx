@@ -129,7 +129,7 @@ export default function MaintenceRecordForm({ params }: IProps) {
           <Input name="remark" label="Remark" placeholder="Type Remark" />
           <DropDown
             name="institute"
-            label="Institute *"
+            label="Campus *"
             options={[
               { text: "Kolkata", value: "Kolkata" },
               { text: "Faridabad", value: "Faridabad" },

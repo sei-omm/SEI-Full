@@ -117,9 +117,9 @@ export default function InventoryList() {
       >
         <DropDown
           name="institute"
-          label="Institute"
+          label="Campus"
           options={[
-            { text: "Not Selected", value: "-1" },
+            { text: "Choose Campus", value: "-1" },
             {
               text: "Kolkata",
               value: "Kolkata",
@@ -132,7 +132,7 @@ export default function InventoryList() {
           name="category"
           label="Category"
           options={[
-            { text: "Not Selected", value: "-1" },
+            { text: "Choose Category", value: "-1" },
             ...inventoryCatList.map((cat) => ({
               text: cat.category_name,
               value: cat.category_id,
@@ -171,7 +171,7 @@ export default function InventoryList() {
         </Button>
       </div> */}
       {/* <MultiInventoryListForm /> */}
-      <MultiInventoryItemForm selectedCheckboxItemId={selectedCheckboxItemId}/>
+      <MultiInventoryItemForm selectedCheckboxItemId={selectedCheckboxItemId} />
 
       <HandleSuspence
         isLoading={isFetching}
@@ -224,7 +224,7 @@ export default function InventoryList() {
                               type="checkbox"
                               checked={
                                 selectedCheckboxItemId ===
-                                data?.data[rowIndex].item_id
+                                data?.data[rowIndex]?.item_id
                               }
                               className="mr-2 cursor-pointer"
                             />

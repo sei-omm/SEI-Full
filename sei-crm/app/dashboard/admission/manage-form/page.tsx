@@ -242,16 +242,16 @@ export default function ManageStudentAdmissionForm() {
               />
               <Input
                 name="issued_by_institute"
-                label="Issued by (name of the Institute) :"
-                placeholder="Issued by (name of the Institute) :"
+                label="Issued by (name of the Campus) :"
+                placeholder="Issued by (name of the Campus) :"
                 defaultValue={
                   data?.data.course_and_student_info.issued_by_institute
                 }
               />
               <Input
                 name="issued_by_institute_indos_number"
-                label="INDoS no (Institute) :"
-                placeholder="INDoS no (Institute) :"
+                label="INDoS no (Campus) :"
+                placeholder="INDoS no (Campus) :"
                 defaultValue={
                   data?.data.course_and_student_info
                     .issued_by_institute_indos_number

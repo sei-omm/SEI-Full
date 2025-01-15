@@ -68,7 +68,7 @@ export default function LibraryFilters() {
       <DropDown
         onChange={(item) => setInstitute(item.value)}
         name="institute"
-        label="Institute *"
+        label="Campus *"
         options={[
           { text: "Kolkata", value: "Kolkata" },
           { text: "Faridabad", value: "Faridabad" },

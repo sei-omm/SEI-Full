@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   addMulipInventoryItem,
+  addMultiItemStock,
   addMultiMaintenceRecord,
   addMultiPlannedMaintenanceSystem,
   addMultipleVendorItem,
@@ -64,6 +65,7 @@ inventoryRoute
   // .get("/item-stock/get-last-closing-stock/:item_id", getPreviousOpeningStock)
   .get("/item-stock/get-all/:item_id", getAllItemStockInfo)
   .post("/item-stock", addNewItemStock)
+  .post("/item-stock/multi", addMultiItemStock)
   .post("/item-stock/consumed", consumeStock)
   .put("/item-stock/:stock_id", updateItemStock)
   .get("/item-stock/:stock_id", getSingleStockInfo)

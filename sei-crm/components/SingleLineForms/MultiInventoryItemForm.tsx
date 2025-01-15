@@ -160,7 +160,7 @@ export default function MultiInventoryItemForm({
                 />
                 <DropDown
                   name="institute"
-                  label="Institute *"
+                  label="Campus *"
                   options={[
                     { text: "Kolkata", value: "Kolkata" },
                     { text: "Faridabad", value: "Faridabad" },

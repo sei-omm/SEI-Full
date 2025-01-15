@@ -62,7 +62,7 @@ export default function CourseWithBatchFilter() {
         onChange={(item) => setInstitute(item.value)}
         key={"institute"}
         name="institute"
-        label="Institute"
+        label="Campus"
         options={[
           { text: "Kolkata", value: "Kolkata" },
           { text: "Faridabad", value: "Faridabad" },

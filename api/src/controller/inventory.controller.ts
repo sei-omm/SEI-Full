@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import {
+  addMultiItemStockValidator,
   addMultiItemValidator,
   addMultiMaintenceRecordValidator,
   addMultiPlannedMaintenanceSystemValidator,
@@ -268,6 +269,8 @@ export const getAllItemStockInfo = asyncErrorHandler(
         LEFT JOIN vendor AS v
         ON v.vendor_id = isi.vendor_id
         WHERE isi.item_id = $1 AND isi.type = 'add'
+
+        ORDER BY isi.stock_id DESC
         `,
         values: [req.params.item_id],
       },
@@ -405,6 +408,35 @@ export const addNewItemStock = asyncErrorHandler(
     res.status(200).json(new ApiResponse(200, "New Item Stock Has Added"));
   }
 );
+
+export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
+  const { error, value } = addMultiItemStockValidator.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await pool.query(
+    `
+    INSERT INTO inventory_stock_info 
+      (opening_stock, item_consumed, closing_stock, status, vendor_id, cost_per_unit_current, total_value, remark, item_id, type, purchase_date)
+    VALUES
+      ${sqlPlaceholderCreator(11, value.length).placeholder}
+    `,
+    value.flatMap((item) => [
+      item.opening_stock,
+      item.item_consumed,
+      item.closing_stock,
+      item.status,
+      item.vendor_id,
+      item.cost_per_unit_current,
+      item.total_value,
+      item.remark,
+      item.item_id,
+      item.type,
+      item.purchase_date,
+    ])
+  );
+
+  res.status(200).json(new ApiResponse(200, "Stock informations Are Saved"));
+});
 
 export const consumeStock = asyncErrorHandler(
   async (req: Request, res: Response) => {

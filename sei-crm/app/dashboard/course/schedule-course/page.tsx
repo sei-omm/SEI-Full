@@ -55,7 +55,7 @@ export default function ScheduleCourse() {
         <div className="flex items-center flex-wrap gap-5 *:flex-grow *:basis-44">
           <DropDown
             onChange={(item) => setCourseCenter(item.value)}
-            label="Institute"
+            label="Campus"
             options={[
               { text: "Kolkata", value: "Kolkata" },
               { text: "Faridabad", value: "Faridabad" },

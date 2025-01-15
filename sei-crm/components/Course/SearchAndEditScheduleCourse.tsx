@@ -39,7 +39,7 @@ export default function SearchAndEditScheduleCourse() {
           onChange={(item) => {
             setSearchCourseCenter(item.value);
           }}
-          label="Institute"
+          label="Campus"
           options={[
             { text: "Kolkata", value: "Kolkata" },
             { text: "Faridabad", value: "Faridabad" },
