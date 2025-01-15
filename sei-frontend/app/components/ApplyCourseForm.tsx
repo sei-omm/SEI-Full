@@ -3,8 +3,12 @@
 import Input from "./Input";
 import Button from "./Button";
 import { FormEvent, useEffect, useState } from "react";
-import { BASE_API } from "../constant";
-import { IResponse, TMultipleCoursePrice } from "../type";
+import { BASE_API, STUDENT_RANKS } from "../constant";
+import {
+  IResponse,
+  TMultipleCoursePrice,
+  TStudentRegistationForm,
+} from "../type";
 import SelectedCourseTable from "./SelectedCourseTable";
 import { useQuery } from "react-query";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,7 +20,11 @@ import { axiosQuery } from "../utils/axiosQuery";
 import { toast } from "react-toastify";
 import { getAuthToken } from "../utils/getAuthToken";
 
-export default function ApplyCourseForm() {
+interface IProps {
+  form_info: TStudentRegistationForm | null;
+}
+
+export default function ApplyCourseForm({ form_info }: IProps) {
   const [userFormInfo, setuserFormInfo] = useState<object | null>(null);
   const [isSavingForm, setIsSavingForm] = useState(false);
 
@@ -92,7 +100,9 @@ export default function ApplyCourseForm() {
           batch_ids: cartData.map((item) => item.batch_id).join(","),
           course_ids: cartData.map((item) => item.course_id).join(","),
           institutes: cartData.map((item) => item.institute).join(","),
-          isInWaitingLists : cartData.map((item) => item.isInWaitingList).join(",")
+          isInWaitingLists: cartData
+            .map((item) => item.isInWaitingList)
+            .join(","),
         },
       })
     );
@@ -117,20 +127,37 @@ export default function ApplyCourseForm() {
           <h2 className="text-2xl font-semibold">Fill Up The Form</h2>
           <div className="flex items-start gap-x-5 gap-y-3 flex-wrap *:basis-96 *:flex-grow">
             {/* <Input label="Your Full Name" placeholder="Somnath Gupta" /> */}
-            <Input
+            {/* <Input
               name="rank"
               label="Rank/Designation"
               placeholder="Rank/Designation"
-            />
+            /> */}
+            <div>
+              <span className="inline-block font-medium">
+                Rank/Designation *
+              </span>
+              <div className="px-3 border bg-[#e9b9582a] border-gray-400">
+                <select
+                  name="rank"
+                  className="w-full outline-none py-2 bg-transparent"
+                  defaultValue={form_info?.rank}
+                >
+                  {STUDENT_RANKS.map((rank) => (
+                    <option key={rank} value={rank}>{rank}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
             {/* <Input label="InDoS No" placeholder="InDoS No" /> */}
             {/* <Input label="Date of Birth *" type="date" /> */}
 
-            <div className="*:block">
+            <div>
               <span className="inline-block font-medium">Nationality *</span>
               <div className="px-3 border bg-[#e9b9582a] border-gray-400">
                 <select
                   name="nationality"
                   className="w-full outline-none py-2 bg-transparent"
+                  defaultValue={form_info?.nationality}
                 >
                   <option value="Indian">Indian</option>
                   <option value="Afghan">Afghan</option>
@@ -148,12 +175,14 @@ export default function ApplyCourseForm() {
               name="permanent_address"
               label="Permanent Address *"
               placeholder="Permanent Address"
+              defaultValue={form_info?.permanent_address}
             />
             <Input
               required
               name="present_address"
               label="Present Address *"
               placeholder="Present Address"
+              defaultValue={form_info?.present_address}
             />
 
             {/* <Input label="Email ID" placeholder="somnath@gmail.com" /> */}
@@ -165,29 +194,54 @@ export default function ApplyCourseForm() {
           </h2>
 
           <div className="grid grid-cols-3 gap-x-5 gap-y-3 md:grid-cols-2 sm:grid-cols-1">
-            <Input name="blood_group" label="Blood Group" placeholder="A+" />
             <Input
+              name="blood_group"
+              label="Blood Group"
+              placeholder="A+"
+              defaultValue={form_info?.blood_group}
+            />
+            {/* <Input
               name="allergic_or_medication"
               label="Whether allergic to any medication (Y/N)"
               placeholder="Y / N"
-            />
+            /> */}
+
+            <div>
+              <span className="inline-block font-medium">
+                Whether allergic to any medication (Y/N) *
+              </span>
+              <div className="px-3 border bg-[#e9b9582a] border-gray-400">
+                <select
+                  name="allergic_or_medication"
+                  className="w-full outline-none py-2 bg-transparent"
+                  defaultValue={form_info?.rank}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+            </div>
+
             <Input
               required
               name="next_of_kin_name"
               label="Next of kin name *"
               placeholder="Next of kin name"
+              defaultValue={form_info?.next_of_kin_name}
             />
             <Input
               required
               name="relation_to_sel"
               label="Relation to sel *"
               placeholder="Relation to sel"
+              defaultValue={form_info?.relation_to_sel}
             />
             <Input
               required
               name="emergency_number"
               label="Telephone Contact Nos.in Emergency *"
-              placeholder="Relation to sel"
+              placeholder="Emergency Number"
+              defaultValue={form_info?.emergency_number}
             />
           </div>
 
@@ -199,16 +253,19 @@ export default function ApplyCourseForm() {
               name="number_of_the_cert"
               label="Number of the Cert.which is being refreshed :"
               placeholder="Number of the Cert.which is being refreshed :"
+              defaultValue={form_info?.number_of_the_cert}
             />
             <Input
               name="issued_by_institute"
               label="Issued by (name of the Institute) :"
               placeholder="Issued by (name of the Institute) :"
+              defaultValue={form_info?.issued_by_institute}
             />
             <Input
               name="issued_by_institute_indos_number"
               label="INDoS no (Institute) :"
               placeholder="INDoS no (Institute) :"
+              defaultValue={form_info?.issued_by_institute_indos_number}
             />
           </div>
         </div>

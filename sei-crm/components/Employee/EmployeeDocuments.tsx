@@ -11,32 +11,26 @@ import {
 } from "@/types";
 import { useQuery } from "react-query";
 import axios from "axios";
-import { BASE_API } from "@/app/constant";
+import {
+  BASE_API,
+  FACULTY_DOC_INFO,
+  OFFICE_STAFF_DOC_INFO,
+} from "@/app/constant";
 import HandleSuspence from "../HandleSuspence";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 
 interface IProps {
   employeeId: number;
   employeeDocsInfoState: React.MutableRefObject<TEmployeeDocs[]>;
+  employeeType: "Faculty" | "Office Staff" | undefined;
 }
 
 export default function EmployeeDocuments({
   employeeDocsInfoState,
   employeeId,
+  employeeType,
 }: IProps) {
-  const [employeeDocsInfo, setEmployeeDocsInfo] = useState<TEmployeeDocs[]>([
-    { doc_id: "Resume", doc_uri: null, doc_name: null },
-    { doc_id: "Pan Card", doc_uri: null, doc_name: null },
-    { doc_id: "Aadhaar Card", doc_uri: null, doc_name: null },
-    { doc_id: "10th Pass Certificate", doc_uri: null, doc_name: null },
-    { doc_id: "12th Pass Certificate", doc_uri: null, doc_name: null },
-    {
-      doc_id: "Choose Graduation Certificate",
-      doc_uri: null,
-      doc_name: null,
-    },
-    { doc_id: "Choose Other Certificate", doc_uri: null, doc_name: null },
-  ]);
+  const [employeeDocsInfo, setEmployeeDocsInfo] = useState<TEmployeeDocs[]>(employeeType === "Faculty" ? FACULTY_DOC_INFO : OFFICE_STAFF_DOC_INFO);
 
   const { isFetching, error } = useQuery<ISuccess<TEmployeeDocsFromDB[]>>({
     queryKey: "employee_documents",
@@ -50,9 +44,10 @@ export default function EmployeeDocuments({
         })
       ).data,
     onSuccess: (data) => {
-      const newEmployeeInfo = [...employeeDocsInfo];
+      const docsInfo = employeeType === "Faculty" ? FACULTY_DOC_INFO : OFFICE_STAFF_DOC_INFO;
+      const newEmployeeInfo = [...docsInfo];
       data.data.forEach((item) => {
-        const indexToChange = employeeDocsInfo.findIndex(
+        const indexToChange = docsInfo.findIndex(
           (findIndexItem) => findIndexItem.doc_id === item.doc_id
         );
         newEmployeeInfo[indexToChange] = {
@@ -65,7 +60,7 @@ export default function EmployeeDocuments({
     },
 
     refetchOnMount: true,
-    enabled: employeeId !== -1,
+    enabled: employeeId !== -1 && employeeType !== undefined,
   });
 
   async function onUploadedCompleted(

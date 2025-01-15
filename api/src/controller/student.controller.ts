@@ -191,6 +191,33 @@ export const getStudentInfo = asyncErrorHandler(
   }
 );
 
+export const getStudentRegisterFormInfo = asyncErrorHandler(
+  async (_, res) => {
+    const { rows } = await pool.query(
+      `
+       SELECT
+        rank,
+        nationality,
+        permanent_address,
+        present_address,
+        blood_group,
+        allergic_or_medication,
+        next_of_kin_name,
+        relation_to_sel,
+        emergency_number,
+        number_of_the_cert,
+        issued_by_institute,
+        issued_by_institute_indos_number
+       FROM students
+       WHERE student_id = $1
+      `,
+      [res.locals.student_id]
+    );
+
+    res.status(200).json(new ApiResponse(200, "", rows ? rows[0] : null));
+  }
+);
+
 export const registerStudent = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error, value } = studentRegisterValidator.validate(req.body);

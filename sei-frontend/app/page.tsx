@@ -2,8 +2,6 @@ import Image from "next/image";
 
 import NextSvg from "./svgicons/NextSvg";
 import Button from "./components/Button";
-import { CourseType } from "./type";
-import CourseItem from "./components/CourseItem";
 import Ratings from "./components/Ratings";
 import { CiCalendarDate } from "react-icons/ci";
 import { BsPhoneVibrateFill } from "react-icons/bs";
@@ -38,7 +36,6 @@ const what_we_provide = [
   },
 ];
 
-const courses: CourseType[] = [];
 
 const notices = [
   {
@@ -176,7 +173,7 @@ export default function Home() {
         </section>
 
         {/* Our Courses */}
-        <section className="pb-10 pt-5">
+        {/* <section className="pb-10 pt-5">
           <div className="flex-center flex-col gap-y-2">
             <h2 className="text-5xl font-semibold">
               Our <span className="text-[#e9b858]">Courses</span>
@@ -197,7 +194,7 @@ export default function Home() {
               />
             ))}
           </ul>
-        </section>
+        </section> */}
 
         {/* Ratings */}
         <section className="py-10 sm:pt-0">

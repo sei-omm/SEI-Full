@@ -53,7 +53,7 @@ export default function CourseForm({ slug }: IProps) {
       queryKey: "get-course-with-id",
       queryFn: async () => (await axios.get(BASE_API + "/course/" + slug)).data,
       refetchOnMount: true,
-      enabled : !isNewCourse
+      enabled: !isNewCourse,
     },
   ]);
 
@@ -72,8 +72,9 @@ export default function CourseForm({ slug }: IProps) {
         apiPath: "/course",
         onSuccess() {
           route.push(
-            "/dashboard/course/manage-course?code=" +
-              Math.round(Math.random() * 100)
+            `/dashboard/course/manage-course?institute=${formData.get(
+              "institute"
+            )}&code=${Math.round(Math.random() * 100)}`
           );
         },
       });
@@ -87,8 +88,9 @@ export default function CourseForm({ slug }: IProps) {
       apiPath: "/course",
       onSuccess() {
         route.push(
-          "/dashboard/course/manage-course?code=" +
-            Math.round(Math.random() * 100)
+          `/dashboard/course/manage-course?institute=${formData.get(
+            "institute"
+          )}&code=${Math.round(Math.random() * 100)}`
         );
       },
     });
@@ -137,7 +139,7 @@ export default function CourseForm({ slug }: IProps) {
             required
             name="require_documents"
             wrapperCss="!basis-[50rem]"
-            label="Require Documents *"
+            label="Enter required documents and press enter *"
             placeholder="Enter required documents and press enter"
             defaultValue={course.data?.data.require_documents}
           />

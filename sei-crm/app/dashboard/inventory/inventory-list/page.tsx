@@ -6,7 +6,9 @@ import {
   inventorySubCatList,
 } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
+import { getDate } from "@/app/utils/getDate";
 import Button from "@/components/Button";
+import DateInput from "@/components/DateInput";
 import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
@@ -139,6 +141,13 @@ export default function InventoryList() {
             })),
           ]}
           defaultValue={searchParamas.get("category") || "-1"}
+        />
+        <DateInput
+          label="Choose Purchase Date"
+          name="current_purchase_date"
+          date={getDate(
+            new Date(searchParamas.get("current_purchase_date") || "")
+          )}
         />
         <Button className="flex-center gap-3 mb-2">
           <CiSearch />

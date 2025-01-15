@@ -6,6 +6,7 @@ import {
   inventorySubCatList,
 } from "@/app/constant";
 import { useDoMutation } from "@/app/utils/useDoMutation";
+import BackBtn from "@/components/BackBtn";
 import Button from "@/components/Button";
 import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
@@ -13,7 +14,8 @@ import Input from "@/components/Input";
 import ProductStockInfo from "@/components/Inventory/ProductStockInfo";
 import { ISuccess, TInventoryItem } from "@/types";
 import axios from "axios";
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useRef } from "react";
 import { useQuery } from "react-query";
 
 interface IProps {
@@ -26,6 +28,8 @@ export default function InventoryListForm({ params }: IProps) {
   const isNewItem = params.id === "add";
 
   const { isLoading: isMutating, mutate } = useDoMutation();
+  const route = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const {
     data: inventoryItem,
     isFetching,
@@ -47,6 +51,9 @@ export default function InventoryListForm({ params }: IProps) {
       },
       formData,
       id: isNewItem ? undefined : parseInt(params.id as string),
+      onSuccess() {
+        route.back();
+      },
     });
   }
 
@@ -54,8 +61,8 @@ export default function InventoryListForm({ params }: IProps) {
     <div>
       <HandleSuspence isLoading={isFetching} error={error} dataLength={1}>
         <div className="space-y-6">
-          <form action={handleFormSubmit} className="space-y-6">
-            <div className="bg-white items-start p-10 border card-shdow rounded-3xl space-y-6">
+          <div className="bg-white items-start p-10 border card-shdow rounded-3xl space-y-6">
+            <form ref={formRef} action={handleFormSubmit} className="space-y-6">
               <h2 className="text-2xl font-semibold uppercase">
                 Item information
               </h2>
@@ -121,8 +128,14 @@ export default function InventoryListForm({ params }: IProps) {
                   defaultValue={inventoryItem?.data.institute || "Kolkata"}
                 />
               </div>
+            </form>
 
+            <div className="flex items-center gap-5">
+              <BackBtn />
               <Button
+                onClick={() => {
+                  formRef.current?.requestSubmit();
+                }}
                 loading={isMutating}
                 disabled={isMutating}
                 className={`${isMutating ? "opacity-40" : ""}`}
@@ -130,10 +143,12 @@ export default function InventoryListForm({ params }: IProps) {
                 Save Item Info
               </Button>
             </div>
-          </form>
+          </div>
           {isNewItem ? null : (
             <ProductStockInfo item_id={inventoryItem?.data.item_id as number} />
           )}
+
+          <BackBtn />
         </div>
       </HandleSuspence>
     </div>

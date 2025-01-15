@@ -443,7 +443,7 @@ CREATE TABLE inventory_item_info (
     FOREIGN KEY (current_vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL,
     cost_per_unit_current DECIMAL(10, 2),
     cost_per_unit_previous DECIMAL(10, 2),
-    current_purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    current_purchase_date DATE DEFAULT CURRENT_DATE,
 
     institute VARCHAR(100),
 
@@ -646,38 +646,44 @@ ADD passport_num VARCHAR(255);
 
 
 -- 14 Jan 2025 New Dbs
-CREATE TABLE new_inventory_list (
-    inventory_item_id SERIAL PRIMARY KEY,
-    item_name VARCHAR(255),
-    category INTEGER,
-    sub_category INTEGER,
-    description TEXT,
-    where_to_use VARCHAR(255),
-    used_by VARCHAR(255),
+-- CREATE TABLE new_inventory_list (
+--     inventory_item_id SERIAL PRIMARY KEY,
+--     item_name VARCHAR(255),
+--     category INTEGER,
+--     sub_category INTEGER,
+--     description TEXT,
+--     where_to_use VARCHAR(255),
+--     used_by VARCHAR(255),
 
-    minimum_quantity INTEGER,
-    item_consumed INTEGER,
-    closing_stock INTEGER,
+--     minimum_quantity INTEGER,
+--     item_consumed INTEGER,
+--     closing_stock INTEGER,
 
-    item_status INTEGER,
+--     item_status INTEGER,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
 
-CREATE TABLE new_inventory_stock (
-    inventory_item_id INTEGER,
-    FOREIGN KEY (inventory_item_id) REFERENCES new_inventory_list(inventory_item_id) ON DELETE SET NULL,
+-- CREATE TABLE new_inventory_stock (
+--     inventory_item_id INTEGER,
+--     FOREIGN KEY (inventory_item_id) REFERENCES new_inventory_list(inventory_item_id) ON DELETE SET NULL,
 
-    opening_stock INTEGER,
+--     opening_stock INTEGER,
 
-    vendor_id INTEGER,
-    FOREIGN KEY (vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL,
+--     vendor_id INTEGER,
+--     FOREIGN KEY (vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL,
 
-    purchsed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    remark TEXT,
+--     purchsed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     remark TEXT,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+ALTER TABLE inventory_item_info
+ALTER COLUMN current_purchase_date TYPE DATE;
+
+ALTER TABLE inventory_item_info
+ALTER COLUMN current_purchase_date SET DEFAULT CURRENT_DATE;
 
 
 -- fro clering all table of db

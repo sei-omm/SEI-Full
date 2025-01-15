@@ -1,4 +1,7 @@
 // export const BASE_API = "https://sei-api-zeta.vercel.app/api/v1";
+
+import { TEmployeeDocs } from "@/types";
+
 // export const BASE_API = "http://localhost:8080/api/v1";
 export const BASE_API = process.env.NEXT_PUBLIC_BASE_API;
 
@@ -58,7 +61,11 @@ export const appraisalOptions = [
   { id: "option-12", text: "Capacity to adhere to time-schedule", group: 2 },
   { id: "option-13", text: "Inter personal relations", group: 2 },
   { id: "option-14", text: "Overall bearing and personality", group: 2 },
-  { id: "option-15", text: "Overall Grading on ‘Personal Attributes’", group: 2 },
+  {
+    id: "option-15",
+    text: "Overall Grading on ‘Personal Attributes’",
+    group: 2,
+  },
 
   {
     id: "option-16",
@@ -68,13 +75,51 @@ export const appraisalOptions = [
   { id: "option-17", text: "Strategic Planning ability", group: 3 },
   { id: "option-18", text: "Decision making ability", group: 3 },
   { id: "option-19", text: "Coordination ability", group: 3 },
-  { id: "option-20", text: "Ability to motivate and develop subordinates", group: 3 },
+  {
+    id: "option-20",
+    text: "Ability to motivate and develop subordinates",
+    group: 3,
+  },
   { id: "option-21", text: "Initiative", group: 3 },
-  { id: "option-22", text: "Overall Grading on Functional Competency", group: 3 },
+  {
+    id: "option-22",
+    text: "Overall Grading on Functional Competency",
+    group: 3,
+  },
 ];
 
 export const employeeAuthority = [
-  {name : "Employee", score : 0},
-  {name : "Reporting Authority", score : 1},
-  {name : "Review Authority", score : 2}
+  { name: "Employee", score: 0 },
+  { name: "Reporting Authority", score: 1 },
+  { name: "Review Authority", score: 2 },
+];
+
+export const STUDENT_RANKS = ["Master", "Captain", "Other"];
+
+export const OFFICE_STAFF_DOC_INFO : TEmployeeDocs[] = [
+  { doc_id: "Resume", doc_uri: null, doc_name: null },
+  { doc_id: "Pan Card", doc_uri: null, doc_name: null },
+  { doc_id: "Aadhaar Card", doc_uri: null, doc_name: null },
+  { doc_id: "10th Pass Certificate", doc_uri: null, doc_name: null },
+  { doc_id: "12th Pass Certificate", doc_uri: null, doc_name: null },
+  {
+    doc_id: "Choose Graduation Certificate",
+    doc_uri: null,
+    doc_name: null,
+  },
+  { doc_id: "Choose Other Certificate", doc_uri: null, doc_name: null },
+];
+
+export const FACULTY_DOC_INFO : TEmployeeDocs[] = [
+  { doc_id: "Passport", doc_uri: null, doc_name: null },
+  { doc_id: "CDC", doc_uri: null, doc_name: null },
+  { doc_id: "COC", doc_uri: null, doc_name: null },
+  { doc_id: "TOTA/VICT/TSTA", doc_uri: null, doc_name: null },
+  { doc_id: "DC", doc_uri: null, doc_name: null },
+  {
+    doc_id: "Pan Card",
+    doc_uri: null,
+    doc_name: null,
+  },
+  { doc_id: "Aadhaar Card", doc_uri: null, doc_name: null },
 ];

@@ -46,11 +46,12 @@ export default async function page({ searchParams }: IProps) {
               { text: "Faridabad", value: "Faridabad" },
             ]}
             changeSearchParamsOnChange={true}
+            defaultValue={searchParams.institute}
           />
           <Link href={"manage-course/add-course"}>
             <Button className="flex-center gap-x-2">
               <IoIosAdd size={23} />
-              Add New Course
+              Add course
             </Button>
           </Link>
         </div>

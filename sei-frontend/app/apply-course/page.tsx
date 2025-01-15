@@ -3,8 +3,19 @@ import IsAuthenticated from "@/app/components/IsAuthenticated";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
+import { BASE_API } from "../constant";
+import { IResponse, TStudentRegistationForm } from "../type";
+import { getAuthTokenServer } from "../actions/cookies";
 
 export default async function page() {
+  const AUTH_TOKEN_OBJ = await getAuthTokenServer();
+
+  const response = await fetch(`${BASE_API}/student/admission-form`, {
+    headers: { ...AUTH_TOKEN_OBJ },
+  });
+  const result =
+    (await response.json()) as IResponse<TStudentRegistationForm | null>;
+
   return (
     <IsAuthenticated>
       <div className="w-full h-[60vh] relative overflow-hidden">
@@ -30,8 +41,8 @@ export default async function page() {
         </div>
       </div>
 
-      <Suspense fallback = {<h5>Loading...</h5>}>
-        <ApplyCourseForm />
+      <Suspense fallback={<h5>Loading...</h5>}>
+        <ApplyCourseForm form_info={result.data} />
       </Suspense>
     </IsAuthenticated>
   );

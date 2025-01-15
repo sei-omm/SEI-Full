@@ -360,7 +360,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 Employee ID : <span className="font-semibold">SG14IOM</span>
               </p> */}
               <p className="text-xs text-gray-500 font-semibold">
-                Date of Join :{" "}
+                Date Of Joining :{" "}
                 {joinDate
                   ? new Date(joinDate).toLocaleDateString("en-US", {
                       day: "2-digit",
@@ -510,7 +510,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
               <DateInput
                 name="joining_date"
                 onChange={onDateOfJoinChnage}
-                label="Date of Join"
+                label="Date Of Joining"
                 date={getDate(new Date(joinDate || ""))}
               />
               <Input
@@ -686,6 +686,13 @@ export default function EmployeeInfo({ employeeID }: IProps) {
           <div className="p-10 border card-shdow rounded-3xl">
             <h2 className="text-2xl font-semibold pb-6">Documentation</h2>
             <EmployeeDocuments
+              employeeType={
+                employeeID === "add-employee"
+                  ? "Office Staff"
+                  : employeeID === "add-faculty"
+                  ? "Faculty"
+                  : employeeInfo?.employee_type as any
+              }
               employeeDocsInfoState={employeeDocsInfoState}
               employeeId={
                 employeeID === "add-employee" || employeeID === "add-faculty"

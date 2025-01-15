@@ -16,6 +16,7 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
 import Pagination from "../Pagination";
 import { useSearchParams } from "next/navigation";
+import BackBtn from "../BackBtn";
 
 // const tableDatas = {
 //   heads: ["Start Date", "End Date", "Visibility", "Action"],
@@ -198,7 +199,13 @@ export default function CourseBatch({ courseId }: IProps) {
           </table>
         </div>
       </HandleSuspence>
-      <Pagination dataLength={data?.data.length} />
+      <div className="flex items-center justify-between">
+        <div className="pt-5">
+          <BackBtn />
+        </div>
+
+        <Pagination dataLength={data?.data.length} />
+      </div>
     </div>
   );
 }

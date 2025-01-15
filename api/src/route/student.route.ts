@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getStudentInfo,
+  getStudentRegisterFormInfo,
   loginStudent,
   registerStudent,
   resendOtp,
@@ -18,6 +19,7 @@ export const studentRouter = Router();
 
 studentRouter
   .get("/", isAuthenticated, getStudentInfo)
+  .get("/admission-form", isAuthenticated, getStudentRegisterFormInfo)
   .post("/register", registerStudent)
   .post("/resend-otp", resendOtp)
   .post("/login", loginStudent)

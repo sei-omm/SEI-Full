@@ -3,6 +3,7 @@
 import { BASE_API } from "@/app/constant";
 import { getDate } from "@/app/utils/getDate";
 import { useDoMutation } from "@/app/utils/useDoMutation";
+import BackBtn from "@/components/BackBtn";
 import Button from "@/components/Button";
 import DateInput from "@/components/DateInput";
 import DropDown from "@/components/DropDown";
@@ -10,6 +11,8 @@ import HandleDataSuspense from "@/components/HandleDataSuspense";
 import TextArea from "@/components/TextArea";
 import { ISuccess, TPlannedMaintenanceSystem } from "@/types";
 import axios from "axios";
+import { useRouter } from "next/navigation";
+import { useRef } from "react";
 import { useQueries, UseQueryResult } from "react-query";
 
 interface IProps {
@@ -20,6 +23,9 @@ interface IProps {
 
 export default function PlannedMaintenanceSystemForm({ params }: IProps) {
   const isNewItem = params.id === "add";
+
+  const formRef = useRef<HTMLFormElement>(null);
+  const route = useRouter();
 
   const [itemsForDropDown, singlePlannedMaintenanceSystem] = useQueries<
     [
@@ -52,12 +58,15 @@ export default function PlannedMaintenanceSystemForm({ params }: IProps) {
       method: isNewItem ? "post" : "put",
       formData,
       id: isNewItem ? undefined : parseInt(params.id.toString()),
+      onSuccess() {
+        route.back();
+      },
     });
   }
 
   return (
     <div>
-      <form action={handleSubmit}>
+      <form ref={formRef} action={handleSubmit}>
         <div className="grid grid-cols-2 py-5 gap-6">
           <HandleDataSuspense
             isLoading={itemsForDropDown.isLoading}
@@ -126,11 +135,20 @@ export default function PlannedMaintenanceSystemForm({ params }: IProps) {
             value={singlePlannedMaintenanceSystem?.data?.data?.remark}
           />
         </div>
-
-        <Button loading={isLoading} disabled={isLoading} type="submit">
+      </form>
+      <div className="flex items-center gap-5">
+        <BackBtn />
+        <Button
+          onClick={() => {
+            formRef.current?.requestSubmit();
+          }}
+          loading={isLoading}
+          disabled={isLoading}
+          type="submit"
+        >
           Save Information
         </Button>
-      </form>
+      </div>
     </div>
   );
 }

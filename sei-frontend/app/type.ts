@@ -118,3 +118,18 @@ export type TMyLibrarySearchParams = {
   course_id?: string;
   library_file_type?: string;
 };
+
+export type TStudentRegistationForm = {
+  rank: string;
+  nationality: string;
+  permanent_address: string;
+  present_address: string;
+  blood_group: string;
+  allergic_or_medication: string;
+  next_of_kin_name: string;
+  relation_to_sel: string;
+  emergency_number: string;
+  number_of_the_cert: string;
+  issued_by_institute: string;
+  issued_by_institute_indos_number: string;
+};

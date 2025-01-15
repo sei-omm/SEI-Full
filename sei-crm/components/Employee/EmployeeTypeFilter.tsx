@@ -30,7 +30,7 @@ export default function EmployeeTypeFilter() {
           { text: "Faculty", value: "Faculty" },
           { text: "Office Staff", value: "Office Staff" },
         ]}
-        name=""
+        defaultValue={searchParams.get("employee_type") || "-1"}
       />
       <DropDown
         onChange={(item) => handleDropDownChange("institute", item.value)}
@@ -40,7 +40,7 @@ export default function EmployeeTypeFilter() {
           { text: "Kolkata", value: "Kolkata" },
           { text: "Faridabad", value: "Faridabad" },
         ]}
-        name=""
+        defaultValue={searchParams.get("institute") || "-1"}
       />
     </form>
   );

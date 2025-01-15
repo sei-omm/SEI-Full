@@ -49,6 +49,8 @@ export default function EditIndosNumberDialog() {
       <form className="space-y-3 *:w-full" onSubmit={handleFormSubmit}>
         <div></div>
         <Input
+          pattern="[0-9]{2}[A-Z]{2}[0-9]{4}"
+          title="InDos Number should be in the format: 11EL1234 (2 digits, 2 uppercase letters, 4 digits)"
           name="indos_number"
           required
           type="text"

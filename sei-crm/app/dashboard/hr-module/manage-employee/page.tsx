@@ -33,11 +33,13 @@ const data = [
 interface IProps {
   searchParams: {
     type?: string;
+    institute?:string
   };
 }
 
 export default async function page({ searchParams }: IProps) {
-  const response = await fetch(`${BASE_API}/hr/dashboard`, {
+  const urlSearchParams = new URLSearchParams(searchParams);
+  const response = await fetch(`${BASE_API}/hr/dashboard?${urlSearchParams.toString()}`, {
     cache: "no-store",
   });
   const result = (await response.json()) as ISuccess<{

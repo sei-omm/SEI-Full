@@ -8,7 +8,7 @@ import DateInput from "@/components/DateInput";
 import PaymentInfoLayout from "@/components/Admission/PaymentInfoLayout";
 import { useQuery } from "react-query";
 import axios from "axios";
-import { BASE_API } from "@/app/constant";
+import { BASE_API, STUDENT_RANKS } from "@/app/constant";
 import { ISuccess, TOneAdmission } from "@/types";
 import HandleSuspence from "@/components/HandleSuspence";
 import { getDate } from "@/app/utils/getDate";
@@ -107,14 +107,25 @@ export default function ManageStudentAdmissionForm() {
                 type="number"
                 defaultValue={data?.data.course_and_student_info.mobile_number}
               />
-              <Input
+              {/* <Input
                 name="rank"
                 label="Rank/Designation"
                 placeholder="Rank/Designation"
                 defaultValue={data?.data.course_and_student_info.rank}
+              /> */}
+              <DropDown
+                name="rank"
+                label="Rank/Designation"
+                options={STUDENT_RANKS.map((rank) => ({
+                  text: rank,
+                  value: rank,
+                }))}
+                defaultValue={data?.data.course_and_student_info.rank}
               />
 
               <Input
+                pattern="[0-9]{2}[A-Z]{2}[0-9]{4}"
+                title="InDos Number should be in the format: 11EL1234 (2 digits, 2 uppercase letters, 4 digits)"
                 name="indos_number"
                 label="InDoS No"
                 placeholder="15EL0118"
@@ -164,6 +175,8 @@ export default function ManageStudentAdmissionForm() {
                 )}
               />
               <Input
+                pattern="[A-Z][0-9]+"
+                title="CDC Number must be alphanumeric (e.g., T12345)."
                 placeholder="CDC Number"
                 label="CDC Number"
                 name="cdc_num"
@@ -191,10 +204,21 @@ export default function ManageStudentAdmissionForm() {
                 placeholder="A+"
                 defaultValue={data?.data.course_and_student_info.blood_group}
               />
-              <Input
+              {/* <Input
                 name="allergic_or_medication"
                 label="Whether allergic to any medication (Y/N)"
                 placeholder="Y / N"
+                defaultValue={
+                  data?.data.course_and_student_info.allergic_or_medication
+                }
+              /> */}
+              <DropDown
+                name="allergic_or_medication"
+                label="Whether allergic to any medication (Y/N)"
+                options={[
+                  { text: "Yes", value: "Yes" },
+                  { text: "No", value: "No" },
+                ]}
                 defaultValue={
                   data?.data.course_and_student_info.allergic_or_medication
                 }

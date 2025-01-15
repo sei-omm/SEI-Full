@@ -66,25 +66,101 @@ export const getHrDashboardInfo = asyncErrorHandler(
     //   })
     // );
 
-    const sql = `
-      SELECT 
-          COUNT(e.id) AS total_employees,
-          COUNT(CASE WHEN e.is_active = 'true' THEN 1 END) AS active_employees,
-          COUNT(CASE WHEN a.status = 'Absent' THEN 1 END) AS employees_on_leave,
-          COUNT(CASE WHEN lr.leave_status = 'pending' THEN 1 END) AS pending_leave_request
-      FROM 
-          employee e
-      LEFT JOIN 
-          attendance a 
-          ON e.id = a.employee_id
-          AND a.date = $1
-      LEFT JOIN
-          leave lr ON e.id = lr.employee_id;
-    `;
+    // const sql = `
+    //   SELECT
+    //       COUNT(e.id) AS total_employees,
+    //       COUNT(CASE WHEN e.is_active = 'true' THEN 1 END) AS active_employees,
+    //       COUNT(CASE WHEN a.status = 'Absent' THEN 1 END) AS employees_on_leave,
+    //       COUNT(CASE WHEN lr.leave_status = 'pending' THEN 1 END) AS pending_leave_request
+    //   FROM
+    //       employee e
+    //   LEFT JOIN
+    //       attendance a
+    //       ON e.id = a.employee_id
+    //       AND a.date = $1
+    //   LEFT JOIN
+    //       leave lr ON e.id = lr.employee_id
+    //   GROUP BY e.id;
+    // `;
 
-    const { rows } = await pool.query(sql, [getDate(date)]);
+    // const { rows } = await pool.query(sql, [getDate(date)]);
 
-    res.status(200).json(new ApiResponse(200, "HR Dashborad Info", rows[0]));
+    const institute = req.query.institute || null;
+
+    const [response1, response2, response3] = await transaction([
+      {
+        sql: `
+          SELECT 
+            COUNT(e.id) as total_employees,
+            COUNT(CASE WHEN e.is_active = 'true' THEN 0 END) AS active_employees
+          FROM employee e
+
+          ${institute ? `WHERE institute = $1` : ""}
+            `,
+        values: institute ? [institute] : [],
+      },
+      {
+        sql: `
+          SELECT
+           COUNT(CASE WHEN lr.leave_status = 'pending' THEN 0 END) as pending_leave_request
+          FROM leave lr
+
+          ${
+            institute
+              ? `
+
+            LEFT JOIN employee e
+            ON e.id = lr.employee_id
+
+            WHERE e.institute = $1
+            
+          `
+              : ""
+          }
+        `,
+        values: institute ? [institute] : [],
+      },
+      {
+        sql: `
+          SELECT
+           COUNT(CASE WHEN a.status = 'Absent' THEN 0 END) AS employees_on_leave
+          FROM attendance a
+
+          ${
+            institute ? `
+            LEFT JOIN employee e
+            ON e.id = a.employee_id
+          `
+              : ""
+          }
+
+          WHERE date = $1 ${institute ? "AND e.institute = $2" : ""}
+        `,
+        values: institute ? [getDate(date), institute] : [getDate(date)],
+      },
+    ]);
+
+    //   const sql = `
+    //     SELECT
+    //       COUNT(e.id) as total_employees,
+    //       COUNT(CASE WHEN e.is_active = 'true' THEN 1 END) AS active_employees,
+    //       COUNT(CASE WHEN lr.leave_status = 'pending' THEN 1 END) AS pending_leave_request
+    //     FROM employee e
+
+    //     LEFT JOIN leave lr
+    //       ON e.id = lr.employee_id
+    // `;
+    // const { rows } = await pool.query(sql)
+
+    const finalResult = {
+      ...response1.rows[0],
+      ...response2.rows[0],
+      ...response3.rows[0],
+    };
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, "HR Dashborad Info", finalResult));
   }
 );
 
