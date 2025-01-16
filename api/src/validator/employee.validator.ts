@@ -18,7 +18,11 @@ export const employeeSchema = Joi.object({
     .pattern(/@/)
     .optional()
     .label("Email Address"),
-  living_address: Joi.string().optional().label("Living Address"),
+  living_address: Joi.string().optional().allow("").label("Living Address"),
+  permanent_address: Joi.string()
+    .optional()
+    .allow("")
+    .label("Permanent Address"),
   dob: Joi.date().optional().label("Date of Birth"),
   gender: Joi.string()
     .valid("Male", "Female", "Other")
@@ -76,6 +80,7 @@ export const employeeSchema = Joi.object({
     .label("Professional Tax"),
   esic: Joi.number().precision(2).optional().label("ESIC Tax"),
   income_tax: Joi.number().precision(2).optional().label("Income Tax"),
+  gratuity: Joi.number().precision(2).optional().label("Gratuity"),
   is_active: Joi.boolean().default(true).label("Is Active"),
 
   login_email: Joi.string().email().max(255).required().messages({
@@ -105,6 +110,15 @@ export const employeeSchema = Joi.object({
   institute: Joi.string().optional().allow(""),
   designation: Joi.string().optional().allow(""),
   authority: Joi.number().optional(),
+
+  emergency_contact_number: Joi.string()
+    .required()
+    .label("Emergency Contact Number"),
+  contact_person_name: Joi.string().required().label("Contact Person Name"),
+  contact_person_relation: Joi.string()
+    .optional()
+    .allow("")
+    .label("Contact Person Relation"),
 });
 
 export const employeeLoginValidator = Joi.object({

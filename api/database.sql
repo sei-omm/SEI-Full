@@ -686,6 +686,19 @@ ALTER TABLE inventory_item_info
 ALTER COLUMN current_purchase_date SET DEFAULT CURRENT_DATE;
 
 
+-- New DB 16 Jan 2025
+ALTER TABLE students
+ADD COLUMN coc_number VARCHAR(255),
+ADD COLUMN cert_of_completency TEXT;
+
+ALTER TABLE employee
+ADD COLUMN gratuity DECIMAL(10, 2) DEFAULT 0.0,
+ADD COLUMN permanent_address TEXT,
+ADD emergency_contact_number VARCHAR(255),
+ADD contact_person_name VARCHAR(255),
+ADD contact_person_relation VARCHAR(255);
+
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

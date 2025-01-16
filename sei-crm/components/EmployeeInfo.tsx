@@ -10,7 +10,7 @@ import Image from "next/image";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { useQueries, UseQueryResult } from "react-query";
 import axios from "axios";
-import { BASE_API, employeeAuthority } from "@/app/constant";
+import { BASE_API } from "@/app/constant";
 import {
   EmployeeType,
   IDepartment,
@@ -35,6 +35,7 @@ import Spinner from "./Spinner";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 import { useRouter } from "next/navigation";
 import { IoMdArrowBack } from "react-icons/io";
+import EAuthorityInfo from "./Employee/EAuthorityInfo";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -89,9 +90,6 @@ export default function EmployeeInfo({ employeeID }: IProps) {
   const [stateProfileUpload, setStateProfileUpload] = useState<
     "done" | "uploading"
   >("done");
-  const [currentDepartment, setCurrentDepartment] = useState<
-    number | undefined
-  >(undefined);
 
   const employeeDocsInfoState = useRef<TEmployeeDocs[]>([]);
 
@@ -125,6 +123,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
       "Professional Tax",
       "ESIC",
       "Income Tax",
+      "Gratuity",
     ],
     datasets: [
       {
@@ -138,6 +137,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
           "#FFE8E5",
           "#8EC448",
           "#000000",
+          "#87CEEB",
         ],
         hoverOffset: 7,
       },
@@ -221,7 +221,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
       }
       setAge(employeeInfo?.dob ? calculateAge(employeeInfo?.dob) : "");
       employeeInstitute.current = employeeInfo?.institute || null;
-      setCurrentDepartment(employeeInfo?.department_id);
+      // setCurrentDepartment(employeeInfo?.department_id);
     }
   }, [fetchResults[1].isLoading]);
 
@@ -393,6 +393,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
             </h2>
             <div className="grid grid-cols-2 gap-x-3 gap-y-4">
               <Input
+                className="uppercase"
                 defaultValue={employeeInfo?.name || ""}
                 required
                 onChange={onNameTextBoxChange}
@@ -420,7 +421,14 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 defaultValue={employeeInfo?.living_address || ""}
                 required
                 name="living_address"
-                label="Living Address"
+                label="Present Address"
+                placeholder="3/3, Swami Vivekananda Rd, Vivekananda Pally, Bapuji Colony, Nagerbazar, Dum Dum, Kolkata, West Bengal 700074"
+              />
+              <Input
+                defaultValue={employeeInfo?.permanent_address || ""}
+                required
+                name="permanent_address"
+                label="Permanent Address"
                 placeholder="3/3, Swami Vivekananda Rd, Vivekananda Pally, Bapuji Colony, Nagerbazar, Dum Dum, Kolkata, West Bengal 700074"
               />
               <DateInput
@@ -454,6 +462,33 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 name="marital_status"
                 defaultValue={employeeInfo?.marital_status}
               />
+
+              <Input
+                required
+                pattern="[0-9]{10}"
+                title="Please enter a valid 10-digit mobile number"
+                name="emergency_contact_number"
+                label="Emergency Contact Number *"
+                placeholder="8457845878"
+                defaultValue={employeeInfo?.emergency_contact_number}
+              />
+
+              <Input
+                required
+                title="Please enter a valid 10-digit mobile number"
+                name="contact_person_name"
+                label="Contact Person Name *"
+                placeholder="Jagannath Gupta"
+                defaultValue={employeeInfo?.contact_person_name}
+              />
+
+              <Input
+                title="Please enter a valid 10-digit mobile number"
+                name="contact_person_relation"
+                label="Contact Person Relation"
+                placeholder="Father"
+                defaultValue={employeeInfo?.contact_person_relation}
+              />
             </div>
           </div>
 
@@ -463,42 +498,9 @@ export default function EmployeeInfo({ employeeID }: IProps) {
               Official Informations
             </h2>
             <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-              <DropDown
-                key={"department_id"}
-                label="Select Department"
-                options={
-                  departements?.map((item) => ({
-                    text: item.name,
-                    value: item.id,
-                  })) || []
-                }
-                onChange={(item) => {
-                  setCurrentDepartment(item.value);
-                }}
-                name="department_id"
-                defaultValue={employeeInfo?.department_id}
-              />
-
-              <DropDown
-                name="designation"
-                key="Designation"
-                label={"Designation " + employeeInfo?.designation}
-                options={
-                  departements
-                    ?.find((item) => item.id === currentDepartment)
-                    ?.designation.split(",")
-                    .map((deg) => ({ text: deg, value: deg })) || []
-                }
-                defaultValue={employeeInfo?.designation}
-              />
-              <DropDown
-                name="authority"
-                label="Authority"
-                options={employeeAuthority.map((item) => ({
-                  text: item.name,
-                  value: item.score,
-                }))}
-                defaultValue={employeeInfo?.authority}
+              <EAuthorityInfo
+                departements={departements}
+                employeeInfo={employeeInfo}
               />
               <Input
                 defaultValue={employeeInfo?.job_title || ""}
@@ -541,21 +543,25 @@ export default function EmployeeInfo({ employeeID }: IProps) {
               employeeInfo?.employee_type === "Faculty" ? (
                 <>
                   <Input
-                    type="number"
+                    pattern="[A-Z][0-9]+"
+                    title="FIN Number must be alphanumeric (e.g., T12345)."
+                    type="text"
                     name="fin_number"
                     label="FIN Number"
                     placeholder="154578"
                     defaultValue={employeeInfo?.fin_number}
                   />
                   <Input
-                    type="number"
+                    pattern="[0-9]{2}[A-Z]{2}[0-9]{4}"
+                    title="InDos Number should be in the format: 11EL1234 (2 digits, 2 uppercase letters, 4 digits)"
+                    type="text"
                     name="indos_number"
                     label="Indos Number"
-                    placeholder="878458"
+                    placeholder="Type Indos Number"
                     defaultValue={employeeInfo?.indos_number}
                   />
                   <Input
-                    type="number"
+                    type="text"
                     name="cdc_number"
                     label="CDC Number"
                     placeholder="4541"
@@ -691,7 +697,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   ? "Office Staff"
                   : employeeID === "add-faculty"
                   ? "Faculty"
-                  : employeeInfo?.employee_type as any
+                  : (employeeInfo?.employee_type as any)
               }
               employeeDocsInfoState={employeeDocsInfoState}
               employeeId={
@@ -780,6 +786,17 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   onChange={(e) => handleSalaryInput(e, 6)}
                   label="Income Tax"
                   placeholder="19,000"
+                />
+
+                <Input
+                  moneyInput={true}
+                  defaultValue={employeeInfo?.gratuity || ""}
+                  required
+                  type="number"
+                  name="gratuity"
+                  onChange={(e) => handleSalaryInput(e, 7)}
+                  label="Gratuity"
+                  placeholder="200"
                 />
 
                 <h2 className="text-sm">

@@ -48,7 +48,10 @@ export default function SRegister() {
   };
 
   return (
-    <DialogBody className="min-w-[40rem] sm:min-w-full" preventToCloseOnSideClick>
+    <DialogBody
+      className="min-w-[40rem] sm:min-w-full"
+      preventToCloseOnSideClick
+    >
       <div className="space-y-1">
         <h2 className="font-bold text-gray-700 text-2xl">
           Student <span className="text-[#e9b858]">Registration</span>
@@ -86,6 +89,8 @@ export default function SRegister() {
           placeholder="Mobile number"
         />
         <Input
+          pattern="[0-9]{2}[A-Z]{2}[0-9]{4}"
+          title="InDos Number should be in the format: 11EL1234 (2 digits, 2 uppercase letters, 4 digits)"
           label="Indos Number"
           name="indos_number"
           type="text"

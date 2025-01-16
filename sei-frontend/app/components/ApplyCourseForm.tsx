@@ -143,7 +143,9 @@ export default function ApplyCourseForm({ form_info }: IProps) {
                   defaultValue={form_info?.rank}
                 >
                   {STUDENT_RANKS.map((rank) => (
-                    <option key={rank} value={rank}>{rank}</option>
+                    <option key={rank} value={rank}>
+                      {rank}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -262,6 +264,8 @@ export default function ApplyCourseForm({ form_info }: IProps) {
               defaultValue={form_info?.issued_by_institute}
             />
             <Input
+              pattern="[0-9]{2}[A-Z]{2}[0-9]{4}"
+              title="InDos Number should be in the format: 11EL1234 (2 digits, 2 uppercase letters, 4 digits)"
               name="issued_by_institute_indos_number"
               label="INDoS no (Institute) :"
               placeholder="INDoS no (Institute) :"

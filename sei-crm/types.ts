@@ -78,6 +78,7 @@ export interface IEmployee {
   contact_number: string;
   email_address: string;
   living_address: string;
+  permanent_address : string | null;
   dob: string; // ISO date string
   gender: GenderType;
   marital_status: MaritalStatus;
@@ -100,6 +101,7 @@ export interface IEmployee {
   professional_tax: string;
   esic: string;
   income_tax: string;
+  gratuity : string;
   is_active: boolean;
   login_email: string;
   login_password: string;
@@ -123,6 +125,10 @@ export interface IEmployee {
 
   designation: string | null;
   authority: string | null;
+
+  emergency_contact_number : string | null;
+  contact_person_name : string | null;
+  contact_person_relation : string | null
 }
 
 export type ILeaveStatus = "pending" | "success" | "decline";
@@ -264,6 +270,8 @@ export type TOneAdmission = {
     cdc_num: string | null;
     passport_num: string | null;
     enrolled_courses_info: TEnrollCourses[];
+    coc_number : string | null;
+    cert_of_completency : string | null
   };
   student_payment_info: TPaymentInfo;
 };

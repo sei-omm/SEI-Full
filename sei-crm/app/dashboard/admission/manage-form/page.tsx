@@ -175,8 +175,6 @@ export default function ManageStudentAdmissionForm() {
                 )}
               />
               <Input
-                pattern="[A-Z][0-9]+"
-                title="CDC Number must be alphanumeric (e.g., T12345)."
                 placeholder="CDC Number"
                 label="CDC Number"
                 name="cdc_num"
@@ -187,6 +185,20 @@ export default function ManageStudentAdmissionForm() {
                 label="Passport Number"
                 name="passport_num"
                 defaultValue={data?.data.course_and_student_info.passport_num}
+              />
+              <Input
+                placeholder="COC No"
+                label="COC Number"
+                name="coc_number"
+                defaultValue={data?.data.course_and_student_info.coc_number}
+              />
+              <Input
+                name="cert_of_completency"
+                label="Cert. Of Completency / Proficiency-Grade"
+                placeholder="Type Here.."
+                defaultValue={
+                  data?.data.course_and_student_info.cert_of_completency
+                }
               />
             </div>
           </div>

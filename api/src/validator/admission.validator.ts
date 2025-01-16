@@ -24,6 +24,8 @@ export const saveAdmissionInfoValidator = studentRegisterValidator
     form_id: Joi.string().required(),
     cdc_num: Joi.string().optional().allow(""),
     passport_num: Joi.string().optional().allow(""),
+    coc_number: Joi.string().optional().allow(""),
+    cert_of_completency: Joi.string().optional().allow(""),
   });
 
 export const updateEnrollCourseStatusValidator = Joi.object({

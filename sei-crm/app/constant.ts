@@ -96,7 +96,7 @@ export const employeeAuthority = [
 
 export const STUDENT_RANKS = ["Master", "Captain", "Other"];
 
-export const OFFICE_STAFF_DOC_INFO : TEmployeeDocs[] = [
+export const OFFICE_STAFF_DOC_INFO: TEmployeeDocs[] = [
   { doc_id: "Resume", doc_uri: null, doc_name: null },
   { doc_id: "Pan Card", doc_uri: null, doc_name: null },
   { doc_id: "Aadhaar Card", doc_uri: null, doc_name: null },
@@ -108,9 +108,11 @@ export const OFFICE_STAFF_DOC_INFO : TEmployeeDocs[] = [
     doc_name: null,
   },
   { doc_id: "Choose Other Certificate", doc_uri: null, doc_name: null },
+  { doc_id: "Contracts", doc_uri: null, doc_name: null },
+  { doc_id: "Appointment Letter", doc_uri: null, doc_name: null },
 ];
 
-export const FACULTY_DOC_INFO : TEmployeeDocs[] = [
+export const FACULTY_DOC_INFO: TEmployeeDocs[] = [
   { doc_id: "Passport", doc_uri: null, doc_name: null },
   { doc_id: "CDC", doc_uri: null, doc_name: null },
   { doc_id: "COC", doc_uri: null, doc_name: null },
@@ -122,4 +124,6 @@ export const FACULTY_DOC_INFO : TEmployeeDocs[] = [
     doc_name: null,
   },
   { doc_id: "Aadhaar Card", doc_uri: null, doc_name: null },
+  { doc_id: "Contracts", doc_uri: null, doc_name: null },
+  { doc_id: "Appointment Letter", doc_uri: null, doc_name: null },
 ];

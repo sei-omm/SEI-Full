@@ -55,9 +55,6 @@ export default function DropDown({
     } else {
       setSelectedItem(options[0]);
     }
-    // setSelectedItem(
-    //   options.find((item) => item.value == defaultValue) || options[0]
-    // );
   }, [defaultValue]);
 
   useEffect(() => {
