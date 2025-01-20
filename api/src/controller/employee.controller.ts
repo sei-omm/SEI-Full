@@ -5,6 +5,7 @@ import { pool } from "../config/db";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import {
+  assignAssetsValidator,
   assignFacultyCourseSubjectValidator,
   createAppraisalValidator,
   employeeLoginValidator,
@@ -27,10 +28,8 @@ import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import { transaction } from "../utils/transaction";
 import { tryCatch } from "../utils/tryCatch";
 import { filterToSql } from "../utils/filterToSql";
-import { isAuthenticated } from "../middleware/isAuthenticated";
 import { parseNullOrUndefined } from "../utils/parseNullOrUndefined";
 import { parsePagination } from "../utils/parsePagination";
-import { FLOW_OF_APPRAISAL } from "../constant";
 
 const table_name = "employee";
 
@@ -127,7 +126,8 @@ export const getHrDashboardInfo = asyncErrorHandler(
           FROM attendance a
 
           ${
-            institute ? `
+            institute
+              ? `
             LEFT JOIN employee e
             ON e.id = a.employee_id
           `
@@ -219,7 +219,8 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
             e.*,
             '********' AS login_password,                             
             d.name AS department_name, 
-            COALESCE(a.status, 'Pending') AS attendance_status
+            COALESCE(a.status, 'Pending') AS attendance_status,
+            COALESCE(JSON_AGG(DISTINCT aae.*) FILTER (WHERE aae IS NOT NULL), '[]') AS assigned_assets
         FROM 
             employee e
         LEFT JOIN 
@@ -229,8 +230,17 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
         LEFT JOIN 
             department d 
             ON e.department_id = d.id
+
+        LEFT JOIN assign_assets_employee AS aae
+        ON aae.to_employee_id = e.id
+
+        LEFT JOIN faculty_with_course_subject AS fwcs
+        ON fwcs.faculty_id = e.id
+
         WHERE 
             e.id = $2
+
+        GROUP BY e.id, d.name, a.status
         ORDER BY 
             e.name;`;
 
@@ -658,33 +668,6 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
   const { error: tryCatchErr } = await tryCatch(async () => {
     await client.query("BEGIN");
 
-    // const { rows } = await client.query(
-    //   `
-    //     SELECT
-    //       e.id,
-    //       e.department_id,
-    //       e.designation,
-    //       e.authority
-    //     FROM employee AS e
-
-    //     WHERE e.id = $1
-    //   `,
-    //   [value.employee_id]
-    // );
-
-    // const thisEmployeeHightAuthority =
-    //   FLOW_OF_APPRAISAL[FLOW_OF_APPRAISAL.indexOf(rows[0].authority) + 1];
-    // const { rows: highAuthEmployeeInfo } = await client.query(
-    //   `
-    //   SELECT
-    //     e.id
-    //   FROM employee AS e
-    //   WHERE e.department_id = $1 AND e.authority = $2
-
-    //   `,
-    //   [rows[0].department_id, thisEmployeeHightAuthority]
-    // );
-
     const { rows: employeeInfo } = await pool.query(
       `
       SELECT 
@@ -756,7 +739,7 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
       SELECT 
         a.appraisal_id,
         a.created_at,
-        JSON_AGG(JSON_OBJECT('name' : e.name, 'status' : aae.appraisal_status)) as sended_to
+        JSON_AGG(JSON_OBJECT('name' : e.name, 'status' : aae.appraisal_status) ORDER BY aae.item_id ASC) as sended_to
       FROM appraisal AS a
 
       LEFT JOIN appraisal_and_employee AS aae
@@ -777,28 +760,65 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, "Your Appraisals", rows));
   }
 
+  // const { rows : req1 } = await pool.query(
+  //   `SELECT appraisal_id FROM appraisal_and_employee WHERE to_employee_id = $1`,
+  //   [value.employee_id]
+  // );
+
+  // const appraisalID = req1[0].appraisal_id;
+
+  // const {} = await pool.query(
+  //   `
+  //     SELECT
+  //       aae.*
+  //     FROM appraisal_and_employee aae
+  //     WHERE aae.appraisal_id = $1
+  //   `,
+  //   [appraisalID]
+  // )
+
   const { rows } = await pool.query(
     `
-    SELECT
+     SELECT
       a.appraisal_id,
       a.created_at,
-      JSON_AGG(JSON_OBJECT('name' : e.name, 'status' : aae.appraisal_status)) as sended_to
-    FROM appraisal_and_employee AS aae
+      a.employee_id AS appraisal_of_employee_id,
+      e.name AS appraisal_of
+     FROM appraisal_and_employee aae
 
-    LEFT JOIN appraisal AS a
-    ON aae.appraisal_id = a.appraisal_id
+     LEFT JOIN appraisal AS a
+     ON a.appraisal_id = aae.appraisal_id
 
-    LEFT JOIN employee AS e
-    ON aae.from_employee_id = e.id
+     LEFT JOIN employee AS e
+     ON e.id = a.employee_id
 
-    WHERE aae.to_employee_id = $1
-
-    GROUP BY a.appraisal_id
-
-    ORDER BY a.appraisal_id DESC
+     WHERE aae.to_employee_id = $1
     `,
     [value.employee_id]
   );
+
+  // const { rows } = await pool.query(
+  //   `
+  //   SELECT
+  //     a.appraisal_id,
+  //     a.created_at,
+  //     JSON_AGG(JSON_OBJECT('name' : e.name, 'status' : aae.appraisal_status)) as sended_to
+  //   FROM appraisal_and_employee AS aae
+
+  //   LEFT JOIN appraisal AS a
+  //   ON aae.appraisal_id = a.appraisal_id
+
+  //   LEFT JOIN employee AS e
+  //   ON aae.from_employee_id = e.id
+
+  //   WHERE aae.to_employee_id = $1
+
+  //   GROUP BY a.appraisal_id
+
+  //   ORDER BY a.appraisal_id DESC
+  //   `,
+  //   [value.employee_id]
+  // );
 
   res.status(200).json(new ApiResponse(200, "Other Appraisals", rows));
 });
@@ -807,11 +827,12 @@ export const getSingleAppraisal = asyncErrorHandler(async (req, res) => {
   const { error, value } = getSingleAppraisalValidator.validate(req.params);
   if (error) if (error) throw new ErrorHandler(400, error.message);
 
-  const { rows } = await pool.query(
-    `
+  const [singleAppraisalInfo, appraisalOfInfo] = await transaction([
+    {
+      sql: `
       SELECT 
         a.*,
-        JSON_AGG(JSON_OBJECT('name' : e.name, 'remark' : aae.appraisal_remark, 'status' : aae.appraisal_status)) as sended_to
+        JSON_AGG(JSON_OBJECT('employee_id' : e.id, 'name' : e.name, 'remark' : aae.appraisal_remark, 'status' : aae.appraisal_status)) as sended_to
       FROM appraisal AS a
 
       LEFT JOIN appraisal_and_employee AS aae
@@ -819,17 +840,39 @@ export const getSingleAppraisal = asyncErrorHandler(async (req, res) => {
 
       LEFT JOIN employee AS e
       ON aae.to_employee_id = e.id
-
+      
       WHERE a.appraisal_id = $1
 
       GROUP BY a.appraisal_id
-    `,
-    [value.appraisal_id]
-  );
+      `,
+      values: [value.appraisal_id],
+    },
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "Single Appraisal Info", rows[0]));
+    {
+      sql: `
+
+        SELECT
+          e.name,
+          e.profile_image,
+          e.dob,
+          e.joining_date
+        FROM appraisal AS a
+
+        LEFT JOIN employee AS e
+        ON a.employee_id = e.id
+
+        WHERE a.appraisal_id = $1
+      `,
+      values: [value.appraisal_id],
+    },
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(200, "Single Appraisal Info", {
+      appraisal_info: singleAppraisalInfo.rows[0],
+      appraisal_of_info: appraisalOfInfo.rows[0],
+    })
+  );
 });
 
 export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
@@ -878,20 +921,22 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
       [value.employee_id]
     );
 
-    await client.query(
-      `
-      INSERT INTO appraisal_and_employee 
-        (appraisal_id, from_employee_id, to_employee_id) 
-      VALUES 
-        ($1, $2, $3)
-      ON CONFLICT(from_employee_id, to_employee_id) DO NOTHING;
-      `,
-      [
-        value.appraisal_id,
-        value.employee_id,
-        employeeInfo[0].higher_authority_employee_id,
-      ]
-    );
+    if (employeeInfo[0].higher_authority_employee_id !== null) {
+      await client.query(
+        `
+        INSERT INTO appraisal_and_employee 
+          (appraisal_id, from_employee_id, to_employee_id) 
+        VALUES 
+          ($1, $2, $3)
+        ON CONFLICT(from_employee_id, to_employee_id) DO NOTHING;
+        `,
+        [
+          value.appraisal_id,
+          value.employee_id,
+          employeeInfo[0].higher_authority_employee_id,
+        ]
+      );
+    }
 
     await client.query("COMMIT");
     client.release();
@@ -904,4 +949,42 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
   }
 
   res.status(200).json(new ApiResponse(200, "Appraisal Status Has Updated"));
+});
+
+//Assign Assets
+export const assignAssets = asyncErrorHandler(async (req, res) => {
+  const { error, value } = assignAssetsValidator.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await pool.query(
+    `
+    INSERT INTO assign_assets_employee 
+      (to_employee_id, assets_name, issued_by)
+    VALUES
+      ${sqlPlaceholderCreator(3, value.length).placeholder}
+    `,
+
+    value.flatMap((item) => [
+      item.employee_id,
+      item.assets_name,
+      item.issued_by,
+    ])
+  );
+
+  res.status(201).json(new ApiResponse(201, "Assets Successfully Assigned"));
+});
+
+export const deleteAssignAssets = asyncErrorHandler(async (req, res) => {
+  await pool.query("DELETE FROM assign_assets_employee WHERE assets_id = $1", [
+    req.params.assets_id,
+  ]);
+  res.status(200).json(new ApiResponse(200, "Assigned Asset Deleted"));
+});
+
+export const getAssignedAssets = asyncErrorHandler(async (req, res) => {
+  const { rows } = await pool.query(
+    "SELECT * FROM assign_assets_employee WHERE to_employee_id = $1",
+    [req.params.employee_id]
+  );
+  res.status(200).json(new ApiResponse(200, "", rows));
 });

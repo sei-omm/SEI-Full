@@ -90,7 +90,7 @@ export default function Admission() {
 
   return (
     <>
-      <ManageAdmissionFilter />
+      <ManageAdmissionFilter withMoreFilter = {true}/>
       <HandleSuspence
         isLoading={isFetching}
         error={error}

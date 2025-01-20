@@ -94,7 +94,7 @@ export const employeeSchema = Joi.object({
     "any.required": "Employee Login Password is required",
   }),
 
-  rank: Joi.string().required().label("Employee Rank"),
+  // rank: Joi.string().required().label("Employee Rank"),
   fin_number: Joi.string().allow("").optional().label("Fin Number"),
   indos_number: Joi.string().allow("").optional().label("Indos Number"),
   cdc_number: Joi.string().allow("").optional().label("CDC Number"),
@@ -119,6 +119,9 @@ export const employeeSchema = Joi.object({
     .optional()
     .allow("")
     .label("Contact Person Relation"),
+
+  payscale_label: Joi.string().required().label("Payscale Label"),
+  payscale_year: Joi.number().required().label("Payscale Year"),
 });
 
 export const employeeLoginValidator = Joi.object({
@@ -176,3 +179,11 @@ export const updateAppraisalValidator = Joi.object({
   state_of_health: Joi.string().required(),
   integrity: Joi.string().required(),
 });
+
+export const assignAssetsValidator = Joi.array().items(
+  Joi.object({
+    employee_id: Joi.number().required(),
+    assets_name: Joi.string().required(),
+    issued_by: Joi.string().required(),
+  })
+);

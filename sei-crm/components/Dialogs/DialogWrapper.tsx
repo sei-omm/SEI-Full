@@ -27,6 +27,7 @@ import AddLeaveRequest from "./AddLeaveRequest";
 import DesignationDialog from "./DesignationDialog";
 import DepartmentAndDesignation from "./DepartmentAndDesignation";
 import AddMultipleVendor from "./AddMultipleVendor";
+import AssignAssetDialog from "./AssignAssetDialog";
 
 type DivType = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -140,6 +141,10 @@ const dialogs = [
     id: "open-multiple-vendor",
     component: <AddMultipleVendor />,
   },
+  {
+    id : "assign-assets",
+    component : <AssignAssetDialog />
+  }
 ];
 
 export default function DialogWrapper(props: DivType) {

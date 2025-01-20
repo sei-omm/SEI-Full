@@ -3,25 +3,23 @@ import React, { useState } from "react";
 import { InfoLayout } from "./InfoLayout";
 import Info from "../Info";
 import axios from "axios";
-import { BASE_API } from "@/app/constant";
+import {
+  BASE_API,
+  FACULTY_DOC_INFO,
+  OFFICE_STAFF_DOC_INFO,
+} from "@/app/constant";
 import { useQuery } from "react-query";
 import HandleSuspence from "../HandleSuspence";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 
-export default function Documentation() {
-  const [employeeDocsInfo, setEmployeeDocsInfo] = useState<TEmployeeDocs[]>([
-    { doc_id: "Resume", doc_uri: null, doc_name: null },
-    { doc_id: "Pan Card", doc_uri: null, doc_name: null },
-    { doc_id: "Aadhaar Card", doc_uri: null, doc_name: null },
-    { doc_id: "10th Pass Certificate", doc_uri: null, doc_name: null },
-    { doc_id: "12th Pass Certificate", doc_uri: null, doc_name: null },
-    {
-      doc_id: "Choose Graduation Certificate",
-      doc_uri: null,
-      doc_name: null,
-    },
-    { doc_id: "Choose Other Certificate", doc_uri: null, doc_name: null },
-  ]);
+interface IProps {
+  employeeType?: string;
+}
+
+export default function Documentation({ employeeType }: IProps) {
+  const [employeeDocsInfo, setEmployeeDocsInfo] = useState<TEmployeeDocs[]>(
+    employeeType === "Faculty" ? FACULTY_DOC_INFO : OFFICE_STAFF_DOC_INFO
+  );
 
   const { isFetching, error, data } = useQuery<ISuccess<TEmployeeDocsFromDB[]>>(
     {
@@ -36,7 +34,9 @@ export default function Documentation() {
           })
         ).data,
       onSuccess: (data) => {
-        const newEmployeeInfo = [...employeeDocsInfo];
+        const docsInfo =
+          employeeType === "Faculty" ? FACULTY_DOC_INFO : OFFICE_STAFF_DOC_INFO;
+        const newEmployeeInfo = [...docsInfo];
         data.data.forEach((item) => {
           const indexToChange = employeeDocsInfo.findIndex(
             (findIndexItem) => findIndexItem.doc_id === item.doc_id
@@ -49,7 +49,7 @@ export default function Documentation() {
         });
         setEmployeeDocsInfo(newEmployeeInfo);
       },
-      refetchOnMount : true,
+      refetchOnMount: true,
     }
   );
 

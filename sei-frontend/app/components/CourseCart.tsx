@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { useIsAuthenticated } from "../hooks/useIsAuthenticated";
 import { setDialog } from "../redux/slice/dialog.slice";
 import { usePathname, useRouter } from "next/navigation";
+import { useScrollChecker } from "../hooks/useScrollChecker";
 
 export default function CourseCart() {
   const courseCart = useSelector((state: RootState) => state.courseCart);
@@ -29,6 +30,8 @@ export default function CourseCart() {
   });
 
   const loginState = useSelector((state: RootState) => state.loginStatus);
+
+  const {  scrollingDirection } = useScrollChecker();
 
   const { isAuthenticated } = useIsAuthenticated([loginState]);
 
@@ -56,7 +59,7 @@ export default function CourseCart() {
     <div
       className={`${courseCart.length === 0 ? "hidden" : "fixed"}  ${
         isExpand ? "bg-white" : "bg-[#E9B858]"
-      } border border-gray-300 bottom-10 right-10 z-10 card-shdow shadow-2xl rounded-2xl p-5 sm:right-0 sm:bottom-4 sm:mx-2`}
+      } border border-gray-300 bottom-10 right-10 z-10 card-shdow shadow-2xl rounded-2xl p-5 sm:right-0 ${isExpand ? "sm:left-0" : ""} ${scrollingDirection === "DOWN" ? "sm:bottom-5" : "sm:bottom-20"} sm:transition-all sm:duration-500 sm:p-3 sm:mx-2 sm:max-w-full`}
     >
       {isExpand ? null : (
         <div
@@ -126,7 +129,7 @@ export default function CourseCart() {
             </li>
           ))}
         </ul>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-wrap gap-3">
           {/* <Link
             className="block"
             href={`/apply-course`}

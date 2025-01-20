@@ -219,7 +219,7 @@ export default function AdmissionReport() {
           </DownloadFormUrl>
         </div>
       </form> */}
-      <DateDurationFilter />
+      <DateDurationFilter withMoreFilter = {true}/>
 
       <div className="flex items-center justify-end">
         <GenarateExcelReportBtn

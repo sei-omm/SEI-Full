@@ -97,12 +97,14 @@ export default function CourseForm({ slug }: IProps) {
   };
 
   return (
-    <HandleSuspence isLoading={course.isFetching} dataLength={1}>
+    <HandleSuspence key={slug} isLoading={course.isFetching} dataLength={1}>
       <form ref={formRef} onSubmit={handleFormSubmit}>
         <div className="flex items-start flex-wrap *:basis-80 *:flex-grow gap-x-3 gap-y-4">
           <Input
-            disabled={course.data?.data.course_code ? true : false}
-            defaultValue={course.data?.data.course_code}
+            disabled={
+              isNewCourse ? false : course.data?.data.course_code ? true : false
+            }
+            defaultValue={isNewCourse ? "" : course.data?.data.course_code}
             name="course_code"
             placeholder="HV(OP)"
             label="Course Code"
@@ -112,7 +114,7 @@ export default function CourseForm({ slug }: IProps) {
             name="course_name"
             placeholder="HIGH VOLTAGE (Operation level)"
             label="Course Name *"
-            defaultValue={course.data?.data.course_name}
+            defaultValue={isNewCourse ? "" : course.data?.data.course_name}
           />
 
           <DropDown
@@ -123,7 +125,7 @@ export default function CourseForm({ slug }: IProps) {
               { text: "Kolkata", value: "Kolkata" },
               { text: "Faridabad", value: "Faridabad" },
             ]}
-            defaultValue={course.data?.data.institute}
+            defaultValue={isNewCourse ? "Kolkata" : course.data?.data.institute}
           />
           <DropDown
             key="course_type"
@@ -133,7 +135,9 @@ export default function CourseForm({ slug }: IProps) {
               { text: "DGS Approved", value: "DGS Approved" },
               { text: "Value Added", value: "Value Added" },
             ]}
-            defaultValue={course.data?.data.course_type}
+            defaultValue={
+              isNewCourse ? "DGS Approved" : course.data?.data.course_type
+            }
           />
           <TagInput
             required
@@ -141,7 +145,9 @@ export default function CourseForm({ slug }: IProps) {
             wrapperCss="!basis-[50rem]"
             label="Enter required documents and press enter *"
             placeholder="Enter required documents and press enter"
-            defaultValue={course.data?.data.require_documents}
+            defaultValue={
+              isNewCourse ? "" : course.data?.data.require_documents
+            }
           />
           <TagInput
             required
@@ -149,14 +155,14 @@ export default function CourseForm({ slug }: IProps) {
             wrapperCss="!basis-[50rem]"
             label="Subjects *"
             placeholder="Enter Subjects and press enter"
-            defaultValue={course.data?.data.subjects}
+            defaultValue={isNewCourse ? "" : course.data?.data.subjects}
           />
           <Input
             required
             name="course_duration"
             label="Course Duration *"
             placeholder="3 days"
-            defaultValue={course.data?.data.course_duration}
+            defaultValue={isNewCourse ? "" : course.data?.data.course_duration}
           />
           <Input
             required
@@ -164,14 +170,16 @@ export default function CourseForm({ slug }: IProps) {
             label="Course Fee *"
             type="number"
             placeholder="2800"
-            defaultValue={course.data?.data.course_fee}
+            defaultValue={isNewCourse ? 0 : course.data?.data.course_fee}
           />
           <Input
             name="min_pay_percentage"
             label="Minimum To Pay In Percentage"
             type="number"
             placeholder="100"
-            defaultValue={course.data?.data.min_pay_percentage || 100}
+            defaultValue={
+              isNewCourse ? 0 : course.data?.data.min_pay_percentage || 100
+            }
           />
           <Input
             required
@@ -179,7 +187,7 @@ export default function CourseForm({ slug }: IProps) {
             label="Total Seats *"
             type="number"
             placeholder="10"
-            defaultValue={course.data?.data.total_seats}
+            defaultValue={isNewCourse ? 0 : course.data?.data.total_seats}
           />
           <Input
             required
@@ -187,7 +195,7 @@ export default function CourseForm({ slug }: IProps) {
             label="Remain Seats *"
             type="number"
             placeholder="10"
-            defaultValue={course.data?.data.remain_seats}
+            defaultValue={isNewCourse ? 0 : course.data?.data.remain_seats}
           />
 
           <DropDown
@@ -197,7 +205,9 @@ export default function CourseForm({ slug }: IProps) {
               { text: "Public", value: "Public" },
               { text: "Private", value: "Private" },
             ]}
-            defaultValue={course.data?.data.course_visibility}
+            defaultValue={
+              isNewCourse ? "Public" : course.data?.data.course_visibility
+            }
           />
 
           <DropDown
@@ -209,13 +219,21 @@ export default function CourseForm({ slug }: IProps) {
                 value: item.employee_id,
               })) || []
             }
+            defaultValue={
+              isNewCourse
+                ? marketingTeam.data?.data?.[0].employee_id
+                : course.data?.data.concern_marketing_executive_id
+            }
           />
 
           <Input
             label="Course Showing Order"
             name="course_showing_order"
             placeholder="1"
-            defaultValue={course.data?.data.course_showing_order}
+            type="number"
+            defaultValue={
+              isNewCourse ? 0 : course.data?.data.course_showing_order
+            }
           />
 
           <Input
@@ -223,7 +241,7 @@ export default function CourseForm({ slug }: IProps) {
             type="number"
             placeholder="Maximum Batch To Be Conducted This Month"
             label="Maximum Batch / Month"
-            defaultValue={course.data?.data.max_batch || 0}
+            defaultValue={isNewCourse ? 0 : course.data?.data.max_batch || 0}
           />
 
           <ChooseFileInput

@@ -1,0 +1,25 @@
+SELECT 
+	ebc.created_at,
+	STRING_AGG(c.course_name, ','),
+	STRING_AGG(cb.batch_fee::TEXT, ','),
+	STRING_AGG(s.name, ','),
+	STRING_AGG(s.profile_image, ','),
+	STRING_AGG((cb.batch_fee - (SELECT SUM(paid_amount) FROM payments WHERE batch_id = ebc.batch_id AND student_id = ebc.student_id))::TEXT, ',') AS student_due_amount,
+	(SELECT SUM(paid_amount) FROM payments WHERE batch_id = ebc.batch_id AND student_id = ebc.student_id) AS student_paid_amount,
+	STRING_AGG(c.course_type, ','),
+	STRING_AGG(s.email, ','),
+	STRING_AGG(s.email, ','),
+	STRING_AGG(s.mobile_number::TEXT, ','),
+	(SELECT SUM(misc_payment) FROM payments WHERE batch_id = ebc.batch_id AND student_id = ebc.student_id) AS misc_payment
+FROM enrolled_batches_courses ebc
+
+LEFT JOIN courses c
+ON c.course_id = ebc.course_id
+
+LEFT JOIN course_batches cb
+ON cb.batch_id = ebc.batch_id
+
+LEFT JOIN students s
+ON s.student_id = ebc.student_id
+
+GROUP BY ebc.enroll_id

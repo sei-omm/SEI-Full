@@ -51,10 +51,11 @@ export default function OccupancyReport() {
     body: [],
   });
 
-  const { data: report, error, isFetching } = useQuery<
-    ISuccess<TOccupancyReport[]>,
-    AxiosError<IError>
-  >(
+  const {
+    data: report,
+    error,
+    isFetching,
+  } = useQuery<ISuccess<TOccupancyReport[]>, AxiosError<IError>>(
     ["fetch-occupancy-report", searchParams.toString()],
     () => fetchData(searchParams.toString()),
     {

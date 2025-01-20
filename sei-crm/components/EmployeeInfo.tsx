@@ -35,7 +35,7 @@ import Spinner from "./Spinner";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 import { useRouter } from "next/navigation";
 import { IoMdArrowBack } from "react-icons/io";
-import EAuthorityInfo from "./Employee/EAuthorityInfo";
+import OfficialInfoForm from "./Employee/OfficialInfoForm";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -493,150 +493,14 @@ export default function EmployeeInfo({ employeeID }: IProps) {
           </div>
 
           {/* Official Information */}
-          <div className="p-10 border card-shdow rounded-3xl">
-            <h2 className="text-2xl font-semibold pb-6">
-              Official Informations
-            </h2>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-              <EAuthorityInfo
-                departements={departements}
-                employeeInfo={employeeInfo}
-              />
-              <Input
-                defaultValue={employeeInfo?.job_title || ""}
-                required
-                name="job_title"
-                label="Job Title"
-                placeholder="Software Engineer"
-              />
-              <DateInput
-                name="joining_date"
-                onChange={onDateOfJoinChnage}
-                label="Date Of Joining"
-                date={getDate(new Date(joinDate || ""))}
-              />
-              <Input
-                defaultValue={employeeInfo?.login_email || ""}
-                required
-                name="login_email"
-                type="email"
-                label="Employee Login Email"
-                placeholder="somnathgupta@gmail.com"
-              />
-              <Input
-                defaultValue={employeeInfo?.login_password || ""}
-                required
-                name="login_password"
-                label="Employee Login Password"
-                type="password"
-                placeholder="adminSom@123"
-              />
-              <Input
-                required
-                name="rank"
-                label="Employee Rank"
-                placeholder="Principal"
-                defaultValue={employeeInfo?.rank}
-              />
-
-              {employeeID === "add-faculty" ||
-              employeeInfo?.employee_type === "Faculty" ? (
-                <>
-                  <Input
-                    pattern="[A-Z][0-9]+"
-                    title="FIN Number must be alphanumeric (e.g., T12345)."
-                    type="text"
-                    name="fin_number"
-                    label="FIN Number"
-                    placeholder="154578"
-                    defaultValue={employeeInfo?.fin_number}
-                  />
-                  <Input
-                    pattern="[0-9]{2}[A-Z]{2}[0-9]{4}"
-                    title="InDos Number should be in the format: 11EL1234 (2 digits, 2 uppercase letters, 4 digits)"
-                    type="text"
-                    name="indos_number"
-                    label="Indos Number"
-                    placeholder="Type Indos Number"
-                    defaultValue={employeeInfo?.indos_number}
-                  />
-                  <Input
-                    type="text"
-                    name="cdc_number"
-                    label="CDC Number"
-                    placeholder="4541"
-                    defaultValue={employeeInfo?.cdc_number}
-                  />
-                  <Input
-                    name="grade"
-                    label="Grade"
-                    placeholder="A+"
-                    defaultValue={employeeInfo?.grade}
-                  />
-                  <DropDown
-                    key={"qualification"}
-                    label="Select Qualification"
-                    options={[
-                      { text: "TOTA", value: "TOTA" },
-                      { text: "VICT", value: "VICT" },
-                    ]}
-                    name="qualification"
-                    defaultValue={employeeInfo?.qualification}
-                  />
-                  {/* additional qualification */}
-                  <DropDown
-                    key={"additional_qualification"}
-                    label="Additional Qualification"
-                    options={[
-                      { text: "AECS", value: "AECS" },
-                      { text: "TSTA", value: "TSTA" },
-                    ]}
-                    name="additional_qualification"
-                    defaultValue={employeeInfo?.additional_qualification}
-                  />
-                  <Input
-                    name="selling_experience"
-                    label="Selling Experience"
-                    placeholder="1 Years"
-                    defaultValue={employeeInfo?.selling_experience}
-                  />
-                  <Input
-                    name="teaching_experience"
-                    label="Teaching Experience"
-                    placeholder="2 Years"
-                    defaultValue={employeeInfo?.teaching_experience}
-                  />
-                  <Input
-                    name="max_teaching_hrs_per_week"
-                    label="Max Teaching Hours Per Week"
-                    placeholder="2 Hours"
-                    defaultValue={employeeInfo?.max_teaching_hrs_per_week}
-                  />
-                  <DropDown
-                    key={"faculty_attendance_type"}
-                    label="Faculty Attendance Type"
-                    options={[
-                      { text: "Regular", value: "Regular" },
-                      { text: "Visiting", value: "Visiting" },
-                    ]}
-                    name="faculty_attendance_type"
-                    defaultValue={employeeInfo?.faculty_attendance_type}
-                  />
-                </>
-              ) : null}
-              <DropDown
-                onChange={(value) => (employeeInstitute.current = value.value)}
-                key={"institute"}
-                label="Campus"
-                options={[
-                  { text: "Kolkata", value: "Kolkata" },
-                  { text: "Faridabad", value: "Faridabad" },
-                ]}
-                name="institute"
-                defaultValue={employeeInfo?.institute}
-              />
-            </div>
-          </div>
+          <OfficialInfoForm
+            employeeID={employeeID}
+            employeeInstituteRef={employeeInstitute}
+            onDateOfJoinChnage={onDateOfJoinChnage}
+            departements={departements}
+            employeeInfo={employeeInfo}
+            joinDate={joinDate}
+          />
 
           {/* Employee Task */}
           {employeeType === "Faculty" && !isNewEmployee ? (

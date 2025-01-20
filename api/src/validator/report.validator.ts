@@ -1,10 +1,15 @@
 import Joi from "joi";
 
 export const admissionReportValidator = Joi.object({
-  institute: Joi.string().required().label("Institute"),
-  from_date: Joi.string().required().label("From Date"),
-  to_date: Joi.string().required().label("To Date"),
+  institute: Joi.string().optional().label("Institute"),
+  from_date: Joi.string().optional().label("From Date"),
+  to_date: Joi.string().optional().label("To Date"),
   page: Joi.number().optional(),
+
+  form_id: Joi.string().optional(),
+  indos_number: Joi.string().optional(),
+  cdc_num: Joi.string().optional(),
+  passport_num: Joi.string().optional(),
 });
 
 export const studentBirthdateReportValidator = Joi.object({

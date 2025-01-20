@@ -4,13 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { RiSettings3Line } from "react-icons/ri";
-import { MdOutlineDateRange, MdOutlineSubject } from "react-icons/md";
+import {
+  MdOutlineDateRange,
+  MdOutlineSubject,
+} from "react-icons/md";
 import { FaPeopleRoof } from "react-icons/fa6";
 import Image from "next/image";
 import { RxDot } from "react-icons/rx";
 import { TbCategory2, TbReportSearch } from "react-icons/tb";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
-import { GoDiscussionOutdated, GoSidebarCollapse } from "react-icons/go";
+import {
+  GoDiscussionOutdated,
+  GoSidebarCollapse,
+  GoStack,
+} from "react-icons/go";
 import { FaRegListAlt } from "react-icons/fa";
 // import { SiAmazonpay } from "react-icons/si";
 import {
@@ -64,6 +71,12 @@ const sidebarOptions = [
         icon: <IoFileTrayOutline />,
         name: "Compliance Record",
         slug: "/dashboard/hr-module/compliance-record",
+      },
+      {
+        id: "1-7",
+        icon: <GoStack />,
+        name: "Manage Payscale",
+        slug: "/dashboard/hr-module/manage-payscale",
       },
       // {
       //   id: "1-6",
@@ -163,6 +176,12 @@ const sidebarOptions = [
         name: "Manage Admission",
         slug: "/dashboard/admission",
       },
+      // {
+      //   id: "3-2",
+      //   icon: <MdOutlineAddBox />,
+      //   name: "Create Admission",
+      //   slug: "/dashboard/create-admission",
+      // },
     ],
   },
   {

@@ -92,9 +92,20 @@ export const employeeAuthority = [
   { name: "Employee", score: 0 },
   { name: "Reporting Authority", score: 1 },
   { name: "Review Authority", score: 2 },
+  { name: "HR", score: 3 },
 ];
 
-export const STUDENT_RANKS = ["Master", "Captain", "Other"];
+export const STUDENT_RANKS = [
+  "Master",
+  "Chief Engineer",
+  "Chief Officer",
+  "2nd Engineer",
+  "2nd Officer",
+  "3rd Engineer",
+  "3rd Officer",
+  "ETO",
+  "Others",
+];
 
 export const OFFICE_STAFF_DOC_INFO: TEmployeeDocs[] = [
   { doc_id: "Resume", doc_uri: null, doc_name: null },

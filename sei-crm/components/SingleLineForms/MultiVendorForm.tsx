@@ -27,6 +27,7 @@ export default function MultiVendorForm() {
         obj[key] = value;
         datasToStore.push(obj);
         obj = {};
+        return;
       }
 
       obj[key] = value;

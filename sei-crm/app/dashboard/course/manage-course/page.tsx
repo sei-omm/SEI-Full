@@ -48,7 +48,7 @@ export default async function page({ searchParams }: IProps) {
             changeSearchParamsOnChange={true}
             defaultValue={searchParams.institute}
           />
-          <Link href={"manage-course/add-course"}>
+          <Link href={"manage-course/add-course"} >
             <Button className="flex-center gap-x-2">
               <IoIosAdd size={23} />
               Add course

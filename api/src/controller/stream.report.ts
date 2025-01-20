@@ -361,11 +361,11 @@ export const streamCourseTrendExcelReport = asyncErrorHandler(
     };
 
     worksheet.addRow([
-      "Sr Number",
-      "Batch Start Date",
-      "Batch End Date",
-      "Total Enrollment",
-      "Total Approved Enrollment",
+      "SL. No",
+      "Start Date",
+      "End Date",
+      "Number of Applied Students",
+      "Number of Approved Students",
     ]);
 
     // Row styling (header row)

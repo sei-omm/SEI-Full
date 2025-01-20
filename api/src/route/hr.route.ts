@@ -31,6 +31,7 @@ import {
 } from "../controller/attendance.controller";
 import { getHrDashboardInfo } from "../controller/employee.controller";
 import { roles } from "../middleware/roles";
+import { addPayscale, deletePayscale, getPayscale, updatePayscale } from "../controller/payscale.controller";
 
 export const hrRouter = Router();
 
@@ -42,6 +43,11 @@ hrRouter
   .post("/department", addNewDepartment)
   .put("/department/:department_id", updateDepartment)
   .delete("/department/:department_id", deleteDepartment)
+
+  .get("/payscale", getPayscale)
+  .post("/payscale", addPayscale)
+  .put("/payscale/:payscale_id", updatePayscale) // not using
+  .delete("/payscale/:item_id", deletePayscale)
 
   .get("/leave", roles(["Admin"]), getRequestedLeaveLists)
   // .post("/leave", createLeaveRequest) //this will done by employee

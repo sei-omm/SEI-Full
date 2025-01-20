@@ -1,10 +1,13 @@
 import { Router } from "express";
 import {
   addNewEmployee,
+  assignAssets,
   assignFacultyCourseSubject,
   createAppraisal,
+  deleteAssignAssets,
   generateAllEmployeeExcelSheet,
   getAppraisalList,
+  getAssignedAssets,
   getEmployee,
   getEmployeeDocuments,
   getFacultyCourseSubject,
@@ -49,6 +52,10 @@ employeeRoute
   .get("/appraisal/:appraisal_id", getSingleAppraisal)
   .post("/appraisal", isAuthenticated, createAppraisal)
   .put("/appraisal/:appraisal_id", isAuthenticated, updateAppraisalReport)
+
+  .get("/assets/:employee_id", getAssignedAssets)
+  .post("/assets", assignAssets)
+  .delete("/assets/:assets_id", deleteAssignAssets)
 
   .get("/:employee_id/document", roles(["Admin", "Own"]), getEmployeeDocuments) //roles not working properly
   .get("/:id", roles(["Admin", "Own"]), getSingleEmployeeInfo)

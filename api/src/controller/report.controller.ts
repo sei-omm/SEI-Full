@@ -65,6 +65,28 @@ export const createAdmissionReport = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
     const { LIMIT, OFFSET } = parsePagination(req);
 
+    let FILTER =
+      "WHERE C.institute = $1 AND EC.enrollment_status = 'Approve' AND DATE(EC.created_at) BETWEEN $2 AND $3";
+    let FILTER_VALUES: any[] = [
+      value.institute,
+      value.from_date,
+      value.to_date,
+    ];
+
+    if (req.query.form_id) {
+      FILTER = "WHERE ff.form_id = $1";
+      FILTER_VALUES = [req.query.form_id as string];
+    } else if (req.query.indos_number) {
+      FILTER = "WHERE s.indos_number = $1";
+      FILTER_VALUES = [req.query.indos_number as string];
+    } else if (req.query.cdc_num) {
+      FILTER = "WHERE s.cdc_num = $1";
+      FILTER_VALUES = [req.query.cdc_num as string];
+    } else if (req.query.passport_num) {
+      FILTER = "WHERE s.passport_num = $1";
+      FILTER_VALUES = [req.query.passport_num as string];
+    }
+
     const sqlForAdmissionReport = `
         SELECT 
             EC.created_at,
@@ -90,12 +112,11 @@ export const createAdmissionReport = asyncErrorHandler(
             ON EC.course_id = PAY.course_id AND EC.student_id = PAY.student_id
         LEFT JOIN course_batches AS CB
             ON CB.batch_id = EC.batch_id
-        WHERE C.institute = $1 AND EC.enrollment_status = 'Approve' AND DATE(EC.created_at) BETWEEN $2 AND $3
+        ${FILTER}
         GROUP BY 
             EC.created_at,
             C.course_name,
             CB.batch_fee,
-            -- C.course_fee,
             C.course_type,
             STU.student_id, 
             STU.name,
@@ -105,11 +126,7 @@ export const createAdmissionReport = asyncErrorHandler(
         LIMIT ${LIMIT} OFFSET ${OFFSET}
     `;
 
-    const { rows } = await pool.query(sqlForAdmissionReport, [
-      value.institute,
-      value.from_date,
-      value.to_date,
-    ]);
+    const { rows } = await pool.query(sqlForAdmissionReport, FILTER_VALUES);
     res.status(200).json(new ApiResponse(200, "Admission Reports", rows));
   }
 );

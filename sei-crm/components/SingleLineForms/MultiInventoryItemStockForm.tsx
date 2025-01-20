@@ -86,6 +86,7 @@ export default function MultiInventoryItemStockForm({
         }
         datasToStore.push(obj);
         obj = {};
+        return;
       }
 
       if (key === "completed_date" && value === "") {
@@ -114,7 +115,9 @@ export default function MultiInventoryItemStockForm({
           onClick={() => {
             const preStates = [...inputs];
 
-            preStates.push(preStates[preStates.length - 1] + 1);
+            preStates.push(
+              preStates.length === 0 ? 1 : preStates[preStates.length - 1] + 1
+            );
             setInputs(preStates);
           }}
           type="button"

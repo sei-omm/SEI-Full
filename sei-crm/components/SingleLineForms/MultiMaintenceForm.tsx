@@ -48,6 +48,7 @@ export default function MultiMaintenceForm() {
         }
         datasToStore.push(obj);
         obj = {};
+        return;
       }
 
       if (key === "completed_date" && value === "") {

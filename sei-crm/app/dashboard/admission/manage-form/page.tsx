@@ -107,12 +107,6 @@ export default function ManageStudentAdmissionForm() {
                 type="number"
                 defaultValue={data?.data.course_and_student_info.mobile_number}
               />
-              {/* <Input
-                name="rank"
-                label="Rank/Designation"
-                placeholder="Rank/Designation"
-                defaultValue={data?.data.course_and_student_info.rank}
-              /> */}
               <DropDown
                 name="rank"
                 label="Rank/Designation"

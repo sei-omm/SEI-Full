@@ -78,7 +78,7 @@ export interface IEmployee {
   contact_number: string;
   email_address: string;
   living_address: string;
-  permanent_address : string | null;
+  permanent_address: string | null;
   dob: string; // ISO date string
   gender: GenderType;
   marital_status: MaritalStatus;
@@ -101,14 +101,14 @@ export interface IEmployee {
   professional_tax: string;
   esic: string;
   income_tax: string;
-  gratuity : string;
+  gratuity: string;
   is_active: boolean;
   login_email: string;
   login_password: string;
   department_name: string;
   attendance_status: string;
 
-  rank: string;
+  // rank: string;
   fin_number: string;
   indos_number: string;
   cdc_number: string;
@@ -126,9 +126,14 @@ export interface IEmployee {
   designation: string | null;
   authority: string | null;
 
-  emergency_contact_number : string | null;
-  contact_person_name : string | null;
-  contact_person_relation : string | null
+  emergency_contact_number: string | null;
+  contact_person_name: string | null;
+  contact_person_relation: string | null;
+
+  payscale_label: string | null;
+  payscale_year: number | null;
+
+  assigned_assets: TAssignAssets[];
 }
 
 export type ILeaveStatus = "pending" | "success" | "decline";
@@ -191,6 +196,7 @@ export interface ICourse extends ICourseWithSubject {
   course_pdf?: string;
   course_showing_order: number;
   max_batch: number;
+  concern_marketing_executive_id: number;
   batches?: TBatches[];
 }
 
@@ -270,8 +276,8 @@ export type TOneAdmission = {
     cdc_num: string | null;
     passport_num: string | null;
     enrolled_courses_info: TEnrollCourses[];
-    coc_number : string | null;
-    cert_of_completency : string | null
+    coc_number: string | null;
+    cert_of_completency: string | null;
   };
   student_payment_info: TPaymentInfo;
 };
@@ -534,19 +540,49 @@ export type TDesignation = {
 export type TAppraisalList = {
   appraisal_id: number;
   created_at: string;
-  sended_to: { name: string; status: string }[];
+  sended_to?: { name: string; status: string }[];
+
+  appraisal_of_employee_id?: number;
+  appraisal_of?: string;
 };
 
 export type TAppraisal = {
-  appraisal_id: number;
-  employee_id: number;
-  discipline: string;
-  duties: string;
-  targets: string;
-  achievements: string;
-  appraisal_options: string | null;
-  state_of_health: string | null;
-  integrity: string | null;
-  created_at: string;
-  sended_to: { name: string; status: string }[];
+  appraisal_info: {
+    appraisal_id: number;
+    employee_id: number;
+    discipline: string;
+    duties: string;
+    targets: string;
+    achievements: string;
+    appraisal_options: string | null;
+    state_of_health: string | null;
+    integrity: string | null;
+    created_at: string;
+    sended_to: { employee_id: number; name: string; status: string }[];
+  };
+  appraisal_of_info: {
+    name: string;
+    profile_image: string;
+    dob: string;
+    joining_date: string;
+  };
+};
+
+export type TPayscaleBoth = {
+  year: { item_id: number; item_value: string }[];
+  label: { item_id: number; item_value: string }[];
+};
+
+export type TAssignAssets = {
+  assets_id: number;
+  to_employee_id: number;
+  assets_name: string;
+  issued_by: string;
+};
+
+export type IAssignCourse = {
+  faculty_id: number;
+  course_id: number;
+  course_name: string;
+  subject: string;
 };

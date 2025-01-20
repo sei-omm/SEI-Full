@@ -34,6 +34,7 @@ export default function MultiPlannedMaintenanceSystem() {
         obj[key] = value;
         datasToStore.push(obj);
         obj = {};
+        return;
       }
 
       obj[key] = value;

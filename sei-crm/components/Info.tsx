@@ -3,7 +3,7 @@ import { IoEyeOutline } from "react-icons/io5";
 
 interface InfoProps {
   title: string;
-  value: string | undefined;
+  value: any;
   isLink?: boolean;
   viewLink?: string;
 }

@@ -11,7 +11,11 @@ import HandleDataSuspense from "../HandleDataSuspense";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Input from "../Input";
 
-export default function ManageAdmissionFilter() {
+interface IProps {
+  withMoreFilter?: boolean;
+}
+
+export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
   const route = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -75,31 +79,36 @@ export default function ManageAdmissionFilter() {
 
   return (
     <div className="space-y-2">
-      <form
-        onSubmit={handleFormSubmit}
-        className="w-full flex items-end justify-between *:flex-grow gap-x-5 pb-5"
-      >
-        <input name="form_1" hidden />
-        <Input name="form_id" label="Form ID" placeholder="Type here.." />
-        <span className="text-xs">OR</span>
-        <Input
-          name="indos_number"
-          label="INDOS No."
-          placeholder="Type here.."
-        />
-        <span className="text-xs">OR</span>
-        <Input name="cdc_num" label="CDC No." placeholder="Type here.." />
-        <span className="text-xs">OR</span>
-        <Input
-          name="passport_num"
-          label="Passport No."
-          placeholder="Type here.."
-        />
-        <div className="mb-2">
-          <Button>Search</Button>
-        </div>
-      </form>
-      <span className="font-semibold">OR</span>
+      {withMoreFilter ? (
+        <>
+          <form
+            onSubmit={handleFormSubmit}
+            className="w-full flex items-end justify-between *:flex-grow gap-x-5 pb-5"
+          >
+            <input name="form_1" hidden />
+            <Input name="form_id" label="Form ID" placeholder="Type here.." />
+            <span className="text-xs">OR</span>
+            <Input
+              name="indos_number"
+              label="INDOS No."
+              placeholder="Type here.."
+            />
+            <span className="text-xs">OR</span>
+            <Input name="cdc_num" label="CDC No." placeholder="Type here.." />
+            <span className="text-xs">OR</span>
+            <Input
+              name="passport_num"
+              label="Passport No."
+              placeholder="Type here.."
+            />
+            <div className="mb-2">
+              <Button>Search</Button>
+            </div>
+          </form>
+          <span className="font-semibold">OR</span>
+        </>
+      ) : null}
+
       <form
         onSubmit={handleFormSubmit}
         className="w-full flex items-end justify-between *:flex-grow gap-x-5 pb-5"

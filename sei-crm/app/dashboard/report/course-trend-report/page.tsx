@@ -27,27 +27,11 @@ export default function CourseTrendReport() {
     heads: string[];
     body: (string | number)[][];
   }>({
-    heads: [],
+    heads: ["Start Date", "End Date", "Number of Applied Students", "Number of Approved Students"],
     body: [],
   });
 
   const searchParams = useSearchParams();
-  // const route = useRouter();
-  // const [selectedCourse, setSelectedCourse] = useState(0);
-
-  // const { data: dropDownCoursesInfo } = useQuery<
-  //   ISuccess<{ course_id: number; course_name: string }[]>
-  // >({
-  //   queryKey: "get-course-names",
-  //   queryFn: async () => (await axios.get(BASE_API + "/course/drop-down")).data,
-  //   onSuccess: (cData) => {
-  //     if (searchParams.get("course_id")) {
-  //       setSelectedCourse(parseInt(`${searchParams.get("course_id")}`));
-  //     } else {
-  //       setSelectedCourse(cData.data[0].course_id);
-  //     }
-  //   },
-  // });
 
   const {
     data: report,
@@ -67,7 +51,7 @@ export default function CourseTrendReport() {
       onSuccess: (data) => {
         const oldStates = { ...tableDatas };
         if (data.data.length === 0) return;
-        oldStates.heads = Object.keys(data.data[0]);
+        // oldStates.heads = Object.keys(data.data[0]);
         oldStates.body = data.data.map((item) => {
           const newObj = { ...item };
           delete (newObj as { profile_image?: string | null }).profile_image;

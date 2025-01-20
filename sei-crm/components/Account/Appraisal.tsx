@@ -12,6 +12,7 @@ import { beautifyDate } from "@/app/utils/beautifyDate";
 import HandleSuspence from "../HandleSuspence";
 import { BiEdit } from "react-icons/bi";
 import Link from "next/link";
+import { GrLinkNext } from "react-icons/gr";
 
 interface IProps {
   type: "own" | "others";
@@ -80,32 +81,48 @@ export default function Appraisal({ type }: IProps) {
                 {/* <h4 className="text-xs text-gray-500 float-left mr-1">
                   Status :
                 </h4> */}
-                <ul className="flex items-center gap-1 flex-wrap">
-                  {appraisal.sended_to.map((item, index) => (
-                    <li key={index} className="flex items-center gap-1 text-xs">
-                      <span className="font-semibold text-yellow-700">
-                        {/* {type === "own"
-                          ? item.status === "Pending"
-                            ? "Sended To : "
-                            : item.status === "Approved"
-                            ? "Approved By : "
-                            : "Rejected By : "
-                          : "Received From : "} */}
+                {type === "others" ? (
+                  <div className="flex items-center gap-1 text-xs">
+                    <span className="font-semibold text-yellow-700">
+                      Appraisal Of :
+                    </span>
+                    <span>{appraisal.appraisal_of}</span>
+                  </div>
+                ) : (
+                  <ul className="flex items-center gap-1 flex-wrap">
+                    {appraisal.sended_to?.map((item, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center gap-1 text-xs"
+                      >
+                        <span
+                          className={`font-semibold ${
+                            item.status === "Pending"
+                              ? "text-yellow-700"
+                              : item.status === "Approved"
+                              ? "text-green-700"
+                              : "text-red-700"
+                          }`}
+                        >
+                          {type === "own"
+                            ? item.status === "Pending"
+                              ? "Sended To : "
+                              : item.status === "Approved"
+                              ? "Approved By : "
+                              : "Rejected By : "
+                            : ""}
+                        </span>
+                        <span>{item.name}</span>
+                        {index + 1 !== appraisal.sended_to?.length ? (
+                          <GrLinkNext />
+                        ) : (
+                          ""
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
-                        {type === "others"
-                          ? "Received From : "
-                          : item.status === "Pending"
-                          ? "Sended To : "
-                          : item.status === "Approved"
-                          ? "Approved By : "
-                          : "Rejected By : "}
-
-                        {/* {} */}
-                      </span>
-                      <span>{item.name}</span>
-                    </li>
-                  ))}
-                </ul>
                 {/* </div> */}
 
                 <Link

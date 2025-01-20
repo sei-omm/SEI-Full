@@ -617,6 +617,8 @@ CREATE TABLE appraisal (
 );
 
 CREATE TABLE appraisal_and_employee (
+    item_id SERIAL PRIMARY KEY,
+
     appraisal_id INTEGER,
     FOREIGN KEY (appraisal_id) REFERENCES appraisal(appraisal_id) ON DELETE SET NULL,
 
@@ -698,6 +700,29 @@ ADD emergency_contact_number VARCHAR(255),
 ADD contact_person_name VARCHAR(255),
 ADD contact_person_relation VARCHAR(255);
 
+
+CREATE TABLE assign_assets_employee(
+    assets_id SERIAL PRIMARY KEY,
+
+    to_employee_id INTEGER,
+    FOREIGN KEY (to_employee_id) REFERENCES employee(id) ON DELETE CASCADE,
+
+    assets_name VARCHAR(255),
+    issued_by VARCHAR(255)
+);
+
+CREATE TABLE payscale (
+    item_id SERIAL PRIMARY KEY,
+    item_type VARCHAR(255) CHECK (item_type IN ('Year', 'Payscale Label')) NOT NULL,
+    item_value VARCHAR(255) NOT NULL
+);
+
+ALTER TABLE employee
+ADD COLUMN payscale_label VARCHAR(255),
+ADD COLUMN payscale_year INTEGER;
+
+ALTER TABLE employee
+DROP COLUMN rank;
 
 -- fro clering all table of db
 -- DO $$ 

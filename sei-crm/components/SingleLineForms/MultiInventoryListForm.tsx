@@ -58,7 +58,9 @@ export default function MultiInventoryListForm() {
           onClick={() => {
             const preStates = [...inputs];
 
-            preStates.push(preStates[preStates.length - 1] + 1);
+            preStates.push(
+              preStates.length === 0 ? 1 : preStates[preStates.length - 1] + 1
+            );
             setInputs(preStates);
           }}
           className="flex-center gap-3"

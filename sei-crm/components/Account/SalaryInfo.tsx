@@ -12,7 +12,8 @@ export default function SalaryInfo({ employee_info }: IProps) {
     parseFloat(employee_info?.income_tax || "0") +
     parseFloat(employee_info?.esic || "0") +
     parseFloat(employee_info?.professional_tax || "0") +
-    parseFloat(employee_info?.provident_fund || "0");
+    parseFloat(employee_info?.provident_fund || "0") + 
+    parseFloat(employee_info?.gratuity || "0");
 
   const totalIncome =
     totalDeductions +
@@ -41,6 +42,7 @@ export default function SalaryInfo({ employee_info }: IProps) {
           />
           <Info title="ESIC" value={employee_info?.esic} />
           <Info title="Income Tax" value={employee_info?.income_tax} />
+          <Info title="Gratuity" value={employee_info?.gratuity} />
         </div>
 
         <div className="space-y-4">

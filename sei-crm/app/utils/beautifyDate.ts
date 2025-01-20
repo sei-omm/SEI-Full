@@ -1,4 +1,6 @@
 export const beautifyDate = (dateStr: string) => {
+  if (dateStr === "") return "";
+
   const date = new Date(dateStr);
 
   //2024-11-01 13:44:17.787182

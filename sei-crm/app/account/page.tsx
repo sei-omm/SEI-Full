@@ -123,11 +123,11 @@ export default function Account() {
                 slug: "/account/?tab=leave-request",
               },
               {
-                name: "Appraisal",
+                name: "My Appraisals",
                 slug: "/account/?tab=appraisal",
               },
               {
-                name: "Others Appraisal",
+                name: "Pending Appraisals",
                 slug: "/account/?tab=otherapr",
               },
             ]}
@@ -137,7 +137,9 @@ export default function Account() {
         {searchParams.get("tab") === "informations" && (
           <Informations employee_info={data?.data[0]} />
         )}
-        {searchParams.get("tab") === "documentation" && <Documentation />}
+        {searchParams.get("tab") === "documentation" && (
+          <Documentation employeeType={data?.data[0].employee_type} />
+        )}
         {searchParams.get("tab") === "salary-information" && (
           <SalaryInfo employee_info={data?.data[0]} />
         )}
@@ -145,8 +147,8 @@ export default function Account() {
           <PaySlipComp employee_info={data?.data[0]} />
         )}
         {searchParams.get("tab") === "leave-request" && <LeaveRequest />}
-        {searchParams.get("tab") === "appraisal" && <Appraisal type="own"/>}
-        {searchParams.get("tab") === "otherapr" && <Appraisal type="others"/>}
+        {searchParams.get("tab") === "appraisal" && <Appraisal type="own" />}
+        {searchParams.get("tab") === "otherapr" && <Appraisal type="others" />}
         {searchParams.get("tab") === "appraisalform" && <AppraisalForm />}
       </div>
     </HandleSuspence>
