@@ -724,6 +724,20 @@ ADD COLUMN payscale_year INTEGER;
 ALTER TABLE employee
 DROP COLUMN rank;
 
+
+-- New DB -> 23 Jan
+CREATE TABLE batch_modified_by (
+    employee_id INTEGER,
+    FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE,
+
+    batch_id INTEGER,
+    FOREIGN KEY (batch_id) REFERENCES course_batches(batch_id) ON DELETE CASCADE,
+
+    UNIQUE (employee_id, batch_id),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

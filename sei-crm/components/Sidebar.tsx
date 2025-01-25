@@ -231,7 +231,7 @@ const sidebarOptions = [
       {
         id: "5-4",
         icon: <TbReportSearch />,
-        name: "Course Trend Report",
+        name: "Batch Trend Report",
         slug: "/dashboard/report/course-trend-report",
       },
       {

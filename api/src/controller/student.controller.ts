@@ -296,10 +296,17 @@ export const loginStudent = asyncErrorHandler(
       `
       SELECT 
         s.student_id, s.indos_number, s.name, s.password, s.profile_image,
-        COALESCE(json_agg(ebc.*) FILTER (WHERE ebc.* IS NOT NULL), '[]'::json) as enrolled_courses
+        COALESCE(
+          json_agg(
+            json_object('batch_id' : cb.batch_id, 'start_date' : cb.start_date)
+          ) FILTER (WHERE cb.batch_id IS NOT NULL AND cb.start_date IS NOT NULL),
+          '[]'
+        ) AS enrolled_courses
       FROM ${table_name} AS s
       LEFT JOIN 
         enrolled_batches_courses AS ebc ON ebc.student_id = s.student_id
+      LEFT JOIN
+       course_batches cb ON cb.batch_id = ebc.batch_id
       WHERE s.email = $1 OR s.indos_number = $1
       GROUP BY s.student_id
       `,

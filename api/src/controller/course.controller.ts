@@ -18,6 +18,7 @@ import {
   scheduleCourseBatchValidator,
   updateCourseValidator,
   updateScheduleCourseBatchValidator,
+  VchangeBatchManually,
 } from "../validator/course.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { getAuthToken } from "../utils/getAuthToken";
@@ -138,11 +139,62 @@ export const getCoursesWithSubject = asyncErrorHandler(async (req, res) => {
 export const getCoursesWithBatch = asyncErrorHandler(async (req, res) => {
   const { LIMIT, OFFSET } = parsePagination(req);
 
-  const { filterQuery, filterValues } = filterToSql(req.query, "c");
+  let isNoPagination = false;
+  if (req.query.nopagination !== undefined) {
+    isNoPagination =
+      req.query.nopagination.toString() === "false" ? false : true;
+    delete req.query.nopagination;
+  }
+
+  //filds
+  let validFields: string[] = [];
+  const fieldsParam = req.query.fields?.toString();
+  if (fieldsParam) {
+    const requestedFields = fieldsParam.split(":").filter(Boolean);
+    const allowedFields = [
+      "course_id",
+      "course_code",
+      "course_name",
+      "institute",
+    ];
+    validFields = requestedFields.filter((field) =>
+      allowedFields.includes(field)
+    );
+    // If no valid fields are provided, default to selecting all fields or throw an error
+    if (validFields.length === 0) {
+      throw new ErrorHandler(400, "No valid fields specified");
+    }
+
+    delete req.query.fields;
+  }
+
+  //for limited courses
+  const courseIds = req.query.course_ids?.toString();
+  delete req.query.course_ids;
+
+  const { filterQuery, filterValues, placeholderNum } = filterToSql(
+    req.query,
+    "c"
+  );
+  let newFilters = filterQuery;
+
+  const courseIdsToArray = courseIds?.split(",");
+  if (courseIds !== undefined && courseIdsToArray) {
+    if (filterQuery === "") {
+      newFilters += `WHERE c.course_id IN (${courseIdsToArray.map(
+        (_, index) => `$${index + 1}`
+      )})`;
+    } else {
+      newFilters += ` AND c.course_id IN (${courseIdsToArray?.map(
+        (_, index) => `$${placeholderNum + index}`
+      )})`;
+    }
+    filterValues.push(...courseIdsToArray);
+  }
 
   const sql = `
-          SELECT 
-          c.*,
+          SELECT
+          ${validFields.length === 0 ? "c.*" : `c.${validFields.join(", c.")}`},
           COALESCE(
               json_agg(
                   b.* ORDER BY b.start_date DESC
@@ -153,14 +205,13 @@ export const getCoursesWithBatch = asyncErrorHandler(async (req, res) => {
       LEFT JOIN 
           course_batches b ON c.course_id = b.course_id
 
-          ${filterQuery}
+          ${newFilters}
 
       GROUP BY 
           c.course_id, c.course_name ORDER BY course_showing_order ASC
-
-      LIMIT ${LIMIT} OFFSET ${OFFSET};
+      
+      ${isNoPagination ? "" : `LIMIT ${LIMIT} OFFSET ${OFFSET}`}
       `;
-
   const { rows } = await pool.query(sql, filterValues);
   res.status(200).json(new ApiResponse(200, "All Date", rows));
 });
@@ -711,9 +762,30 @@ export const enrollToBatch = asyncErrorHandler(
   }
 );
 
+export const getMultipleBatchWithId = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const ids = req.query.batch_ids?.toString().split(",") || [];
+
+    const { rows } = await pool.query(
+      `SELECT 
+        cb.*,
+        c.course_name
+       FROM course_batches cb
+        LEFT JOIN courses c
+        ON c.course_id = cb.course_id
+       WHERE batch_id IN (${ids.map((_, index) => `$${index + 1}`)})`,
+      ids
+    );
+
+    res.status(200).json(new ApiResponse(200, "Course Batches", rows));
+  }
+);
+
 export const getCourseBatch = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { error } = getScheduleCourseBatchValidator.validate(req.params);
+    const { error, value } = getScheduleCourseBatchValidator.validate(
+      req.params
+    );
     if (error) throw new ErrorHandler(400, error.message);
 
     const { LIMIT, OFFSET } = parsePagination(req);
@@ -827,6 +899,7 @@ export const getCoursesRequiredDocuments = asyncErrorHandler(
 export const getCoursesForDropDown = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const institute = req.query.institute;
+    const monthAndYear = req.query.month_year;
 
     let filter = "";
     const valueToStore: string[] = [];
@@ -834,6 +907,16 @@ export const getCoursesForDropDown = asyncErrorHandler(
     if (institute) {
       filter = "WHERE institute = $1";
       valueToStore.push(institute.toString());
+    }
+
+    if (monthAndYear) {
+      if (filter === "") {
+        filter = "WHERE TO_CHAR(cb.start_date, 'YYYY-MM') = $1";
+      } else {
+        filter += " AND TO_CHAR(cb.start_date, 'YYYY-MM') = $2";
+      }
+
+      valueToStore.push(monthAndYear.toString());
     }
 
     const { rows } = await pool.query(
@@ -859,3 +942,51 @@ export const getCoursesForDropDown = asyncErrorHandler(
     res.status(200).json(new ApiResponse(200, "Courses For Dropdown", rows));
   }
 );
+
+export const changeBatchManually = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VchangeBatchManually.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await transaction([
+    {
+      sql: `
+        UPDATE enrolled_batches_courses 
+        SET batch_id = $1 
+        WHERE student_id = $2 AND course_id = $3 AND batch_id = $4
+      `,
+      values: [
+        value.new_batch_id,
+        value.student_id,
+        value.course_id,
+        value.old_batch_id,
+      ],
+    },
+
+    {
+      sql: `
+        UPDATE payments
+        SET batch_id = $1
+        WHERE student_id = $2 AND course_id = $3 AND batch_id = $4
+      `,
+      values: [
+        value.new_batch_id,
+        value.student_id,
+        value.course_id,
+        value.old_batch_id,
+      ],
+    },
+
+    {
+      sql: `
+        INSERT INTO batch_modified_by (employee_id, batch_id)
+        VALUES ($1, $2)
+        ON CONFLICT(employee_id, batch_id) DO NOTHING;
+      `,
+      values: [res.locals.employee_id, value.new_batch_id],
+    },
+  ]);
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Student Batch Date Successfully Updated"));
+});

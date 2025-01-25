@@ -49,12 +49,15 @@ export default function Admission() {
     error,
   } = useQuery<ISuccess<TAdmissions[]>>({
     queryKey: ["get-admission", searchParams.toString()],
-    queryFn: async () =>
-      (
+    queryFn: async () => {
+      const urlSearchParams = new URLSearchParams(searchParams);
+      urlSearchParams.delete("month_year");
+      return (
         await axios.get(
-          BASE_API + "/admission?" + decodeURI(searchParams.toString())
+          BASE_API + "/admission?" + decodeURI(urlSearchParams.toString())
         )
-      ).data,
+      ).data;
+    },
     enabled: searchParams.size !== 0,
     onSuccess(data) {
       const oldTDatas = { ...tableDatas };
@@ -90,7 +93,7 @@ export default function Admission() {
 
   return (
     <>
-      <ManageAdmissionFilter withMoreFilter = {true}/>
+      <ManageAdmissionFilter withMoreFilter={true} />
       <HandleSuspence
         isLoading={isFetching}
         error={error}

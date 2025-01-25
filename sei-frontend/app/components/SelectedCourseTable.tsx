@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { MdOutlineDeleteOutline } from "react-icons/md";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../redux/store";
 import Button from "./Button";
 import { IoAddOutline } from "react-icons/io5";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { deleteCourseFromCart } from "../redux/slice/courseCart.slice";
-
+import { usePathname, useSearchParams } from "next/navigation";
+import { queryClient } from "../redux/MyProvider";
+import { IResponse, TCourseBatches } from "../type";
+import { formateDate } from "../utils/formateDate";
+import { useRouter } from "next/navigation";
 
 type TTableBody = (string | number)[][];
 type TTable = {
@@ -18,129 +18,64 @@ type TTable = {
 };
 
 export default function SelectedCourseTable() {
-  const courseCart = useSelector((state: RootState) => state.courseCart);
   const searchParams = useSearchParams();
 
-  const dispatch = useDispatch();
+  const [querString, setQueryString] = useState("");
+
+  useEffect(() => {
+    setQueryString(searchParams.toString());
+  }, [searchParams.toString()]);
+
+  const cartData = queryClient.getQueriesData([
+    "get-batch-info",
+    searchParams.toString(),
+  ])[0][1] as IResponse<TCourseBatches[]> | undefined;
+  const route = useRouter();
+  const pathname = usePathname();
 
   const [tableDatas, setTableDatas] = useState<TTable>({
     head: ["Course Name", "Batch Date", "Price", "Action"],
-    body: courseCart.map((item) => [
-      item.course_name,
-      item.batch_start_date,
-      item.course_price,
-      "actionBtn",
-    ]),
+    body: [],
   });
 
-  // useEffect(() => {
-  //   if (isDeleteBtnClicked.current === true) {
-  //     const allBatchesStartDate = searchParams.getAll("bsd");
-  //     const allBatchesEndDate = searchParams.getAll("bed");
-  //     const allBatchesIds = searchParams.getAll("bid");
-  //     if (
-  //       allBatchesStartDate.length !== multi_course_price_info.length ||
-  //       allBatchesEndDate.length !== multi_course_price_info.length ||
-  //       allBatchesIds.length !== multi_course_price_info.length
-  //     ) {
-  //       return notFound();
-  //     }
-  //     const tableData: TTableBody = [];
-  //     // const cartStateData: TCourseCart[] = [];
-  //     multi_course_price_info.forEach((item, index) => {
-  //       tableData.push([
-  //         item.course_name + ` (${item.course_id}) `,
-  //         allBatchesStartDate[index],
-  //         item.total_price,
-  //         "actionBtn",
-  //       ]);
-  //       // cartStateData.push({
-  //       //   batch_id: parseInt(allBatchesIds[index]),
-  //       //   batch_start_date: allBatchesStartDate[index],
-  //       //   batch_end_date: allBatchesEndDate[index],
-  //       //   course_id: item.course_id,
-  //       //   course_name: item.course_name,
-  //       //   course_price: item.total_price,
-  //       // });
-
-  //     });
-
-  //     // dispatch(setCourseCart(cartStateData));
-  //     setTableDatas((preState) => ({ head: preState.head, body: tableData }));
-  //     isDeleteBtnClicked.current = false;
-  //   }
-  // }, [searchParams.size]);
-
   useEffect(() => {
-    setTableDatas((preState) => ({
-      head: preState.head,
-      body: courseCart.map((item) => [
-        item.course_name,
-        item.batch_start_date,
-        item.course_price,
-        "actionBtn",
-      ]),
-    }));
-  }, [courseCart]);
+    if (cartData) {
+      setTableDatas({
+        head: ["Course Name", "Batch Date", "Price", "Action"],
+        body: cartData?.data.map((item) => [
+          item.course_name || "",
+          item.start_date,
+          item.end_date,
+          item.batch_fee,
+          "actionBtn",
+        ]),
+      });
+    } else {
+      setTableDatas({
+        head: ["Course Name", "Batch Date", "Price", "Action"],
+        body: [],
+      });
+    }
+  }, [cartData]);
 
   const handleCourseRemoveFromCartBtn = (rowIndex: number) => {
-    dispatch(deleteCourseFromCart(rowIndex));
+    const idToRemove = cartData?.data[rowIndex].batch_id;
+    if (idToRemove) {
+      const urlSearchParams = new URLSearchParams();
+      searchParams.forEach((value, key) => {
+        if (parseInt(value) !== idToRemove) {
+          urlSearchParams.set(key, value);
+        }
+      });
+      route.push(`${pathname}?${urlSearchParams.toString()}`, {
+        scroll: false,
+      });
+      return;
+    }
 
-    // isDeleteBtnClicked.current = true;
-    // const urlSearchParams = new URLSearchParams();
-    // const bid = searchParams
-    //   .getAll("bid")
-    //   .filter((_, index) => index !== rowIndex);
-    // const bsd = searchParams
-    //   .getAll("bsd")
-    //   .filter((_, index) => index !== rowIndex);
-    // const bed = searchParams
-    //   .getAll("bed")
-    //   .filter((_, index) => index !== rowIndex);
-    // const courseIds = searchParams
-    //   .getAll("course-id")
-    //   .filter((_, index) => index !== rowIndex);
-    // bid.forEach((eachBid, index) => {
-    //   urlSearchParams.append("course-id", courseIds[index]);
-    //   urlSearchParams.append("bid", eachBid);
-    //   urlSearchParams.append("bsd", bsd[index]);
-    //   urlSearchParams.append("bed", bed[index]);
-    // });
-    // dispatch(deleteCourseFromCart(rowIndex));
-    // // const allBatchesStartDate = searchParams.getAll("bsd");
-    // // const allBatchesEndDate = searchParams.getAll("bed");
-    // // const allBatchesIds = searchParams.getAll("bid");
-    // // const tableData: TTableBody = [];
-    // // const cartStateData: TCourseCart[] = [];
-    // // multi_course_price_info.splice(rowIndex, 1);
-    // // allBatchesStartDate.splice(rowIndex, 1);
-    // // allBatchesEndDate.splice(rowIndex, 1);
-    // // allBatchesIds.splice(rowIndex, 1);
-    // // multi_course_price_info.forEach((item, index) => {
-    // //   // if (index !== rowIndex) {
-    // //   urlSearchParams.append("course-id", item.course_id.toString());
-    // //   urlSearchParams.append("bid", allBatchesIds[index]);
-    // //   urlSearchParams.append("bsd", allBatchesStartDate[index]);
-    // //   urlSearchParams.append("bed", allBatchesEndDate[index]);
-    // //   tableData.push([
-    // //     item.course_name,
-    // //     allBatchesStartDate[index],
-    // //     item.total_price,
-    // //     "actionBtn",
-    // //   ]);
-    // //   cartStateData.push({
-    // //     batch_id: parseInt(allBatchesIds[index]),
-    // //     batch_start_date: allBatchesStartDate[index],
-    // //     batch_end_date: allBatchesEndDate[index],
-    // //     course_id: item.course_id,
-    // //     course_name: item.course_name,
-    // //     course_price: item.total_price,
-    // //   });
-    // //   // }
-    // // });
-    // // dispatch(setCourseCart(cartStateData));
-    // // setTableDatas((preState) => ({ head: preState.head, body: tableData }));
-    // route.push("/apply-course?" + urlSearchParams.toString());
+    if(querString) {}
+    alert("No Id For Remove");
+    setQueryString("nodb");
   };
 
   return (
@@ -169,6 +104,8 @@ export default function SelectedCourseTable() {
                     size={20}
                     className="cursor-pointer active:scale-90"
                   />
+                ) : columnIndex === 1 || columnIndex === 2 ? (
+                  formateDate(value.toString())
                 ) : (
                   value
                 )}
@@ -179,7 +116,13 @@ export default function SelectedCourseTable() {
       </table>
 
       <div className="w-full flex items-center justify-end">
-        <Link href={"/our-courses/kolkata?" + searchParams.toString()}>
+        <Link
+          href={`/our-courses/${
+            localStorage
+              ? localStorage.getItem("user-selected-institute")?.toLowerCase()
+              : "kolkata"
+          }?${searchParams.toString()}`}
+        >
           <Button
             type="button"
             className="mt-4 active:scale-90 !bg-white border !border-gray-500 !text-foreground"

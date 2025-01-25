@@ -13,7 +13,6 @@ import {
   viewStudentsDocumentsValidator,
 } from "../validator/admission.validator";
 import { pool } from "../config/db";
-import { reqFilesToKeyValue } from "../utils/reqFilesToKeyValue";
 import { objectToSqlConverterUpdate } from "../utils/objectToSql";
 import { transaction } from "../utils/transaction";
 
@@ -77,6 +76,10 @@ export const saveAdmissionInfo = asyncErrorHandler(
         sql: `UPDATE students SET ${keys} WHERE student_id = $${paramsNum}`,
         values: sqlValues,
       },
+      {
+        sql : `UPDATE enrolled_batches_courses SET enrollment_status = $1 WHERE form_id = $2`,
+        values : [formStatus, formId]
+      }
     ]);
 
     res
@@ -109,10 +112,16 @@ export const updateFormStatus = asyncErrorHandler(
     const { error, value } = updateFormStatusValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
-    await pool.query(
-      `UPDATE fillup_forms SET form_status = $1 WHERE form_id = $2`,
-      [value.form_status, value.form_id]
-    );
+    await transaction([
+      {
+        sql : `UPDATE fillup_forms SET form_status = $1 WHERE form_id = $2`,
+        values : [value.form_status, value.form_id]
+      },
+      {
+        sql : `UPDATE enrolled_batches_courses SET enrollment_status = $1 WHERE form_id = $2`,
+        values : [value.form_status, value.form_id]
+      }
+    ]);
 
     res
       .status(200)

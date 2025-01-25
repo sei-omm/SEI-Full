@@ -9,6 +9,7 @@ interface IProps {
   centerName?: string;
 }
 
+
 export default async function CoursesPage({ centerName }: IProps) {
   const response = await fetch(
     `${BASE_API}/course/with-batches/student?institute=${capitalizeFirstChar(
@@ -47,7 +48,7 @@ export default async function CoursesPage({ centerName }: IProps) {
       </div>
 
       {/* Courses List */}
-      <CoursesListView courses={courses.data} />
+      <CoursesListView courses={courses.data}/>
     </section>
   );
 }

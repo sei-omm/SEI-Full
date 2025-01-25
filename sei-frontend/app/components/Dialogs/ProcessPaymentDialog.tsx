@@ -11,6 +11,10 @@ import { axiosQuery } from "@/app/utils/axiosQuery";
 import { useRazorpay } from "react-razorpay";
 import { toast } from "react-toastify";
 import { setDialog } from "@/app/redux/slice/dialog.slice";
+import {
+  getLocalLoginInfo,
+  setLocalLoginInfo,
+} from "@/app/utils/getLocalLoginInfo";
 
 type EnrollCourseType = {
   order_id: number;
@@ -32,10 +36,12 @@ export default function ProcessPaymentDialog() {
   const batchIdsInString = extraValue.batch_ids;
   const courseIds = extraValue.course_ids;
   const isInWaitingLists = extraValue.isInWaitingLists;
-  // const instituteNames = extraValue.institutes;
 
   const handlePaymentSuccess = async (res: RazorpaySuccesshandlerTypes) => {
-    const { error, response } = await axiosQuery<IResponse, IResponse>({
+    const { error, response } = await axiosQuery<
+      IResponse,
+      IResponse<{ batch_id: number; start_date: string }[]>
+    >({
       url: `${BASE_API}/payment/verify?order_id=${res.razorpay_order_id}&batch_ids=${batchIdsInString}&course_ids=${courseIds}&institute=${instituteName.current}&is_in_waiting_list=${isInWaitingLists}`,
       method: "get",
       headers: {
@@ -46,6 +52,23 @@ export default function ProcessPaymentDialog() {
 
     if (error !== null) {
       return toast.error(error.message);
+    }
+
+    //after payment success store the enrolled courses to localstorage to avoid duplicate course_batch enrollment
+    const loginInfo = getLocalLoginInfo();
+    if (loginInfo !== null) {
+      const alreadyEnrolledCourses = loginInfo.enrolled_courses;
+      response?.data.forEach((item) => {
+        alreadyEnrolledCourses.push({
+          batch_id: item.batch_id,
+          start_date: item.start_date,
+        });
+      });
+
+      setLocalLoginInfo({
+        ...loginInfo,
+        enrolled_courses: alreadyEnrolledCourses,
+      });
     }
 
     dispatch(

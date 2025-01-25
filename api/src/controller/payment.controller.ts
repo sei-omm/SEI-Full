@@ -392,7 +392,7 @@ export const verifyPayment = asyncErrorHandler(
     const payments_values: (string | number)[] = [];
 
     const client = await pool.connect();
-    const { error: transactionError } = await tryCatch(async () => {
+    const { error: transactionError, data } = await tryCatch<{batch_id : number, start_date : string}[]>(async () => {
       await client.query("BEGIN");
 
       // store data to fillup_forms (single row will created althoug if multiple course or batches enroll)
@@ -426,7 +426,7 @@ export const verifyPayment = asyncErrorHandler(
           studentId,
           rows[0].form_id,
           orderId,
-          isInWaitingListArray[index] == "true" ? "Pending" : "Approve"
+          isInWaitingListArray[index] == "true" ? "Pending" : "Pending" //old data was "Approve"
         );
 
         payments_values.push(
@@ -470,17 +470,20 @@ export const verifyPayment = asyncErrorHandler(
         payments_values
       );
 
-      //decrese the total seats as -1 for every batches user enrolled
-      await client.query(
+      //increse the total batch_reserved_seats as +1 for every batches user enrolled
+      const { rows : course_batch_info } = await client.query(
         `
         UPDATE course_batches
-        SET batch_total_seats = batch_total_seats - 1
-        WHERE batch_id IN (${batchIds?.map((_, index) => `$${index + 1}`)})`,
+        SET batch_reserved_seats = batch_reserved_seats + 1
+        WHERE batch_id IN (${batchIds?.map((_, index) => `$${index + 1}`)})
+        RETURNING batch_id, start_date
+        `,
         batchIds
       );
 
       await client.query("COMMIT");
       client.release();
+      return course_batch_info;
     });
 
     if (transactionError !== null) {
@@ -491,7 +494,7 @@ export const verifyPayment = asyncErrorHandler(
 
     res
       .status(200)
-      .json(new ApiResponse(201, "Payment & Course Enrollment Successful"));
+      .json(new ApiResponse(201, "Payment & Course Enrollment Successful", data));
   }
 );
 

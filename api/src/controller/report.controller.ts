@@ -65,16 +65,82 @@ export const createAdmissionReport = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
     const { LIMIT, OFFSET } = parsePagination(req);
 
+    // let FILTER =
+    //   "WHERE C.institute = $1 AND EC.enrollment_status = 'Approve' AND DATE(EC.created_at) BETWEEN $2 AND $3";
+    // let FILTER_VALUES: any[] = [
+    //   value.institute,
+    //   value.from_date,
+    //   value.to_date,
+    // ];
+
+    // if (req.query.form_id) {
+    //   FILTER = "WHERE ff.form_id = $1";
+    //   FILTER_VALUES = [req.query.form_id as string];
+    // } else if (req.query.indos_number) {
+    //   FILTER = "WHERE s.indos_number = $1";
+    //   FILTER_VALUES = [req.query.indos_number as string];
+    // } else if (req.query.cdc_num) {
+    //   FILTER = "WHERE s.cdc_num = $1";
+    //   FILTER_VALUES = [req.query.cdc_num as string];
+    // } else if (req.query.passport_num) {
+    //   FILTER = "WHERE s.passport_num = $1";
+    //   FILTER_VALUES = [req.query.passport_num as string];
+    // }
+
+    // const sqlForAdmissionReport = `
+    //     SELECT
+    //         EC.created_at,
+    //         C.course_name,
+    //         CB.batch_fee AS course_batch_fee,
+    //         (CB.batch_fee - SUM(PAY.paid_amount)) AS due_amount_for_course,
+    //         -- C.course_fee,
+    //         -- (C.course_fee - SUM(PAY.paid_amount)) AS due_amount_for_course,
+    //         STU.name,
+    //         STU.profile_image,
+    //         C.course_type,
+    //         STU.email,
+    //         STU.mobile_number,
+    //         SUM(PAY.paid_amount) AS paid_amount_for_course, -- it for total paid for course
+    //         SUM(PAY.misc_payment) AS total_misc_amount,
+    //         (SUM(PAY.paid_amount) + SUM(PAY.misc_payment)) AS total_paid
+    //     FROM enrolled_batches_courses AS EC
+    //     LEFT JOIN students AS STU
+    //         ON EC.student_id = STU.student_id
+    //     LEFT JOIN courses AS C
+    //         ON EC.course_id = C.course_id
+    //     LEFT JOIN payments AS PAY
+    //         ON EC.course_id = PAY.course_id AND EC.student_id = PAY.student_id
+    //     LEFT JOIN course_batches AS CB
+    //         ON CB.batch_id = EC.batch_id
+    //     ${FILTER}
+    //     GROUP BY
+    //         EC.created_at,
+    //         C.course_name,
+    //         CB.batch_fee,
+    //         C.course_type,
+    //         STU.student_id,
+    //         STU.name,
+    //         STU.profile_image,
+    //         STU.email,
+    //         STU.mobile_number
+    //     LIMIT ${LIMIT} OFFSET ${OFFSET}
+    // `;
+
     let FILTER =
-      "WHERE C.institute = $1 AND EC.enrollment_status = 'Approve' AND DATE(EC.created_at) BETWEEN $2 AND $3";
+      "WHERE c.institute = $1 AND ebc.enrollment_status = 'Approve' AND DATE(ebc.created_at) BETWEEN $2 AND $3";
     let FILTER_VALUES: any[] = [
       value.institute,
       value.from_date,
       value.to_date,
     ];
 
+    if (req.query.rank) {
+      FILTER += " AND s.rank = $4";
+      FILTER_VALUES.push(value.rank);
+    }
+
     if (req.query.form_id) {
-      FILTER = "WHERE ff.form_id = $1";
+      FILTER = "WHERE ebc.form_id = $1";
       FILTER_VALUES = [req.query.form_id as string];
     } else if (req.query.indos_number) {
       FILTER = "WHERE s.indos_number = $1";
@@ -88,41 +154,39 @@ export const createAdmissionReport = asyncErrorHandler(
     }
 
     const sqlForAdmissionReport = `
-        SELECT 
-            EC.created_at,
-            C.course_name,
-            CB.batch_fee AS course_batch_fee,
-            (CB.batch_fee - SUM(PAY.paid_amount)) AS due_amount_for_course,
-            -- C.course_fee,
-            -- (C.course_fee - SUM(PAY.paid_amount)) AS due_amount_for_course,
-            STU.name,
-            STU.profile_image,
-            C.course_type,
-            STU.email,
-            STU.mobile_number,
-            SUM(PAY.paid_amount) AS paid_amount_for_course, -- it for total paid for course
-            SUM(PAY.misc_payment) AS total_misc_amount,
-            (SUM(PAY.paid_amount) + SUM(PAY.misc_payment)) AS total_paid
-        FROM enrolled_batches_courses AS EC
-        LEFT JOIN students AS STU
-            ON EC.student_id = STU.student_id
-        LEFT JOIN courses AS C
-            ON EC.course_id = C.course_id
-        LEFT JOIN payments AS PAY
-            ON EC.course_id = PAY.course_id AND EC.student_id = PAY.student_id
-        LEFT JOIN course_batches AS CB
-            ON CB.batch_id = EC.batch_id
+        SELECT DISTINCT
+          cb.start_date AS created_at,
+          c.course_name,
+          cb.batch_fee AS course_batch_fee,
+          cb.batch_fee - SUM(p.paid_amount) as due_amount_for_course,
+          s.profile_image,
+          s.name,
+          c.course_type,
+          s.email,
+          s.mobile_number,
+          SUM(p.paid_amount) paid_amount_for_course,
+          SUM(p.misc_payment) as total_misc_amount,
+          SUM(p.paid_amount) + SUM(p.misc_payment) as total_paid,
+          SUM(p.discount_amount) as total_discount
+        FROM enrolled_batches_courses ebc
+
+        INNER JOIN courses c
+        ON c.course_id = ebc.course_id
+
+        INNER JOIN course_batches cb
+        ON cb.batch_id = ebc.batch_id
+
+        INNER JOIN payments p
+        ON p.batch_id = ebc.batch_id
+
+        INNER JOIN students s
+        ON s.student_id = ebc.student_id
+
         ${FILTER}
+
         GROUP BY 
-            EC.created_at,
-            C.course_name,
-            CB.batch_fee,
-            C.course_type,
-            STU.student_id, 
-            STU.name,
-            STU.profile_image,
-            STU.email,
-            STU.mobile_number
+        c.course_name, cb.start_date, cb.batch_fee, s.name, s.profile_image, c.course_type, s.email, s.mobile_number
+
         LIMIT ${LIMIT} OFFSET ${OFFSET}
     `;
 
@@ -642,7 +706,7 @@ export const getCourseTrendReport = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error, value } = courseTrendReportValidator.validate(req.query);
     if (error) throw new ErrorHandler(400, error.message);
-    const { LIMIT, OFFSET } = parsePagination(req);
+    // const { LIMIT, OFFSET } = parsePagination(req);
 
     const courseTrendReportSql = `
         SELECT
@@ -657,16 +721,18 @@ export const getCourseTrendReport = asyncErrorHandler(
             ON ebc.batch_id = cb.batch_id
       LEFT JOIN fillup_forms AS ff
             ON ff.form_id = ebc.form_id
-      WHERE c.course_id = $1 AND c.course_type = $2 AND c.institute = $3 AND cb.start_date = $4
+      WHERE c.course_id = $1 AND c.course_type = $2 AND c.institute = $3 -- AND cb.start_date -- cb.start_date = $4
       GROUP BY cb.batch_id
       ORDER BY cb.start_date DESC
-      LIMIT ${LIMIT} OFFSET ${OFFSET};`;
+      LIMIT $4`;
 
+    // LIMIT ${LIMIT} OFFSET ${OFFSET};
     const { rows } = await pool.query(courseTrendReportSql, [
       value.course_id,
       value.course_type,
       value.institute,
-      value.batch_date,
+      // value.batch_date,
+      value.last_no_of_batches,
     ]);
     res.status(200).json(new ApiResponse(200, "", rows));
   }
@@ -752,16 +818,17 @@ export const getCourseTrendExcelReport = asyncErrorHandler(
               ON ebc.batch_id = cb.batch_id
         LEFT JOIN fillup_forms AS ff
               ON ff.form_id = ebc.form_id
-        WHERE c.course_id = $1 AND c.course_type = $2 AND c.institute = $3 AND cb.start_date = $4
+        WHERE c.course_id = $1 AND c.course_type = $2 AND c.institute = $3 -- AND cb.start_date = $4
         GROUP BY cb.batch_id
         ORDER BY cb.start_date DESC
-        -- LIMIT $4`;
+        LIMIT $4`;
 
     const { rows, rowCount } = await pool.query(courseTrendReportSql, [
       value.course_id,
       value.course_type,
       value.institute,
-      value.batch_date,
+      // value.batch_date,
+      value.last_no_of_batches,
     ]);
 
     if (rowCount === 0) throw new ErrorHandler(400, "No Report Found");
@@ -871,6 +938,7 @@ export const getBatchReport = asyncErrorHandler(
         SELECT 
           ebc.form_id,
           s.name,
+          cb.start_date,
           cb.batch_fee,
           SUM(p.paid_amount) AS total_paid,
           (cb.batch_fee - SUM(p.paid_amount)) AS total_due,
@@ -901,7 +969,7 @@ export const getBatchReport = asyncErrorHandler(
               AND c.institute = $3
               AND c.course_type = $4
                       
-        GROUP BY p.student_id, ebc.form_id, s.name, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email
+        GROUP BY p.student_id, ebc.form_id, s.name, cb.start_date, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email
         LIMIT ${LIMIT} OFFSET ${OFFSET};
       `,
       [value.course_id, value.batch_date, value.institute, value.course_type]
@@ -1093,6 +1161,7 @@ export const getReceiptReport = asyncErrorHandler(
       `
       SELECT
       s.name,
+      cb.batch_fee - (SELECT SUM(paid_amount) FROM payments WHERE batch_id = cb.batch_id) as due_amount,
       s.indos_number,
       s.mobile_number,
       s.email,
@@ -1102,7 +1171,8 @@ export const getReceiptReport = asyncErrorHandler(
       p.payment_id,
       p.remark AS payment_remark,
       p.misc_payment,
-      p.misc_remark
+      p.misc_remark,
+      p.receipt_no
       FROM payments AS p
 
       LEFT JOIN course_batches AS cb
@@ -1115,6 +1185,12 @@ export const getReceiptReport = asyncErrorHandler(
       ON c.course_id = p.course_id
       
       WHERE c.institute = $1 AND DATE(p.created_at) BETWEEN $2 AND $3
+      GROUP BY 
+      cb.batch_id,
+      s.name, cb.batch_fee,
+      s.indos_number, s.mobile_number, 
+      s.email, p.payment_type, p.mode, 
+      p.paid_amount, p.payment_id, p.remark, p.misc_payment, p.misc_remark, p.receipt_no
       LIMIT ${LIMIT} OFFSET ${OFFSET};
     `,
       [value.institute, value.from_date, value.to_date]
@@ -1236,43 +1312,115 @@ export const getOccupancyReport = asyncErrorHandler(
     const { error, value } = occupancyReportValidator.validate(req.query);
     if (error) throw new ErrorHandler(400, error.message);
 
-    const { LIMIT, OFFSET } = parsePagination(req);
+    // const { LIMIT, OFFSET } = parsePagination(req);
+
+    // const { rows } = await pool.query(
+    //   `
+    //   SELECT
+    //     c.course_id,
+    //     c.course_name,
+    //     c.course_code,
+    //     c.institute,
+    //     COUNT(cb.batch_id) AS total_batch_conducted,
+    //     SUM(cb.batch_total_seats) AS total_candidate_strength,
+    //     COUNT(ebc.batch_id) AS occupency,
+    //     mb.max_batch AS max_batch_per_month,
+    //     ROUND((COUNT(ebc.batch_id)::DECIMAL / NULLIF(mb.max_batch * SUM(cb.batch_total_seats), 0) * 100), 2) AS occupency_percentage
+    //   FROM courses AS c
+
+    //   LEFT JOIN course_batches AS cb
+    //   ON cb.course_id = c.course_id
+
+    //   LEFT JOIN enrolled_batches_courses AS ebc
+    //   ON ebc.batch_id = cb.batch_id AND ebc.enrollment_status = 'Approve'
+
+    //   LEFT JOIN fillup_forms AS ff
+    //   ON ff.form_id = ebc.form_id
+
+    //   LEFT JOIN (
+    //     SELECT DISTINCT ON (course_id) course_id, max_batch
+    //     FROM course_with_max_batch_per_month
+    //     ORDER BY course_id, created_month DESC
+    //   ) mb ON c.course_id = mb.course_id
+
+    //   WHERE cb.end_date BETWEEN $1 AND $2 AND c.institute = $3
+
+    //   GROUP BY c.course_id, c.course_name, c.course_code, mb.max_batch
+    //   LIMIT ${LIMIT} OFFSET ${OFFSET};
+    // `,
+    //   [value.start_date, value.end_date, value.institute]
+    // );
 
     const { rows } = await pool.query(
       `
-      SELECT
-        c.course_id,
-        c.course_name,
-        c.course_code,
-        c.institute,
-        COUNT(cb.batch_id) AS total_batch_conducted,
-        SUM(cb.batch_total_seats) AS total_candidate_strength,
-        COUNT(ebc.batch_id) AS occupency,
-        mb.max_batch AS max_batch_per_month,
-        ROUND((COUNT(ebc.batch_id)::DECIMAL / NULLIF(mb.max_batch * SUM(cb.batch_total_seats), 0) * 100), 2) AS occupency_percentage
-      FROM courses AS c
-
-      LEFT JOIN course_batches AS cb
-      ON cb.course_id = c.course_id
-
-      LEFT JOIN enrolled_batches_courses AS ebc
-      ON ebc.batch_id = cb.batch_id AND ebc.enrollment_status = 'Approve'
-
-      LEFT JOIN fillup_forms AS ff
-      ON ff.form_id = ebc.form_id
-
-      LEFT JOIN (
-        SELECT DISTINCT ON (course_id) course_id, max_batch
-        FROM course_with_max_batch_per_month
-        ORDER BY course_id, created_month DESC
-      ) mb ON c.course_id = mb.course_id
-
-      WHERE cb.end_date BETWEEN $1 AND $2 AND c.institute = $3
-
-      GROUP BY c.course_id, c.course_name, c.course_code, mb.max_batch
-      LIMIT ${LIMIT} OFFSET ${OFFSET};
+      WITH EnrolledData AS (
+          SELECT 
+            course_id,
+            COUNT(enroll_id) AS occupancy
+          FROM 
+            enrolled_batches_courses
+          WHERE 
+            enrollment_status = 'Approve'
+          GROUP BY 
+            course_id
+        ),
+        PaymentsData AS (
+          SELECT 
+            p.course_id,
+            SUM(p.paid_amount) AS total_fee_collection,
+            SUM(p.paid_amount) - SUM(discount_amount) AS after_discount_fee_collection
+          FROM 
+            payments p
+          INNER JOIN 
+            enrolled_batches_courses ebc ON p.course_id = ebc.course_id
+          WHERE 
+            ebc.enrollment_status = 'Approve'
+          GROUP BY 
+            p.course_id
+        ),
+        BatchData AS (
+          SELECT 
+            course_id,
+            COUNT(batch_id) AS batch_conducted
+          FROM 
+            course_batches
+          GROUP BY 
+            course_id
+        )
+        SELECT 
+          c.course_id,
+          c.course_code,
+          c.course_name,
+          c.total_seats AS student_capacity,
+          e.name AS executive_name,
+          (SELECT max_batch FROM course_with_max_batch_per_month WHERE course_id = c.course_id ORDER BY created_date DESC LIMIT 1) as max_batch_per_month,
+          bd.batch_conducted,
+          COALESCE(ed.occupancy, 0) as occupancy,
+          COALESCE(pd.total_fee_collection, 0) as total_fee_collection,
+          COALESCE(pd.after_discount_fee_collection, 0) as after_discount_fee_collection,
+          COALESCE(
+            ROUND((ed.occupancy / (
+            (SELECT max_batch FROM course_with_max_batch_per_month WHERE course_id = c.course_id ORDER BY created_date DESC LIMIT 1) 
+            * c.total_seats)::DECIMAL * 100), 2)
+          , 0) as occupancy_percentage
+        FROM 
+          courses c
+        LEFT JOIN 
+          BatchData bd ON bd.course_id = c.course_id
+        LEFT JOIN 
+          EnrolledData ed ON ed.course_id = c.course_id
+        LEFT JOIN 
+          PaymentsData pd ON pd.course_id = c.course_id
+        LEFT JOIN 
+          employee e ON e.id = c.concern_marketing_executive_id
+        LEFT JOIN course_batches AS cb
+          ON cb.course_id = c.course_id
+        WHERE 
+          c.institute = $1 AND cb.start_date BETWEEN $2 AND $3
+        GROUP BY 
+          c.course_id, c.course_name, c.total_seats, e.name, bd.batch_conducted, ed.occupancy, pd.total_fee_collection, pd.after_discount_fee_collection;
     `,
-      [value.start_date, value.end_date, value.institute]
+      [value.institute, value.start_date, value.end_date]
     );
 
     res.status(200).json(new ApiResponse(200, "Occupancy Report", rows));

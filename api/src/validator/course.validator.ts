@@ -106,7 +106,7 @@ export const fillUpCourseFormValidator = Joi.object({
 });
 
 export const getScheduleCourseBatchValidator = Joi.object({
-  course_id: Joi.number().required(),
+  course_id: Joi.any().required(),
   page: Joi.number().optional(),
 });
 
@@ -145,4 +145,11 @@ export const deleteCourseBatchValidator = Joi.object({
 export const getRequiredDocumentsValidator = Joi.object({
   course_ids: Joi.string().required(),
   student_id: Joi.number().optional(),
+});
+
+export const VchangeBatchManually = Joi.object({
+  old_batch_id : Joi.number().required(),
+  new_batch_id: Joi.number().required(),
+  course_id: Joi.number().required(),
+  student_id: Joi.number().required(),
 });

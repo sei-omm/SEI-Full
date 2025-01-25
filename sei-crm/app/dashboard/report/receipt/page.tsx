@@ -16,12 +16,26 @@ import { useQuery } from "react-query";
 
 export default function ReceiptReport() {
   const searchParams = useSearchParams();
-  
+
   const [tableDatas, setTableDatas] = useState<{
     heads: string[];
     body: (string | null)[][];
   }>({
-    heads: [],
+    heads: [
+      "STUDENT NAME",
+      "DUE AMOUNT",
+      "INDOS NUMBER",
+      "MOBILE NUMBER",
+      "EMAIL",
+      "PAYMENT TYPE",
+      "PAYMENT MODE",
+      "AMOUNT PAID",
+      "PAYMENT ID",
+      "PAYMENT REMARK",
+      "MISC PAID AMOUNT",
+      "MISC REMARK",
+      "RECEIPT NUMBER",
+    ],
     body: [],
   });
 
@@ -43,7 +57,7 @@ export default function ReceiptReport() {
       onSuccess: (data) => {
         const oldStates = { ...tableDatas };
         if (data.data.length === 0) return;
-        oldStates.heads = Object.keys(data.data[0]);
+        // oldStates.heads = Object.keys(data.data[0]);
 
         oldStates.body = data.data.map((item) => {
           const newObj = { ...item };
@@ -86,9 +100,9 @@ export default function ReceiptReport() {
             <table className="min-w-max w-full table-auto">
               <thead className="uppercase w-full border-b border-gray-100">
                 <tr>
-                  {tableDatas.heads.map((item) => (
+                  {tableDatas.heads.map((item, index) => (
                     <th
-                      className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
+                    className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${index === 1 ? "text-red-600" : ""}`}
                       key={item}
                     >
                       {item}
@@ -102,9 +116,9 @@ export default function ReceiptReport() {
                     key={rowIndex}
                     className="hover:bg-gray-100 group/bodyitem"
                   >
-                    {itemArray.map((value) => (
+                    {itemArray.map((value, colIndex) => (
                       <td
-                        className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
+                      className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${colIndex === 1 && parseInt(value as string) > 0 ? "text-red-600" : ""}`}
                         key={value}
                       >
                         {value?.includes("@") ? (

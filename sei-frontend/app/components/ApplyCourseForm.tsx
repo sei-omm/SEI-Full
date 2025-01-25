@@ -6,19 +6,21 @@ import { FormEvent, useEffect, useState } from "react";
 import { BASE_API, STUDENT_RANKS } from "../constant";
 import {
   IResponse,
+  TCourseBatches,
   TMultipleCoursePrice,
   TStudentRegistationForm,
 } from "../type";
 import SelectedCourseTable from "./SelectedCourseTable";
 import { useQuery } from "react-query";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../redux/store";
+import { useDispatch } from "react-redux";
 import axios from "axios";
 import { FaLongArrowAltDown } from "react-icons/fa";
 import { setDialog } from "../redux/slice/dialog.slice";
 import { axiosQuery } from "../utils/axiosQuery";
 import { toast } from "react-toastify";
 import { getAuthToken } from "../utils/getAuthToken";
+import { useSearchParams } from "next/navigation";
+import { queryClient } from "../redux/MyProvider";
 
 interface IProps {
   form_info: TStudentRegistationForm | null;
@@ -28,29 +30,41 @@ export default function ApplyCourseForm({ form_info }: IProps) {
   const [userFormInfo, setuserFormInfo] = useState<object | null>(null);
   const [isSavingForm, setIsSavingForm] = useState(false);
 
+  const searchParams = useSearchParams();
+
   const dispatch = useDispatch();
 
-  const cartData = useSelector((state: RootState) => state.courseCart);
+  // const cartData = useSelector((state: RootState) => state.courseCart);
+
+  const cartData = queryClient.getQueriesData([
+    "get-batch-info",
+    searchParams.toString(),
+  ])[0][1] as IResponse<TCourseBatches[]> | undefined;
 
   const [calclutedPrice, setCalclutedPrice] = useState({
     totalPrice: 0,
     minToPay: 0,
   });
 
-  useQuery<IResponse<TMultipleCoursePrice[]>>({
-    queryKey: ["get-cart-courses-info", cartData],
-    queryFn: async () =>
-      (
+  useQuery<IResponse<TMultipleCoursePrice[]> | undefined>({
+    queryKey: ["get-cart-courses-info", searchParams.toString()],
+    queryFn: async () => {
+      const ids: string[] = [];
+      searchParams.forEach((value) => {
+        ids.push(value);
+      });
+      if (ids.length === 0) return;
+
+      return (
         await axios.get(
-          `${BASE_API}/course/get-multi-batch-price?batch_ids=${cartData
-            .map((item) => item.batch_id)
-            .join(",")}`
+          `${BASE_API}/course/get-multi-batch-price?batch_ids=${ids.join(",")}`
         )
-      ).data,
+      ).data;
+    },
     onSuccess(data) {
       let totalPrice = 0;
       let minToPay = 0;
-      data.data.forEach((item) => {
+      data?.data.forEach((item) => {
         totalPrice += parseInt(item.total_price.toString());
         minToPay += parseInt(item.minimum_to_pay.toString());
       });
@@ -61,6 +75,23 @@ export default function ApplyCourseForm({ form_info }: IProps) {
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const oldDates = new Map<string, boolean>();
+    let isDuplicatedFound = false;
+    cartData?.data.forEach((item) => {
+      if (oldDates.has(item.start_date)) {
+        isDuplicatedFound = true;
+        return;
+      }
+      oldDates.set(item.start_date, true);
+    });
+
+    if (isDuplicatedFound) {
+      return alert(
+        "You have selected two courses with the same date please delte one of them."
+      );
+    }
+
     setIsSavingForm(true);
 
     if (userFormInfo === null) {
@@ -97,11 +128,10 @@ export default function ApplyCourseForm({ form_info }: IProps) {
           totalPrice: calclutedPrice.totalPrice,
           minToPay: calclutedPrice.minToPay,
           currentTarget: event.currentTarget,
-          batch_ids: cartData.map((item) => item.batch_id).join(","),
-          course_ids: cartData.map((item) => item.course_id).join(","),
-          institutes: cartData.map((item) => item.institute).join(","),
-          isInWaitingLists: cartData
-            .map((item) => item.isInWaitingList)
+          batch_ids: cartData?.data.map((item) => item.batch_id).join(","),
+          course_ids: cartData?.data.map((item) => item.course_id).join(","),
+          isInWaitingLists: cartData?.data
+            .map((item) => item.batch_reserved_seats >= item.batch_total_seats)
             .join(","),
         },
       })

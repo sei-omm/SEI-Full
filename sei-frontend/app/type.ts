@@ -11,6 +11,7 @@ export type TabMenuType = {
 };
 
 export type TCourseBatches = {
+  course_name ? : string;
   batch_id: number;
   course_id: number;
   start_date: string;
@@ -19,6 +20,7 @@ export type TCourseBatches = {
   batch_reserved_seats: number;
   end_date: string;
   visibility: string;
+  min_pay_percentage : number;
 };
 
 export type CourseType = {

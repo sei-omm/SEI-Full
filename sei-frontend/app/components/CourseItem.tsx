@@ -22,59 +22,6 @@ export default function CourseItem({
   withoutBatchDates,
 }: IProps) {
   return (
-    // <li
-    //   className={`shadow-xl border border-gray-200 rounded-3xl p-7 basis-64 max-w-64 flex-grow flex flex-col justify-between gap-3 card-shdow ${className}`}
-    // >
-    //   <div>
-    //     <div className="flex items-center justify-between py-2">
-    //       <div className="flex-center gap-x-1 text-[#bd9037]">
-    //         <CgTimelapse size={14} />
-    //         <span className="text-[0.82rem]">
-    //           {course.remain_seats} Seats Remain
-    //         </span>
-    //       </div>
-    //       <div className="flex-center gap-x-1 text-[#bd9037]">
-    //         <MdOutlineDateRange size={14} />
-    //         <span className="text-[0.82rem]">
-    //           {formateDate(course.created_at)}
-    //         </span>
-    //       </div>
-    //     </div>
-
-    //     <h2 className="font-semibold text-gray-700 text-xl line-clamp-2">
-    //       {course.course_name}
-    //     </h2>
-
-    //     <div className="mt-2 space-y-2">
-    //       <h2 className="font-medium">Required Documents : </h2>
-    //       <ul className="flex flex-wrap gap-2">
-    //         {course.require_documents?.split(",").map((item) => (
-    //           <li key={item} className="flex items-center gap-1">
-    //             <IoDocumentTextOutline size={12} />
-    //             <span className="text-[13px]">{item}</span>
-    //           </li>
-    //         ))}
-    //       </ul>
-    //     </div>
-    //   </div>
-    //   {withoutBatchDates ? null : course.batches?.length === 0 ? null : (
-    //     <div className="space-y-2">
-    //       <span className="text-sm text-gray-500">
-    //         Click on the Date to book your Course
-    //       </span>
-
-    //       <CourseBatchDateList course={course} />
-    //     </div>
-    //   )}
-
-    //   <div className="w-full flex items-end justify-between pt-4">
-    //     <span className="text-[#b18c44] font-semibold flex-center gap-2">
-    //       <IoMdTime />
-    //       <span className="text-sm">Duration {course.course_duration}</span>
-    //     </span>
-    //   </div>
-    // </li>
-
     <li
       className={`shadow-xl border relative border-gray-200 rounded-3xl p-7 basis-64 max-w-64 flex-grow flex flex-col justify-between gap-3 card-shdow ${className}`}
     >
@@ -121,11 +68,17 @@ export default function CourseItem({
         {course.enrollment_status ? (
           <div className="max-w-fit absolute right-7">
             {course.enrollment_status === "Approve" ? (
-              <TagsBtn className="text-[14px]" type="SUCCESS">Approved</TagsBtn>
+              <TagsBtn className="text-[14px]" type="SUCCESS">
+                Approved
+              </TagsBtn>
             ) : course.enrollment_status === "Pending" ? (
-              <TagsBtn className="text-[14px]" type="PENDING">Waiting List</TagsBtn>
+              <TagsBtn className="text-[14px]" type="PENDING">
+                Waiting List
+              </TagsBtn>
             ) : (
-              <TagsBtn className="text-[14px]" type="FAILED">Canceled</TagsBtn>
+              <TagsBtn className="text-[14px]" type="FAILED">
+                Canceled
+              </TagsBtn>
             )}
           </div>
         ) : null}

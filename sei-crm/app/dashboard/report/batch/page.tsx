@@ -1,6 +1,7 @@
 "use client";
 
 import { BASE_API } from "@/app/constant";
+import { beautifyDate } from "@/app/utils/beautifyDate";
 import ManageAdmissionFilter from "@/components/Admission/ManageAdmissionFilter";
 import Button from "@/components/Button";
 import DownloadFormUrl from "@/components/DownloadFormUrl";
@@ -37,7 +38,23 @@ export default function BatchReport() {
     heads: string[];
     body: (string | null | number)[][];
   }>({
-    heads: [],
+    heads: [
+      "FORM ID",
+      "STUDENT NAME",
+      "BATCH DATE",
+      "BATCH FEE",
+      "AMOUNT PAID",
+      "DUE AMOUNT",
+      "MISC PAID AMOUNT",
+      "FORM STATUS",
+      "INDOS NUMBER",
+      "MOBILE NUMBER",
+      "EMAIL",
+      "PAYMENT TYPE",
+      "PAYMENT MODE",
+      "PAYMENT IDS",
+      "REMARKS"
+    ],
     body: [],
   });
 
@@ -47,19 +64,20 @@ export default function BatchReport() {
     isFetching,
   } = useQuery<ISuccess<TBatch[]>, AxiosError<IError>>(
     ["get-dgs-indos-reports", searchParams.toString()],
-    async () =>
-      (
+    async () => {
+      return (
         await axios.get(
           `${BASE_API}/report/batch${
             searchParams.size != 0 ? `?${searchParams.toString()}` : ""
           }`
         )
-      ).data,
+      ).data;
+    },
     {
       onSuccess: (data) => {
         const oldStates = { ...tableDatas };
         if (data.data.length === 0) return;
-        oldStates.heads = Object.keys(data.data[0]);
+        // oldStates.heads = Object.keys(data.data[0]);
         oldStates.body = data.data.map((item) => {
           const newObj = { ...item };
           delete (newObj as { profile_image?: string | null }).profile_image;
@@ -100,9 +118,9 @@ export default function BatchReport() {
             <table className="min-w-max w-full table-auto">
               <thead className="uppercase w-full border-b border-gray-100">
                 <tr>
-                  {tableDatas.heads.map((item) => (
+                  {tableDatas.heads.map((item, index) => (
                     <th
-                      className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
+                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${index === 5 ? "text-red-600" : ""}`}
                       key={item}
                     >
                       {item}
@@ -116,9 +134,9 @@ export default function BatchReport() {
                     key={rowIndex}
                     className="hover:bg-gray-100 group/bodyitem"
                   >
-                    {itemArray.map((value) => (
+                    {itemArray.map((value, colIndex) => (
                       <td
-                        className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
+                        className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${colIndex === 6 && parseInt(value as string) > 0 ? "text-red-600" : ""}`}
                         key={value}
                       >
                         {typeof value != "number" && value?.includes("@") ? (
@@ -128,6 +146,8 @@ export default function BatchReport() {
                           >
                             {value}
                           </Link>
+                        ) : colIndex === 2 ? (
+                          beautifyDate(value?.toString() || "")
                         ) : (
                           value
                         )}

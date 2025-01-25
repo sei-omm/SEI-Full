@@ -1,0 +1,130 @@
+WITH EnrolledData AS (
+  SELECT 
+    course_id,
+    COUNT(enroll_id) AS occupancy
+  FROM 
+    enrolled_batches_courses
+  WHERE 
+    enrollment_status = 'Approve'
+  GROUP BY 
+    course_id
+),
+PaymentsData AS (
+  SELECT 
+    p.course_id,
+    SUM(p.paid_amount) AS total_fee_collection,
+    SUM(p.paid_amount) - SUM(discount_amount) AS after_discount_fee_collection
+  FROM 
+    payments p
+  INNER JOIN 
+    enrolled_batches_courses ebc ON p.course_id = ebc.course_id
+  WHERE 
+    ebc.enrollment_status = 'Approve'
+  GROUP BY 
+    p.course_id
+),
+BatchData AS (
+  SELECT 
+    course_id,
+	start_date,
+    COUNT(batch_id) AS batch_conducted
+  FROM 
+    course_batches
+  GROUP BY 
+    course_id, start_date
+)
+SELECT 
+  c.course_name,
+  c.total_seats AS student_capacity,
+  e.name AS executive_name,
+  mbpm.max_batch AS max_batch_per_month,
+  bd.batch_conducted,
+  COALESCE(ed.occupancy, 0) as occupancy,
+  COALESCE(pd.total_fee_collection, 0) as total_fee_collection,
+  COALESCE(pd.after_discount_fee_collection, 0) as after_discount_fee_collection,
+  COALESCE(ROUND((ed.occupancy / (mbpm.max_batch * c.total_seats)::DECIMAL * 100), 2), 0) as occupancy_percentage
+FROM 
+  courses c
+LEFT JOIN 
+  BatchData bd ON bd.course_id = c.course_id
+LEFT JOIN 
+  EnrolledData ed ON ed.course_id = c.course_id
+LEFT JOIN 
+  PaymentsData pd ON pd.course_id = c.course_id
+LEFT JOIN 
+	course_with_max_batch_per_month as mbpm ON mbpm.course_id = c.course_id
+INNER JOIN 
+  employee e ON e.id = c.concern_marketing_executive_id
+WHERE 
+  c.institute = 'Kolkata' AND bd.start_date BETWEEN '2025-01-01' AND '2025-01-31'
+GROUP BY 
+  c.course_id, c.course_name, c.total_seats, e.name, bd.batch_conducted, ed.occupancy, pd.total_fee_collection, pd.after_discount_fee_collection, mbpm.max_batch;
+
+
+
+
+NEW OLD
+WITH EnrolledData AS (
+  SELECT 
+    course_id,
+    COUNT(enroll_id) AS occupancy
+  FROM 
+    enrolled_batches_courses
+  WHERE 
+    enrollment_status = 'Approve'
+  GROUP BY 
+    course_id
+),
+PaymentsData AS (
+  SELECT 
+    p.course_id,
+    SUM(p.paid_amount) AS total_fee_collection,
+    SUM(p.paid_amount) - SUM(discount_amount) AS after_discount_fee_collection
+  FROM 
+    payments p
+  INNER JOIN 
+    enrolled_batches_courses ebc ON p.course_id = ebc.course_id
+  WHERE 
+    ebc.enrollment_status = 'Approve'
+  GROUP BY 
+    p.course_id
+),
+BatchData AS (
+  SELECT 
+    course_id,
+    COUNT(batch_id) AS batch_conducted
+  FROM 
+    course_batches
+  GROUP BY 
+    course_id
+)
+SELECT 
+  c.course_name,
+  c.total_seats AS student_capacity,
+  e.name AS executive_name,
+  (SELECT max_batch FROM course_with_max_batch_per_month WHERE course_id = c.course_id ORDER BY created_date DESC LIMIT 1) as max_batch_per_month,
+  bd.batch_conducted,
+  COALESCE(ed.occupancy, 0) as occupancy,
+  COALESCE(pd.total_fee_collection, 0) as total_fee_collection,
+  COALESCE(pd.after_discount_fee_collection, 0) as after_discount_fee_collection,
+  COALESCE(
+  	ROUND((ed.occupancy / (
+	  (SELECT max_batch FROM course_with_max_batch_per_month WHERE course_id = c.course_id ORDER BY created_date DESC LIMIT 1) 
+	  * c.total_seats)::DECIMAL * 100), 2)
+  , 0) as occupancy_percentage
+FROM 
+  courses c
+LEFT JOIN 
+  BatchData bd ON bd.course_id = c.course_id
+LEFT JOIN 
+  EnrolledData ed ON ed.course_id = c.course_id
+LEFT JOIN 
+  PaymentsData pd ON pd.course_id = c.course_id
+LEFT JOIN 
+  employee e ON e.id = c.concern_marketing_executive_id
+LEFT JOIN course_batches AS cb
+	ON cb.course_id = c.course_id
+WHERE 
+  c.institute = 'Kolkata' AND cb.start_date BETWEEN '2025-01-01' AND '2025-02-28'
+GROUP BY 
+  c.course_id, c.course_name, c.total_seats, e.name, bd.batch_conducted, ed.occupancy, pd.total_fee_collection, pd.after_discount_fee_collection;

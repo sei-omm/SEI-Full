@@ -4,12 +4,17 @@ import DateInput from "./DateInput";
 import Button from "./Button";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Input from "./Input";
+import { STUDENT_RANKS } from "@/app/constant";
 
 interface IProps {
   withMoreFilter?: boolean;
+  withStudentRank?: boolean;
 }
 
-export default function DateDurationFilter({ withMoreFilter }: IProps) {
+export default function DateDurationFilter({
+  withMoreFilter,
+  withStudentRank,
+}: IProps) {
   const searchParams = useSearchParams();
   const route = useRouter();
   const pathname = usePathname();
@@ -89,6 +94,17 @@ export default function DateDurationFilter({ withMoreFilter }: IProps) {
         className="flex items-end gap-5 *:flex-grow"
       >
         <input name="form_2" hidden />
+        {withStudentRank ? (
+          <DropDown
+            // onChange={(item) => setInstitute(item.value)}
+            key={"student_rank"}
+            name="rank"
+            label="Student Rank"
+            options={STUDENT_RANKS.map((item) => ({ text: item, value: item }))}
+            defaultValue={searchParams.get("rank") || STUDENT_RANKS[0]}
+          />
+        ) : null}
+
         <DropDown
           name="institute"
           label="Campus"

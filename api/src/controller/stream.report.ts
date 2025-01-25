@@ -7,12 +7,11 @@ import {
   courseTrendReportValidator,
   dgsIndosReportValidator,
   occupancyExcelReportValidator,
-  occupancyReportValidator,
   receiptReportValidator,
   refundReportValidator,
 } from "../validator/report.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
-import { ApiResponse } from "../utils/ApiResponse";
+import { beautifyDate } from "../utils/beautifyDate";
 
 export const streamMaintenceRecordExcelReport = asyncErrorHandler(
   async (req, res) => {
@@ -403,11 +402,18 @@ export const streamCourseTrendExcelReport = asyncErrorHandler(
               ON ebc.batch_id = cb.batch_id
         LEFT JOIN fillup_forms AS ff
               ON ff.form_id = ebc.form_id
-        WHERE c.course_id = $1 AND c.course_type = $2 AND c.institute = $3 AND cb.start_date = $4
+        WHERE c.course_id = $1 AND c.course_type = $2 AND c.institute = $3 -- AND cb.start_date = $4
         GROUP BY cb.batch_id
         ORDER BY cb.start_date DESC
+        LIMIT $4
     `,
-      [value.course_id, value.course_type, value.institute, value.batch_date],
+      [
+        value.course_id,
+        value.course_type,
+        value.institute,
+        // value.batch_date
+        value.last_no_of_batches,
+      ],
       {
         batchSize: 10,
       }
@@ -464,7 +470,7 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
   });
   const worksheet = workbook.addWorksheet("Course Batch Report");
 
-  worksheet.mergeCells("A1:O1");
+  worksheet.mergeCells("A1:P1");
   worksheet.getCell("A1").value = `Course Batch Report (${value.institute})`;
   worksheet.getCell("A1").font = {
     size: 20,
@@ -487,7 +493,7 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
     `SELECT course_name FROM courses WHERE course_id = $1`,
     [value.course_id]
   );
-  worksheet.mergeCells("A2:O2");
+  worksheet.mergeCells("A2:P2");
   worksheet.getCell("A2").value = `Course Name : ${rows[0].course_name}`;
   worksheet.getCell("A2").font = {
     size: 18,
@@ -509,9 +515,10 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
     "Sr Number",
     "Form ID",
     "Student Name",
+    "Batch Date",
     "Batch Fee",
     "Due Amount",
-    "Total Paid",
+    "Amount Paid",
     "Total Misc Payment",
     "Admission Form Status",
     "Indos Number",
@@ -529,13 +536,13 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
       font: {
         bold: true,
         size: 14,
-        color: { argb: cellNumber === 5 ? "FFFFFF" : "000000" },
+        color: { argb: cellNumber === 6 ? "FFFFFF" : "000000" },
       },
       alignment: { horizontal: "center", vertical: "middle" },
       fill: {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: cellNumber === 5 ? "DC2626" : "F4A460" },
+        fgColor: { argb: cellNumber === 6 ? "DC2626" : "F4A460" },
       },
       border: {
         top: { style: "thin" },
@@ -553,6 +560,7 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
           row_number() OVER () AS sr_no,
           ebc.form_id,
           s.name,
+          cb.start_date,
           cb.batch_fee,
           (cb.batch_fee - SUM(p.paid_amount)) AS total_due,
           SUM(p.paid_amount) AS total_paid,
@@ -583,7 +591,7 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
               AND c.institute = $3
               AND c.course_type = $4
                       
-        GROUP BY p.student_id, ebc.form_id, s.name, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email, ff.created_at, s.dob, cb.start_date
+        GROUP BY p.student_id, ebc.form_id, s.name, cb.start_date, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email, ff.created_at, s.dob, cb.start_date
     `,
     [value.course_id, value.batch_date, value.institute, value.course_type],
     {
@@ -598,11 +606,17 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
     const excelRow = worksheet.addRow(Object.values(data));
     // Style the data rows
     excelRow.eachCell((cell, cellNumber) => {
+      const values = Object.values(data);
       cell.style = {
         font: {
           size: 12,
-          bold: cellNumber === 5,
-          color: { argb: cellNumber === 5 ? "DC2626" : "000000" },
+          bold: cellNumber === 6,
+          color: {
+            argb:
+              cellNumber === 6 && parseInt(values[cellNumber - 1] as any) > 0
+                ? "DC2626"
+                : "000000",
+          },
         },
         alignment: { horizontal: "center" },
         border: {
@@ -645,8 +659,10 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
   });
   const worksheet = workbook.addWorksheet("Receipt Report");
 
-  worksheet.mergeCells("A1:P1");
-  worksheet.getCell("A1").value = `Receipt Report (${value.institute})`;
+  worksheet.mergeCells("A1:R1");
+  worksheet.getCell(
+    "A1"
+  ).value = `Receipt Report (${value.institute}) ${value.from_date} -> ${value.to_date}`;
   worksheet.getCell("A1").font = {
     size: 20,
     bold: true,
@@ -668,6 +684,7 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
     "Form Id",
     "Admission Date",
     "Student Name",
+    "Due Amount",
     "Indos Number",
     "Date Of Birth",
     "Course Code",
@@ -680,17 +697,22 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
     "Payment Remark",
     "Misc Payment",
     "Misc Remark",
+    "Receipt Number",
   ]);
 
   // Row styling (header row)
-  worksheet.getRow(2).eachCell((cell) => {
+  worksheet.getRow(2).eachCell((cell, cellNumber) => {
     cell.style = {
-      font: { bold: true, size: 14, color: { argb: "000000" } },
+      font: {
+        bold: true,
+        size: 14,
+        color: { argb: cellNumber === 5 ? "FFFFFF" : "000000" },
+      },
       alignment: { horizontal: "center", vertical: "middle" },
       fill: {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "F4A460" },
+        fgColor: { argb: cellNumber === 5 ? "DC2626" : "F4A460" },
       }, // Red background
       border: {
         top: { style: "thin" },
@@ -710,6 +732,7 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
       p.form_id,
       p.created_at,
       s.name,
+      cb.batch_fee - (SELECT SUM(paid_amount) FROM payments WHERE batch_id = cb.batch_id) as due_amount,
       s.indos_number,
       s.dob,
       c.course_code,
@@ -721,8 +744,8 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
       p.payment_id,
       p.remark AS payment_remark,
       p.misc_payment,
-      p.misc_remark
-
+      p.misc_remark,
+      p.receipt_no
       FROM payments AS p
 
       LEFT JOIN course_batches AS cb
@@ -735,6 +758,23 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
       ON c.course_id = p.course_id
 
       WHERE c.institute = $1 AND DATE(p.created_at) BETWEEN $2 AND $3
+
+      GROUP BY 
+       cb.batch_id,
+       p.form_id, 
+       cb.batch_fee,
+       p.created_at, 
+       s.name, 
+       s.indos_number, 
+       s.dob, 
+       c.course_code,
+       s.mobile_number, 
+       s.email, 
+       p.payment_type, 
+       p.mode, 
+       p.paid_amount, 
+       p.payment_id, 
+       p.remark, p.misc_payment, p.misc_remark, p.receipt_no
     `,
     [value.institute, value.from_date, value.to_date],
     {
@@ -748,10 +788,21 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
   pgStream.on("data", (data) => {
     const excelRow = worksheet.addRow(Object.values(data));
     // Style the data rows
-    excelRow.eachCell((cell) => {
+    excelRow.eachCell((cell, cellNumber) => {
+      const values = Object.values(data);
       cell.style = {
-        font: { size: 12 },
+        font: {
+          size: 12,
+          bold: cellNumber === 5,
+          color: {
+            argb:
+              cellNumber === 5 && parseInt(values[cellNumber - 1] as any) > 0
+                ? "DC2626"
+                : "000000",
+          },
+        },
         alignment: { horizontal: "center" },
+
         border: {
           top: { style: "thin" },
           left: { style: "thin" },
@@ -793,8 +844,10 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
     });
     const worksheet = workbook.addWorksheet("Admission Report");
 
-    worksheet.mergeCells("A1:L1");
-    worksheet.getCell("A1").value = `Admission Report (${value.institute})`;
+    worksheet.mergeCells("A1:M1");
+    worksheet.getCell("A1").value = `Admission Report (${
+      value.institute
+    }) ${beautifyDate(value.from_date)} -> ${beautifyDate(value.to_date)}`;
     worksheet.getCell("A1").font = {
       size: 20,
       bold: true,
@@ -824,6 +877,7 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
       "Paid Amount",
       "Misc Payment",
       "Total Paid",
+      "Discount",
     ]);
 
     // Row styling (header row)
@@ -850,46 +904,81 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
     });
 
     const client = await pool.connect();
+    // const query = new QueryStream(
+    //   `
+    //   SELECT
+    //         row_number() OVER () AS sr_no,
+    //         EC.created_at,
+    //         C.course_name,
+    //         CB.batch_fee AS course_batch_fee,
+    //         (CB.batch_fee - SUM(PAY.paid_amount)) AS due_amount_for_course,
+    //         -- C.course_fee,
+    //         -- (C.course_fee - SUM(PAY.paid_amount)) AS due_amount_for_course,
+    //         STU.name,
+    //        -- STU.profile_image,
+    //         C.course_type,
+    //         STU.email,
+    //         STU.mobile_number,
+    //         SUM(PAY.paid_amount) AS paid_amount_for_course, -- it for total paid for course
+    //         SUM(PAY.misc_payment) AS total_misc_amount,
+    //         (SUM(PAY.paid_amount) + SUM(PAY.misc_payment)) AS total_paid
+    //     FROM enrolled_batches_courses AS EC
+    //     LEFT JOIN students AS STU
+    //         ON EC.student_id = STU.student_id
+    //     LEFT JOIN courses AS C
+    //         ON EC.course_id = C.course_id
+    //     LEFT JOIN payments AS PAY
+    //         ON EC.course_id = PAY.course_id AND EC.student_id = PAY.student_id
+    //     LEFT JOIN course_batches AS CB
+    //         ON CB.batch_id = EC.batch_id
+    //     WHERE C.institute = $1 AND EC.enrollment_status = 'Approve' AND DATE(EC.created_at) BETWEEN $2 AND $3
+    //     GROUP BY
+    //         EC.created_at,
+    //         C.course_name,
+    //         CB.batch_fee,
+    //         -- C.course_fee,
+    //         C.course_type,
+    //         STU.student_id,
+    //         STU.name,
+    //         STU.profile_image,
+    //         STU.email,
+    //         STU.mobile_number
+    // `,
     const query = new QueryStream(
       `
-      SELECT 
-            row_number() OVER () AS sr_no,
-            EC.created_at,
-            C.course_name,
-            CB.batch_fee AS course_batch_fee,
-            (CB.batch_fee - SUM(PAY.paid_amount)) AS due_amount_for_course,
-            -- C.course_fee,
-            -- (C.course_fee - SUM(PAY.paid_amount)) AS due_amount_for_course,
-            STU.name,
-           -- STU.profile_image,
-            C.course_type,
-            STU.email,
-            STU.mobile_number,
-            SUM(PAY.paid_amount) AS paid_amount_for_course, -- it for total paid for course
-            SUM(PAY.misc_payment) AS total_misc_amount,
-            (SUM(PAY.paid_amount) + SUM(PAY.misc_payment)) AS total_paid
-        FROM enrolled_batches_courses AS EC
-        LEFT JOIN students AS STU
-            ON EC.student_id = STU.student_id
-        LEFT JOIN courses AS C
-            ON EC.course_id = C.course_id
-        LEFT JOIN payments AS PAY
-            ON EC.course_id = PAY.course_id AND EC.student_id = PAY.student_id
-        LEFT JOIN course_batches AS CB
-            ON CB.batch_id = EC.batch_id
-        WHERE C.institute = $1 AND EC.enrollment_status = 'Approve' AND DATE(EC.created_at) BETWEEN $2 AND $3
+      SELECT DISTINCT
+          row_number() OVER () AS sr_no,
+          cb.start_date AS created_at,
+          c.course_name,
+          cb.batch_fee AS course_batch_fee,
+          cb.batch_fee - SUM(p.paid_amount) as due_amount_for_course,
+          -- s.profile_image,
+          s.name,
+          c.course_type,
+          s.email,
+          s.mobile_number,
+          SUM(p.paid_amount) paid_amount_for_course,
+          SUM(p.misc_payment) as total_misc_amount,
+          SUM(p.paid_amount) + SUM(p.misc_payment) as total_paid,
+          SUM(p.discount_amount) as total_discount
+        FROM enrolled_batches_courses ebc
+        INNER JOIN courses c
+        ON c.course_id = ebc.course_id
+
+        INNER JOIN course_batches cb
+        ON cb.batch_id = ebc.batch_id
+
+        INNER JOIN payments p
+        ON p.batch_id = ebc.batch_id
+
+        INNER JOIN students s
+        ON s.student_id = ebc.student_id
+
+        WHERE c.institute = $1 AND ebc.enrollment_status = 'Approve' AND DATE(ebc.created_at) BETWEEN $2 AND $3
+
         GROUP BY 
-            EC.created_at,
-            C.course_name,
-            CB.batch_fee,
-            -- C.course_fee,
-            C.course_type,
-            STU.student_id, 
-            STU.name,
-            STU.profile_image,
-            STU.email,
-            STU.mobile_number
-    `,
+        c.course_name, cb.start_date, cb.batch_fee, s.name, s.profile_image, c.course_type, s.email, s.mobile_number
+      `,
       [value.institute, value.from_date, value.to_date],
       {
         batchSize: 10,
@@ -900,14 +989,20 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
 
     // Process PostgreSQL stream data and append to Excel sheet
     pgStream.on("data", (data) => {
-      const excelRow = worksheet.addRow(Object.values(data));
+      const values = Object.values(data);
+      const excelRow = worksheet.addRow(values);
       // Style the data rows
       excelRow.eachCell((cell, cellNumber) => {
         cell.style = {
           font: {
             size: 12,
             bold: cellNumber === 5,
-            color: { argb: cellNumber === 5 ? "DC2626" : "000000" },
+            color: {
+              argb:
+                cellNumber === 5 && parseInt(values[cellNumber - 1] as any) > 0
+                  ? "DC2626"
+                  : "000000",
+            },
           },
           alignment: { horizontal: "center" },
           border: {
@@ -931,6 +1026,229 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
   }
 );
 
+// export const streamOccupancyExcelReport = asyncErrorHandler(
+//   async (req, res) => {
+//     const { error, value } = occupancyExcelReportValidator.validate(req.query);
+//     if (error) throw new ErrorHandler(400, error.message);
+
+//     // Set response headers for streaming
+//     res.setHeader(
+//       "Content-Disposition",
+//       'attachment; filename="Occupancy_Report.xlsx"'
+//     );
+//     res.setHeader(
+//       "Content-Type",
+//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//     );
+
+//     const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+//       stream: res,
+//       useStyles: true,
+//     });
+//     const worksheet = workbook.addWorksheet("Occupancy Report");
+
+//     const date = new Date(value.end_date);
+//     const formattedDate = new Intl.DateTimeFormat("en-GB", {
+//       month: "short",
+//       year: "numeric",
+//     }).format(date);
+
+//     //first heading
+//     worksheet.mergeCells("A1:K1");
+//     worksheet.getCell("A1").value = `${formattedDate} - Occupancy Report`;
+//     worksheet.getCell("A1").font = {
+//       size: 16,
+//       bold: true,
+//       color: { argb: "000000" },
+//     };
+//     worksheet.getCell("A1").fill = {
+//       type: "pattern",
+//       pattern: "solid",
+//       fgColor: { argb: "FFFF00" },
+//     };
+//     worksheet.getRow(1).height = 30;
+//     worksheet.getCell("A1").alignment = {
+//       horizontal: "center",
+//       vertical: "middle",
+//     };
+
+//     //secound heading kolkata
+//     worksheet.mergeCells("A2:F2");
+//     worksheet.getCell("A2").value = "SEIET, KOLKATA";
+//     worksheet.getCell("A2").font = {
+//       size: 11,
+//       bold: true,
+//       color: { argb: "000000" },
+//     };
+//     worksheet.getCell("A2").fill = {
+//       type: "pattern",
+//       pattern: "solid",
+//       // fgColor: { argb: "FFFF00" },
+//       fgColor: { argb: "C3D0CF" },
+//     };
+//     worksheet.getRow(1).height = 20;
+//     worksheet.getCell("A2").alignment = {
+//       horizontal: "center",
+//       vertical: "middle",
+//     };
+//     worksheet.getCell("A2").border = {
+//       right: { style: "medium", color: { argb: "000000" } },
+//     };
+
+//     //secound heading faridabad
+//     worksheet.mergeCells("G2:K2");
+//     worksheet.getCell("G2").value = "SEIET, FARIDABAD";
+//     worksheet.getCell("G2").font = {
+//       size: 11,
+//       bold: true,
+//       color: { argb: "000000" },
+//     };
+//     worksheet.getCell("G2").fill = {
+//       type: "pattern",
+//       pattern: "solid",
+//       // fgColor: { argb: "FFFF00" },
+//       fgColor: { argb: "C3D0CF" },
+//     };
+//     worksheet.getRow(1).height = 20;
+//     worksheet.getCell("G2").alignment = {
+//       horizontal: "center",
+//       vertical: "middle",
+//     };
+
+//     worksheet.addRow([
+//       "COURSE",
+//       "MAXIMUM BATCHES/MONTH",
+//       "CANDIDATE STRENGTH",
+//       "BATCH CONDUCTED",
+//       "OCCUPENCY",
+//       "% OF OCCUPENCY",
+
+//       "MAXIMUM BATCHES/MONTH",
+//       "CANDIDATE STRENGTH",
+//       "BATCH CONDUCTED",
+//       "OCCUPENCY",
+//       "% OF OCCUPENCY",
+//     ]);
+
+//     // Row styling (header row)
+//     worksheet.getRow(3).eachCell((cell, cellNumber) => {
+//       cell.style = {
+//         font: {
+//           size: 9,
+//           color: { argb: "DC2626" },
+//         },
+//         alignment: { horizontal: "center", vertical: "middle" },
+//         border: {
+//           top: { style: "thin" },
+//           left: { style: "thin" },
+//           right: { style: cellNumber === 6 ? "medium" : "thin" },
+//           bottom: { style: "thin" },
+//         },
+//       };
+//     });
+
+//     const client = await pool.connect();
+//     const query = new QueryStream(
+//       `
+//         SELECT
+//             c.course_id,
+//             c.course_name,
+//             c.course_code,
+//             c.institute,
+//             COUNT(cb.batch_id) AS total_batch_conducted,
+//             SUM(cb.batch_total_seats) AS total_candidate_strength,
+//             COUNT(ebc.batch_id) AS occupency,
+//             mb.max_batch AS max_batch_per_month,
+//             ROUND((COUNT(ebc.batch_id)::DECIMAL / NULLIF(mb.max_batch * SUM(cb.batch_total_seats), 0) * 100), 2) AS occupency_percentage
+//           FROM courses AS c
+
+//           -- LEFT JOIN course_batches AS cb
+//           -- ON cb.course_id = c.course_id
+//           LEFT JOIN (SELECT * FROM course_batches WHERE end_date BETWEEN $1 AND $2) AS cb ON cb.course_id = c.course_id
+
+//           LEFT JOIN enrolled_batches_courses AS ebc
+//           ON ebc.batch_id = cb.batch_id AND ebc.enrollment_status = 'Approve'
+
+//           LEFT JOIN fillup_forms AS ff
+//           ON ff.form_id = ebc.form_id
+
+//           LEFT JOIN (
+//             SELECT DISTINCT ON (course_id) course_id, max_batch
+//             FROM course_with_max_batch_per_month
+//             ORDER BY course_id, created_month DESC
+//           ) mb ON c.course_id = mb.course_id
+
+//           GROUP BY c.course_id, c.course_name, c.course_code, mb.max_batch
+//     `,
+//       [value.start_date, value.end_date],
+//       {
+//         batchSize: 10,
+//       }
+//     );
+
+//     const pgStream = client.query(query);
+
+//     // Process PostgreSQL stream data and append to Excel sheet
+//     pgStream.on("data", (data) => {
+//       const excelRow = worksheet.addRow([
+//         data.course_code,
+//         data.institute === "Kolkata" && data.max_batch_per_month
+//           ? data.max_batch_per_month
+//           : "x",
+//         data.institute === "Kolkata" && data.total_candidate_strength
+//           ? data.total_candidate_strength
+//           : "x",
+//         data.institute === "Kolkata" && data.total_batch_conducted
+//           ? data.total_batch_conducted
+//           : "x",
+//         data.institute === "Kolkata" && data.occupency ? data.occupency : "x",
+//         data.institute === "Kolkata" && data.occupency_percentage
+//           ? data.occupency_percentage + "%"
+//           : "x",
+
+//         data.institute === "Faridabad" && data.max_batch_per_month
+//           ? data.max_batch_per_month
+//           : "x",
+//         data.institute === "Faridabad" && data.total_candidate_strength
+//           ? data.total_candidate_strength
+//           : "x",
+//         data.institute === "Faridabad" && data.total_batch_conducted
+//           ? data.total_batch_conducted
+//           : "x",
+//         data.institute === "Faridabad" && data.occupency ? data.occupency : "x",
+//         data.institute === "Faridabad" && data.occupency_percentage
+//           ? data.occupency_percentage + "%"
+//           : "x",
+//       ]);
+//       // Style the data rows
+//       excelRow.eachCell((cell, cellNumber) => {
+//         cell.style = {
+//           font: {
+//             size: 9,
+//             color: { argb: "000000" },
+//           },
+//           alignment: { horizontal: "center" },
+//           border: {
+//             top: { style: "thin" },
+//             left: { style: "thin" },
+//             right: { style: cellNumber === 6 ? "medium" : "thin" },
+//             bottom: { style: "thin" },
+//           },
+//         };
+//       });
+//     });
+
+//     pgStream.on("end", () => {
+//       workbook.commit();
+//       client.release(); // Release the client when done
+//     });
+
+//     pgStream.on("error", (err) => {
+//       client.release();
+//     });
+//   }
+// );
+
 export const streamOccupancyExcelReport = asyncErrorHandler(
   async (req, res) => {
     const { error, value } = occupancyExcelReportValidator.validate(req.query);
@@ -952,17 +1270,12 @@ export const streamOccupancyExcelReport = asyncErrorHandler(
     });
     const worksheet = workbook.addWorksheet("Occupancy Report");
 
-    const date = new Date(value.end_date);
-    const formattedDate = new Intl.DateTimeFormat("en-GB", {
-      month: "short",
-      year: "numeric",
-    }).format(date);
-
-    //first heading
-    worksheet.mergeCells("A1:K1");
-    worksheet.getCell("A1").value = `${formattedDate} - Occupancy Report`;
+    worksheet.mergeCells("A1:J1");
+    worksheet.getCell("A1").value = `Occupancy Report (${
+      value.institute
+    }) ${beautifyDate(value.start_date)} -> ${beautifyDate(value.end_date)}`;
     worksheet.getCell("A1").font = {
-      size: 16,
+      size: 20,
       bold: true,
       color: { argb: "000000" },
     };
@@ -977,76 +1290,38 @@ export const streamOccupancyExcelReport = asyncErrorHandler(
       vertical: "middle",
     };
 
-    //secound heading kolkata
-    worksheet.mergeCells("A2:F2");
-    worksheet.getCell("A2").value = "SEIET, KOLKATA";
-    worksheet.getCell("A2").font = {
-      size: 11,
-      bold: true,
-      color: { argb: "000000" },
-    };
-    worksheet.getCell("A2").fill = {
-      type: "pattern",
-      pattern: "solid",
-      // fgColor: { argb: "FFFF00" },
-      fgColor: { argb: "C3D0CF" },
-    };
-    worksheet.getRow(1).height = 20;
-    worksheet.getCell("A2").alignment = {
-      horizontal: "center",
-      vertical: "middle",
-    };
-    worksheet.getCell("A2").border = {
-      right: { style: "medium", color: { argb: "000000" } },
-    };
-
-    //secound heading faridabad
-    worksheet.mergeCells("G2:K2");
-    worksheet.getCell("G2").value = "SEIET, FARIDABAD";
-    worksheet.getCell("G2").font = {
-      size: 11,
-      bold: true,
-      color: { argb: "000000" },
-    };
-    worksheet.getCell("G2").fill = {
-      type: "pattern",
-      pattern: "solid",
-      // fgColor: { argb: "FFFF00" },
-      fgColor: { argb: "C3D0CF" },
-    };
-    worksheet.getRow(1).height = 20;
-    worksheet.getCell("G2").alignment = {
-      horizontal: "center",
-      vertical: "middle",
-    };
-
     worksheet.addRow([
-      "COURSE",
-      "MAXIMUM BATCHES/MONTH",
-      "CANDIDATE STRENGTH",
-      "BATCH CONDUCTED",
-      "OCCUPENCY",
-      "% OF OCCUPENCY",
-
-      "MAXIMUM BATCHES/MONTH",
-      "CANDIDATE STRENGTH",
-      "BATCH CONDUCTED",
-      "OCCUPENCY",
-      "% OF OCCUPENCY",
+      "Course Name",
+      "Course Code",
+      "Maximum Batch This Month",
+      "Batch Conducted This Month",
+      "Candidate Strength",
+      "Occupency",
+      "% Of Occupency",
+      "Executive Name",
+      "Fee Collection",
+      "Fee Collection After Discount",
     ]);
 
     // Row styling (header row)
-    worksheet.getRow(3).eachCell((cell, cellNumber) => {
+    worksheet.getRow(2).eachCell((cell) => {
       cell.style = {
         font: {
-          size: 9,
-          color: { argb: "DC2626" },
+          bold: true,
+          size: 14,
+          color: { argb: "000000" },
         },
         alignment: { horizontal: "center", vertical: "middle" },
+        fill: {
+          type: "pattern",
+          pattern: "solid",
+          // fgColor: { argb: cellNumber === 5 ? "DC2626" : "F4A460" },
+          fgColor: { argb: "F4A460" },
+        },
         border: {
           top: { style: "thin" },
           left: { style: "thin" },
-          right: { style: cellNumber === 6 ? "medium" : "thin" },
+          right: { style: "thin" },
           bottom: { style: "thin" },
         },
       };
@@ -1055,37 +1330,74 @@ export const streamOccupancyExcelReport = asyncErrorHandler(
     const client = await pool.connect();
     const query = new QueryStream(
       `
-        SELECT
-            c.course_id,
-            c.course_name,
-            c.course_code,
-            c.institute,
-            COUNT(cb.batch_id) AS total_batch_conducted,
-            SUM(cb.batch_total_seats) AS total_candidate_strength,
-            COUNT(ebc.batch_id) AS occupency,
-            mb.max_batch AS max_batch_per_month,
-            ROUND((COUNT(ebc.batch_id)::DECIMAL / NULLIF(mb.max_batch * SUM(cb.batch_total_seats), 0) * 100), 2) AS occupency_percentage
-          FROM courses AS c
-
-          -- LEFT JOIN course_batches AS cb
-          -- ON cb.course_id = c.course_id
-          LEFT JOIN (SELECT * FROM course_batches WHERE end_date BETWEEN $1 AND $2) AS cb ON cb.course_id = c.course_id
-
-          LEFT JOIN enrolled_batches_courses AS ebc
-          ON ebc.batch_id = cb.batch_id AND ebc.enrollment_status = 'Approve'
-
-          LEFT JOIN fillup_forms AS ff
-          ON ff.form_id = ebc.form_id
-
-          LEFT JOIN (
-            SELECT DISTINCT ON (course_id) course_id, max_batch
-            FROM course_with_max_batch_per_month
-            ORDER BY course_id, created_month DESC
-          ) mb ON c.course_id = mb.course_id
-
-          GROUP BY c.course_id, c.course_name, c.course_code, mb.max_batch
-    `,
-      [value.start_date, value.end_date],
+      WITH EnrolledData AS (
+          SELECT 
+            course_id,
+            COUNT(enroll_id) AS occupancy
+          FROM 
+            enrolled_batches_courses
+          WHERE 
+            enrollment_status = 'Approve'
+          GROUP BY 
+            course_id
+        ),
+        PaymentsData AS (
+          SELECT 
+            p.course_id,
+            SUM(p.paid_amount) AS total_fee_collection,
+            SUM(p.paid_amount) - SUM(discount_amount) AS after_discount_fee_collection
+          FROM 
+            payments p
+          INNER JOIN 
+            enrolled_batches_courses ebc ON p.course_id = ebc.course_id
+          WHERE 
+            ebc.enrollment_status = 'Approve'
+          GROUP BY 
+            p.course_id
+        ),
+        BatchData AS (
+          SELECT 
+            course_id,
+            COUNT(batch_id) AS batch_conducted
+          FROM 
+            course_batches
+          GROUP BY 
+            course_id
+        )
+        SELECT 
+          -- c.course_id,
+          c.course_code,
+          c.course_name,
+          c.total_seats AS student_capacity,
+          e.name AS executive_name,
+          (SELECT max_batch FROM course_with_max_batch_per_month WHERE course_id = c.course_id ORDER BY created_date DESC LIMIT 1) as max_batch_per_month,
+          bd.batch_conducted,
+          COALESCE(ed.occupancy, 0) as occupancy,
+          COALESCE(pd.total_fee_collection, 0) as total_fee_collection,
+          COALESCE(pd.after_discount_fee_collection, 0) as after_discount_fee_collection,
+          COALESCE(
+            ROUND((ed.occupancy / (
+            (SELECT max_batch FROM course_with_max_batch_per_month WHERE course_id = c.course_id ORDER BY created_date DESC LIMIT 1) 
+            * c.total_seats)::DECIMAL * 100), 2)
+          , 0) as occupancy_percentage
+        FROM 
+          courses c
+        LEFT JOIN 
+          BatchData bd ON bd.course_id = c.course_id
+        LEFT JOIN 
+          EnrolledData ed ON ed.course_id = c.course_id
+        LEFT JOIN 
+          PaymentsData pd ON pd.course_id = c.course_id
+        LEFT JOIN 
+          employee e ON e.id = c.concern_marketing_executive_id
+        LEFT JOIN course_batches AS cb
+          ON cb.course_id = c.course_id
+        WHERE 
+          c.institute = $1 AND cb.start_date BETWEEN $2 AND $3
+        GROUP BY 
+          c.course_id, c.course_name, c.total_seats, e.name, bd.batch_conducted, ed.occupancy, pd.total_fee_collection, pd.after_discount_fee_collection;
+      `,
+      [value.institute, value.start_date, value.end_date],
       {
         batchSize: 10,
       }
@@ -1096,47 +1408,31 @@ export const streamOccupancyExcelReport = asyncErrorHandler(
     // Process PostgreSQL stream data and append to Excel sheet
     pgStream.on("data", (data) => {
       const excelRow = worksheet.addRow([
+        data.course_name,
         data.course_code,
-        data.institute === "Kolkata" && data.max_batch_per_month
-          ? data.max_batch_per_month
-          : "x",
-        data.institute === "Kolkata" && data.total_candidate_strength
-          ? data.total_candidate_strength
-          : "x",
-        data.institute === "Kolkata" && data.total_batch_conducted
-          ? data.total_batch_conducted
-          : "x",
-        data.institute === "Kolkata" && data.occupency ? data.occupency : "x",
-        data.institute === "Kolkata" && data.occupency_percentage
-          ? data.occupency_percentage + "%"
-          : "x",
-
-        data.institute === "Faridabad" && data.max_batch_per_month
-          ? data.max_batch_per_month
-          : "x",
-        data.institute === "Faridabad" && data.total_candidate_strength
-          ? data.total_candidate_strength
-          : "x",
-        data.institute === "Faridabad" && data.total_batch_conducted
-          ? data.total_batch_conducted
-          : "x",
-        data.institute === "Faridabad" && data.occupency ? data.occupency : "x",
-        data.institute === "Faridabad" && data.occupency_percentage
-          ? data.occupency_percentage + "%"
-          : "x",
+        data.max_batch_per_month,
+        data.batch_conducted,
+        data.student_capacity,
+        data.occupancy,
+        `${data.occupancy_percentage}%`,
+        data.executive_name,
+        data.total_fee_collection,
+        data.after_discount_fee_collection,
       ]);
       // Style the data rows
       excelRow.eachCell((cell, cellNumber) => {
         cell.style = {
           font: {
-            size: 9,
-            color: { argb: "000000" },
+            size: 12,
+            color: {
+              argb: "000000",
+            },
           },
           alignment: { horizontal: "center" },
           border: {
             top: { style: "thin" },
             left: { style: "thin" },
-            right: { style: cellNumber === 6 ? "medium" : "thin" },
+            right: { style: "thin" },
             bottom: { style: "thin" },
           },
         };

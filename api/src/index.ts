@@ -21,6 +21,8 @@ import { inventoryRoute } from "./route/inventory.routes";
 import { notificationRoutes } from "./route/notification.routes";
 import { receiptRoutes } from "./route/receipt.routes";
 import path from "path";
+import { pool } from "./config/db";
+import { tryCatch } from "./utils/tryCatch";
 
 dotenv.config();
 const app = express();
@@ -62,6 +64,16 @@ app.use("/api/v1/db", setupDbRoute);
 
 //global error handler
 app.use(globalErrorController);
+
+app.get("/some", async (req, res) => {
+  // const { rows } = await pool.query(`SELECT * FROM course_batches, courses`);
+  // res.json(rows);
+  const { data, error } = await tryCatch(async () => {
+    // return "Success";
+    throw new Error("Hello world erro")
+  });
+  res.json({ data, error });
+});
 
 //route error
 app.all("*", (req, res, next) => {

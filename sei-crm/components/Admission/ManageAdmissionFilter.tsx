@@ -10,6 +10,7 @@ import { ISuccess, TCourseDropDown } from "@/types";
 import HandleDataSuspense from "../HandleDataSuspense";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Input from "../Input";
+import DateInput from "../DateInput";
 
 interface IProps {
   withMoreFilter?: boolean;
@@ -25,16 +26,22 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
   const [institute, setInstitute] = useState(
     searchParams.get("institute") || "Kolkata"
   );
+  const [currentMonth, setCurrentMonth] = useState(
+    searchParams.get("month_year") || new Date().toISOString().slice(0, 7)
+  );
 
   const {
     data: courses,
     isFetching,
     error,
   } = useQuery<ISuccess<TCourseDropDown[]>>({
-    queryKey: ["get-courses-dropdown", institute],
+    queryKey: ["get-courses-dropdown", institute, currentMonth],
     queryFn: async () =>
-      (await axios.get(`${BASE_API}/course/drop-down?institute=${institute}`))
-        .data,
+      (
+        await axios.get(
+          `${BASE_API}/course/drop-down?institute=${institute}&month_year=${currentMonth}`
+        )
+      ).data,
     onSuccess(data) {
       const batchesInfo =
         data.data.find(
@@ -68,6 +75,7 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
 
     if (formData.has("form_2")) {
       formData.delete("form_2");
+      // formData.delete("month_year");
 
       formData.forEach((value, key) => {
         urlSearchParams.set(key, value.toString());
@@ -76,6 +84,10 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
 
     route.push(`${pathname}?${urlSearchParams.toString()}`);
   };
+
+  function handleMonthChange(value: string) {
+    setCurrentMonth(value);
+  }
 
   return (
     <div className="space-y-2">
@@ -109,66 +121,77 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
         </>
       ) : null}
 
-      <form
-        onSubmit={handleFormSubmit}
-        className="w-full flex items-end justify-between *:flex-grow gap-x-5 pb-5"
-      >
+      <form onSubmit={handleFormSubmit} className="w-full">
         <input name="form_2" hidden />
-        <DropDown
-          onChange={(item) => setInstitute(item.value)}
-          key={"institute"}
-          name="institute"
-          label="Campus"
-          options={[
-            { text: "Kolkata", value: "Kolkata" },
-            { text: "Faridabad", value: "Faridabad" },
-          ]}
-          defaultValue={searchParams.get("institute") || "Kolkata"}
-        />
-        <DropDown
-          key={"course_type"}
-          name="course_type"
-          label="Course Type"
-          options={[
-            { text: "DGS Approved", value: "DGS Approved" },
-            { text: "Value Added", value: "Value Added" },
-          ]}
-          defaultValue={searchParams.get("course_type") || "DGS Approved"}
-        />
-
-        <HandleDataSuspense isLoading={isFetching} error={error} data={courses}>
-          {(course) => (
-            <DropDown
-              onChange={(item) => {
-                const batchesInfo =
-                  course.data.find((fItem) => fItem.course_id == item.value)
-                    ?.course_batches || [];
-                setCurrentBatchDate(
-                  searchParams.get("batch_date") || batchesInfo[0]
-                );
-                setCurrentBatches(batchesInfo);
-              }}
-              key={"course_id"}
-              name="course_id"
-              label="Courses"
-              options={course.data.map((item) => ({
-                text: item.course_name,
-                value: item.course_id,
-              }))}
-              defaultValue={
-                searchParams.get("course_id") || course.data[0].course_id
-              }
-            />
-          )}
-        </HandleDataSuspense>
-
-        <DropDown
-          key={"batch_date"}
-          name="batch_date"
-          label="Select Batch"
-          options={currentBatches.map((item) => ({ text: item, value: item }))}
-          defaultValue={currentBatchDate}
-        />
+        <div className="flex items-end justify-between flex-wrap gap-4 *:flex-grow gap-x-5 pb-5">
+          <DropDown
+            onChange={(item) => setInstitute(item.value)}
+            key={"institute"}
+            name="institute"
+            label="Campus"
+            options={[
+              { text: "Kolkata", value: "Kolkata" },
+              { text: "Faridabad", value: "Faridabad" },
+            ]}
+            defaultValue={searchParams.get("institute") || "Kolkata"}
+          />
+          <DropDown
+            key={"course_type"}
+            name="course_type"
+            label="Course Type"
+            options={[
+              { text: "DGS Approved", value: "DGS Approved" },
+              { text: "Value Added", value: "Value Added" },
+            ]}
+            defaultValue={searchParams.get("course_type") || "DGS Approved"}
+          />
+          <HandleDataSuspense
+            isLoading={isFetching}
+            error={error}
+            data={courses}
+          >
+            {(course) => (
+              <DropDown
+                onChange={(item) => {
+                  const batchesInfo =
+                    course.data.find((fItem) => fItem.course_id == item.value)
+                      ?.course_batches || [];
+                  setCurrentBatchDate(
+                    searchParams.get("batch_date") || batchesInfo[0]
+                  );
+                  setCurrentBatches(batchesInfo);
+                }}
+                key={"course_id"}
+                name="course_id"
+                label="Courses"
+                options={course.data.map((item) => ({
+                  text: item.course_name,
+                  value: item.course_id,
+                }))}
+                defaultValue={
+                  searchParams.get("course_id") || course.data[0]?.course_id
+                }
+              />
+            )}
+          </HandleDataSuspense>
+          <DateInput
+            name="month_year"
+            onChange={handleMonthChange}
+            type="month"
+            label="Choose Month & Year"
+            date={currentMonth}
+          />
+          <DropDown
+            key={"batch_date"}
+            name="batch_date"
+            label="Select Batch"
+            options={currentBatches.map((item) => ({
+              text: item,
+              value: item,
+            }))}
+            defaultValue={currentBatchDate}
+          />
+        </div>
 
         <div className="mb-2">
           <Button>Search</Button>

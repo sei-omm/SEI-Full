@@ -11,3 +11,5 @@ export const STUDENT_RANKS = [
   "ETO",
   "Others",
 ];
+
+export const selectedDateList = new Map<string, number>();

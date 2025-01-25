@@ -20,6 +20,8 @@ import {
   getCoursesForDropDown,
   getCourseWithBatchStudents,
   getCoursesWithSubject,
+  getMultipleBatchWithId,
+  changeBatchManually,
 } from "../controller/course.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 
@@ -28,14 +30,13 @@ export const courseRouter = Router();
 courseRouter
   .get("/", getAllCourse)
   .get("/with-batches/student", getCourseWithBatchStudents)
-  .get("/with-batches", getCoursesWithBatch)
+  .get("/with-batches", getCoursesWithBatch) /* bydefault with pagination | modify to -> ?nopagination=true || ?course_ids=11,10&institute=Kolkata&nopagination=false&fields=course_id:course_name */
   .get("/with-subjects", getCoursesWithSubject)
   .get("/search", searchCourse)
   .get("/required-documents", isAuthenticated, getCoursesRequiredDocuments)
   .get("/get-multi-course-price", getMultiCoursesPrices)
   .get("/get-multi-batch-price", getMultiBatchPrices)
   .get("/drop-down", getCoursesForDropDown)
-  .get("/:course_id", getSingleCourse)
   .post("/", addNewCourse)
   .put(
     "/:course_id",
@@ -46,7 +47,11 @@ courseRouter
   // .post("/enroll", isAuthenticated, enrolCourse)
   .post("/enroll", isAuthenticated, enrollToBatch)
   // .post("/fill-form/:course_id", fillUpCourseForm) //can done only buy student and admin
+  .get("/get-batch", getMultipleBatchWithId)
   .get("/batch/:course_id", getCourseBatch)
   .post("/batch", insertNewCourseBatch)
   .put("/batch/:batch_id", updateCourseBatchInfo)
-  .delete("/batch/:batch_id", deleteCourseBatch);
+  .delete("/batch/:batch_id", deleteCourseBatch)
+  .patch("/batch", isAuthenticated, changeBatchManually) //chnage batch manually -> only access by marketing team
+
+  .get("/:course_id", getSingleCourse);

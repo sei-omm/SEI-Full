@@ -5,6 +5,7 @@ import { pool } from "../config/db";
 import { getAdmissionsValidator } from "../validator/admission.validator";
 import { parsePagination } from "../utils/parsePagination";
 import { Request } from "express";
+import { tryCatch } from "../utils/tryCatch";
 
 // export const getAdmissionsService = async (courseId?: string) => {
 //   let sql1 = `
@@ -128,44 +129,47 @@ export const getAdmissionsService = async (
 export const getSingleAdmissionInfo = async (form_id: string) => {
   //this is for enroll courses and student info
   const courseAndStudentInfoSql = `
-        SELECT
+          SELECT
+              s.*,
+              '********' AS password,
+              ff.form_status,
+              ff.form_id,
 
-        s.*,
-        '********' AS password,
-        ff.form_status,
-        ff.form_id,
+              json_agg(
+                  json_build_object(
+                      'enroll_id', ebc.enroll_id,
+                      'course_id', c.course_id,
+                      'course_require_documents', c.require_documents,
+                      'course_name', c.course_name,
+                      'batch_start_date', cb.start_date,
+                      'batch_end_date', cb.end_date,
+                      'batch_fee', cb.batch_fee,
+                      'batch_id', cb.batch_id,
+                      'enrollment_status', ebc.enrollment_status,
+                      'modified_by_info', (
+                          SELECT json_agg(
+                              json_build_object('batch_id', mb.batch_id, 'employee_name', e.name, 'created_at', mb.created_at)
+                          )
+                          FROM batch_modified_by AS mb
 
-        json_agg(
-          json_build_object(
-            'enroll_id', ebc.enroll_id,
-            'course_id', c.course_id,
-            'course_require_documents', c.require_documents,
-            'course_name', c.course_name,
-            'batch_start_date', cb.start_date,
-            'batch_end_date', cb.end_date,
-            'batch_fee', cb.batch_fee,
-            'batch_id', cb.batch_id,
-            'enrollment_status', ebc.enrollment_status
-          ) ORDER BY ebc.enroll_id
-        ) as enrolled_courses_info
+                          INNER JOIN employee e
+                          ON e.id = mb.employee_id
 
-        FROM fillup_forms AS ff
+                          WHERE mb.batch_id = cb.batch_id
+                          -- ORDER BY DESC
+                      )
+                  ) ORDER BY ebc.enroll_id
+              ) AS enrolled_courses_info
 
-        LEFT JOIN students AS s
-        ON s.student_id = ff.student_id
+          FROM fillup_forms AS ff
+          LEFT JOIN students AS s ON s.student_id = ff.student_id
+          LEFT JOIN enrolled_batches_courses AS ebc ON ebc.form_id = ff.form_id
+          LEFT JOIN courses AS c ON c.course_id = ebc.course_id
+          LEFT JOIN course_batches AS cb ON cb.batch_id = ebc.batch_id
 
-        LEFT JOIN enrolled_batches_courses AS ebc
-        ON ebc.form_id = ff.form_id
+          WHERE ff.form_id = $1
 
-        LEFT JOIN courses AS c
-        ON c.course_id = ebc.course_id
-
-        LEFT JOIN course_batches AS cb
-        ON cb.batch_id = ebc.batch_id
-
-        WHERE ff.form_id = $1
-
-        GROUP BY s.student_id, ff.form_status, ff.form_id
+          GROUP BY s.student_id, ff.form_status, ff.form_id;
   `;
 
   const paymentsDataSql = `SELECT * FROM payments WHERE form_id = $1`;
@@ -180,15 +184,67 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
     LEFT JOIN course_batches as CB
     ON CB.batch_id = EBC.batch_id
 
-    WHERE form_id = $1 AND EBC.enrollment_status = 'Approve'`;
+    WHERE form_id = $1 AND EBC.enrollment_status = 'Approve' OR EBC.enrollment_status = 'Pending'`;
 
-  const response = await transaction([
-    { sql: courseAndStudentInfoSql, values: [form_id] },
-    { sql: paymentsDataSql, values: [form_id] },
-    { sql: getBatchesFeesSql, values: [form_id] },
-  ]);
+  const client = await pool.connect();
 
-  if (response[0].rowCount === 0 || response[1].rowCount === 0)
+  const { error, data } = await tryCatch(async () => {
+    await client.query("BEGIN");
+
+    const courseAndStudentInfo = await client.query(courseAndStudentInfoSql, [
+      form_id,
+    ]);
+    const enrolledCourseIds =
+      courseAndStudentInfo.rows[0].enrolled_courses_info.map(
+        (item: any) => item.course_id
+      );
+
+    const paymentsDataInfo = await client.query(paymentsDataSql, [form_id]);
+
+    const getBatchesFeesInfo = await client.query(getBatchesFeesSql, [form_id]);
+
+    const courseBatchesInfo = await client.query(
+      `
+      SELECT c.course_id, json_agg(cb.*) AS batches FROM courses c
+      LEFT JOIN course_batches cb
+      ON cb.course_id = c.course_id
+
+      WHERE c.course_id IN (${enrolledCourseIds.map(
+        (_: any, index: number) => `$${index + 1}`
+      )})
+
+      GROUP BY c.course_id
+    `,
+      enrolledCourseIds
+    );
+
+    await client.query("COMMIT");
+    client.release();
+
+    return {
+      courseAndStudentInfo,
+      paymentsDataInfo,
+      getBatchesFeesInfo,
+      courseBatchesInfo,
+    };
+  });
+
+  if (error) {
+    await client.query("ROLLBACK");
+    client.release();
+    throw new ErrorHandler(400, error.message);
+  }
+
+  // const response = await transaction([
+  //   { sql: courseAndStudentInfoSql, values: [form_id] },
+  //   { sql: paymentsDataSql, values: [form_id] },
+  //   { sql: getBatchesFeesSql, values: [form_id] },
+  // ]);
+
+  if (
+    data?.courseAndStudentInfo.rowCount === 0 ||
+    data?.paymentsDataInfo.rowCount === 0
+  )
     throw new ErrorHandler(500, "Data Empty Error");
 
   const paymentInfo: {
@@ -208,7 +264,7 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
   };
 
   const existedPaymentIds = new Map();
-  response[1].rows.forEach((item) => {
+  data?.paymentsDataInfo.rows.forEach((item: any) => {
     if (existedPaymentIds.has(item.payment_id)) {
       const tempPayInfo =
         paymentInfo.payments[existedPaymentIds.get(item.payment_id)];
@@ -232,7 +288,8 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
   });
 
   paymentInfo.total_fee =
-    parseFloat(response[2].rows[0].total_fee || 0) - paymentInfo.total_discount;
+    parseFloat(data?.getBatchesFeesInfo.rows[0].total_fee || 0) -
+    paymentInfo.total_discount;
   paymentInfo.total_due = parseFloat(
     (
       paymentInfo.total_fee -
@@ -243,7 +300,8 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
   );
 
   return {
-    course_and_student_info: response[0].rows[0],
+    course_and_student_info: data?.courseAndStudentInfo.rows[0],
     student_payment_info: paymentInfo,
+    course_batches: data?.courseBatchesInfo.rows,
   };
 };

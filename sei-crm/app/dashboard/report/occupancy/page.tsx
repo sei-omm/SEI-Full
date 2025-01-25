@@ -2,6 +2,7 @@
 
 import { BASE_API } from "@/app/constant";
 import Button from "@/components/Button";
+import OccupancyChat from "@/components/ChatView/OccupancyChat";
 import DateInput from "@/components/DateInput";
 import DropDown from "@/components/DropDown";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
@@ -47,6 +48,9 @@ export default function OccupancyReport() {
       "Candidate Strength",
       "Occupency",
       "% Of Occupency",
+      "Executive Name",
+      "Fee Collection",
+      "Fee Collection After Discount",
     ],
     body: [],
   });
@@ -65,11 +69,15 @@ export default function OccupancyReport() {
           item.course_name,
           item.course_code,
           item.max_batch_per_month.toString(),
-          item.total_batch_conducted.toString(),
-          item.total_candidate_strength.toString(),
-          item.occupency.toString(),
-          `${item.occupency_percentage.toString()}%`,
+          item.batch_conducted.toString(),
+          item.student_capacity.toString(),
+          item.occupancy.toString(),
+          `${item.occupancy_percentage.toString()}%`,
+          item.executive_name,
+          item.total_fee_collection.toString(),
+          item.after_discount_fee_collection.toString(),
         ]);
+
         setTableDatas(oldTableData);
       },
       enabled: searchParams.size !== 0,
@@ -118,6 +126,8 @@ export default function OccupancyReport() {
           Search
         </Button>
       </form>
+
+      {report ? <OccupancyChat data={report.data} /> : null}
 
       <div className="flex justify-end">
         <GenarateExcelReportBtn

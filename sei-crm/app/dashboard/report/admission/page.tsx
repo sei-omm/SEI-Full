@@ -60,7 +60,7 @@ export default function AdmissionReport() {
     body: (string | null)[][];
   }>({
     heads: [
-      "Enrolled Date",
+      "Batch Date",
       "Course Name",
       "Course Fee",
       "Student Due Amount",
@@ -68,9 +68,10 @@ export default function AdmissionReport() {
       "Course Type",
       "Student Email",
       "Student Contact Number",
-      "Student Pay For This Course",
-      "Student Misc Paid Amount",
+      "Amount Paid",
+      "Misc Amount Paid",
       "Total Paid",
+      "Discount Amount"
     ],
     body: [],
   });
@@ -219,7 +220,7 @@ export default function AdmissionReport() {
           </DownloadFormUrl>
         </div>
       </form> */}
-      <DateDurationFilter withMoreFilter = {true}/>
+      <DateDurationFilter withMoreFilter={true} withStudentRank = {true}/>
 
       <div className="flex items-center justify-end">
         <GenarateExcelReportBtn
@@ -250,7 +251,11 @@ export default function AdmissionReport() {
                       className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
                       key={item}
                     >
-                      <span className={`${index === 3 ? "text-red-600" : ""}`}>
+                      <span
+                        className={`${
+                          index === 3 ? "text-red-600" : "text-black"
+                        }`}
+                      >
                         {item}
                       </span>
                     </th>
@@ -277,8 +282,8 @@ export default function AdmissionReport() {
                           </Link>
                         ) : (
                           <span
-                            className={`line-clamp-1 inline-flex gap-x-3 ${
-                              columnIndex === 3
+                            className={`line-clamp-1 inline-flex gap-x-3  ${
+                              columnIndex === 3 && parseInt(value as any) > 0
                                 ? "text-red-600 font-semibold"
                                 : ""
                             }`}

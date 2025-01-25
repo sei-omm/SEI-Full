@@ -31,7 +31,7 @@ export default function ManageStudentAdmissionForm() {
   const route = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
-  const { data, isLoading, error } = useQuery<ISuccess<TOneAdmission>>({
+  const { data, isFetching, error } = useQuery<ISuccess<TOneAdmission>>({
     queryKey: "fetch-admission-details",
     queryFn: () =>
       fetchData(`${BASE_API}/admission?form-id=${searchParams.get("form-id")}`),
@@ -59,7 +59,7 @@ export default function ManageStudentAdmissionForm() {
     <div className="w-full main-layout space-y-4">
       <h2 className="text-2xl font-semibold">Course Form</h2>
 
-      <HandleSuspence isLoading={isLoading} dataLength={1} error={error}>
+      <HandleSuspence isLoading={isFetching} dataLength={1} error={error}>
         <form ref={formRef} action={handleFormSubmit} className="space-y-4">
           {/* Courses Enrolled */}
           <div className="p-10 border card-shdow rounded-3xl space-y-3">
@@ -75,6 +75,7 @@ export default function ManageStudentAdmissionForm() {
                     paymentsInfo={data?.data.student_payment_info}
                     key={item.enroll_id}
                     enroll_course_info={item}
+                    course_batches={data.data.course_batches.find(cItem => cItem.course_id === item.course_id)?.batches}
                   />
                 )
               )}

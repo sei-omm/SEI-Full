@@ -244,6 +244,11 @@ export type TEnrollCourses = {
   batch_fee: number;
   enrollment_status: string;
   batch_id: number;
+  modified_by_info: null | {
+    batch_id: number;
+    employee_name: string;
+    created_at: string;
+  }[];
 };
 
 export type TOneAdmission = {
@@ -280,6 +285,7 @@ export type TOneAdmission = {
     cert_of_completency: string | null;
   };
   student_payment_info: TPaymentInfo;
+  course_batches: { course_id: number; batches: TBatches[] }[];
 };
 
 export type TAdmissionTable = {
@@ -490,14 +496,26 @@ export type TMaintenanceRecord = {
 };
 
 export type TOccupancyReport = {
+  // course_id: number;
+  // course_name: string;
+  // course_code: string;
+  // total_batch_conducted: string;
+  // total_candidate_strength: string;
+  // occupency: string;
+  // max_batch_per_month: number;
+  // occupency_percentage: string;
+
   course_id: number;
-  course_name: string;
   course_code: string;
-  total_batch_conducted: string;
-  total_candidate_strength: string;
-  occupency: string;
+  course_name: string;
+  student_capacity: number;
+  executive_name: string;
   max_batch_per_month: number;
-  occupency_percentage: string;
+  batch_conducted: number;
+  occupancy: number;
+  total_fee_collection: number;
+  after_discount_fee_collection: number;
+  occupancy_percentage: number;
 };
 
 export type TPlannedMaintenanceSystem = {

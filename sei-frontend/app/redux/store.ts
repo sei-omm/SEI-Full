@@ -11,7 +11,7 @@ export const store = configureStore({
     headerColorChanger: headerColorChangerSlice,
     profileImage: profileImageSlice,
     courseCart: courseCart,
-    loginStatus: loginStatusSlice,
+    loginStatus: loginStatusSlice
   },
 });
 
