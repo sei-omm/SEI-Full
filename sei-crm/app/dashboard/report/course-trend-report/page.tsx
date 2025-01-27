@@ -61,6 +61,7 @@ export default function CourseTrendReport() {
   });
 
   const [barData, setBarData] = useState<any | null>(null);
+  const [institute, setInstitute] = useState("Kolkata");
 
   const manageBarChat = (response: ISuccess<TCourseTrendReport[]>) => {
     const dataForBarChat = {
@@ -131,12 +132,12 @@ export default function CourseTrendReport() {
     ]
   >([
     {
-      queryKey: "get-courses-dropdown-trend",
+      queryKey: ["get-courses-dropdown-trend", institute],
       queryFn: async () =>
         (
           await axios.get(
             `${BASE_API}/course/drop-down?institute=${
-              searchParams.get("institute") || "Kolkata"
+              searchParams.get("institute") || institute
             }`
           )
         ).data,
@@ -191,6 +192,7 @@ export default function CourseTrendReport() {
         className="flex items-end gap-5 *:flex-grow"
       >
         <DropDown
+          onChange={(item) => setInstitute(item.value)}
           name="institute"
           label="Campus"
           options={[
