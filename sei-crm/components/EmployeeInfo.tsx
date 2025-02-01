@@ -194,6 +194,13 @@ export default function EmployeeInfo({ employeeID }: IProps) {
 
   const newSalary = totalSalary - deductions;
 
+  // const workingTenure = calculateYearsDifference(
+  //   joinDate || "",
+  //   new Date().toISOString().split("T")[0]
+  // );
+  const workingTenure = employeeInfo?.working_tenure || 0;
+  const gratuity = ((15 * (newSalary / 12) * workingTenure) / 26).toFixed(2);
+
   const onNameTextBoxChange = (event: React.FormEvent<HTMLInputElement>) => {
     setEmployeeName(event.currentTarget.value);
   };
@@ -667,18 +674,26 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   placeholder="19,000"
                 />
 
-                <Input
-                  viewOnly
-                  moneyInput={true}
-                  defaultValue={employeeInfo?.gratuity || ""}
-                  required
-                  type="number"
-                  name="gratuity"
-                  onChange={(e) => handleSalaryInput(e, 7)}
-                  label="Gratuity"
-                  placeholder="200"
-                />
-                
+                {workingTenure >= 5 ? (
+                  <div>
+                    <Input
+                      viewOnly
+                      moneyInput={true}
+                      required
+                      type="number"
+                      // name="gratuity"
+                      onChange={(e) => handleSalaryInput(e, 7)}
+                      label="Gratuity"
+                      placeholder="200"
+                      // defaultValue={employeeInfo?.gratuity || ""}
+                      defaultValue={gratuity}
+                    />
+                    <span className="text-xs">
+                      Gratuity = (15 × {(newSalary / 12).toFixed(2)} ×{" "}
+                      {workingTenure} years) / 26 = {gratuity}
+                    </span>
+                  </div>
+                ) : null}
 
                 <h2 className="text-sm">
                   Total Deductions :{" "}
@@ -690,7 +705,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   Net Salary :{" "}
                   <span className="font-semibold">
                     {/* ₹{netSalary + salaryValues[salaryValues.length - 1]} */}
-                    {newSalary}
+                    ₹{newSalary}
                     {/* ₹{totalSalary - deductions} */}
                   </span>
                 </h2>

@@ -31,6 +31,7 @@ import { filterToSql } from "../utils/filterToSql";
 import { parseNullOrUndefined } from "../utils/parseNullOrUndefined";
 import { parsePagination } from "../utils/parsePagination";
 import { generateEmployeeId } from "../utils/generateEmployeeId";
+import { calculateYearsDifference } from "../utils/calculateYearsDifference";
 
 const table_name = "employee";
 
@@ -255,6 +256,42 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
             e.name;`;
 
     const { rows } = await pool.query(query, [getDate(date), employee_id]);
+    // const salaryValues: number[] = [];
+    // salaryValues.push(
+    //   parseFloat(rows[0].basic_salary),
+    //   parseFloat(rows[0].hra),
+    //   parseFloat(rows[0].other_allowances),
+    //   parseFloat(rows[0].provident_fund),
+    //   parseFloat(rows[0].professional_tax),
+    //   parseFloat(rows[0].esic),
+    //   parseFloat(rows[0].income_tax)
+    // );
+    // const totalSalary = salaryValues.reduce((accumulator, currentValue) => {
+    //   return accumulator + currentValue;
+    // }, 0);
+
+    // const deductions = salaryValues.reduce(
+    //   (accumulator, currentValue, index) => {
+    //     if (index > 2) return accumulator + currentValue;
+    //     return 0;
+    //   },
+    //   0
+    // );
+
+    // const newSalary = totalSalary - deductions;
+    
+    const workingTenure = calculateYearsDifference(
+      rows[0].joining_date || "",
+      new Date().toISOString().split("T")[0]
+    );
+
+    // rows[0].total_salary = totalSalary;
+    // rows[0].deductions = deductions;
+    // rows[0].monthly_salary = (newSalary / 12).toFixed(2);
+    // rows[0].gratuity = ((15 * (newSalary / 12) * workingTenure) / 26).toFixed(2);
+    rows[0].working_tenure = workingTenure;
+    // rows[0].net_salary = newSalary;
+
     res.status(200).json(new ApiResponse(200, "Single Employee Info", rows));
   }
 );

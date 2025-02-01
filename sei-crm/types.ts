@@ -142,6 +142,12 @@ export interface IEmployee {
   relation_to_self : string | null;
 
   assigned_assets: TAssignAssets[];
+
+  // total_salary : number;
+  // deductions : number;
+  // monthly_salary : string;
+  working_tenure : number;
+  // net_salary : number
 }
 
 export type ILeaveStatus = "pending" | "success" | "decline";
