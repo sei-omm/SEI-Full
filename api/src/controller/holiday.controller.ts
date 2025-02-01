@@ -25,7 +25,7 @@ export const addHolidayList = asyncErrorHandler(async (req, res) => {
 
       values: value.flatMap((item) => [
         item.holiday_name,
-        item.holiday_date,
+        new Date(item.holiday_date).toISOString().split('T')[0],
         item.holiday_year,
       ]),
     },

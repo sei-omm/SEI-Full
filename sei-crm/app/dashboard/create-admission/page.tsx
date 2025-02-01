@@ -61,7 +61,6 @@ export default function CreateAdmission() {
   );
 
   const handleFormSubmit = (formData: StudentForm) => {
-    alert("Hello world");
     // const courseInfo: any[] = [];
     // const formInfo: any = {};
     // let tempObj: any = {};
