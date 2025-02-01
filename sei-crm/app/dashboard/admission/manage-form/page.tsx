@@ -1,17 +1,13 @@
 "use client";
 
 import Button from "@/components/Button";
-import Input from "@/components/Input";
-import DropDown from "@/components/DropDown";
 import { useRef } from "react";
-import DateInput from "@/components/DateInput";
 import PaymentInfoLayout from "@/components/Admission/PaymentInfoLayout";
 import { useQuery } from "react-query";
 import axios from "axios";
-import { BASE_API, STUDENT_RANKS } from "@/app/constant";
-import { ISuccess, TOneAdmission } from "@/types";
+import { BASE_API } from "@/app/constant";
+import { ISuccess, StudentForm, TOneAdmission } from "@/types";
 import HandleSuspence from "@/components/HandleSuspence";
-import { getDate } from "@/app/utils/getDate";
 import { FaRegSave } from "react-icons/fa";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import AppliedCourseListItem from "@/components/Course/AppliedCourseListItem";
@@ -19,6 +15,11 @@ import { useDispatch } from "react-redux";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { useRouter, useSearchParams } from "next/navigation";
 import { IoMdArrowBack } from "react-icons/io";
+import StudentInputForm from "@/components/Admission/StudentInputForm";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { studentFormSchema } from "@/FormSchema";
+import DropDownNew from "@/components/FormInputs/DropDownNew";
 
 async function fetchData(url: string) {
   return (await axios.get(url)).data;
@@ -31,6 +32,28 @@ export default function ManageStudentAdmissionForm() {
   const route = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    setValue,
+    clearErrors,
+    reset,
+  } = useForm<StudentForm>({
+    resolver: zodResolver(studentFormSchema),
+    defaultValues: {
+      course_info: [
+        {
+          batch_id: 0,
+          course_id: 0,
+          institute: "Kolkata",
+          month_year: new Date().toISOString().slice(0, 7),
+        },
+      ],
+    },
+  });
+
   const { data, isFetching, error } = useQuery<ISuccess<TOneAdmission>>({
     queryKey: "fetch-admission-details",
     queryFn: () =>
@@ -39,16 +62,23 @@ export default function ManageStudentAdmissionForm() {
     staleTime: 0,
     cacheTime: 0,
     refetchOnMount: true,
+    onSuccess(data) {
+      reset(data.data.course_and_student_info as any);
+    },
   });
 
-  const handleFormSubmit = (formData: FormData) => {
-    formData.set("student_id", `${searchParams.get("student-id")}`);
-    formData.set("form_id", `${data?.data.course_and_student_info.form_id}`);
+  const handleFormSubmit = (formData: StudentForm) => {
+    delete (formData as any).password;
+    delete (formData as any).institute;
 
     mutate({
       apiPath: "/admission/save",
       method: "put",
-      formData,
+      formData: {
+        ...formData,
+        student_id: searchParams.get("student-id"),
+        form_id: data?.data.course_and_student_info.form_id,
+      },
       onSuccess() {
         route.back();
       },
@@ -60,7 +90,11 @@ export default function ManageStudentAdmissionForm() {
       <h2 className="text-2xl font-semibold">Course Form</h2>
 
       <HandleSuspence isLoading={isFetching} dataLength={1} error={error}>
-        <form ref={formRef} action={handleFormSubmit} className="space-y-4">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit(handleFormSubmit)}
+          className="space-y-4"
+        >
           {/* Courses Enrolled */}
           <div className="p-10 border card-shdow rounded-3xl space-y-3">
             <h2 className="text-2xl font-semibold">Courses Applied for</h2>
@@ -75,221 +109,26 @@ export default function ManageStudentAdmissionForm() {
                     paymentsInfo={data?.data.student_payment_info}
                     key={item.enroll_id}
                     enroll_course_info={item}
-                    course_batches={data.data.course_batches.find(cItem => cItem.course_id === item.course_id)?.batches}
+                    course_batches={
+                      data.data.course_batches.find(
+                        (cItem) => cItem.course_id === item.course_id
+                      )?.batches
+                    }
                   />
                 )
               )}
             </ul>
           </div>
 
-          {/* Student Personal Info */}
-          <div className="p-10 border card-shdow rounded-3xl space-y-3">
-            <div className="flex items-start gap-x-5 gap-y-3 flex-wrap *:basis-96 *:flex-grow">
-              <Input
-                name="name"
-                required
-                label="Full Name"
-                placeholder="Somnath Gupta *"
-                defaultValue={data?.data.course_and_student_info.name}
-              />
-              <Input
-                name="email"
-                required
-                label="Email ID *"
-                type="email"
-                placeholder="somnath@gmail.com"
-                defaultValue={data?.data.course_and_student_info.email}
-              />
-              <Input
-                name="mobile_number"
-                required
-                label="Phone Number *"
-                placeholder="8787458787"
-                type="number"
-                defaultValue={data?.data.course_and_student_info.mobile_number}
-              />
-              <DropDown
-                name="rank"
-                label="Rank/Designation"
-                options={STUDENT_RANKS.map((rank) => ({
-                  text: rank,
-                  value: rank,
-                }))}
-                defaultValue={data?.data.course_and_student_info.rank}
-              />
-
-              <Input
-                pattern="[0-9]{2}[A-Z]{2}[0-9]{4}"
-                title="InDos Number should be in the format: 11EL1234 (2 digits, 2 uppercase letters, 4 digits)"
-                name="indos_number"
-                label="InDoS No"
-                placeholder="15EL0118"
-                defaultValue={data?.data.course_and_student_info.indos_number}
-              />
-
-              <DropDown
-                label="Nationality *"
-                name="nationality"
-                options={[
-                  { text: "Afghan", value: "Afghan" },
-                  { text: "Albanian", value: "Albanian" },
-                  { text: "Algerian", value: "Algerian" },
-                  { text: "American", value: "American" },
-                  { text: "Andorran", value: "Andorran" },
-                  { text: "Bangladeshi", value: "Bangladeshi" },
-                  { text: "Indian", value: "Indian" },
-                ]}
-                defaultValue={data?.data.course_and_student_info.nationality}
-              />
-
-              <Input
-                required
-                name="permanent_address"
-                label="Permanent Address *"
-                placeholder="Permanent Address"
-                defaultValue={
-                  data?.data.course_and_student_info.permanent_address
-                }
-              />
-              <Input
-                required
-                name="present_address"
-                label="Present Address *"
-                placeholder="Present Address"
-                defaultValue={
-                  data?.data.course_and_student_info.present_address
-                }
-              />
-
-              <DateInput
-                required
-                label="Date of Birth *"
-                name="dob"
-                date={getDate(
-                  new Date(data?.data.course_and_student_info.dob || "")
-                )}
-              />
-              <Input
-                placeholder="CDC Number"
-                label="CDC Number"
-                name="cdc_num"
-                defaultValue={data?.data.course_and_student_info.cdc_num}
-              />
-              <Input
-                placeholder="Passport Number"
-                label="Passport Number"
-                name="passport_num"
-                defaultValue={data?.data.course_and_student_info.passport_num}
-              />
-              <Input
-                placeholder="COC No"
-                label="COC Number"
-                name="coc_number"
-                defaultValue={data?.data.course_and_student_info.coc_number}
-              />
-              <Input
-                name="cert_of_completency"
-                label="Cert. Of Completency / Proficiency-Grade"
-                placeholder="Type Here.."
-                defaultValue={
-                  data?.data.course_and_student_info.cert_of_completency
-                }
-              />
-            </div>
-          </div>
-
-          {/* Student Emergency situation Info */}
-          <div className="p-10 border card-shdow rounded-3xl space-y-3">
-            <h2 className="text-2xl font-semibold">
-              Information For Emergency situation
-            </h2>
-
-            <div className="grid grid-cols-3 gap-x-5 gap-y-3 md:grid-cols-2 sm:grid-cols-1">
-              <Input
-                name="blood_group"
-                label="Blood Group"
-                placeholder="A+"
-                defaultValue={data?.data.course_and_student_info.blood_group}
-              />
-              {/* <Input
-                name="allergic_or_medication"
-                label="Whether allergic to any medication (Y/N)"
-                placeholder="Y / N"
-                defaultValue={
-                  data?.data.course_and_student_info.allergic_or_medication
-                }
-              /> */}
-              <DropDown
-                name="allergic_or_medication"
-                label="Whether allergic to any medication (Y/N)"
-                options={[
-                  { text: "Yes", value: "Yes" },
-                  { text: "No", value: "No" },
-                ]}
-                defaultValue={
-                  data?.data.course_and_student_info.allergic_or_medication
-                }
-              />
-              <Input
-                name="next_of_kin_name"
-                label="Next of kin name"
-                placeholder="Next of kin name"
-                defaultValue={
-                  data?.data.course_and_student_info.next_of_kin_name
-                }
-              />
-              <Input
-                name="relation_to_sel"
-                label="Relation to sel *"
-                placeholder="Relation to sel"
-                defaultValue={
-                  data?.data.course_and_student_info.relation_to_sel
-                }
-              />
-              <Input
-                name="emergency_number"
-                label="Telephone Contact Nos.in Emergency *"
-                placeholder="Relation to sel"
-                defaultValue={
-                  data?.data.course_and_student_info.emergency_number
-                }
-              />
-            </div>
-          </div>
-
-          {/* Student Additionally Info */}
-          <div className="p-10 border card-shdow rounded-3xl space-y-3">
-            <h2 className="text-2xl font-semibold">
-              Additionally for canditates of Refresher Courses
-            </h2>
-            <div className="flex items-start gap-x-5 gap-y-3 flex-wrap *:basis-96 *:flex-grow">
-              <Input
-                name="number_of_the_cert"
-                label="Number of the Cert.which is being refreshed :"
-                placeholder="Number of the Cert.which is being refreshed :"
-                defaultValue={
-                  data?.data.course_and_student_info.number_of_the_cert
-                }
-              />
-              <Input
-                name="issued_by_institute"
-                label="Issued by (name of the Campus) :"
-                placeholder="Issued by (name of the Campus) :"
-                defaultValue={
-                  data?.data.course_and_student_info.issued_by_institute
-                }
-              />
-              <Input
-                name="issued_by_institute_indos_number"
-                label="INDoS no (Campus) :"
-                placeholder="INDoS no (Campus) :"
-                defaultValue={
-                  data?.data.course_and_student_info
-                    .issued_by_institute_indos_number
-                }
-              />
-            </div>
-          </div>
+          <StudentInputForm
+            student_info={data?.data.course_and_student_info}
+            form_type="manage-admission"
+            control={control}
+            clearErrors={clearErrors}
+            errors={errors}
+            register={register}
+            setValue={setValue}
+          />
 
           {/* Student Documentation */}
           <div className="p-10 border card-shdow rounded-3xl space-y-3">
@@ -329,15 +168,26 @@ export default function ManageStudentAdmissionForm() {
 
           <div className="p-10 border card-shdow rounded-3xl space-y-3">
             <h2 className="text-2xl font-semibold">Form Status *</h2>
-            <DropDown
-              label=""
+            <Controller
               name="form_status"
-              options={[
-                { text: "Approve", value: "Approve" },
-                { text: "Cancel", value: "Cancel" },
-                { text: "Pending", value: "Pending" },
-              ]}
-              defaultValue={data?.data.course_and_student_info.form_status}
+              control={control}
+              render={({ field }) => (
+                <DropDownNew
+                  {...register("form_status")}
+                  label=""
+                  options={[
+                    { text: "Approve", value: "Approve" },
+                    { text: "Cancel", value: "Cancel" },
+                    { text: "Pending", value: "Pending" },
+                  ]}
+                  defaultValue={field.value}
+                  onChange={(option) => {
+                    setValue("form_status", option.value);
+                    clearErrors("form_status");
+                  }}
+                  error={errors.form_status?.message as string}
+                />
+              )}
             />
           </div>
         </form>

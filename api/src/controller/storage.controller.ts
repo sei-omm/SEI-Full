@@ -15,6 +15,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { transaction } from "../utils/transaction";
 import { del } from "@vercel/blob";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
+import { parsePagination } from "../utils/parsePagination";
 
 // export const getFilesAndFolders = asyncErrorHandler(
 //   async (req: Request, res: Response) => {
@@ -216,3 +217,19 @@ export const deleteFile = asyncErrorHandler(
     res.status(200).json(new ApiResponse(200, "File Has Removed"));
   }
 );
+
+export const searchFile = asyncErrorHandler(async (req, res) => {
+  const { LIMIT, OFFSET } = parsePagination(req);
+
+  const { rows } = await pool.query(
+    `
+    SELECT * FROM files WHERE file_name ILIKE '%' || $1 || '%'
+    LIMIT ${LIMIT} OFFSET ${OFFSET}
+    `,
+    [req.query.q]
+  );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Search Result", { folders: [], files: rows }));
+});

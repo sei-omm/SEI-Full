@@ -1,6 +1,7 @@
 "use client";
 
 import { BASE_API } from "@/app/constant";
+import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import Button from "@/components/Button";
 import DateDurationFilter from "@/components/DateDurationFilter";
 import DownloadFormUrl from "@/components/DownloadFormUrl";
@@ -35,6 +36,8 @@ export default function ReceiptReport() {
       "MISC PAID AMOUNT",
       "MISC REMARK",
       "RECEIPT NUMBER",
+      "DISCOUNT AMOUNT",
+      "DISCOUNT REMARK",
     ],
     body: [],
   });
@@ -102,7 +105,9 @@ export default function ReceiptReport() {
                 <tr>
                   {tableDatas.heads.map((item, index) => (
                     <th
-                    className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${index === 1 ? "text-red-600" : ""}`}
+                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${
+                        index === 1 ? "text-red-600" : ""
+                      } ${stickyFirstCol(index)}`}
                       key={item}
                     >
                       {item}
@@ -118,7 +123,11 @@ export default function ReceiptReport() {
                   >
                     {itemArray.map((value, colIndex) => (
                       <td
-                      className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${colIndex === 1 && parseInt(value as string) > 0 ? "text-red-600" : ""}`}
+                        className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${
+                          colIndex === 1 && parseInt(value as string) > 0
+                            ? "text-red-600"
+                            : ""
+                        } ${stickyFirstCol(colIndex)}`}
                         key={value}
                       >
                         {value?.includes("@") ? (

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Job Posting Email</title>
+    <style type="text/css">
+        /* Reset styles */
+        body {
+            margin: 0;
+            padding: 0;
+            min-width: 100%;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f6f6f6;
+            color: #333333;
+        }
+
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 3px solid #007bff;
+        }
+
+        .job-details {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #007bff;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666666;
+            font-size: 12px;
+        }
+
+        @media screen and (max-width: 600px) {
+            .email-wrapper {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-wrapper">
+        <div class="header">
+            <h1 style="color: #007bff; margin: 0;">SEI Educational Trust</h1>
+        </div>
+
+        <div class="job-details">
+            <h2 style="margin-top: 0;"><%= job_title %></h2>
+
+            <div style="margin-bottom: 25px;">
+                <p style="margin: 5px 0;">
+                    <strong>📍 Campus:</strong> <%= campus %>
+                </p>
+                <p style="margin: 5px 0;">
+                    <strong>📅 Exprience:</strong> <%= exprience %>
+                </p>
+                <p style="margin: 5px 0;">
+                    <strong>💼 Department:</strong> <%= department_name %>
+                </p>
+            </div>
+
+            <h3 style="color: #007bff;">Job Description</h3>
+            <p><%= job_description %></p>
+
+            <!-- <center>
+                <a href="[APPLICATION_LINK]" class="button">View Job</a>
+            </center> -->
+        </div>
+
+        <div class="footer">
+            <!-- <p style="margin: 10px 0;">
+                Follow us:
+                <a href="[FACEBOOK_LINK]" style="color: #007bff; text-decoration: none;">Facebook</a> |
+                <a href="[LINKEDIN_LINK]" style="color: #007bff; text-decoration: none;">LinkedIn</a> |
+                <a href="[TWITTER_LINK]" style="color: #007bff; text-decoration: none;">Twitter</a>
+            </p> -->
+            <p style="margin: 5px 0; font-size: 10px;">
+                © <%= current_year %> SEI Educational Trust. All rights reserved.<br>
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

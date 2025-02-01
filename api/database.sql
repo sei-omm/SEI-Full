@@ -620,7 +620,7 @@ CREATE TABLE appraisal_and_employee (
     item_id SERIAL PRIMARY KEY,
 
     appraisal_id INTEGER,
-    FOREIGN KEY (appraisal_id) REFERENCES appraisal(appraisal_id) ON DELETE SET NULL,
+    FOREIGN KEY (appraisal_id) REFERENCES appraisal(appraisal_id) ON DELETE CASCADE,
 
     from_employee_id INTEGER,
     FOREIGN KEY (from_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
@@ -737,6 +737,68 @@ CREATE TABLE batch_modified_by (
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+
+-- NEW DB SETUP -> 27 Jan 2025
+ALTER TABLE refund_details
+ADD COLUMN status VARCHAR(50) CHECK (status IN ('Pending', 'Approved', 'Reject')) DEFAULT 'Pending';
+
+ALTER TABLE refund_details
+ADD CONSTRAINT refund_details_unique UNIQUE (student_id, course_id, batch_id);
+
+ALTER TABLE refund_details
+ADD COLUMN institute VARCHAR(50) DEFAULT 'Kolkata',
+ADD COLUMN form_id TEXT,
+ADD COLUMN payment_id VARCHAR(255);
+
+ALTER TABLE refund_details
+ADD CONSTRAINT refund_details_form_id_fk
+FOREIGN KEY (form_id) REFERENCES fillup_forms(form_id) ON DELETE CASCADE;
+
+ALTER TABLE students
+ADD COLUMN institute VARCHAR(50) DEFAULT 'Kolkata';
+
+ALTER TABLE students
+ADD CONSTRAINT unique_email UNIQUE (email);
+
+ALTER TABLE assign_assets_employee
+ADD COLUMN issue_date DATE DEFAULT CURRENT_DATE,
+ADD COLUMN return_date DATE DEFAULT NULL;
+
+ALTER TABLE appraisal
+ADD COLUMN appraisal_options_employee TEXT;
+
+ALTER TABLE appraisal RENAME COLUMN appraisal_options TO appraisal_options_hod;
+
+-- DEFAULT FOLDER NAMES
+DELETE FROM folders;
+DELETE FROM files;
+
+INSERT INTO folders (folder_name) 
+VALUES 
+    ('Employee Personnel Files'),
+    ('Recruitment Records Folder'),
+    ('Training & Development Files'),
+    ('Performance Management Folder'),
+    ('Attendance & Leave Records Folder'),
+    ('Payroll & Benefits Records Folder'),
+    ('Disciplinary Actions Folder'),
+    ('Exit Records Folder');
+
+ALTER TABLE employee
+ADD COLUMN next_to_kin VARCHAR(200),
+ADD COLUMN relation_to_self VARCHAR(200);
+
+
+CREATE TABLE holiday_management (
+    holiday_id SERIAL PRIMARY KEY,
+    holiday_name VARCHAR(255),
+    holiday_date DATE,
+    holiday_year VARCHAR(4)
+);
+
+ALTER TABLE job
+ADD COLUMN vendors_email TEXT DEFAULT '';
 
 -- fro clering all table of db
 -- DO $$ 

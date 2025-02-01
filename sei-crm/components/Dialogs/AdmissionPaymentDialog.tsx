@@ -13,19 +13,12 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
 import RadioInput from "../RadioInput";
 import RefundForm from "../RefundForm";
+import { PAYMENT_MODES } from "@/app/constant";
 
 const paymentTypes = [
   { id: 1, text: "Part Payment" },
   { id: 2, text: "Clear Due" },
   { id: 3, text: "Refund" },
-];
-
-const paymentModes = [
-  { id: 1, text: "CASH" },
-  { id: 2, text: "ICICI BANK" },
-  { id: 3, text: "CANARA BANK" },
-  { id: 4, text: "SWIPE CARD" },
-  { id: 5, text: "ONLINE" },
 ];
 
 export default function AdmissionPaymentDialog() {
@@ -39,6 +32,10 @@ export default function AdmissionPaymentDialog() {
   const [currentAmount] = useState(0);
 
   const { mutate, isLoading: isMutating } = useDoMutation();
+  const {
+    mutate: updateEnrollmentStatus,
+    isLoading: isUpdatingEnrollmentStatus,
+  } = useDoMutation();
 
   const searchParams = useSearchParams();
 
@@ -85,6 +82,21 @@ export default function AdmissionPaymentDialog() {
       method: "post",
       formData,
       onSuccess: () => {
+        queryClient.invalidateQueries(["fetch-admission-details"]);
+        dispatch(setDialog({ type: "CLOSE", dialogId: "" }));
+      },
+    });
+  };
+
+  const handleSkipRefund = () => {
+    updateEnrollmentStatus({
+      apiPath: "/admission/enrollment-status",
+      method: "patch",
+      formData: {
+        enrollment_status: "Cancel",
+      },
+      id: extraValue?.enroll_id,
+      onSuccess() {
         queryClient.invalidateQueries(["fetch-admission-details"]);
         dispatch(setDialog({ type: "CLOSE", dialogId: "" }));
       },
@@ -202,7 +214,7 @@ export default function AdmissionPaymentDialog() {
 
         {/* payment mode */}
         <div className="flex items-center justify-between *:cursor-pointer">
-          {paymentModes.map((item, index) =>
+          {PAYMENT_MODES.map((item, index) =>
             item.id === 5 && selectedPaymentTypeIndex !== 2 ? null : (
               <RadioInput
                 disabled={isMutating}
@@ -217,22 +229,41 @@ export default function AdmissionPaymentDialog() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-4 justify-end">
-          <Button
-            disabled={isMutating}
-            loading={isMutating}
-            className="border border-foreground"
-          >
-            {selectedPaymentTypeIndex === 2 ? "Refund" : "Add"}
-          </Button>
-          <Button
-            disabled={isMutating}
-            type="button"
-            onClick={() => dispatch(setDialog({ type: "CLOSE", dialogId: "" }))}
-            className="bg-transparent border-foreground border text-foreground"
-          >
-            Cancel
-          </Button>
+        <div className="flex items-center justify-between">
+          <div>
+            {selectedPaymentTypeIndex === 2 && extraValue?.enroll_id ? (
+              <Button
+                className="bg-yellow-500 text-black font-semibold"
+                loading={isUpdatingEnrollmentStatus}
+                disabled={isUpdatingEnrollmentStatus}
+                type="button"
+                onClick={handleSkipRefund}
+              >
+                Skip Refund & Cancel
+              </Button>
+            ) : null}
+          </div>
+          <div className="flex items-center justify-end gap-4">
+            <Button
+              disabled={isMutating || isUpdatingEnrollmentStatus}
+              loading={isMutating}
+              className="border border-foreground"
+            >
+              {selectedPaymentTypeIndex === 2
+                ? "Initiate Refund"
+                : "Add"}
+            </Button>
+            <Button
+              disabled={isMutating || isUpdatingEnrollmentStatus}
+              type="button"
+              onClick={() =>
+                dispatch(setDialog({ type: "CLOSE", dialogId: "" }))
+              }
+              className="bg-transparent border-foreground border text-foreground"
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
       </form>
     </DialogBody>

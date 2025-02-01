@@ -7,6 +7,7 @@ import {
   renameFile,
   renameFolder,
   saveFileInfoToDb,
+  searchFile,
 } from "../controller/storage.controller";
 
 export const storageRouter = Router();
@@ -19,4 +20,6 @@ storageRouter
 
   .post("/file", saveFileInfoToDb)
   .patch("/file/:file_id", renameFile)
-  .delete("/file/:file_id", deleteFile);
+  .delete("/file/:file_id", deleteFile)
+
+  .get("/search", searchFile);

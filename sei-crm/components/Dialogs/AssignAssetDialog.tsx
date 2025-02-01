@@ -9,6 +9,7 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import { usePathname } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setDialog } from "@/redux/slices/dialogs.slice";
+import DateInput from "../DateInput";
 
 export default function AssignAssetDialog() {
   const [inputs, setInputs] = useState<number[]>([1]);
@@ -26,9 +27,12 @@ export default function AssignAssetDialog() {
     let obj: any = {};
 
     formData.forEach((value, key) => {
-      if (trackIndex >= 2) {
+      if (trackIndex >= 4) {
         trackIndex = 0;
-        obj[key] = value;
+        if (key === "return_date" && value === "") {
+        } else {
+          obj[key] = value;
+        }
         datasToStore.push(obj);
         obj = {};
         return;
@@ -43,7 +47,7 @@ export default function AssignAssetDialog() {
       method: "post",
       formData: datasToStore,
       onSuccess() {
-        queryClient.invalidateQueries("employee_assigned_assets");
+        queryClient.invalidateQueries("get-employee-info");
         setInputs([]);
         dispatch(setDialog({ type: "CLOSE", dialogId: "" }));
       },
@@ -57,7 +61,7 @@ export default function AssignAssetDialog() {
   }
 
   return (
-    <DialogBody className="min-w-[38rem] max-h-[90vh] overflow-y-auto">
+    <DialogBody className="min-w-[65rem] max-h-[90vh] overflow-y-auto">
       <Button
         type="button"
         onClick={() => {
@@ -76,24 +80,33 @@ export default function AssignAssetDialog() {
           {inputs.map((item, index) => (
             <li key={item} className="flex items-center gap-4">
               <div className="flex items-center *:flex-grow gap-5 flex-grow">
-                <input name="employee_id" hidden value={pathNames[pathNames.length - 1]} />
+                <input
+                  name="employee_id"
+                  hidden
+                  value={pathNames[pathNames.length - 1]}
+                />
                 <Input
                   required
                   name="assets_name"
-                  label="Assets Name"
+                  label="Assets Name *"
                   placeholder="Type Here.."
                 />
                 <Input
                   required
                   name="issued_by"
-                  label="Issued By"
+                  label="Issued By *"
                   placeholder="Type Here.."
                 />
+                <DateInput required name="issue_date" label="Issued Date *" />
+                <DateInput name="return_date" label="Return Date" />
               </div>
 
               <div className="pt-6">
                 <AiOutlineDelete
-                  onClick={() => handleDeleteItem(index)}
+                  onClick={() => {
+                    if (!confirm("Are you sure you want to delete")) return;
+                    handleDeleteItem(index);
+                  }}
                   className="cursor-pointer active:scale-90"
                 />
               </div>

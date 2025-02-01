@@ -126,6 +126,7 @@ export const createAdmissionReport = asyncErrorHandler(
     //     LIMIT ${LIMIT} OFFSET ${OFFSET}
     // `;
 
+    let placeholder = 3;
     let FILTER =
       "WHERE c.institute = $1 AND ebc.enrollment_status = 'Approve' AND DATE(ebc.created_at) BETWEEN $2 AND $3";
     let FILTER_VALUES: any[] = [
@@ -134,9 +135,16 @@ export const createAdmissionReport = asyncErrorHandler(
       value.to_date,
     ];
 
-    if (req.query.rank) {
-      FILTER += " AND s.rank = $4";
+    if (req.query.rank && req.query.rank !== "All") {
+      placeholder += 1;
+      FILTER += ` AND s.rank = $${placeholder}`;
       FILTER_VALUES.push(value.rank);
+    }
+
+    if (req.query.course_id && req.query.course_id !== "0") {
+      placeholder += 1;
+      FILTER += ` AND c.course_id = $${placeholder}`;
+      FILTER_VALUES.push(value.course_id);
     }
 
     if (req.query.form_id) {
@@ -155,12 +163,12 @@ export const createAdmissionReport = asyncErrorHandler(
 
     const sqlForAdmissionReport = `
         SELECT DISTINCT
+          s.profile_image,
+          s.name,
           cb.start_date AS created_at,
           c.course_name,
           cb.batch_fee AS course_batch_fee,
           cb.batch_fee - SUM(p.paid_amount) as due_amount_for_course,
-          s.profile_image,
-          s.name,
           c.course_type,
           s.email,
           s.mobile_number,
@@ -936,8 +944,8 @@ export const getBatchReport = asyncErrorHandler(
     const { rows } = await pool.query(
       `
         SELECT 
-          ebc.form_id,
           s.name,
+          ebc.form_id,
           cb.start_date,
           cb.batch_fee,
           SUM(p.paid_amount) AS total_paid,
@@ -1172,7 +1180,9 @@ export const getReceiptReport = asyncErrorHandler(
       p.remark AS payment_remark,
       p.misc_payment,
       p.misc_remark,
-      p.receipt_no
+      p.receipt_no,
+      p.discount_amount,
+      p.discount_remark
       FROM payments AS p
 
       LEFT JOIN course_batches AS cb

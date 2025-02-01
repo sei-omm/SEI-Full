@@ -7,4 +7,3 @@ export function parsePagination(req: Request) {
   delete req.query.page;
   return { OFFSET, LIMIT };
 }
-

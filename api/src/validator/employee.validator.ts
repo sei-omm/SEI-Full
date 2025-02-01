@@ -8,7 +8,7 @@ export const updateEmployeeStatusValidator = Joi.object({
 export const employeeSchema = Joi.object({
   name: Joi.string().max(255).required().label("Name"),
   employee_id: Joi.string().length(7).optional().label("Employee ID"),
-  joining_date: Joi.date().optional().label("Joining Date"),
+  joining_date: Joi.date().required().label("Joining Date"),
   job_title: Joi.string().max(255).optional().label("Job Title"),
   department_id: Joi.number().optional().label("department_id"),
   contact_number: Joi.string().max(15).optional().label("Contact Number"),
@@ -83,8 +83,8 @@ export const employeeSchema = Joi.object({
   gratuity: Joi.number().precision(2).optional().label("Gratuity"),
   is_active: Joi.boolean().default(true).label("Is Active"),
 
-  login_email: Joi.string().email().max(255).required().messages({
-    "string.email": "Please enter a valid Employee Login Email",
+  login_email: Joi.string().max(255).optional().allow("").messages({
+    "string.email": "Please enter a valid Employee Login Email / Employee ID",
     "string.max": "Employee Login Email should be at most 255 characters",
     "any.required": "Employee Login Email is required",
   }),
@@ -107,7 +107,7 @@ export const employeeSchema = Joi.object({
   max_teaching_hrs_per_week: Joi.string().optional().allow(""),
   faculty_attendance_type: Joi.string().valid("Regular", "Visiting"),
   employee_type: Joi.string().valid("Office Staff", "Faculty"),
-  institute: Joi.string().optional().allow(""),
+  institute: Joi.string().required(),
   designation: Joi.string().optional().allow(""),
   authority: Joi.number().optional(),
 
@@ -122,11 +122,14 @@ export const employeeSchema = Joi.object({
 
   payscale_label: Joi.string().required().label("Payscale Label"),
   payscale_year: Joi.number().required().label("Payscale Year"),
+
+  next_to_kin : Joi.string().optional().allow("").label("Next To Kin"),
+  relation_to_self : Joi.string().optional().allow("").label("Relation To Self")
 });
 
 export const employeeLoginValidator = Joi.object({
-  login_email: Joi.string().email().max(255).required().messages({
-    "string.email": "Please enter a valid Employee Login Email",
+  login_email: Joi.string().max(255).required().messages({
+    "string.email": "Please enter a valid Employee Login Email / ID",
     "string.max": "Employee Login Email should be at most 255 characters",
     "any.required": "Employee Login Email is required",
   }),
@@ -154,6 +157,7 @@ export const createAppraisalValidator = Joi.object({
   duties: Joi.string().required(),
   targets: Joi.string().required(),
   achievements: Joi.string().required(),
+  appraisal_options_employee : Joi.string().required()
 });
 
 export const getAppraisalListValidator = Joi.object({
@@ -175,7 +179,8 @@ export const updateAppraisalValidator = Joi.object({
   targets: Joi.string().required(),
   achievements: Joi.string().required(),
 
-  appraisal_options: Joi.string().required(),
+  appraisal_options_employee: Joi.string().required(),
+  appraisal_options_hod: Joi.string().required(),
   state_of_health: Joi.string().required(),
   integrity: Joi.string().required(),
 });
@@ -185,5 +190,7 @@ export const assignAssetsValidator = Joi.array().items(
     employee_id: Joi.number().required(),
     assets_name: Joi.string().required(),
     issued_by: Joi.string().required(),
+    issue_date: Joi.string().required(),
+    return_date: Joi.string().optional(),
   })
 );

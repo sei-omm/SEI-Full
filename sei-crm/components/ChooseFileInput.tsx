@@ -48,13 +48,16 @@ export default function ChooseFileInput({
   const [file, setFile] = useState<File | null>(null);
   const [uploadFileUrl, setUploadedFileUrl] = useState<string>("");
 
+  const [viewLinkState, setViewLink] = useState(viewLink);
+  const [fileNameState, setFileName] = useState(fileName);
+
   const handleViewFile = () => {
     if (file) {
       const url = URL.createObjectURL(file);
       window.open(url);
     }
 
-    window.open(viewLink || "");
+    window.open(viewLinkState || "");
   };
 
   const [uploadStatus, setUploadStatus] = useState<{
@@ -117,7 +120,7 @@ export default function ChooseFileInput({
         id={id}
         type="file"
       />
-      <input type="text" name={name} className="hidden" value={uploadFileUrl}/>
+      <input type="text" name={name} className="hidden" value={uploadFileUrl} />
       <span className="block font-semibold text-sm pl-1">{label}</span>
       <label
         htmlFor={uploadStatus.status === "done" ? id : ""}
@@ -126,14 +129,14 @@ export default function ChooseFileInput({
         {uploadStatus.status === "done" ? (
           <>
             <h2 className="w-full line-clamp-1 break-all whitespace-normal">
-              {file ? file.name : fileName}
+              {file ? file.name : fileNameState}
             </h2>
             <div className="flex items-center gap-3 *:cursor-pointer">
-              {!file && !viewLink ? null : (
+              {!file && !viewLinkState ? null : (
                 <IoEyeOutline onClick={handleViewFile} size={18} />
               )}
 
-              {!file && !viewLink ? (
+              {!file && !viewLinkState ? (
                 <label className={viewOnly ? "hidden" : "inline"} htmlFor={id}>
                   <IoCloudUploadOutline size={18} />
                 </label>
@@ -147,9 +150,16 @@ export default function ChooseFileInput({
                   </label>
                   <MdOutlineDeleteOutline
                     className={viewOnly ? "hidden" : "inline"}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      if (!confirm("Are you sure you want to delete ?")) return;
+
                       onFileDelete?.(id);
                       setFile(null);
+                      setViewLink(null);
+                      setFileName("Choose File");
                     }}
                     size={18}
                   />

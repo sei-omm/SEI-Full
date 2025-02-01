@@ -23,7 +23,7 @@ async function submitInformationToServer<T>(params: ParamsType) {
       ? { ...params.headers }
       : {
           // "Content-Type": "multipart/form-data",
-          "Content-Type" : "application/json"
+          "Content-Type": "application/json",
         },
   });
 
@@ -35,7 +35,8 @@ async function submitInformationToServer<T>(params: ParamsType) {
 
 export const useDoMutation = <T = any>(
   onGSuccess?: (data: ISuccess<T>) => void,
-  onGError?: (error: AxiosError<IError>) => void
+  onGError?: (error: AxiosError<IError>) => void,
+  hideToastError?: boolean
 ) => {
   const { mutate, isLoading } = useMutation(submitInformationToServer<T>, {
     onSuccess: (data) => {
@@ -47,7 +48,9 @@ export const useDoMutation = <T = any>(
     },
     onError: (error: AxiosError<IError>) => {
       onGError?.(error);
-      toast.error(error.response?.data.message);
+      if (!hideToastError) {
+        toast.error(error.response?.data.message);
+      }
     },
   });
 

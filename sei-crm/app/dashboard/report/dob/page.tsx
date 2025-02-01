@@ -84,7 +84,6 @@ export default function DobReport() {
     data: report,
     error,
     isFetching,
-    refetch,
   } = useQuery<ISuccess<TDobReport[]>, AxiosError<IError>>(
     ["fetch-dob-report", searchParams.toString()],
     () =>
@@ -102,7 +101,6 @@ export default function DobReport() {
           delete (newObj as { profile_image?: string | null }).profile_image;
           return Object.values(newObj);
         });
-        // manageLineChat();
         setTableDatas(oldStates);
       },
       enabled: searchParams.size != 0,
@@ -117,7 +115,6 @@ export default function DobReport() {
     const searchParams = new URLSearchParams();
     searchParams.set("birth_date", `${formData.get("birth_date")}`);
     route.push(`/dashboard/report/dob?${searchParams.toString()}`);
-    refetch();
   };
 
   const { mutate, isLoading: isSendingEmail } = useDoMutation();
@@ -135,7 +132,6 @@ export default function DobReport() {
       formData,
     });
   };
-
   return (
     <div className="space-y-12">
       {/* Filters */}
@@ -147,6 +143,7 @@ export default function DobReport() {
           required
           label="Birth Date"
           name="birth_date"
+          type="date"
           date={searchParams.get("birth_date")}
         />
 
@@ -174,16 +171,9 @@ export default function DobReport() {
       )} */}
 
       <HandleSuspence
-        errorMsg={
-          error
-            ? error.response?.data.message
-            : tableDatas.body.length === 0
-            ? "No Response"
-            : report?.data.length === 0
-            ? "No Data Found"
-            : ""
-        }
+        error={error}
         isLoading={isFetching}
+        dataLength={report?.data.length}
       >
         <div className="w-full overflow-hidden card-shdow">
           <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black">

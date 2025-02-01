@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razorpay Payment</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body>
+    <h1>Razorpay Payment Integration <%= amount_to_pay * 1000 %></h1>
+    <!-- <button id="pay-btn">Pay Now</button> -->
+
+    <script>
+        // const payBtn = document.getElementById('pay-btn');
+        window.addEventListener('DOMContentLoaded', async () => {
+
+            const options = {
+                key: "<%= key %>", // Razorpay Key ID passed from the server
+                amount: '<%= amount_to_pay * 1000 %>',
+                currency: "INR",
+                name: "Sei Educational Trust",
+                order_id: "<%= order_id %>", // Pass the Razorpay order ID
+                handler: function (response) {
+                    // Send payment details to the server for verification
+                    fetch('/verify-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        }),
+                    })
+                        .then((res) => res.json())
+                        .then((data) => {
+                            if (data.success) {
+                                alert('Payment successful!');
+                            } else {
+                                alert('Payment verification failed.');
+                            }
+                        });
+                },
+            };
+
+            const razorpay = new Razorpay(options);
+            razorpay.open();
+
+        })
+    </script>
+</body>
+
+</html>

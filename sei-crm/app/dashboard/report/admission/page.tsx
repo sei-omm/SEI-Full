@@ -24,6 +24,7 @@ import {
 import DateDurationFilter from "@/components/DateDurationFilter";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import Pagination from "@/components/Pagination";
+import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 
 ChartJS.register(
   CategoryScale,
@@ -60,18 +61,18 @@ export default function AdmissionReport() {
     body: (string | null)[][];
   }>({
     heads: [
+      "Student Name",
       "Batch Date",
       "Course Name",
       "Course Fee",
       "Student Due Amount",
-      "Student Name",
       "Course Type",
       "Student Email",
       "Student Contact Number",
       "Amount Paid",
       "Misc Amount Paid",
       "Total Paid",
-      "Discount Amount"
+      "Discount Amount",
     ],
     body: [],
   });
@@ -220,7 +221,11 @@ export default function AdmissionReport() {
           </DownloadFormUrl>
         </div>
       </form> */}
-      <DateDurationFilter withMoreFilter={true} withStudentRank = {true}/>
+      <DateDurationFilter
+        withMoreFilter={true}
+        withStudentRank={true}
+        withCourse={true}
+      />
 
       <div className="flex items-center justify-end">
         <GenarateExcelReportBtn
@@ -248,12 +253,14 @@ export default function AdmissionReport() {
                 <tr>
                   {tableDatas.heads.map((item, index) => (
                     <th
-                      className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
+                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${stickyFirstCol(
+                        index
+                      )}`}
                       key={item}
                     >
                       <span
                         className={`${
-                          index === 3 ? "text-red-600" : "text-black"
+                          index === 4 ? "text-red-600" : "text-black"
                         }`}
                       >
                         {item}
@@ -270,7 +277,9 @@ export default function AdmissionReport() {
                   >
                     {itemArray.map((value, columnIndex) => (
                       <td
-                        className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
+                        className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${stickyFirstCol(
+                          columnIndex
+                        )}`}
                         key={value}
                       >
                         {typeof value !== "number" && value?.includes("@") ? (
@@ -283,12 +292,12 @@ export default function AdmissionReport() {
                         ) : (
                           <span
                             className={`line-clamp-1 inline-flex gap-x-3  ${
-                              columnIndex === 3 && parseInt(value as any) > 0
+                              columnIndex === 4 && parseInt(value as any) > 0
                                 ? "text-red-600 font-semibold"
                                 : ""
                             }`}
                           >
-                            {columnIndex === 4 ? (
+                            {columnIndex === 0 ? (
                               <div className="flex items-center gap-2">
                                 <div className="size-10 bg-gray-200 overflow-hidden rounded-full">
                                   {!report ||
@@ -315,7 +324,7 @@ export default function AdmissionReport() {
                               <TagsBtn type="FAILED">Cancelled</TagsBtn>
                             ) : value === "Pending" || value === null ? (
                               <TagsBtn type="PENDING">Pending</TagsBtn>
-                            ) : columnIndex === 0 ? (
+                            ) : columnIndex === 1 ? (
                               beautifyDate(value)
                             ) : (
                               value

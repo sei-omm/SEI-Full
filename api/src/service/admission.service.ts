@@ -184,7 +184,7 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
     LEFT JOIN course_batches as CB
     ON CB.batch_id = EBC.batch_id
 
-    WHERE form_id = $1 AND EBC.enrollment_status = 'Approve' OR EBC.enrollment_status = 'Pending'`;
+    WHERE form_id = $1 -- AND EBC.enrollment_status = 'Approve' OR EBC.enrollment_status = 'Pending'`;
 
   const client = await pool.connect();
 
@@ -235,17 +235,11 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
     throw new ErrorHandler(400, error.message);
   }
 
-  // const response = await transaction([
-  //   { sql: courseAndStudentInfoSql, values: [form_id] },
-  //   { sql: paymentsDataSql, values: [form_id] },
-  //   { sql: getBatchesFeesSql, values: [form_id] },
-  // ]);
-
-  if (
-    data?.courseAndStudentInfo.rowCount === 0 ||
-    data?.paymentsDataInfo.rowCount === 0
-  )
-    throw new ErrorHandler(500, "Data Empty Error");
+  // if (
+  //   data?.courseAndStudentInfo.rowCount === 0 ||
+  //   data?.paymentsDataInfo.rowCount === 0
+  // )
+  //   throw new ErrorHandler(500, "Data Empty Error");
 
   const paymentInfo: {
     total_paid: number;

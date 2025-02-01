@@ -22,7 +22,7 @@ import {
 } from "../validator/course.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { getAuthToken } from "../utils/getAuthToken";
-import { verifyToken } from "../utils/token";
+import { createToken, verifyToken } from "../utils/token";
 import { createOrder } from "../service/razorpay.service";
 import { transaction } from "../utils/transaction";
 import { filterToSql } from "../utils/filterToSql";
@@ -417,7 +417,7 @@ export const searchCourse = asyncErrorHandler(
 export const addNewCourse = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error } = addNewCourseValidator.validate(req.body);
-    if (error) throw new ErrorHandler(400, error.message);
+    if (error) throw new ErrorHandler(400, error.message, error?.details[0].context?.key);
 
     const client = await pool.connect();
 
@@ -728,18 +728,29 @@ export const enrollToBatch = asyncErrorHandler(
     const batchIds = req.query.batch_ids?.toString().split(","); //it should be an array of course ids
     delete req.body.batch_ids;
 
-    const payment_mode = req.body.payment_mode;
+    const payment_type = req.body.payment_mode;
     delete req.body.payment_mode;
 
     //get the amount of the course
     const paramsSql = batchIds?.map((_, index) => `$${index + 1}`);
 
     //Date Come -> [ { total_price: '7499.00', minimum_to_pay: 4999 } ]
+    // const { rows, rowCount } = await pool.query(
+    //   `SELECT
+    //       SUM(batch_fee) AS total_price,
+    //       CAST(SUM(batch_fee * (min_pay_percentage / 100.0)) AS INT) AS minimum_to_pay
+    //    FROM course_batches WHERE batch_id IN (${paramsSql}
+    //    `,
+    //   batchIds
+    // );
+
     const { rows, rowCount } = await pool.query(
       `SELECT
+          STRING_AGG(course_id::TEXT, ',') as course_ids,
           SUM(batch_fee) AS total_price,
           CAST(SUM(batch_fee * (min_pay_percentage / 100.0)) AS INT) AS minimum_to_pay
-       FROM course_batches WHERE batch_id IN (${paramsSql})`,
+       FROM course_batches WHERE batch_id IN (${paramsSql})
+       `,
       batchIds
     );
 
@@ -747,9 +758,20 @@ export const enrollToBatch = asyncErrorHandler(
 
     //create new order and send back to client side
     const { id, amount } = await createOrder(
-      payment_mode === "Part-Payment"
+      payment_type === "Part-Payment"
         ? rows[0].minimum_to_pay * 100
         : rows[0].total_price * 100
+    );
+
+    const token_key = createToken(
+      {
+        ...rows[0],
+        batch_ids: req.query.batch_ids,
+        student_id: req.query.student_id, //it could undefined
+        payment_type,
+        order_id: id,
+      },
+      { expiresIn: "48h" }
     );
 
     res.status(201).json(
@@ -757,6 +779,7 @@ export const enrollToBatch = asyncErrorHandler(
         order_id: id,
         amount,
         razorpay_key: process.env.RAZORPAY_KEY_ID,
+        token_key,
       })
     );
   }
@@ -899,7 +922,14 @@ export const getCoursesRequiredDocuments = asyncErrorHandler(
 export const getCoursesForDropDown = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const institute = req.query.institute;
-    const monthAndYear = req.query.month_year;
+    let monthAndYear = req.query.month_year;
+    const without_course_batches =
+      req.query.without_course_batches === "true" ? true : false;
+    if (without_course_batches) {
+      monthAndYear = undefined;
+    }
+    const withFullBatchInfo =
+      req.query.with_full_batch_info === "true" ? true : false;
 
     let filter = "";
     const valueToStore: string[] = [];
@@ -923,15 +953,34 @@ export const getCoursesForDropDown = asyncErrorHandler(
       `
         SELECT 
           c.course_id, 
-          c.course_name,
-          COALESCE(
-            JSON_AGG(cb.start_date ORDER BY cb.created_at DESC) 
-            FILTER (WHERE cb.course_id IS NOT NULL), 
-            '[]'::json
-          ) AS course_batches
+          c.course_name
+          ${
+            without_course_batches
+              ? ""
+              : `
+              , COALESCE(
+              ${
+                withFullBatchInfo
+                  ? "JSON_AGG(JSON_OBJECT('batch_id' : cb.batch_id, 'start_date' : cb.start_date) ORDER BY cb.created_at DESC)"
+                  : "JSON_AGG(cb.start_date ORDER BY cb.created_at DESC)"
+              }
+               
+              FILTER (WHERE cb.course_id IS NOT NULL), 
+              '[]'::json
+            ) AS course_batches
+            `
+          }
+          
         FROM ${table_name} AS c
-        LEFT JOIN course_batches AS cb
-        ON cb.course_id = c.course_id
+        ${
+          without_course_batches
+            ? ""
+            : `
+          LEFT JOIN course_batches AS cb
+          ON cb.course_id = c.course_id
+        `
+        }
+        
 
         ${filter}
         

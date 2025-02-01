@@ -1,23 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 import DropDown from "./DropDown";
 import DateInput from "./DateInput";
 import Button from "./Button";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Input from "./Input";
-import { STUDENT_RANKS } from "@/app/constant";
+import { BASE_API, STUDENT_RANKS } from "@/app/constant";
+import { useQuery } from "react-query";
+import axios from "axios";
+import { ISuccess, TCourseDropDown } from "@/types";
+import HandleSuspence from "./HandleSuspence";
 
 interface IProps {
   withMoreFilter?: boolean;
   withStudentRank?: boolean;
+  withCourse?: boolean;
 }
 
 export default function DateDurationFilter({
   withMoreFilter,
   withStudentRank,
+  withCourse,
 }: IProps) {
   const searchParams = useSearchParams();
   const route = useRouter();
   const pathname = usePathname();
+
+  const [institute, setInstitute] = useState("Kolkata");
 
   // const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
   //   event.preventDefault();
@@ -57,8 +65,16 @@ export default function DateDurationFilter({
     route.push(`${pathname}?${urlSearchParams.toString()}`);
   };
 
+  const { data, isFetching, error } = useQuery<ISuccess<TCourseDropDown[]>>({
+    queryKey: ["get-course-for-filter", institute],
+    queryFn: async () =>
+      (await axios.get(`${BASE_API}/course/drop-down?institute=${institute}`))
+        .data,
+    enabled: withCourse,
+  });
+
   return (
-    <div className="w-full">
+    <div className="w-full space-y-3">
       {withMoreFilter ? (
         <>
           <form
@@ -91,12 +107,11 @@ export default function DateDurationFilter({
 
       <form
         onSubmit={handleFormSubmit}
-        className="flex items-end gap-5 *:flex-grow"
+        className="flex items-end gap-5 *:flex-grow flex-wrap"
       >
         <input name="form_2" hidden />
         {withStudentRank ? (
           <DropDown
-            // onChange={(item) => setInstitute(item.value)}
             key={"student_rank"}
             name="rank"
             label="Student Rank"
@@ -105,7 +120,32 @@ export default function DateDurationFilter({
           />
         ) : null}
 
+        {withCourse ? (
+          <HandleSuspence
+            noDataMsg="No Course Avilable"
+            isLoading={isFetching}
+            dataLength={data?.data.length}
+            error={error}
+          >
+            <DropDown
+              name="course_id"
+              label="Choose Course"
+              options={[
+                { text: "All Courses", value: 0 },
+                ...(data?.data.map((item) => ({
+                  text: item.course_name,
+                  value: item.course_id,
+                })) || []),
+              ]}
+              defaultValue={
+                searchParams.get("course_id") || data?.data[0]?.course_id
+              }
+            />
+          </HandleSuspence>
+        ) : null}
+
         <DropDown
+          onChange={(institute) => setInstitute(institute.value)}
           name="institute"
           label="Campus"
           options={[
@@ -117,14 +157,14 @@ export default function DateDurationFilter({
 
         <DateInput
           required
-          label="From Date"
+          label="From Date *"
           name="from_date"
           date={searchParams.get("from_date")}
         />
 
         <DateInput
           required
-          label="To Date"
+          label="To Date *"
           name="to_date"
           date={searchParams.get("to_date")}
         />

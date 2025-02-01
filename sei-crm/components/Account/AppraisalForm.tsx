@@ -29,7 +29,8 @@ export default function AppraisalForm() {
   const route = useRouter();
 
   // const parsedOptions = useRef<any>({});
-  const [parsedOptions, setParsedOptions] = useState<any>(null);
+  const [parsedOptionsEmployee, setParsedOptionsEmployee] = useState<any>(null);
+  const [parsedOptionsHod, setParsedOptionsHod] = useState<any>(null);
 
   const isNew = searchParams.get("id") === "add";
   const appraisalID = searchParams.get("id");
@@ -39,9 +40,14 @@ export default function AppraisalForm() {
     queryFn: () => getSingleAppraisal(parseInt(appraisalID || "0")),
     enabled: !isNew,
     onSuccess(data) {
-      if (data.data.appraisal_info.appraisal_options) {
-        setParsedOptions(
-          JSON.parse(data.data.appraisal_info.appraisal_options)
+      if (data.data.appraisal_info.appraisal_options_employee) {
+        setParsedOptionsEmployee(
+          JSON.parse(data.data.appraisal_info.appraisal_options_employee)
+        );
+      }
+      if (data.data.appraisal_info.appraisal_options_hod) {
+        setParsedOptionsHod(
+          JSON.parse(data.data.appraisal_info.appraisal_options_hod)
         );
       }
     },
@@ -49,8 +55,28 @@ export default function AppraisalForm() {
   });
 
   function handleFormAction(formData: FormData) {
+    const dataToStore: any = {};
+    const optionToObjHod: any = {};
+    const optionToObjEmployee: any = {};
+
+    formData.forEach((value, key) => {
+      if (key.includes("employee-option-")) {
+        optionToObjEmployee[key] = value;
+      } else if (key.includes("hod-option-") && !isNew) {
+        optionToObjHod[key] = value;
+      } else {
+        dataToStore[key] = value;
+      }
+    });
+
+    dataToStore["appraisal_options_employee"] =
+      JSON.stringify(optionToObjEmployee);
+
     //if for creating appraisal
     if (isNew) {
+      delete dataToStore["state_of_health"];
+      delete dataToStore["integrity"];
+
       mutate({
         apiPath: "/employee/appraisal",
         method: "post",
@@ -58,12 +84,7 @@ export default function AppraisalForm() {
           "Content-Type": "application/json",
           ...getAuthToken(),
         },
-        formData: {
-          discipline: formData.get("discipline"),
-          duties: formData.get("duties"),
-          targets: formData.get("targets"),
-          achievements: formData.get("achievements"),
-        },
+        formData: dataToStore,
         onSuccess() {
           route.push("/account?tab=appraisal");
         },
@@ -71,17 +92,9 @@ export default function AppraisalForm() {
       return;
     }
 
-    const dataToStore: any = {};
-    const optionToObj: any = {};
-    formData.forEach((value, key) => {
-      if (key.includes("option-")) {
-        optionToObj[key] = value;
-      } else {
-        dataToStore[key] = value;
-      }
-    });
-
-    dataToStore["appraisal_options"] = JSON.stringify(optionToObj);
+    dataToStore["appraisal_options_hod"] = JSON.stringify(optionToObjHod);
+    dataToStore["appraisal_options_employee"] =
+      JSON.stringify(optionToObjEmployee);
 
     mutate({
       apiPath: "/employee/appraisal",
@@ -97,6 +110,8 @@ export default function AppraisalForm() {
       },
     });
   }
+
+  console.log(parsedOptionsEmployee);
 
   return (
     <>
@@ -233,25 +248,58 @@ export default function AppraisalForm() {
                       <span className="flex-grow basis-60">
                         {index + 1}) {item.text}
                       </span>
-                      <div className="basis-20">
-                        <select
-                          name={item.id}
-                          disabled={isNew}
-                          className="border border-gray-500 text-xs px-2 py-1 cursor-pointer outline-none"
-                          defaultValue={parsedOptions?.[item.id]}
-                          key={parsedOptions?.[item.id]}
-                        >
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                          <option value="3">3</option>
-                          <option value="4">4</option>
-                          <option value="5">5</option>
-                          <option value="6">6</option>
-                          <option value="7">7</option>
-                          <option value="8">8</option>
-                          <option value="9">9</option>
-                          <option value="10">10</option>
-                        </select>
+                      <div className="basis-20 flex items-start gap-6">
+                        <div className="space-y-2">
+                          {index === 0 ? (
+                            <span className="text-xs font-semibold">
+                              Employee
+                            </span>
+                          ) : null}
+                          <select
+                            name={"employee-" + item.id}
+                            className="border border-gray-500 text-xs px-2 py-1 cursor-pointer outline-none"
+                            defaultValue={
+                              parsedOptionsEmployee?.["employee-" + item.id]
+                            }
+                            key={parsedOptionsEmployee?.["employee-" + item.id]}
+                          >
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          {index === 0 ? (
+                            <span className="text-xs font-semibold">
+                              HOI/HOD
+                            </span>
+                          ) : null}
+                          <select
+                            name={"hod-" + item.id}
+                            disabled={isNew}
+                            className="border border-gray-500 text-xs px-2 py-1 cursor-pointer outline-none"
+                            defaultValue={parsedOptionsHod?.["hod-" + item.id]}
+                            key={parsedOptionsHod?.["hod-" + item.id]}
+                          >
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                     {previousGroup !== item.group ? (

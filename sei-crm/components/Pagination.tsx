@@ -11,9 +11,12 @@ interface IProps {
 }
 
 export default function Pagination({ className, dataLength }: IProps) {
+
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  if(dataLength === 0) return null;
 
   function handlePagination(type: "next" | "prev") {
     const urlSearchParams = new URLSearchParams(searchParams);

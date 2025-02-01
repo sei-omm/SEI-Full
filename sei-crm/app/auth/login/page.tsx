@@ -56,9 +56,8 @@ export default function Login() {
           </p>
         </div>
         <Input
-          type="email"
-          placeholder="somnathgupta112@gmail.com"
-          label="Your email"
+          placeholder="somnathgupta112@gmail.com / 01112025(4)F"
+          label="Login Email / Employee ID"
           name="login_email"
         />
         <Input

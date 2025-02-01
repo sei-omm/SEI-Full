@@ -96,13 +96,13 @@ const table_name = "attendance";
 //   const endData = new Date(2025, 1, 0);
 //   const totalDays = endData.getDate();
 
-  // const queryForFilter = { ...req.query } as any;
-  // delete queryForFilter.month;
-  // delete queryForFilter.year;
-  // const { filterQuery, filterValues, placeholderNum } = filterToSql(
-  //   queryForFilter,
-  //   "e"
-  // );
+// const queryForFilter = { ...req.query } as any;
+// delete queryForFilter.month;
+// delete queryForFilter.year;
+// const { filterQuery, filterValues, placeholderNum } = filterToSql(
+//   queryForFilter,
+//   "e"
+// );
 
 //   let cases = "";
 //   const currentMonth = endData.getMonth() + 1;
@@ -166,7 +166,6 @@ async function generateEmployeeAttendance(req: Request) {
 
   const { LIMIT, OFFSET } = parsePagination(req);
 
-
   const queryForFilter = { ...req.query } as any;
   delete queryForFilter.from_date;
   delete queryForFilter.to_date;
@@ -192,10 +191,14 @@ async function generateEmployeeAttendance(req: Request) {
     FROM employee AS e
 
     LEFT JOIN leave AS l 
-    ON e.id = l.employee_id AND (l.leave_from BETWEEN $${placeholderNum} AND $${placeholderNum + 1} OR l.leave_to BETWEEN $${placeholderNum} AND $${placeholderNum + 1})
+    ON e.id = l.employee_id AND (l.leave_from BETWEEN $${placeholderNum} AND $${
+    placeholderNum + 1
+  } OR l.leave_to BETWEEN $${placeholderNum} AND $${placeholderNum + 1})
 
     LEFT JOIN attendance AS a
-    ON e.id = a.employee_id AND a.date BETWEEN $${placeholderNum} AND $${placeholderNum + 1}
+    ON e.id = a.employee_id AND a.date BETWEEN $${placeholderNum} AND $${
+    placeholderNum + 1
+  }
 
     ${filterQuery}
 
@@ -208,12 +211,21 @@ async function generateEmployeeAttendance(req: Request) {
 
   const { rows } = await pool.query(sql, filterValues);
 
+  const { rows : holidayList } = await pool.query(
+    `SELECT 
+      holiday_name, 
+      TO_CHAR(holiday_date, 'YYYY-MM-DD') as holiday_date 
+    FROM holiday_management WHERE holiday_year = $1`,
+    [date.getFullYear()]
+  );
+
   const dataToReturn: any[] = [];
 
   rows.forEach((item) => {
     const objToStore: any = {};
     const attendanceObj: any = {};
     const leavesObj: any = {};
+    const holidayObj : any = {};
     const startDate = new Date(fromData);
     const endDate = new Date(toData);
     const joiningDate = new Date(item.joining_date);
@@ -235,6 +247,10 @@ async function generateEmployeeAttendance(req: Request) {
       }
     });
 
+    holidayList.forEach((hItem) => {
+      holidayObj[hItem.holiday_date] = "Holiday";
+    })
+
     while (needToStopLoop === false) {
       if (
         startDate.toISOString().split("T")[0] ===
@@ -248,8 +264,7 @@ async function generateEmployeeAttendance(req: Request) {
       if (joiningDate.getTime() > startDate.getTime()) {
         objToStore[key] = "Not Employed";
       } else {
-        objToStore[`${key}`] =
-          attendanceObj[`${key}`] || leavesObj[`${key}`] || "Pending";
+        objToStore[`${key}`] = holidayObj[`${key}`] || attendanceObj[`${key}`] || leavesObj[`${key}`] || "Pending";
       }
       startDate.setDate(startDate.getDate() + 1);
     }

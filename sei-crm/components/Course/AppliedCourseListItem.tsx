@@ -59,6 +59,7 @@ export default function AppliedCourseListItem({
             student_course_info: student_course_info,
             selected_tab_index: 2,
             selected_batch_id: enroll_course_info.batch_id,
+            enroll_id
           },
         })
       );

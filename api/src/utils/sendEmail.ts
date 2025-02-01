@@ -4,6 +4,8 @@ import { resetPasswordTemplate } from "../config/resetPasswordTemplate";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
 import { sendOtpTemplate } from "../config/sendOtpTemplate";
 import { generateHappyBirthdayEmail } from "../config/generateHappyBirthdayEmail";
+import { generatePaymentLinkEmail } from "../config/generatePaymentLinkEmail";
+import { generateEmailTemplate } from "../config/generateEmailTemplate";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -13,7 +15,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendEmail = async (to: string[] | string, type: EmailType, templateData ? : ejs.Data) => {
+export const sendEmail = async (
+  to: string[] | string,
+  type: EmailType,
+  templateData?: ejs.Data
+) => {
   const sendForm = process.env.EMAIL_SENDER_EMAIL;
 
   let mailOptions = {};
@@ -27,7 +33,7 @@ export const sendEmail = async (to: string[] | string, type: EmailType, template
       subject: "Password Reset Email SEI", // Subject line
       html,
     };
-  } else if(type === "SEND_OTP") {
+  } else if (type === "SEND_OTP") {
     const html = await sendOtpTemplate(templateData || {});
     mailOptions = {
       from: `"OTP Verification Form SEI" <${sendForm}>`, // Sender address
@@ -38,9 +44,28 @@ export const sendEmail = async (to: string[] | string, type: EmailType, template
   } else if (type === "BIRTHDATE_WISH") {
     const html = await generateHappyBirthdayEmail(templateData || {});
     mailOptions = {
-      from: `"${templateData?.student_name } Happy Birthday To You" <${sendForm}>`, // Sender address
+      from: `"${templateData?.student_name} Happy Birthday To You" <${sendForm}>`, // Sender address
       to, // List of recipients
       subject: "Birthday Wish To You From SEI", // Subject line
+      html,
+    };
+  } else if (type === "PAYMENT_LINK") {
+    const html = await generatePaymentLinkEmail(templateData || {});
+    mailOptions = {
+      from: `"Payment Link For ${templateData?.course_name}" <${sendForm}>`, // Sender address
+      to, // List of recipients
+      subject: "Payment Link From SEI", // Subject line
+      html,
+    };
+  } else if (type === "SEND_JOB_INFO_VENDOR") {
+    const html = await generateEmailTemplate(
+      templateData || {},
+      "job_posting.html"
+    );
+    mailOptions = {
+      from: `"Job Details From SEI" <${sendForm}>`, // Sender address
+      to, // List of recipients
+      subject: "Job Details From SEI", // Subject line
       html,
     };
   }

@@ -29,8 +29,8 @@ export const uploadToVercel = async ({
 
     onProcessing?.();
     if (convartToWebp === true) {
-      if (fileName.length > 0 || file.length > 0)
-        throw new Error("No able to convart multiple image to webp");
+      // if (fileName.length > 0 || file.length > 0)
+      //   throw new Error("No able to convart multiple image to webp");
       fileToUpload = [await convartImgToWebp(file[0])];
     } else {
       fileToUpload = file;

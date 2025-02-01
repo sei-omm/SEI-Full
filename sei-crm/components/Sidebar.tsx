@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
-import { RiSettings3Line } from "react-icons/ri";
+import { RiRefundLine, RiSettings3Line } from "react-icons/ri";
 import {
+  MdOutlineAddBox,
   MdOutlineDateRange,
+  MdOutlineHolidayVillage,
   MdOutlineSubject,
 } from "react-icons/md";
 import { FaPeopleRoof } from "react-icons/fa6";
@@ -77,6 +79,12 @@ const sidebarOptions = [
         icon: <GoStack />,
         name: "Manage Payscale",
         slug: "/dashboard/hr-module/manage-payscale",
+      },
+      {
+        id: "1-8",
+        icon: <MdOutlineHolidayVillage />,
+        name: "Holiday Management",
+        slug: "/dashboard/hr-module/holiday-management",
       },
       // {
       //   id: "1-6",
@@ -176,12 +184,26 @@ const sidebarOptions = [
         name: "Manage Admission",
         slug: "/dashboard/admission",
       },
-      // {
-      //   id: "3-2",
-      //   icon: <MdOutlineAddBox />,
-      //   name: "Create Admission",
-      //   slug: "/dashboard/create-admission",
-      // },
+      {
+        id: "3-2",
+        icon: <MdOutlineAddBox />,
+        name: "Create Admission",
+        slug: "/dashboard/create-admission",
+      },
+    ],
+  },
+  {
+    id: 9,
+    icon: null,
+    name: "Refund Management",
+    slug: "#",
+    subMenu: [
+      {
+        id: "9-1",
+        icon: <RiRefundLine />,
+        name: "Manage Refund",
+        slug: "/dashboard/manage-refund",
+      },
     ],
   },
   {

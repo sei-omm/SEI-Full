@@ -3,13 +3,16 @@ export interface IError extends Error {
   message: string;
   statusCode: number;
   isOperational: boolean;
+  key?: string;
 }
 
 export type EmailType =
   | "RESET_PASSWORD"
   | "SEND_OTP"
   | "SEND_PAYSLIP"
-  | "BIRTHDATE_WISH";
+  | "BIRTHDATE_WISH"
+  | "PAYMENT_LINK"
+  | "SEND_JOB_INFO_VENDOR"
 
 export type StudentLoginTokenDataType = {
   student_id?: number;

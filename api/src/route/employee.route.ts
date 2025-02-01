@@ -18,6 +18,7 @@ import {
   removeEmployee,
   removeFacultyCourseSubject,
   updateAppraisalReport,
+  updateAssetReturnDate,
   updateEmployee,
   updateEmployeeActiveStatus,
 } from "../controller/employee.controller";
@@ -31,16 +32,16 @@ import { roles } from "../middleware/roles";
 
 export const employeeRoute = Router();
 
-const uploadFileFilds = [
-  { name: "profile_image", maxCount: 1 },
-  { name: "resume", maxCount: 1 },
-  { name: "pan_card", maxCount: 1 },
-  { name: "aadhaar_card", maxCount: 1 },
-  { name: "ten_pass_certificate", maxCount: 1 },
-  { name: "twelve_pass_certificate", maxCount: 1 },
-  { name: "graduation_certificate", maxCount: 1 },
-  { name: "other_certificate", maxCount: 1 },
-];
+// const uploadFileFilds = [
+//   { name: "profile_image", maxCount: 1 },
+//   { name: "resume", maxCount: 1 },
+//   { name: "pan_card", maxCount: 1 },
+//   { name: "aadhaar_card", maxCount: 1 },
+//   { name: "ten_pass_certificate", maxCount: 1 },
+//   { name: "twelve_pass_certificate", maxCount: 1 },
+//   { name: "graduation_certificate", maxCount: 1 },
+//   { name: "other_certificate", maxCount: 1 },
+// ];
 
 employeeRoute
   .get("/", getEmployee)
@@ -56,11 +57,12 @@ employeeRoute
   .get("/assets/:employee_id", getAssignedAssets)
   .post("/assets", assignAssets)
   .delete("/assets/:assets_id", deleteAssignAssets)
+  .patch("/assets/:assets_id", updateAssetReturnDate)
 
   .get("/:employee_id/document", roles(["Admin", "Own"]), getEmployeeDocuments) //roles not working properly
   .get("/:id", roles(["Admin", "Own"]), getSingleEmployeeInfo)
   
-  .post("/", upload.fields(uploadFileFilds), addNewEmployee)
+  .post("/", addNewEmployee)
   .post("/leave", isAuthenticated, createEmployeeLeaveRequest)
   .put("/:id", updateEmployee)
   .patch("/:id", updateEmployeeActiveStatus)

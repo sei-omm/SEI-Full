@@ -28,6 +28,8 @@ import DesignationDialog from "./DesignationDialog";
 import DepartmentAndDesignation from "./DepartmentAndDesignation";
 import AddMultipleVendor from "./AddMultipleVendor";
 import AssignAssetDialog from "./AssignAssetDialog";
+import RefundFormDialog from "./RefundFormDialog";
+import GeneratePaymentLinkDialog from "./GeneratePaymentLinkDialog";
 
 type DivType = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -142,9 +144,17 @@ const dialogs = [
     component: <AddMultipleVendor />,
   },
   {
-    id : "assign-assets",
-    component : <AssignAssetDialog />
-  }
+    id: "assign-assets",
+    component: <AssignAssetDialog />,
+  },
+  {
+    id: "refund-form-dialog",
+    component: <RefundFormDialog />,
+  },
+  {
+    id: "generate-payment-link-dialog",
+    component: <GeneratePaymentLinkDialog />,
+  },
 ];
 
 export default function DialogWrapper(props: DivType) {

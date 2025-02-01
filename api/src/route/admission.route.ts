@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  createAdmission,
   getAdmissions,
   // getSingleAdmission,
   saveAdmissionInfo,
@@ -18,4 +19,5 @@ admissionRouter
   )
   .patch("/update-form-status", updateFormStatus)
   .get("/student-documents/:student_id", viewStudentUploadedDocuments) //should only access from CRM
-  .patch("/enrollment-status/:enroll_id", updateEnrollCourseStatus);
+  .patch("/enrollment-status/:enroll_id", updateEnrollCourseStatus)
+  .post("/create", createAdmission)

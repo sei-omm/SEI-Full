@@ -17,6 +17,7 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import Spinner from "../Spinner";
 import HandleDataSuspense from "../HandleDataSuspense";
 import { queryClient } from "@/redux/MyProvider";
+import { beautifyDate } from "@/app/utils/beautifyDate";
 
 interface IProps {
   departements?: IDepartment[];
@@ -55,6 +56,7 @@ export default function OfficialInfoForm({
   ]);
 
   const { isLoading, mutate } = useDoMutation();
+  const { isLoading: isDateChenging, mutate: changeDate } = useDoMutation();
 
   function handleRemoveAsset(assets_id: number) {
     mutate({
@@ -67,6 +69,24 @@ export default function OfficialInfoForm({
   }
 
   const dispatch = useDispatch();
+
+  const returnAssetsDate = useRef<string>("");
+
+  const handleReturnAssetsInputBlur = (assets_id: number) => {
+    if (!confirm("Are you sure you want to change return date")) return;
+
+    changeDate({
+      apiPath: "/employee/assets",
+      method: "patch",
+      formData: {
+        return_date: returnAssetsDate.current,
+      },
+      id: assets_id,
+      onSuccess() {
+        queryClient.invalidateQueries("get-employee-info");
+      },
+    });
+  };
 
   return (
     <>
@@ -82,28 +102,31 @@ export default function OfficialInfoForm({
             defaultValue={employeeInfo?.job_title || ""}
             required
             name="job_title"
-            label="Job Title"
+            label="Job Title *"
             placeholder="Software Engineer"
           />
           <DateInput
+            required
             name="joining_date"
             onChange={onDateOfJoinChnage}
-            label="Date Of Joining"
+            label="Date Of Joining *"
             date={getDate(new Date(joinDate || ""))}
           />
           <Input
-            defaultValue={employeeInfo?.login_email || ""}
-            required
             name="login_email"
-            type="email"
-            label="Employee Login Email"
-            placeholder="somnathgupta@gmail.com"
+            key={"login_email"}
+            // type="email"
+            // label="Employee Login Email"
+            label="Employee ID"
+            placeholder="010125(01)K"
+            defaultValue={employeeInfo?.login_email || ""}
+            // defaultValue={employeeInfo?.joining_date}
           />
           <Input
             defaultValue={employeeInfo?.login_password || ""}
             required
             name="login_password"
-            label="Employee Login Password"
+            label="Employee Login Password *"
             type="password"
             placeholder="adminSom@123"
           />
@@ -203,7 +226,7 @@ export default function OfficialInfoForm({
           <DropDown
             onChange={(value) => (employeeInstituteRef.current = value.value)}
             key={"institute"}
-            label="Campus"
+            label="Campus *"
             options={[
               { text: "Kolkata", value: "Kolkata" },
               { text: "Faridabad", value: "Faridabad" },
@@ -290,20 +313,44 @@ export default function OfficialInfoForm({
                       Assets Name :- {item.assets_name}
                     </h2>
                     <h3 className="text-sm text-gray-600">
-                      <span className="font-semibold">Issued By :-</span>{" "}
+                      <span className="font-semibold">Issued By :</span>{" "}
                       {item.issued_by}
                     </h3>
+                    <h3 className="text-sm text-gray-600">
+                      <span className="font-semibold">Issued Date :</span>{" "}
+                      {beautifyDate(item.issue_date)}
+                    </h3>
+                  </div>
+                  <div className="flex items-center">
+                    {isDateChenging ? (
+                      <Spinner size="20px" />
+                    ) : (
+                      <DateInput
+                        key={"date-input-" + index}
+                        onChange={(value) => (returnAssetsDate.current = value)}
+                        onBlur={() =>
+                          handleReturnAssetsInputBlur(item.assets_id)
+                        }
+                        label="Return Date"
+                        name="return_date"
+                        date={item.return_date}
+                      />
+                    )}
                   </div>
                   <div className="flex gap-3 *:cursor-pointer">
                     {isLoading && index === deleteBtnClickedIndex.current ? (
                       <Spinner size="18px" />
                     ) : (
-                      <AiOutlineDelete
-                        onClick={() => {
-                          handleRemoveAsset(item.assets_id);
-                          deleteBtnClickedIndex.current = index;
-                        }}
-                      />
+                      !item.return_date && (
+                        <AiOutlineDelete
+                          onClick={() => {
+                            if (isDateChenging) return;
+
+                            handleRemoveAsset(item.assets_id);
+                            deleteBtnClickedIndex.current = index;
+                          }}
+                        />
+                      )
                     )}
                   </div>
                 </div>

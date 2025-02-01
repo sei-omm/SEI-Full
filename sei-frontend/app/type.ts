@@ -11,7 +11,7 @@ export type TabMenuType = {
 };
 
 export type TCourseBatches = {
-  course_name ? : string;
+  course_name?: string;
   batch_id: number;
   course_id: number;
   start_date: string;
@@ -20,7 +20,7 @@ export type TCourseBatches = {
   batch_reserved_seats: number;
   end_date: string;
   visibility: string;
-  min_pay_percentage : number;
+  min_pay_percentage: number;
 };
 
 export type CourseType = {
@@ -134,4 +134,11 @@ export type TStudentRegistationForm = {
   number_of_the_cert: string;
   issued_by_institute: string;
   issued_by_institute_indos_number: string;
+};
+
+export type EnrollCourseType = {
+  order_id: number;
+  amount: number;
+  razorpay_key: number;
+  tokenKey?: string;
 };

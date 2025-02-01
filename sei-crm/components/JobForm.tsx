@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Input from "./Input";
 import Button from "./Button";
 import { AiOutlineDelete } from "react-icons/ai";
@@ -16,6 +16,7 @@ import TextArea from "./TextArea";
 import DropDown from "./DropDown";
 import HandleSuspence from "./HandleSuspence";
 import { IoMdArrowBack } from "react-icons/io";
+import TagInput from "./TagInput";
 
 interface IProps {
   action: string; //it could be add or the id of job posting for update
@@ -56,6 +57,7 @@ const fetchAJob = async (job_id: string) => {
 export default function JobForm({ action }: IProps) {
   const dispatch = useDispatch();
   const route = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
 
   // const [selectedDepartment, setSelectedDepartment] = useState(-1);
 
@@ -75,6 +77,7 @@ export default function JobForm({ action }: IProps) {
       queryFn: () => fetchAJob(action),
       onSuccess: () => closeProgressDialog,
       onError: () => closeProgressDialog,
+      refetchOnMount: true,
     },
     {
       queryKey: ["get-department"],
@@ -82,7 +85,7 @@ export default function JobForm({ action }: IProps) {
     },
   ]);
 
-  const { mutate } = useMutation(doDbMutation, {
+  const { mutate, isLoading } = useMutation(doDbMutation, {
     onSuccess: (data: ISuccess<IJob>) => {
       toast.success(data.message);
       route.push(
@@ -96,21 +99,37 @@ export default function JobForm({ action }: IProps) {
     },
   });
 
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
+  const onSubmit = (formData: FormData) => {
+    const objToStore: any = {
+      department_name: response[1].data?.data[0].name,
+    };
+    const informVendor = formData.get("inform_vendor") === "on";
+    formData.delete("inform_vendor");
+    
+    formData.forEach((value, key) => {
+      if (
+        key === "vendors_email" &&
+        value !== "" &&
+        informVendor
+      ) {
+        objToStore[key] = value;
+      } else {
+        if (key !== "vendors_email") {
+          objToStore[key] = value;
+        }
+      }
+    });
 
     if (action === "add") {
       mutate({
         method: "post",
-        formData,
+        formData: objToStore,
       });
     } else {
       mutate({
         method: "put",
         id: response[0].data?.data?.[0].id,
-        formData,
+        formData: objToStore,
       });
     }
   };
@@ -133,84 +152,109 @@ export default function JobForm({ action }: IProps) {
   }, [response[0].isLoading]);
 
   return (
-    <HandleSuspence
-      isLoading={response[0].isFetching}
-      error={response[0].error}
-      dataLength={1}
-    >
-      <form onSubmit={onSubmit} className="w-full">
-        <div className="grid grid-cols-2 py-5 gap-6">
-          <Input
-            defaultValue={response[0].data?.data?.[0]?.job_title}
-            name="job_title"
-            label="Job Title"
-            placeholder="Software engineer"
-          />
-          <Input
-            defaultValue={response[0].data?.data?.[0]?.address}
-            name="address"
-            label="Address"
-            placeholder="South 24 Parganas ASHINA, MAKHNA, Falta, West Bengal 743503"
-          />
-          <Input
-            defaultValue={response[0].data?.data?.[0]?.exprience}
-            name="exprience"
-            label="Exprience"
-            placeholder="2 years"
-          />
-          {/* <Input
-          defaultValue={response[0]?.data?.[0]?.department}
-          name="department"
-          label="Department"
-          placeholder="Marketing"
-        /> */}
-          <DropDown
-            label="Department"
-            name="department"
-            options={
-              response[1].data?.data.map((item) => ({
-                text: item.name,
-                value: item.id,
-              })) || []
-            }
-            defaultValue={
-              response[0].data?.data?.[0]?.department ||
-              response[1].data?.data[0].id
-            }
-          />
+    <>
+      <HandleSuspence
+        isLoading={response[0].isFetching}
+        error={response[0].error}
+        dataLength={1}
+      >
+        <form ref={formRef} action={onSubmit} className="w-full space-y-4">
+          <div className="grid grid-cols-2 py-5 gap-6">
+            <Input
+              required
+              defaultValue={response[0].data?.data?.[0]?.job_title}
+              name="job_title"
+              label="Job Title *"
+              placeholder="Software engineer"
+            />
+            <DropDown
+              name="address"
+              label="Campus *"
+              options={[
+                { text: "Kolkata", value: "Kolkata" },
+                { text: "Faridabad", value: "Faridabad" },
+              ]}
+              defaultValue={response[0].data?.data?.[0]?.address}
+            />
+            <Input
+              defaultValue={response[0].data?.data?.[0]?.exprience}
+              name="exprience"
+              label="Exprience *"
+              placeholder="2 years"
+            />
+            <DropDown
+              label="Department *"
+              name="department"
+              options={
+                response[1].data?.data.map((item) => ({
+                  text: item.name,
+                  value: item.id,
+                })) || []
+              }
+              defaultValue={
+                response[0].data?.data?.[0]?.department ||
+                response[1].data?.data[0].id
+              }
+            />
+          </div>
           <TextArea
+            required
             name="job_description"
             placeholder="Enter your job description"
-            label="Job Description"
+            label="Job Description *"
             defaultValue={response[0].data?.data?.[0].job_description}
+            rows={10}
           />
-        </div>
-        <div className="space-x-6 flex items-center">
-          <Button
-            type="button"
-            onClick={() => {
-              route.back();
-            }}
-            className="flex items-center gap-2"
-          >
-            <IoMdArrowBack />
-            Back
-          </Button>
-          <Button type="submit" className="min-w-48">
-            {action === "add" ? "Publish Job" : "Update Job"}
-          </Button>
-          {action === "add" ? null : (
+          <div className="space-y-4">
+            <h2 className="font-semibold text-xl">Inform Vendors</h2>
+            <TagInput
+              name="vendors_email"
+              label="Vendors Email"
+              placeholder="Type Email And Press Enter"
+              defaultValue={response[0].data?.data[0].vendors_email}
+            />
+            <span className="flex items-center gap-2 text-sm">
+              <input name="inform_vendor" type="checkbox" />
+              <span>Inform Vendors</span>
+            </span>
+          </div>
+          <div className="space-x-6 flex items-center">
             <Button
-              onClick={handleDeleteButton}
+              disabled={isLoading}
               type="button"
-              className="min-w-48 !bg-[#F44336] flex-center gap-x-2"
+              onClick={() => {
+                route.back();
+              }}
+              className="flex items-center gap-2"
             >
-              <AiOutlineDelete />
-              Remove Job
+              <IoMdArrowBack />
+              Back
             </Button>
-          )}
-        </div>
-      </form>
-    </HandleSuspence>
+            <Button
+              disabled={isLoading}
+              loading={isLoading}
+              onClick={() => {
+                formRef.current?.requestSubmit();
+              }}
+              type="button"
+              className="min-w-48"
+            >
+              {action === "add" ? "Publish Job" : "Update Job"}
+            </Button>
+            {action === "add" ? null : (
+              <Button
+                disabled={isLoading}
+                onClick={handleDeleteButton}
+                type="button"
+                className="min-w-48 !bg-[#F44336] flex-center gap-x-2"
+              >
+                <AiOutlineDelete />
+                Remove Job
+              </Button>
+            )}
+          </div>
+        </form>
+      </HandleSuspence>
+    </>
   );
 }

@@ -6,6 +6,9 @@ interface IProps<K> {
   errorMsg?: string;
   error?: K;
   dataLength?: number;
+  noDataMsg?: string;
+  customLoading?: React.ReactNode;
+  customLoadingTxt?: string;
 }
 
 export default function HandleSuspence<K>({
@@ -13,25 +16,38 @@ export default function HandleSuspence<K>({
   children,
   errorMsg,
   error,
-  dataLength
+  dataLength,
+  noDataMsg,
+  customLoading,
+  customLoadingTxt
 }: IProps<K>) {
   if (isLoading)
-    return <h1 className="text-center text-sm text-gray-500">Loading...</h1>;
+    return (
+      customLoading ?? (
+        <h1 className="text-center text-sm text-gray-500">{customLoadingTxt ?? "Loading..."}</h1>
+      )
+    );
 
   if (errorMsg)
     return <h1 className="text-center text-sm text-gray-500">{errorMsg}</h1>;
 
-  if (error) return <h1>{error.toString()}</h1>;
-
+  if (error) {
+    console.log(error)
+    return <h1>{error.toString()}</h1>
+  };
   if (dataLength === undefined)
     return (
       <h1 className="text-center text-sm text-gray-500">Nothing To Show</h1>
     );
-    // return <></>;
+  // return <></>;
 
   if (dataLength === 0)
-    return <h1 className="text-center text-sm text-gray-500">No Data Found</h1>;
-    // return <></>;
+    return (
+      <h1 className="text-center text-sm text-gray-500">
+        {noDataMsg ?? "No Data Found"}
+      </h1>
+    );
+  // return <></>;
 
   return children;
 }

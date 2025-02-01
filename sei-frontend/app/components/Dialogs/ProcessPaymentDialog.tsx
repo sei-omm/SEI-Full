@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/redux/store";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 import { BASE_API } from "@/app/constant";
-import { IResponse, RazorpaySuccesshandlerTypes } from "@/app/type";
+import { EnrollCourseType, IResponse, RazorpaySuccesshandlerTypes } from "@/app/type";
 import { axiosQuery } from "@/app/utils/axiosQuery";
 import { useRazorpay } from "react-razorpay";
 import { toast } from "react-toastify";
@@ -16,11 +16,6 @@ import {
   setLocalLoginInfo,
 } from "@/app/utils/getLocalLoginInfo";
 
-type EnrollCourseType = {
-  order_id: number;
-  amount: number;
-  razorpay_key: number;
-};
 
 export default function ProcessPaymentDialog() {
   const { extraValue } = useSelector((state: RootState) => state.dialog);
@@ -131,7 +126,6 @@ export default function ProcessPaymentDialog() {
         ...getAuthToken(),
       },
       data: formData,
-      // signal : controllerRef.current.signal
     });
 
     setIsLoading(false);

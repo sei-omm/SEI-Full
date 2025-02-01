@@ -1,6 +1,5 @@
 import { QueryResult } from "pg";
 import { pool } from "../config/db";
-import { NextFunction } from "express";
 
 export const transaction = async (
   queries: { sql: string; values: any[] }[],

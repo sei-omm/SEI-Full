@@ -659,7 +659,7 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
   });
   const worksheet = workbook.addWorksheet("Receipt Report");
 
-  worksheet.mergeCells("A1:R1");
+  worksheet.mergeCells("A1:T1");
   worksheet.getCell(
     "A1"
   ).value = `Receipt Report (${value.institute}) ${value.from_date} -> ${value.to_date}`;
@@ -698,6 +698,8 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
     "Misc Payment",
     "Misc Remark",
     "Receipt Number",
+    "Discount Amount",
+    "Discount Remark"
   ]);
 
   // Row styling (header row)
@@ -745,7 +747,9 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
       p.remark AS payment_remark,
       p.misc_payment,
       p.misc_remark,
-      p.receipt_no
+      p.receipt_no,
+      p.discount_amount,
+      p.discount_remark
       FROM payments AS p
 
       LEFT JOIN course_batches AS cb
@@ -944,6 +948,42 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
     //         STU.email,
     //         STU.mobile_number
     // `,
+
+    let placeholder = 3;
+    let FILTER =
+      "WHERE c.institute = $1 AND ebc.enrollment_status = 'Approve' AND DATE(ebc.created_at) BETWEEN $2 AND $3";
+    let FILTER_VALUES: any[] = [
+      value.institute,
+      value.from_date,
+      value.to_date,
+    ];
+
+    if (req.query.rank && req.query.rank !== "All") {
+      placeholder += 1;
+      FILTER += ` AND s.rank = $${placeholder}`;
+      FILTER_VALUES.push(value.rank);
+    }
+
+    if (req.query.course_id && req.query.course_id !== "0") {
+      placeholder += 1;
+      FILTER += ` AND c.course_id = $${placeholder}`;
+      FILTER_VALUES.push(value.course_id);
+    }
+
+    if (req.query.form_id) {
+      FILTER = "WHERE ebc.form_id = $1";
+      FILTER_VALUES = [req.query.form_id as string];
+    } else if (req.query.indos_number) {
+      FILTER = "WHERE s.indos_number = $1";
+      FILTER_VALUES = [req.query.indos_number as string];
+    } else if (req.query.cdc_num) {
+      FILTER = "WHERE s.cdc_num = $1";
+      FILTER_VALUES = [req.query.cdc_num as string];
+    } else if (req.query.passport_num) {
+      FILTER = "WHERE s.passport_num = $1";
+      FILTER_VALUES = [req.query.passport_num as string];
+    }
+
     const query = new QueryStream(
       `
       SELECT DISTINCT
@@ -974,12 +1014,12 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
         INNER JOIN students s
         ON s.student_id = ebc.student_id
 
-        WHERE c.institute = $1 AND ebc.enrollment_status = 'Approve' AND DATE(ebc.created_at) BETWEEN $2 AND $3
+        ${FILTER}
 
         GROUP BY 
         c.course_name, cb.start_date, cb.batch_fee, s.name, s.profile_image, c.course_type, s.email, s.mobile_number
       `,
-      [value.institute, value.from_date, value.to_date],
+      FILTER_VALUES,
       {
         batchSize: 10,
       }

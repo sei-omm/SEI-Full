@@ -10,6 +10,7 @@ interface IProps {
   label?: string;
   date?: string | null;
   onChange?: (value: string) => void;
+  onBlur? : () => void;
   required?: boolean;
   type?: React.HTMLInputTypeAttribute;
   max?: number | string;
@@ -23,7 +24,7 @@ export default function DateInput(props: IProps) {
     setDate(props.date || "");
   }, [props.date]);
 
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDateChange = (event: React.FormEvent<HTMLInputElement>) => {
     setDate(event.currentTarget.value);
     props.onChange?.(event.currentTarget.value);
   };
@@ -34,6 +35,7 @@ export default function DateInput(props: IProps) {
       viewOnlyText={props.viewOnlyText}
       {...props}
       onChange={handleDateChange}
+      onBlur={props.onBlur}
       type={props.type || "date"}
       value={date}
       max={props.max}

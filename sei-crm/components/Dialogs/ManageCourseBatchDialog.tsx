@@ -1,8 +1,6 @@
 "use client";
 
 import DialogBody from "./DialogBody";
-import DateInput from "../DateInput";
-import DropDown from "../DropDown";
 import Button from "../Button";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,8 +9,36 @@ import { toast } from "react-toastify";
 import { queryClient } from "@/redux/MyProvider";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { getDate } from "@/app/utils/getDate";
-import Input from "../Input";
 import { beautifyDate } from "@/app/utils/beautifyDate";
+import { Controller, useForm } from "react-hook-form";
+
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import DateInputNew from "../FormInputs/DateInputNew";
+import InputNew from "../FormInputs/InputNew";
+import DropDownNew from "../FormInputs/DropDownNew";
+
+const formSchema = z.object({
+  start_date: z.string().min(1, "Batch Start Date Is Required"),
+  end_date: z.string().min(1, "Batch End Date Is Required"),
+  batch_fee: z
+    .number({ message: "Input Must Be A Number" })
+    .min(1, "Batch Fee Is "),
+  min_pay_percentage: z
+    .number({ message: "Input Must Be A Number" })
+    .min(1, "Add Min To Pay In Percentage"),
+  batch_total_seats: z
+    .number({ message: "Input Must Be A Number" })
+    .min(1, "Total Seats Is "),
+  batch_reserved_seats: z
+    .number({ message: "Input Must Be A Number" })
+    .min(0, "Remain Seats Is "),
+  visibility: z.string().min(1, "Choose Batch Visibility"),
+  // course_id: z.string().min(1, "Choose Batch Visibility"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function ManageCourseBatchDialog() {
   const { extraValue } = useSelector((state: RootState) => state.dialogs);
@@ -30,18 +56,25 @@ export default function ManageCourseBatchDialog() {
     visibility,
   } = extraValue; //course_id -> number | null
 
-  const { mutate } = useDoMutation();
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    clearErrors,
+    control,
+    formState: { errors },
+    reset,
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+  });
+
+  const { mutate, isLoading } = useDoMutation();
   const isNewBatch = btnType === "add";
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-
+  const handleFormSubmit = (formData: FormValues) => {
     if (!course_id) {
       return toast.error("Need course id for manage course batch");
     }
-
-    formData.append("course_id", `${course_id}`);
 
     if (isNewBatch) {
       mutate({
@@ -50,7 +83,10 @@ export default function ManageCourseBatchDialog() {
         headers: {
           "Content-Type": "application/json",
         },
-        formData,
+        formData: {
+          ...formData,
+          course_id,
+        },
         onSuccess: () => {
           queryClient.invalidateQueries(["get-course-batches"]);
           dispatch(setDialog({ type: "CLOSE", dialogId: "" }));
@@ -66,7 +102,10 @@ export default function ManageCourseBatchDialog() {
       headers: {
         "Content-Type": "application/json",
       },
-      formData,
+      formData: {
+        ...formData,
+        course_id,
+      },
       id: batch_id,
       onSuccess: () => {
         queryClient.invalidateQueries(["get-course-batches"]);
@@ -75,72 +114,97 @@ export default function ManageCourseBatchDialog() {
     });
   };
 
+  useEffect(() => {
+    reset({
+      batch_fee: batch_fee,
+      batch_reserved_seats: batch_reserved_seats,
+      batch_total_seats: batch_total_seats,
+      end_date: end_date,
+      min_pay_percentage: min_to_pay,
+      start_date: start_date,
+      visibility: visibility,
+    });
+  }, []);
+
   return (
     <DialogBody className="w-[35rem]">
-      <form onSubmit={handleFormSubmit} className="mt-5 space-y-4">
+      <form
+        onSubmit={handleSubmit(handleFormSubmit)}
+        className="mt-5 space-y-4"
+      >
         <div className="flex items-start gap-4 flex-wrap *:basis-40 *:flex-grow">
-          <DateInput
+          <DateInputNew
+            {...register("start_date")}
             viewOnly={!isNewBatch}
-            required
-            name="start_date"
             label="Batch Start Date *"
             date={start_date ? getDate(new Date(start_date)) : ""}
             viewOnlyText={start_date ? beautifyDate(start_date) : undefined}
+            error={errors.start_date?.message}
           />
-          <DateInput
-            required
+          <DateInputNew
+            {...register("end_date")}
             viewOnly={!isNewBatch}
-            name="end_date"
             label="Batch End Date *"
             date={end_date ? getDate(new Date(end_date)) : ""}
             viewOnlyText={end_date ? beautifyDate(end_date) : undefined}
+            error={errors.end_date?.message}
           />
 
-          <Input
-            required
-            name="batch_fee"
+          <InputNew
+            {...register("batch_fee", { valueAsNumber: true })}
             type="number"
             label="Batch Fee *"
             placeholder="0"
-            defaultValue={batch_fee}
+            error={errors.batch_fee?.message}
           />
-          <Input
-            required
-            name="min_pay_percentage"
+          <InputNew
+            {...register("min_pay_percentage", { valueAsNumber: true })}
             type="number"
             label="Minimum To Pay In Percentage *"
             placeholder="0"
-            defaultValue={min_to_pay}
+            error={errors.min_pay_percentage?.message}
           />
-          <Input
-            required
-            name="batch_total_seats"
+          <InputNew
+            {...register("batch_total_seats", { valueAsNumber: true })}
             type="number"
             label="Total Seats *"
             placeholder="0"
-            defaultValue={batch_total_seats}
+            error={errors.batch_total_seats?.message}
           />
-          <Input
+          <InputNew
             required
-            name="batch_reserved_seats"
+            {...register("batch_reserved_seats", { valueAsNumber: true })}
             type="number"
             label="Seat Reserved *"
             placeholder="0"
-            defaultValue={batch_reserved_seats}
+            error={errors.batch_reserved_seats?.message}
           />
 
-          <DropDown
-            defaultValue={visibility}
-            label="Visibility"
+          <Controller
             name="visibility"
-            options={[
-              { text: "Public", value: "Public" },
-              { text: "Private", value: "Private" },
-            ]}
+            control={control}
+            render={({ field }) => (
+              <DropDownNew
+                {...register("visibility")}
+                label="Visibility"
+                options={[
+                  { text: "Public", value: "Public" },
+                  { text: "Private", value: "Private" },
+                ]}
+                onChange={(option) => {
+                  setValue("visibility", option.value);
+                  clearErrors("visibility");
+                }}
+                error={errors.visibility?.message}
+                defaultValue={field.value}
+              />
+            )}
           />
         </div>
 
-        <Button>{isNewBatch ? "Add New Batch" : "Update Batch Info"}</Button>
+        <Button loading={isLoading} disabled={isLoading}>
+          {isNewBatch ? "Add New Batch" : "Update Batch Info"}
+        </Button>
       </form>
     </DialogBody>
   );

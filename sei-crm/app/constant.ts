@@ -96,6 +96,7 @@ export const employeeAuthority = [
 ];
 
 export const STUDENT_RANKS = [
+  "All",
   "Master",
   "Chief Engineer",
   "Chief Officer",
@@ -119,8 +120,7 @@ export const OFFICE_STAFF_DOC_INFO: TEmployeeDocs[] = [
     doc_name: null,
   },
   { doc_id: "Choose Other Certificate", doc_uri: null, doc_name: null },
-  { doc_id: "Contracts", doc_uri: null, doc_name: null },
-  { doc_id: "Appointment Letter", doc_uri: null, doc_name: null },
+  { doc_id: "Contracts/Appointment Letter", doc_uri: null, doc_name: null },
 ];
 
 export const FACULTY_DOC_INFO: TEmployeeDocs[] = [
@@ -135,6 +135,15 @@ export const FACULTY_DOC_INFO: TEmployeeDocs[] = [
     doc_name: null,
   },
   { doc_id: "Aadhaar Card", doc_uri: null, doc_name: null },
-  { doc_id: "Contracts", doc_uri: null, doc_name: null },
-  { doc_id: "Appointment Letter", doc_uri: null, doc_name: null },
+  { doc_id: "Contracts/Appointment Letter", doc_uri: null, doc_name: null },
+];
+
+export const REFUND_STATUS_OPTIONS = ["Pending", "Approved", "Reject"];
+
+export const PAYMENT_MODES = [
+  { id: 1, text: "CASH" },
+  { id: 2, text: "ICICI BANK" },
+  { id: 3, text: "CANARA BANK" },
+  { id: 4, text: "SWIPE CARD" },
+  { id: 5, text: "ONLINE" },
 ];

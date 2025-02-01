@@ -2,6 +2,7 @@
 
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
+import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import ManageAdmissionFilter from "@/components/Admission/ManageAdmissionFilter";
 import Button from "@/components/Button";
 import DownloadFormUrl from "@/components/DownloadFormUrl";
@@ -39,8 +40,8 @@ export default function BatchReport() {
     body: (string | null | number)[][];
   }>({
     heads: [
-      "FORM ID",
       "STUDENT NAME",
+      "FORM ID",
       "BATCH DATE",
       "BATCH FEE",
       "AMOUNT PAID",
@@ -53,7 +54,7 @@ export default function BatchReport() {
       "PAYMENT TYPE",
       "PAYMENT MODE",
       "PAYMENT IDS",
-      "REMARKS"
+      "REMARKS",
     ],
     body: [],
   });
@@ -120,7 +121,9 @@ export default function BatchReport() {
                 <tr>
                   {tableDatas.heads.map((item, index) => (
                     <th
-                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${index === 5 ? "text-red-600" : ""}`}
+                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${
+                        index === 5 ? "text-red-600" : ""
+                      } ${stickyFirstCol(index)}`}
                       key={item}
                     >
                       {item}
@@ -136,7 +139,11 @@ export default function BatchReport() {
                   >
                     {itemArray.map((value, colIndex) => (
                       <td
-                        className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${colIndex === 6 && parseInt(value as string) > 0 ? "text-red-600" : ""}`}
+                        className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${
+                          colIndex === 6 && parseInt(value as string) > 0
+                            ? "text-red-600"
+                            : ""
+                        } ${stickyFirstCol(colIndex)}`}
                         key={value}
                       >
                         {typeof value != "number" && value?.includes("@") ? (

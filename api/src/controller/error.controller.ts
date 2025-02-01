@@ -17,18 +17,25 @@ const backErrorResponse = (
     res
       .status(err.statusCode)
       .json(
-        new ApiResponse(err.statusCode, err.message, mode == "dev" ? err : null)
+        new ApiResponse(
+          err.statusCode,
+          err.message,
+          mode == "dev" ? err : null,
+          err.key
+        )
       );
   } else if (err.code) {
     if (DBERRORS[err.code]) {
       return res
         .status(400)
-        .json(new ApiResponse(400, DBERRORS[err.code], err));
+        .json(new ApiResponse(400, DBERRORS[err.code], err, err.key));
     }
 
-    res.status(400).json(new ApiResponse(400, err.message, err));
+    res.status(400).json(new ApiResponse(400, err.message, err, err.key));
   } else {
-    res.status(500).json(new ApiResponse(500, "Internal Server Error", err));
+    res
+      .status(500)
+      .json(new ApiResponse(500, "Internal Server Error", err, err.key));
   }
 };
 
@@ -38,6 +45,6 @@ export const globalErrorController = (
   res: Response,
   next: NextFunction
 ) => {
-  console.log(err)
-  backErrorResponse(err, res, "dev");
+  console.log(err);
+  backErrorResponse(err, res, "prod");
 };

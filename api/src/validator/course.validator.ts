@@ -1,20 +1,23 @@
 import Joi from "joi";
 
 export const addNewCourseValidator = Joi.object({
-  course_code: Joi.string().max(20).required(),
-  course_name: Joi.string().max(255).required(),
-  institute: Joi.string().max(20).required(),
-  course_type: Joi.string().max(20).required(),
-  require_documents: Joi.string().required(),
-  subjects: Joi.string().required(),
-  course_duration: Joi.string().max(255).required(),
-  course_fee: Joi.number().required(),
-  min_pay_percentage: Joi.number().optional(),
-  total_seats: Joi.number().required(),
-  remain_seats: Joi.number().required(),
+  course_code: Joi.string().max(20).required().label("Course Code"),
+  course_name: Joi.string().max(255).required().label("Course Name"),
+  institute: Joi.string().max(20).required().label("Institute"),
+  course_type: Joi.string().max(20).required().label("Course Type"),
+  require_documents: Joi.string().required().label("Course Require Documents"),
+  subjects: Joi.string().required().label("Course Subject"),
+  course_duration: Joi.string().max(255).required().label("Course Duration"),
+  course_fee: Joi.number().required().label("Course Fee"),
+  min_pay_percentage: Joi.number()
+    .optional()
+    .label("Course min Pay Percentage"),
+  total_seats: Joi.number().required().label("Total Seats"),
+  remain_seats: Joi.number().required().label("Remain Seats"),
   course_visibility: Joi.string()
     .valid("Public", "Private", "Schedule")
-    .required(),
+    .required()
+    .label("Course Visibility"),
   course_update_time: Joi.string().when("course_visibility", {
     is: "Schedule",
     then: Joi.required().messages({
@@ -22,10 +25,15 @@ export const addNewCourseValidator = Joi.object({
     }),
     otherwise: Joi.optional(),
   }),
-  course_pdf: Joi.string().optional().allow(""),
-  course_showing_order: Joi.number().optional().min(1),
-  concern_marketing_executive_id: Joi.number().required(),
-  max_batch: Joi.number().required(),
+  course_pdf: Joi.string().optional().allow("").label("Course Module"),
+  course_showing_order: Joi.number()
+    .optional()
+    .min(1)
+    .label("Course Showing Order"),
+  concern_marketing_executive_id: Joi.number()
+    .required()
+    .label("Concern Marketing Executive"),
+  max_batch: Joi.number().required().label("Maximum Batch / Month"),
 });
 
 export const getSingleCourseValidator = Joi.object({
@@ -118,6 +126,8 @@ export const enrollCourseValidator = Joi.object({
 export const enrollBatchValidator = Joi.object({
   batch_ids: Joi.string().required(),
   payment_mode: Joi.string().required().valid("Part-Payment", "Full-Payment"),
+
+  student_id: Joi.number().optional(),
 });
 
 export const scheduleCourseBatchValidator = Joi.object({
@@ -148,7 +158,7 @@ export const getRequiredDocumentsValidator = Joi.object({
 });
 
 export const VchangeBatchManually = Joi.object({
-  old_batch_id : Joi.number().required(),
+  old_batch_id: Joi.number().required(),
   new_batch_id: Joi.number().required(),
   course_id: Joi.number().required(),
   student_id: Joi.number().required(),

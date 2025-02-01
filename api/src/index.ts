@@ -22,7 +22,7 @@ import { notificationRoutes } from "./route/notification.routes";
 import { receiptRoutes } from "./route/receipt.routes";
 import path from "path";
 import { pool } from "./config/db";
-import { tryCatch } from "./utils/tryCatch";
+import { holidayRoutes } from "./route/holiday.routes";
 
 dotenv.config();
 const app = express();
@@ -60,19 +60,70 @@ app.use("/api/v1/storage", storageRouter);
 app.use("/api/v1/inventory", inventoryRoute);
 app.use("/api/v1/notification", notificationRoutes);
 app.use("/api/v1/receipt", receiptRoutes);
+app.use("/api/v1/holiday", holidayRoutes)
 app.use("/api/v1/db", setupDbRoute);
 
 //global error handler
 app.use(globalErrorController);
 
 app.get("/some", async (req, res) => {
-  // const { rows } = await pool.query(`SELECT * FROM course_batches, courses`);
-  // res.json(rows);
-  const { data, error } = await tryCatch(async () => {
-    // return "Success";
-    throw new Error("Hello world erro")
-  });
-  res.json({ data, error });
+  const { rows } = await pool.query(`
+              WITH payment_list AS (
+                 SELECT
+                  *
+                 FROM payments p
+                 WHERE p.form_id = $1
+              )
+
+              SELECT
+              s.*,
+              '********' AS password,
+              ff.form_status,
+              ff.form_id,
+
+              json_agg(
+                  json_build_object(
+                      'enroll_id', ebc.enroll_id,
+                      'course_id', c.course_id,
+                      'course_require_documents', c.require_documents,
+                      'course_name', c.course_name,
+                      'batch_start_date', cb.start_date,
+                      'batch_end_date', cb.end_date,
+                      'batch_fee', cb.batch_fee,
+                      'batch_id', cb.batch_id,
+                      'enrollment_status', ebc.enrollment_status,
+                      'modified_by_info', (
+                          SELECT json_agg(
+                              json_build_object('batch_id', mb.batch_id, 'employee_name', e.name, 'created_at', mb.created_at)
+                          )
+                          FROM batch_modified_by AS mb
+
+                          INNER JOIN employee e
+                          ON e.id = mb.employee_id
+
+                          WHERE mb.batch_id = cb.batch_id
+                          -- ORDER BY DESC
+                      )
+                  ) ORDER BY ebc.enroll_id
+              ) AS enrolled_courses_info,
+              
+              json_agg(pl.*)
+
+
+          FROM fillup_forms AS ff
+          LEFT JOIN students AS s ON s.student_id = ff.student_id
+          LEFT JOIN enrolled_batches_courses AS ebc ON ebc.form_id = ff.form_id
+          LEFT JOIN courses AS c ON c.course_id = ebc.course_id
+          LEFT JOIN course_batches AS cb ON cb.batch_id = ebc.batch_id
+
+          LEFT JOIN payment_list pl
+
+          WHERE ff.form_id = $1
+
+          GROUP BY s.student_id, ff.form_status, ff.form_id;
+  `, ['KOL/FORM/2025/47']);
+
+  res.status(200).json(new ApiResponse(200, "", rows));
 });
 
 //route error

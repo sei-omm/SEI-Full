@@ -1,6 +1,7 @@
 "use client";
 
 import { BASE_API } from "@/app/constant";
+import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import Button from "@/components/Button";
 import OccupancyChat from "@/components/ChatView/OccupancyChat";
 import DateInput from "@/components/DateInput";
@@ -147,9 +148,9 @@ export default function OccupancyReport() {
             <table className="min-w-max w-full table-auto">
               <thead className="uppercase w-full border-b border-gray-100">
                 <tr>
-                  {tableDatas.heads.map((item) => (
+                  {tableDatas.heads.map((item, index) => (
                     <th
-                      className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
+                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${stickyFirstCol(index)}`}
                       key={item}
                     >
                       {item}
@@ -164,9 +165,9 @@ export default function OccupancyReport() {
                     key={rowIndex}
                     className="hover:bg-gray-100 group/bodyitem"
                   >
-                    {itemArray.map((value) => (
+                    {itemArray.map((value, colIndex) => (
                       <td
-                        className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
+                        className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${stickyFirstCol(colIndex)}`}
                         key={value}
                       >
                         {value?.includes("@") ? (

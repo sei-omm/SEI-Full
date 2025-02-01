@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Payment Email</title>
+</head>
+
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <!-- Header -->
+        <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #eeeeee;">
+            <img src="<%= hostname %>/sei_logo.png" alt="Company Logo" style="max-width: 200px; height: auto;">
+        </div>
+
+        <!-- Main Content -->
+        <div style="padding: 30px 0;">
+            <h1 style="color: #2d3748; font-size: 24px; margin-bottom: 25px;">Pay For : <%= course_name %>
+            </h1>
+
+            <p style="margin-bottom: 20px;">Hello <%= student_name %>,</p>
+
+            <p style="margin-bottom: 20px;">Payment request form <strong style="color: #2d3748;">SEI EDUCATIONAL
+                    TRUST</strong> for <%= course_name %>
+            </p>
+
+            <!-- Payment Summary -->
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                <h2 style="color: #2d3748; font-size: 18px; margin-bottom: 15px;">Payment Summary</h2>
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="padding: 8px 0;">Order ID:</td>
+                        <td style="padding: 8px 0; font-weight: bold;">
+                            <%= order_id %>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0;">Amount To Pay :</td>
+                        <td style="padding: 8px 0; font-weight: bold; color: #2d3748;">
+                            <%= amount_to_pay %>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Call to Action Button -->
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="<%= payment_link %>"
+                    style="background-color: #2563eb; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">PAY
+                    NOW</a>
+            </div>
+
+            <!-- Payment Instructions -->
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: #2d3748; font-size: 16px; margin-bottom: 15px;">Payment Instructions</h3>
+                <p style="margin-bottom: 10px;">1. Click the "PAY NOW" button above</p>
+                <p style="margin-bottom: 10px;">2. Follow the payment gateway instructions</p>
+                <p style="margin-bottom: 10px;">3. Save your payment confirmation</p>
+            </div>
+
+            <p style="margin-bottom: 20px;">If you've already made this payment, please disregard this message or
+                contact our support team.</p>
+
+            <p style="margin-bottom: 20px;">Best regards,<br>
+                SEI EDUCATIONAL TRUST</p>
+        </div>
+
+        <!-- Footer -->
+        <div
+            style="text-align: center; padding: 20px 0; border-top: 2px solid #eeeeee; color: #718096; font-size: 14px;">
+            <p style="margin: 5px 0;">© <%= current_year %> SEI EDUCATIONAL TRUST. All rights reserved.</p>
+
+        </div>
+    </div>
+</body>
+
+</html>

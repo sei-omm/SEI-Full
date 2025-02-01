@@ -15,7 +15,7 @@ interface IProps extends InputTypes {
 
 export default function Input(props: IProps) {
   return (
-    <div className={`${props.wrapperCss}`}>
+    <div className={props.wrapperCss}>
       {props.hideLabel ? null : (
         <span className="block font-semibold text-sm pl-1 mb-[0.5rem]">
           {props.label}
@@ -34,6 +34,7 @@ export default function Input(props: IProps) {
           {props.viewOnlyText ?? props.defaultValue ?? props.value}
         </span>
         <input
+          // onInput={(e) => props.onDateChange?.(e.currentTarget.value)}
           type="text"
           {...props}
           ref={props.referal}

@@ -11,7 +11,12 @@ export default function HeaderHolder({ children }: IProps) {
   const { isScrolling, scrollingDirection } = useScrollChecker();
   const pathname = usePathname();
 
-  if(pathname.includes("view-file")) return <></>;
+  if (
+    pathname.includes("view-file") ||
+    pathname.includes("payment-success") ||
+    pathname.includes("payment-failed")
+  )
+    return <></>;
 
   return (
     <div

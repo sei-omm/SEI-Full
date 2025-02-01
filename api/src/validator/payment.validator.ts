@@ -6,6 +6,8 @@ export const verifyPaymentValidator = Joi.object({
   course_ids: Joi.string().required(),
   is_in_waiting_list: Joi.string().required(),
   institute: Joi.string().required(),
+
+  payment_id: Joi.string().optional().allow(""),
 });
 
 export const verifyDueOnlinePaymentValidator = Joi.object({
@@ -36,11 +38,18 @@ export const refundPaymentValidator = Joi.object({
   course_id: Joi.number().required(),
   batch_id: Joi.number().required(),
   refund_amount: Joi.number().required(),
-  refund_reason: Joi.string().required(),
-  bank_details: Joi.string().required(),
-  executive_name: Joi.string().required(),
+
+  refund_reason: Joi.string().optional().allow(""),
+  bank_details: Joi.string().optional().allow(""),
+  executive_name: Joi.string().optional().allow(""),
   refund_id: Joi.string().optional().allow(""),
 
   mode: Joi.string().required(),
   form_id: Joi.string().required(),
+
+  status: Joi.string().optional(),
+});
+
+export const sendPaymentLinkValidator = Joi.object({
+  token: Joi.string().required(),
 });

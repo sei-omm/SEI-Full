@@ -2,6 +2,7 @@
 
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
+import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import CourseWithBatchFilter from "@/components/Filters/CourseWithBatchFilter";
 import CourseWithDateRange from "@/components/Filters/CourseWithDateRange";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
@@ -100,9 +101,11 @@ export default function RefundReport() {
             <table className="min-w-max w-full table-auto">
               <thead className="uppercase w-full border-b border-gray-100">
                 <tr>
-                  {tableDatas.heads.map((item) => (
+                  {tableDatas.heads.map((item, index) => (
                     <th
-                      className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
+                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${stickyFirstCol(
+                        index
+                      )}`}
                       key={item}
                     >
                       {item}
@@ -118,7 +121,9 @@ export default function RefundReport() {
                   >
                     {itemArray.map((value, colIndex) => (
                       <td
-                        className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
+                        className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${stickyFirstCol(
+                          colIndex
+                        )}`}
                         key={value}
                       >
                         {value?.includes("@") ? (

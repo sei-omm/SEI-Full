@@ -11,6 +11,7 @@ import {
   trackJobApplicationValidator,
   updateCandidateApplicationStatusValidator,
   updateJobValidator,
+  VSendEmailToVendor,
 } from "../validator/job.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import {
@@ -18,6 +19,7 @@ import {
   objectToSqlInsert,
 } from "../utils/objectToSql";
 import { parsePagination } from "../utils/parsePagination";
+import { sendEmail } from "../utils/sendEmail";
 
 const table_name = "job";
 
@@ -70,8 +72,10 @@ export const getAJob = asyncErrorHandler(
 export const postNewJob = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error } = createJobValidator.validate(req.body);
-
     if (error) throw new ErrorHandler(400, error.message);
+
+    const department_name = req.body.department_name;
+    delete req.body.department_name;
 
     const { columns, params, values } = objectToSqlInsert(req.body);
 
@@ -79,6 +83,17 @@ export const postNewJob = asyncErrorHandler(
       `INSERT INTO ${table_name} ${columns} VALUES ${params}`, //RETURNING *
       values
     );
+
+    if (req.body.vendors_email) {
+      sendEmail(req.body.vendors_email.split(","), "SEND_JOB_INFO_VENDOR", {
+        job_title: req.body.job_title,
+        campus: req.body.address,
+        exprience: req.body.exprience,
+        department_name: department_name,
+        job_description: req.body.job_description,
+        current_year: new Date().getFullYear(),
+      });
+    }
 
     res.status(200).json(new ApiResponse(200, "New Job Has Posted"));
   }
@@ -90,8 +105,10 @@ export const updateJobPosting = asyncErrorHandler(
       ...req.body,
       ...req.params,
     });
-
     if (error) throw new ErrorHandler(400, error.message);
+
+    const department_name = req.body.department_name;
+    delete req.body.department_name;
 
     const { keys, values, paramsNum } = objectToSqlConverterUpdate(req.body);
 
@@ -99,6 +116,17 @@ export const updateJobPosting = asyncErrorHandler(
       `UPDATE ${table_name} SET ${keys} WHERE id = $${paramsNum}`,
       [...values, value.id]
     );
+
+    if (req.body.vendors_email) {
+      sendEmail(req.body.vendors_email.split(","), "SEND_JOB_INFO_VENDOR", {
+        job_title: req.body.job_title,
+        campus: req.body.address,
+        exprience: req.body.exprience,
+        department_name: department_name,
+        job_description: req.body.job_description,
+        current_year: new Date().getFullYear(),
+      });
+    }
 
     res.status(200).json(new ApiResponse(200, "Job info has updated"));
   }
@@ -207,3 +235,8 @@ export const trackJobApplication = asyncErrorHandler(
     res.status(200).json(new ApiResponse(200, "Job Application Status", rows));
   }
 );
+
+export const sendEmailToVendor = asyncErrorHandler(async (req, res) => {
+  const { error } = VSendEmailToVendor.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+});

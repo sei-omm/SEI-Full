@@ -30,6 +30,7 @@ import { tryCatch } from "../utils/tryCatch";
 import { filterToSql } from "../utils/filterToSql";
 import { parseNullOrUndefined } from "../utils/parseNullOrUndefined";
 import { parsePagination } from "../utils/parsePagination";
+import { generateEmployeeId } from "../utils/generateEmployeeId";
 
 const table_name = "employee";
 
@@ -182,7 +183,11 @@ export const getEmployee = asyncErrorHandler(
             e.profile_image,
             e.job_title,
             d.name AS department_name,
-            COALESCE(a.status, 'Pending') AS attendance_status
+            -- COALESCE(a.status, 'Pending') AS attendance_status
+            COALESCE(
+              (SELECT 'Holiday' FROM holiday_management WHERE holiday_date = CURRENT_DATE),
+              COALESCE(a.status, 'Pending')
+            ) AS attendance_status
         FROM 
             employee e
         LEFT JOIN 
@@ -220,7 +225,12 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
             '********' AS login_password,                             
             d.name AS department_name, 
             COALESCE(a.status, 'Pending') AS attendance_status,
-            COALESCE(JSON_AGG(DISTINCT aae.*) FILTER (WHERE aae IS NOT NULL), '[]') AS assigned_assets
+            -- COALESCE(JSON_AGG(DISTINCT aae.*) FILTER (WHERE aae IS NOT NULL), '[]') AS assigned_assets
+             COALESCE((
+                  SELECT JSON_AGG(aae)
+                  FROM assign_assets_employee aae
+                  WHERE aae.to_employee_id = e.id
+              ), '[]') AS assigned_assets
         FROM 
             employee e
         LEFT JOIN 
@@ -231,8 +241,8 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
             department d 
             ON e.department_id = d.id
 
-        LEFT JOIN assign_assets_employee AS aae
-        ON aae.to_employee_id = e.id
+        -- LEFT JOIN assign_assets_employee AS aae
+        -- ON aae.to_employee_id = e.id
 
         LEFT JOIN faculty_with_course_subject AS fwcs
         ON fwcs.faculty_id = e.id
@@ -281,6 +291,19 @@ export const addNewEmployee = asyncErrorHandler(
       const { rows } = await client.query(sql, values);
       const employeeGeneratedId = rows[0].id;
 
+      //it's a bad thing to do don't do it. i don't want to run insert query mannualy because of to many column. i don't have time
+      if (!req.body.login_email || req.body.login_email === "") {
+        const employeeID = generateEmployeeId(
+          req.body.joining_date,
+          req.body.institute,
+          employeeGeneratedId
+        );
+        await client.query(
+          `UPDATE employee SET login_email = $1 WHERE id = $2`,
+          [employeeID, employeeGeneratedId]
+        );
+      }
+
       if (employeeDocsInfo.length !== 0) {
         //if employee docs list is not empty
         const valuesForEmployeeDocsInfo: (string | null)[] = [];
@@ -320,6 +343,7 @@ export const updateEmployee = asyncErrorHandler(
 
     //this is the id of employee
     const id = (req.params.id as string) || null;
+    if (!id) throw new ErrorHandler(400, "Employee Id Is Required", "id");
 
     let login_password = req.body.login_password;
     if (login_password != "********") {
@@ -355,11 +379,24 @@ export const updateEmployee = asyncErrorHandler(
       );
     });
 
+    //it will generate employee id automatically if login_email not provided
+    let loginIDorEmail = req.body.login_email;
+    if (!loginIDorEmail || loginIDorEmail === "") {
+      loginIDorEmail = generateEmployeeId(
+        req.body.joining_date,
+        req.body.institute,
+        parseInt(id)
+      );
+    }
+
     const {
       keys,
       values: valuesForEmployeeInfo,
       paramsNum,
-    } = objectToSqlConverterUpdate(req.body);
+    } = objectToSqlConverterUpdate({
+      ...req.body,
+      login_email: loginIDorEmail,
+    });
 
     const sql = `UPDATE ${table_name} SET ${keys} WHERE id = $${paramsNum}`;
     valuesForEmployeeInfo.push(id as string);
@@ -690,13 +727,14 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
     );
 
     const { rows: appraisal } = await client.query(
-      `INSERT INTO appraisal (employee_id, discipline, duties, targets, achievements) VALUES ($1, $2, $3, $4, $5) RETURNING appraisal_id`,
+      `INSERT INTO appraisal (employee_id, discipline, duties, targets, achievements, appraisal_options_employee) VALUES ($1, $2, $3, $4, $5, $6) RETURNING appraisal_id`,
       [
         value.employee_id,
         value.discipline,
         value.duties,
         value.targets,
         value.achievements,
+        value.appraisal_options_employee,
       ]
     );
 
@@ -959,15 +997,17 @@ export const assignAssets = asyncErrorHandler(async (req, res) => {
   await pool.query(
     `
     INSERT INTO assign_assets_employee 
-      (to_employee_id, assets_name, issued_by)
+      (to_employee_id, assets_name, issued_by, issue_date, return_date)
     VALUES
-      ${sqlPlaceholderCreator(3, value.length).placeholder}
+      ${sqlPlaceholderCreator(5, value.length).placeholder}
     `,
 
     value.flatMap((item) => [
       item.employee_id,
       item.assets_name,
       item.issued_by,
+      item.issue_date,
+      item.return_date || null,
     ])
   );
 
@@ -987,4 +1027,16 @@ export const getAssignedAssets = asyncErrorHandler(async (req, res) => {
     [req.params.employee_id]
   );
   res.status(200).json(new ApiResponse(200, "", rows));
+});
+
+export const updateAssetReturnDate = asyncErrorHandler(async (req, res) => {
+  const assets_id = req.params.assets_id;
+  const return_date = req.body.return_date;
+
+  await pool.query(
+    `UPDATE assign_assets_employee SET return_date = $1 WHERE assets_id = $2`,
+    [return_date, assets_id]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Asset Return Date Updated"));
 });

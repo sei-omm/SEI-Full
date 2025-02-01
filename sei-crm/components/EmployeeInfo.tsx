@@ -238,6 +238,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
     //   (item) => item.name === departmentName
     // );
     // formData.set("department_id", `${singleDepartmentInfo?.id}`);
+    formData.delete("return_date");
     if (employeeID === "add-employee") {
       formData.set("employee_type", "Office Staff");
     } else if (employeeID === "add-faculty") {
@@ -405,7 +406,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 defaultValue={employeeInfo?.contact_number || ""}
                 required
                 name="contact_number"
-                label="Contact number"
+                label="Contact number *"
                 placeholder="8784587854"
               />
               <Input
@@ -413,7 +414,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 required
                 name="email_address"
                 type="email"
-                label="Email address"
+                label="Email address *"
                 placeholder="somnathgupta112@gmail.com"
               />
 
@@ -421,14 +422,14 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 defaultValue={employeeInfo?.living_address || ""}
                 required
                 name="living_address"
-                label="Present Address"
+                label="Present Address *"
                 placeholder="3/3, Swami Vivekananda Rd, Vivekananda Pally, Bapuji Colony, Nagerbazar, Dum Dum, Kolkata, West Bengal 700074"
               />
               <Input
                 defaultValue={employeeInfo?.permanent_address || ""}
                 required
                 name="permanent_address"
-                label="Permanent Address"
+                label="Permanent Address *"
                 placeholder="3/3, Swami Vivekananda Rd, Vivekananda Pally, Bapuji Colony, Nagerbazar, Dum Dum, Kolkata, West Bengal 700074"
               />
               <DateInput
@@ -475,7 +476,6 @@ export default function EmployeeInfo({ employeeID }: IProps) {
 
               <Input
                 required
-                title="Please enter a valid 10-digit mobile number"
                 name="contact_person_name"
                 label="Contact Person Name *"
                 placeholder="Jagannath Gupta"
@@ -483,11 +483,25 @@ export default function EmployeeInfo({ employeeID }: IProps) {
               />
 
               <Input
-                title="Please enter a valid 10-digit mobile number"
                 name="contact_person_relation"
                 label="Contact Person Relation"
                 placeholder="Father"
                 defaultValue={employeeInfo?.contact_person_relation}
+              />
+
+              <Input
+                key={"next_to_kin"}
+                name="next_to_kin"
+                label="Next To Kin"
+                placeholder="Type Here Next To Kin"
+                defaultValue={employeeInfo?.next_to_kin}
+              />
+              <Input
+                key={"relation_to_self"}
+                name="relation_to_self"
+                label="Relation To Self"
+                placeholder="Type Here Relation To Self"
+                defaultValue={employeeInfo?.relation_to_self}
               />
             </div>
           </div>
@@ -518,36 +532,37 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 defaultValue={employeeInfo?.bank_name || ""}
                 required
                 name="bank_name"
-                label="Bank name"
+                label="Bank name *"
                 placeholder="ICICI Bank"
               />
               <Input
                 defaultValue={employeeInfo?.bank_account_no || ""}
                 required
                 name="bank_account_no"
-                label="Bank account No."
+                label="Bank account No. *"
                 placeholder="159843014641"
               />
               <Input
                 defaultValue={employeeInfo?.bank_account_no || ""}
                 required
                 name="confirm_bank_account_number"
-                label="Confirm Bank account No."
+                label="Confirm Bank account No. *"
                 placeholder="159843014641"
               />
               <Input
                 defaultValue={employeeInfo?.account_holder_name || ""}
                 required
                 name="account_holder_name"
-                label="Account holder name"
+                label="Account holder name *"
                 placeholder="Somnath Gupta"
               />
               <Input
                 defaultValue={employeeInfo?.ifsc_code || ""}
                 required
                 name="ifsc_code"
-                label="IFSC Code"
+                label="IFSC Code *"
                 placeholder="ICI24504"
+                maxLength={11}
               />
             </div>
           </div>

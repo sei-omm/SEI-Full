@@ -1,5 +1,7 @@
 import { PutBlobResult } from "@vercel/blob";
 import { Dispatch, SetStateAction } from "react";
+import { z } from "zod";
+import { studentFormSchema } from "./FormSchema";
 
 export interface ITabItems {
   name: string;
@@ -21,7 +23,9 @@ export interface ISuccess<T = null> {
   success: boolean;
 }
 
-export interface IError extends ISuccess {}
+export interface IError extends ISuccess {
+  key?: string;
+}
 
 export interface IDepartment {
   id: number;
@@ -38,6 +42,7 @@ export interface IJob {
   department_name: string;
   created_at: string;
   job_description: string;
+  vendors_email : string
 }
 
 export interface IJobAppliedCandidate {
@@ -132,6 +137,9 @@ export interface IEmployee {
 
   payscale_label: string | null;
   payscale_year: number | null;
+
+  next_to_kin : string | null;
+  relation_to_self : string | null;
 
   assigned_assets: TAssignAssets[];
 }
@@ -244,46 +252,50 @@ export type TEnrollCourses = {
   batch_fee: number;
   enrollment_status: string;
   batch_id: number;
-  modified_by_info: null | {
-    batch_id: number;
-    employee_name: string;
-    created_at: string;
-  }[];
+  modified_by_info:
+    | null
+    | {
+        batch_id: number;
+        employee_name: string;
+        created_at: string;
+      }[];
+};
+
+export type TCourseAndStudentInfo = {
+  student_id: number;
+  course_id: number;
+  name: string;
+  email: string;
+  mobile_number: string;
+  dob: string;
+  profile_image: string | null;
+  indos_number: string;
+  rank: string;
+  nationality: string;
+  permanent_address: string;
+  present_address: string;
+  blood_group: string;
+  allergic_or_medication: string;
+  next_of_kin_name: string;
+  relation_to_sel: string;
+  emergency_number: string;
+  number_of_the_cert: string;
+  issued_by_institute: string;
+  issued_by_institute_indos_number: string;
+  id_proof: null | string;
+  address_proof: null | string;
+  academic_proof: null | string;
+  form_status: string;
+  form_id: string;
+  cdc_num: string | null;
+  passport_num: string | null;
+  enrolled_courses_info: TEnrollCourses[];
+  coc_number: string | null;
+  cert_of_completency: string | null;
 };
 
 export type TOneAdmission = {
-  course_and_student_info: {
-    student_id: number;
-    course_id: number;
-    name: string;
-    email: string;
-    mobile_number: string;
-    dob: string;
-    profile_image: string | null;
-    indos_number: string;
-    rank: string;
-    nationality: string;
-    permanent_address: string;
-    present_address: string;
-    blood_group: string;
-    allergic_or_medication: string;
-    next_of_kin_name: string;
-    relation_to_sel: string;
-    emergency_number: string;
-    number_of_the_cert: string;
-    issued_by_institute: string;
-    issued_by_institute_indos_number: string;
-    id_proof: null | string;
-    address_proof: null | string;
-    academic_proof: null | string;
-    form_status: string;
-    form_id: string;
-    cdc_num: string | null;
-    passport_num: string | null;
-    enrolled_courses_info: TEnrollCourses[];
-    coc_number: string | null;
-    cert_of_completency: string | null;
-  };
+  course_and_student_info: TCourseAndStudentInfo;
   student_payment_info: TPaymentInfo;
   course_batches: { course_id: number; batches: TBatches[] }[];
 };
@@ -321,6 +333,12 @@ export type TCourseDropDown = {
   course_id: number;
   course_name: string;
   course_batches: string[];
+};
+
+export type TCourseDropDown2 = {
+  course_id: number;
+  course_name: string;
+  course_batches: { batch_id: number; start_date: string }[];
 };
 
 export type TLibraryVisibility = "subject-specific" | "course-specific";
@@ -572,7 +590,8 @@ export type TAppraisal = {
     duties: string;
     targets: string;
     achievements: string;
-    appraisal_options: string | null;
+    appraisal_options_hod: string | null;
+    appraisal_options_employee: string | null;
     state_of_health: string | null;
     integrity: string | null;
     created_at: string;
@@ -596,6 +615,8 @@ export type TAssignAssets = {
   to_employee_id: number;
   assets_name: string;
   issued_by: string;
+  issue_date: string;
+  return_date: string | null;
 };
 
 export type IAssignCourse = {
@@ -604,3 +625,24 @@ export type IAssignCourse = {
   course_name: string;
   subject: string;
 };
+
+export type TRefundDetails = {
+  profile_image: string;
+  name: string;
+  course_name: string;
+  start_date: string; // ISO date string
+  student_id: number;
+  course_id: number;
+  batch_id: number;
+  refund_amount: string; // Assuming it's a formatted string like "2000.00"
+  refund_reason: string | null; // Can be empty
+  bank_details: string | null; // Can be empty
+  executive_name: string | null; // Can be empty
+  refund_id: string | null; // Can be empty
+  mode: string; // Add other possible modes if applicable
+  created_at: string; // ISO date string
+  status: string; // Add other statuses if applicable
+  form_id: string;
+};
+
+export type StudentForm = z.infer<typeof studentFormSchema>;

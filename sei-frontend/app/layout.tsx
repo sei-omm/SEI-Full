@@ -10,6 +10,7 @@ import DialogWrapper from "./components/Dialogs/DialogWrapper";
 import PreventRightClick from "./components/PreventRightClick";
 import MobileNavigation from "./components/MobileNavigation";
 import MobileNavigationHolder from "./components/MobileNavigationHolder";
+import React from "react";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -69,18 +70,20 @@ export default function RootLayout({
       <body
         className={`${futura.variable} ${inter.variable} font-futura antialiased w-full`}
       >
-        <MyProvider>
-          <DialogWrapper />
-          <PreventRightClick />
-          <HeaderHolder>
-            <Header />
-          </HeaderHolder>
-          {children}
-          <Footer />
-          <MobileNavigationHolder>
-            <MobileNavigation />
-          </MobileNavigationHolder>
-        </MyProvider>
+        <React.Suspense fallback={<></>}>
+          <MyProvider>
+            <DialogWrapper />
+            <PreventRightClick />
+            <HeaderHolder>
+              <Header />
+            </HeaderHolder>
+            {children}
+            <Footer />
+            <MobileNavigationHolder>
+              <MobileNavigation />
+            </MobileNavigationHolder>
+          </MyProvider>
+        </React.Suspense>
       </body>
     </html>
   );
