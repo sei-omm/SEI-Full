@@ -668,6 +668,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 />
 
                 <Input
+                  viewOnly
                   moneyInput={true}
                   defaultValue={employeeInfo?.gratuity || ""}
                   required
@@ -677,6 +678,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   label="Gratuity"
                   placeholder="200"
                 />
+                
 
                 <h2 className="text-sm">
                   Total Deductions :{" "}

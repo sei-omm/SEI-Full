@@ -5,6 +5,11 @@ import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import { transaction } from "../utils/transaction";
 import { VAddHolidayList } from "../validator/holiday.validator";
 
+function parseDate(dateStr : string) {
+  const [day, month, year] = dateStr.split('-');
+  return new Date(`${year}-${month}-${day}`);
+}
+
 export const addHolidayList = asyncErrorHandler(async (req, res) => {
   const { error, value } = VAddHolidayList.validate(req.body);
   if (error)
@@ -25,7 +30,7 @@ export const addHolidayList = asyncErrorHandler(async (req, res) => {
 
       values: value.flatMap((item) => [
         item.holiday_name,
-        new Date(item.holiday_date).toISOString().split('T')[0],
+        new Date(parseDate(item.holiday_date)).toISOString().split('T')[0],
         item.holiday_year,
       ]),
     },
