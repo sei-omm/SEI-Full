@@ -14,9 +14,11 @@ import { RootState } from "@/redux/store";
 import { toast } from "react-toastify";
 import { queryClient } from "@/redux/MyProvider";
 import { setDialog } from "@/redux/slices/dialogs.slice";
+import { useSearchParams } from "next/navigation";
 
 export default function ChooseFilesDialog() {
   const { extraValue } = useSelector((state: RootState) => state.dialogs);
+  const searchParams = useSearchParams();
 
   const [files, setFiles] = useState<File[]>([]);
 
@@ -82,6 +84,7 @@ export default function ChooseFilesDialog() {
           file_name: blob.pathname.split("/").pop(),
           file_type: blob.contentType,
           file_url: blob.url,
+          institute : searchParams.get("institute") || "Kolkata"
         };
         if (extraValue?.folderId) {
           reqBody.folder_id = extraValue.folderId;

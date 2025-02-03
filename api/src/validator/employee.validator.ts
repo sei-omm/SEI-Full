@@ -123,8 +123,13 @@ export const employeeSchema = Joi.object({
   payscale_label: Joi.string().required().label("Payscale Label"),
   payscale_year: Joi.number().required().label("Payscale Year"),
 
-  next_to_kin : Joi.string().optional().allow("").label("Next To Kin"),
-  relation_to_self : Joi.string().optional().allow("").label("Relation To Self")
+  next_to_kin: Joi.string().optional().allow("").label("Next To Kin"),
+  relation_to_self: Joi.string().optional().allow("").label("Relation To Self"),
+
+  cl: Joi.number().required(),
+  sl: Joi.number().required(),
+  el: Joi.number().required(),
+  ml: Joi.number().required(),
 });
 
 export const employeeLoginValidator = Joi.object({
@@ -157,7 +162,7 @@ export const createAppraisalValidator = Joi.object({
   duties: Joi.string().required(),
   targets: Joi.string().required(),
   achievements: Joi.string().required(),
-  appraisal_options_employee : Joi.string().required()
+  appraisal_options_employee: Joi.string().required(),
 });
 
 export const getAppraisalListValidator = Joi.object({

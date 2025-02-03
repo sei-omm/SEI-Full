@@ -342,7 +342,6 @@ CREATE TABLE files (
     FOREIGN KEY (folder_id) REFERENCES folders(folder_id) ON DELETE CASCADE
 );
 
-
 -- Inventory Management
 
 CREATE TABLE durable (
@@ -799,6 +798,59 @@ CREATE TABLE holiday_management (
 
 ALTER TABLE job
 ADD COLUMN vendors_email TEXT DEFAULT '';
+
+-- NEW DB TABLE 01 Feb 2025
+
+ALTER TABLE folders
+ADD COLUMN institute VARCHAR(100) DEFAULT 'Kolkata';
+
+ALTER TABLE files
+ADD COLUMN institute VARCHAR(100) DEFAULT 'Kolkata';
+
+DELETE FROM holiday_management;
+
+ALTER TABLE holiday_management
+ADD COLUMN institute VARCHAR(100);
+
+-- RUN THIS QUERY IN POSTGRES MANUALLY TO STORE leave default details for existing employee
+-- INSERT INTO employee_leave (employee_id, cl, sl, el, ml)
+-- SELECT id, 10, 10, 0, 84  -- Default leave balance
+-- FROM employee
+-- WHERE id NOT IN (SELECT employee_id FROM employee_leave); 
+
+-- INSERT INTO employee_leave (employee_id, cl, sl, el, ml, financial_year_date)
+-- SELECT id, 10, 10, 0, 84, '2024-04-01'  -- Replace with your financial year start date
+-- FROM employee
+-- ON CONFLICT (employee_id, financial_year_date) DO NOTHING;
+
+-- First, create a function to calculate the financial year start
+CREATE OR REPLACE FUNCTION get_financial_year_start()
+RETURNS DATE AS $$
+DECLARE
+  current_year INT := EXTRACT(YEAR FROM CURRENT_DATE);
+  financial_month INT := 4; -- April (adjust this to your financial year start month)
+BEGIN
+  IF EXTRACT(MONTH FROM CURRENT_DATE) >= financial_month THEN
+    RETURN TO_DATE(current_year || '-' || financial_month || '-01', 'YYYY-MM-DD');
+  ELSE
+    RETURN TO_DATE((current_year - 1) || '-' || financial_month || '-01', 'YYYY-MM-DD');
+  END IF;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE TABLE employee_leave (
+    employee_id INTEGER REFERENCES employee(id) ON DELETE CASCADE,
+    cl INT DEFAULT 10,
+    sl INT DEFAULT 10,
+    el INT DEFAULT 0,
+    ml INT DEFAULT 84,
+    financial_year_date DATE NOT NULL,
+    UNIQUE (employee_id, financial_year_date)
+);
+
+-- Then alter the table to add a default
+ALTER TABLE employee_leave 
+ALTER COLUMN financial_year_date SET DEFAULT get_financial_year_start();
 
 -- fro clering all table of db
 -- DO $$ 

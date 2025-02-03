@@ -180,6 +180,7 @@ async function generateEmployeeAttendance(req: Request) {
       e.name,
       e.profile_image,
       e.joining_date,
+      e.institute,
       COALESCE(
         JSON_AGG(l.*) FILTER (WHERE l IS NOT NULL), 
         '[]'::json
@@ -211,10 +212,11 @@ async function generateEmployeeAttendance(req: Request) {
 
   const { rows } = await pool.query(sql, filterValues);
 
-  const { rows : holidayList } = await pool.query(
+  const { rows: holidayList } = await pool.query(
     `SELECT 
       holiday_name, 
-      TO_CHAR(holiday_date, 'YYYY-MM-DD') as holiday_date 
+      TO_CHAR(holiday_date, 'YYYY-MM-DD') as holiday_date,
+      institute
     FROM holiday_management WHERE holiday_year = $1`,
     [date.getFullYear()]
   );
@@ -225,7 +227,7 @@ async function generateEmployeeAttendance(req: Request) {
     const objToStore: any = {};
     const attendanceObj: any = {};
     const leavesObj: any = {};
-    const holidayObj : any = {};
+    const holidayObj: any = {};
     const startDate = new Date(fromData);
     const endDate = new Date(toData);
     const joiningDate = new Date(item.joining_date);
@@ -233,6 +235,7 @@ async function generateEmployeeAttendance(req: Request) {
     objToStore["employee_id"] = item.employee_id;
     objToStore["name"] = item.name;
     objToStore["profile_image"] = item.profile_image;
+    objToStore["institute"] = item.institute;
 
     item.attendances.forEach((aItem: any) => {
       attendanceObj[aItem.date] = aItem.status;
@@ -248,8 +251,11 @@ async function generateEmployeeAttendance(req: Request) {
     });
 
     holidayList.forEach((hItem) => {
-      holidayObj[hItem.holiday_date] = "Holiday";
-    })
+      holidayObj[hItem.holiday_date] = {
+        status : "Holiday",
+        institute : hItem.institute
+      };
+    });
 
     while (needToStopLoop === false) {
       if (
@@ -264,11 +270,18 @@ async function generateEmployeeAttendance(req: Request) {
       if (joiningDate.getTime() > startDate.getTime()) {
         objToStore[key] = "Not Employed";
       } else {
-        objToStore[`${key}`] = holidayObj[`${key}`] || attendanceObj[`${key}`] || leavesObj[`${key}`] || "Pending";
+        objToStore[`${key}`] =
+          attendanceObj[`${key}`] ||
+          leavesObj[`${key}`] ||
+          "Pending";
+        if(holidayObj[`${key}`] && holidayObj[`${key}`].institute === objToStore["institute"]) {
+          objToStore[`${key}`] = holidayObj[`${key}`].status
+        }
       }
       startDate.setDate(startDate.getDate() + 1);
     }
 
+    delete objToStore["institute"];
     dataToReturn.push(objToStore);
   });
 

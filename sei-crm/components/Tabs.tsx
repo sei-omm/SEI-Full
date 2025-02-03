@@ -20,7 +20,7 @@ export default function Tabs({ tabs, className }: IProps) {
           <li key={index}>
             <Link
               className={`block h-full text-sm py-2 px-5 font-semibold rounded-lg cursor-pointer ${
-                pathname.includes(tab.slug) ||
+                pathname === tab.slug ||
                 tab.slug.includes(searchParams.get("tab") || "")
                   ? "bg-white"
                   : "bg-transparent"

@@ -1,6 +1,9 @@
 import { Router } from "express";
-import { addHolidayList } from "../controller/holiday.controller";
+import {
+  addHolidayList,
+  getHolidayListBoth,
+} from "../controller/holiday.controller";
 
 export const holidayRoutes = Router();
 
-holidayRoutes.post("/add", addHolidayList);
+holidayRoutes.post("/add", addHolidayList).get("/", getHolidayListBoth);

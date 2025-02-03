@@ -11,6 +11,7 @@ import { objectToSqlInsert } from "../utils/objectToSql";
 import { getDate } from "../utils/getDate";
 import { dbTransaction } from "../utils/dbTransaction";
 import { parsePagination } from "../utils/parsePagination";
+import { transaction } from "../utils/transaction";
 
 const table_name = "leave";
 
@@ -32,11 +33,37 @@ export const getRequestedLeaveLists = asyncErrorHandler(
 
 export const getEmployeeLeaveRequest = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { rows } = await pool.query(
-      `SELECT * FROM ${table_name} WHERE employee_id = $1 ORDER BY id DESC`,
-      [res.locals?.employee_id]
+    const [leaveRequestList, leaveDetails] = await transaction([
+      {
+        sql: `SELECT * FROM ${table_name} WHERE employee_id = $1 ORDER BY id DESC`,
+        values: [res.locals?.employee_id],
+      },
+      {
+        sql: `
+        SELECT * FROM employee_leave WHERE employee_id = $1
+        AND financial_year_date >=
+          CASE 
+            WHEN EXTRACT(MONTH FROM CURRENT_DATE) < 4 
+            THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT - 1, 4, 1) 
+            ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT, 4, 1) 
+          END
+        AND financial_year_date <
+          CASE 
+            WHEN EXTRACT(MONTH FROM CURRENT_DATE) < 4 
+            THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT, 4, 1) 
+            ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT + 1, 4, 1) 
+          END
+        `,
+        values: [res.locals?.employee_id],
+      },
+    ]);
+
+    res.status(200).json(
+      new ApiResponse(200, "Employee Leave Request", {
+        leave_request_list: leaveRequestList.rows,
+        leave_details: leaveDetails.rows,
+      })
     );
-    res.status(200).json(new ApiResponse(200, "Employee Leave Request", rows));
   }
 );
 

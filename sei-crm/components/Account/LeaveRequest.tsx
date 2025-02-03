@@ -9,18 +9,21 @@ import { useQuery } from "react-query";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
 import HandleSuspence from "../HandleSuspence";
-import { ILeave, ISuccess } from "@/types";
+import { ILeave, ISuccess, TEmployeeLeave } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { getAuthToken } from "@/app/utils/getAuthToken";
+import { FaCircleNotch } from "react-icons/fa6";
 
 export default function LeaveRequest() {
   const dispatch = useDispatch();
 
   const {
-    data: leaveRequest,
+    data: leaveData,
     isFetching,
     error,
-  } = useQuery<ISuccess<ILeave[]>>({
+  } = useQuery<
+    ISuccess<{ leave_request_list: ILeave[]; leave_details: TEmployeeLeave[] }>
+  >({
     queryKey: ["employee-leave-request"],
     queryFn: async () =>
       (
@@ -55,13 +58,44 @@ export default function LeaveRequest() {
             </Button>
           </div>
 
+          <ul className="flex items-center justify-center gap-4 flex-wrap">
+            <li className="flex items-center  gap-2 text-sm">
+              <FaCircleNotch />
+              <span>
+                <span className="font-semibold">Casual Leave</span> :{" "}
+                {leaveData?.data.leave_details[0]?.cl}
+              </span>
+            </li>
+            <li className="flex items-center  gap-2 text-sm">
+              <FaCircleNotch />
+              <span>
+                <span className="font-semibold">Sick Leave</span> :{" "}
+                {leaveData?.data.leave_details[0]?.sl}
+              </span>
+            </li>
+            <li className="flex items-center  gap-2 text-sm">
+              <FaCircleNotch />
+              <span>
+                <span className="font-semibold">Earned Leave</span> :{" "}
+                {leaveData?.data.leave_details[0]?.el}
+              </span>
+            </li>
+            <li className="flex items-center  gap-2 text-sm">
+              <FaCircleNotch />
+              <span>
+                <span className="font-semibold">Maternity Leave</span> :{" "}
+                {leaveData?.data.leave_details[0]?.ml}
+              </span>
+            </li>
+          </ul>
+
           <HandleSuspence
             isLoading={isFetching}
-            dataLength={leaveRequest?.data.length}
+            dataLength={leaveData?.data.leave_request_list.length}
             error={error}
           >
             <ul className="space-y-5">
-              {leaveRequest?.data?.map((leave) => (
+              {leaveData?.data?.leave_request_list?.map((leave) => (
                 <li
                   key={leave.id}
                   className="space-y-1 relative border-b-2 pb-5"

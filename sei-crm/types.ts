@@ -42,7 +42,7 @@ export interface IJob {
   department_name: string;
   created_at: string;
   job_description: string;
-  vendors_email : string
+  vendors_email: string;
 }
 
 export interface IJobAppliedCandidate {
@@ -72,6 +72,14 @@ export interface IHREmployee {
   attendance_status: AttendanceStatusType;
 }
 
+export type TEmployeeLeave = {
+  employee_id: number;
+  cl: number;
+  sl: number;
+  el: number;
+  ml: number;
+  financial_year_date: string;
+};
 export type EmployeeType = "Office Staff" | "Faculty";
 export interface IEmployee {
   id: number;
@@ -138,16 +146,18 @@ export interface IEmployee {
   payscale_label: string | null;
   payscale_year: number | null;
 
-  next_to_kin : string | null;
-  relation_to_self : string | null;
+  next_to_kin: string | null;
+  relation_to_self: string | null;
 
   assigned_assets: TAssignAssets[];
 
   // total_salary : number;
   // deductions : number;
   // monthly_salary : string;
-  working_tenure : number;
+  working_tenure: number;
   // net_salary : number
+
+  leave_details: TEmployeeLeave[];
 }
 
 export type ILeaveStatus = "pending" | "success" | "decline";
@@ -220,8 +230,10 @@ export type DropDownOptionType = {
 };
 
 export type EmployeeLoginInfoType = {
+  token: string;
+  profile_image: string;
   name: string;
-  profile_image: string | "null";
+  employee_id: number;
 };
 
 export type TStudentPayment = {

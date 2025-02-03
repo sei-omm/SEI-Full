@@ -8,8 +8,7 @@ import { ISuccess, TFileFolderOptionAction, TFolder } from "@/types";
 import { useDispatch } from "react-redux";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { queryClient } from "@/redux/MyProvider";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BASE_API } from "@/app/constant";
 import { axiosQuery } from "@/utils/axiosQuery";
 import { toast } from "react-toastify";
@@ -23,6 +22,7 @@ export default function FolderItem({ folder }: IProps) {
   const modalRef = useRef<HTMLLIElement>(null);
   const dispatch = useDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleMoreOptionOpen = () => {
     setIsOptionOpen(true);
@@ -42,7 +42,14 @@ export default function FolderItem({ folder }: IProps) {
 
   const handleOptionClick = async (action: TFileFolderOptionAction) => {
     if (action === "open") {
-      router.push(`?folder_id=${folder.folder_id}`);
+      const urlSearchParams = new URLSearchParams(searchParams);
+      if (!urlSearchParams.has("institute")) {
+        urlSearchParams.set("institute", "Kolkata");
+      }
+      urlSearchParams.set("folder_id", folder.folder_id.toString());
+      router.push(
+        `/dashboard/hr-module/compliance-record?${urlSearchParams.toString()}`
+      );
       return;
     }
 
@@ -86,15 +93,15 @@ export default function FolderItem({ folder }: IProps) {
   return (
     <li
       ref={modalRef}
-      className="relative flex items-center justify-between border border-gray-400 gap-2 p-3 bg-slate-200 rounded-lg shadow-lg cursor-default"
+      className="relative flex items-center justify-start border border-gray-400 gap-2 p-3 bg-slate-200 rounded-lg shadow-lg cursor-default"
     >
-      <Link
-        href={`?folder_id=${folder.folder_id}`}
+      <button
+        onClick={() => handleOptionClick("open")}
         className="flex items-center gap-4 w-full"
       >
         <MdOutlineFolder />
         <span className="text-sm line-clamp-1">{folder.folder_name}</span>
-      </Link>
+      </button>
       <HiOutlineDotsVertical
         onClick={handleMoreOptionOpen}
         className="cursor-pointer"

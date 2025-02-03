@@ -1,9 +1,15 @@
 "use client";
 
+import { BASE_API } from "@/app/constant";
+import { beautifyDate } from "@/app/utils/beautifyDate";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import Button from "@/components/Button";
 import ChooseFileInput from "@/components/ChooseFileInput";
+import DropDown from "@/components/DropDown";
+import { ISuccess } from "@/types";
+import axios from "axios";
 import React, { useState } from "react";
+import { useQuery } from "react-query";
 import * as XLSX from "xlsx";
 
 interface Holiday {
@@ -12,8 +18,37 @@ interface Holiday {
   holiday_year: number | null;
 }
 
+type HolidayRes = {
+  holiday_id: number;
+  holiday_name: string;
+  holiday_date: string;
+  holiday_year: string;
+  institute: string;
+};
+
+type THolidayList = {
+  faridabad: HolidayRes[];
+  kolkata: HolidayRes[];
+};
+
+type TTable = {
+  heads: string[];
+  body: string[][];
+};
+
 const HolidayManagement = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
+  const [institute, setInstitute] = useState("Kolkata");
+
+  const [tableDatasKolkata, setTableDatasKolkata] = useState<TTable>({
+    heads: ["Holiday Name", "Holiday Date"],
+    body: [],
+  });
+
+  const [tableDatasFaridabad, setTableDatasFaridabad] = useState<TTable>({
+    heads: ["Holiday Name", "Holiday Date"],
+    body: [],
+  });
 
   const handleFileUpload = (file: File): void => {
     if (!file) return;
@@ -62,34 +97,71 @@ const HolidayManagement = () => {
 
   const { isLoading, mutate } = useDoMutation();
   const handleUploadBtn = () => {
+    if (excelData.length === 0)
+      return alert("Please Choose You Holiday List File");
+
     if (!confirm("Are you sure you want to upload")) return;
 
     mutate({
       apiPath: "/holiday/add",
       method: "post",
-      formData: excelData,
+      formData: {
+        institute,
+        holiday_list: excelData,
+      },
     });
   };
 
-  // const tableDatas = {
-  //   heads: ["Holiday Name", "Holiday Date"],
-  //   body: [
-  //     ["Somnath Gupta", "12 Jun, 2024"],
-  //     ["Arindam Gupta", "12 Jun, 2024"],
-  //   ],
-  // };
-
+  useQuery<ISuccess<THolidayList>>({
+    queryKey: "get-holiday-list",
+    queryFn: async () => (await axios.get(`${BASE_API}/holiday`)).data,
+    onSuccess(data) {
+      setTableDatasKolkata((preState) => ({
+        ...preState,
+        body: data.data.kolkata.map((item) => [
+          item.holiday_name,
+          item.holiday_date,
+        ]),
+      }));
+      setTableDatasFaridabad((preState) => ({
+        ...preState,
+        body: data.data.faridabad.map((item) => [
+          item.holiday_name,
+          item.holiday_date,
+        ]),
+      }));
+    },
+  });
   return (
-    <div className="w-full space-y-5">
+    <div className="w-full space-y-10">
       <div className="flex items-end gap-5 w-full">
-        <div className="flex-grow">
-          <ChooseFileInput
-            id="excel_file"
-            onFilePicked={(file) => handleFileUpload(file)}
-            label="Choose Holiday Management Excel File"
-            fileName="Choose Holiday Management Excel File"
-            disableUpload
-          />
+        <div className="flex-grow flex items-center gap-4 *:flex-grow">
+          <div>
+            <ChooseFileInput
+              accept=".xls, .xlsx"
+              id="excel_file"
+              onFilePicked={(file) => handleFileUpload(file)}
+              label="Choose Holiday Management Excel File"
+              fileName="Choose Holiday Management Excel File"
+              onFileDelete={() => {
+                setExcelData([]);
+              }}
+              disableUpload
+            />
+          </div>
+          <div className="mt-2">
+            <DropDown
+              onChange={(option) => {
+                setInstitute(option.value);
+              }}
+              name="institute"
+              label="Choose Campus"
+              options={[
+                { text: "Kolkata", value: "Kolkata" },
+                { text: "Faridabad", value: "Faridabad" },
+              ]}
+            />
+          </div>
         </div>
         <div className="flex-grow-0 pb-1">
           <Button
@@ -101,43 +173,81 @@ const HolidayManagement = () => {
           </Button>
         </div>
       </div>
-
-      {/* <div>
-        <h3>Excel Data</h3>
-        <pre>{JSON.stringify(excelData, null, 2)}</pre>
-      </div> */}
-      {/* <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black card-shdow rounded-xl">
-        <table className="min-w-max w-full table-auto">
-          <thead className="uppercase w-full border-b border-gray-100">
-            <tr>
-              {tableDatas.heads.map((item) => (
-                <th
-                  className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
-                  key={item}
-                >
-                  {item}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {tableDatas.body.map((itemArray, index) => (
-              <tr key={index} className="hover:bg-gray-100 group/bodyitem">
-                {itemArray.map((value, childItemIndex) => (
-                  <td
-                    className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
-                    key={value}
-                  >
-                    <span className="line-clamp-1 inline-flex gap-x-3">
-                      {value}
-                    </span>
-                  </td>
+      <div className="flex items-start gap-5 *:flex-grow">
+        <div className="space-y-5">
+          <h2 className="font-semibold text-gray-500">Kolkata Holiday List</h2>
+          <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black card-shdow rounded-xl">
+            <table className="min-w-max w-full table-auto">
+              <thead className="uppercase w-full border-b border-gray-100">
+                <tr>
+                  {tableDatasKolkata.heads.map((item) => (
+                    <th
+                      className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
+                      key={item}
+                    >
+                      {item}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableDatasKolkata.body.map((itemArray, index) => (
+                  <tr key={index} className="hover:bg-gray-100 group/bodyitem">
+                    {itemArray.map((value, colIndex) => (
+                      <td
+                        className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
+                        key={value}
+                      >
+                        <span className="line-clamp-1 inline-flex gap-x-3">
+                          {colIndex === 1 ? beautifyDate(value) : value}
+                        </span>
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div> */}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          <h2 className="font-semibold text-gray-500">
+            Faridabad Holiday List
+          </h2>
+          <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black card-shdow rounded-xl">
+            <table className="min-w-max w-full table-auto">
+              <thead className="uppercase w-full border-b border-gray-100">
+                <tr>
+                  {tableDatasFaridabad.heads.map((item) => (
+                    <th
+                      className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
+                      key={item}
+                    >
+                      {item}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableDatasFaridabad.body.map((itemArray, index) => (
+                  <tr key={index} className="hover:bg-gray-100 group/bodyitem">
+                    {itemArray.map((value, colIndex) => (
+                      <td
+                        className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
+                        key={value}
+                      >
+                        <span className="line-clamp-1 inline-flex gap-x-3">
+                          {colIndex === 1 ? beautifyDate(value) : value}
+                        </span>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

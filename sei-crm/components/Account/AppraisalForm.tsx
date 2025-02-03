@@ -17,6 +17,7 @@ import { calculateAge } from "@/app/utils/calculateAge";
 import BackBtn from "../BackBtn";
 import { FcApproval } from "react-icons/fc";
 import { IoMdCloseCircle } from "react-icons/io";
+import { useIsAuthenticated } from "@/app/hooks/useIsAuthenticated";
 
 async function getSingleAppraisal(appraisalId: number) {
   return (await axios.get(`${BASE_API}/employee/appraisal/${appraisalId}`))
@@ -27,6 +28,7 @@ export default function AppraisalForm() {
   const { mutate, isLoading } = useDoMutation();
   const searchParams = useSearchParams();
   const route = useRouter();
+  const { userInfo } = useIsAuthenticated();
 
   // const parsedOptions = useRef<any>({});
   const [parsedOptionsEmployee, setParsedOptionsEmployee] = useState<any>(null);
@@ -110,8 +112,6 @@ export default function AppraisalForm() {
       },
     });
   }
-
-  console.log(parsedOptionsEmployee);
 
   return (
     <>
@@ -344,7 +344,9 @@ export default function AppraisalForm() {
                       {item.status === "Approved"
                         ? "Approved By "
                         : "Rejected By "}{" "}
-                      {item.name}
+                      {userInfo?.employee_id === item.employee_id
+                        ? "You"
+                        : item.name}
                     </span>
                     {item.status === "Approved" ? (
                       <FcApproval size={20} />

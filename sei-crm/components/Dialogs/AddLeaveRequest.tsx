@@ -8,6 +8,8 @@ import { setDialog } from "@/redux/slices/dialogs.slice";
 import { useDispatch } from "react-redux";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 import { queryClient } from "@/redux/MyProvider";
+import DropDown from "../DropDown";
+import { SEI_LEAVES } from "@/app/constant";
 
 export default function AddLeaveRequest() {
   const { isLoading, mutate } = useDoMutation();
@@ -32,17 +34,31 @@ export default function AddLeaveRequest() {
   return (
     <DialogBody>
       <form action={handleSubmit} className="space-y-3">
-        <DateInput required name="leave_from" label="From" />
-        <DateInput required name="leave_to" label="To" />
+        <div className="grid grid-cols-2 gap-3">
+          <DateInput required name="leave_from" label="From *" />
+          <DateInput required name="leave_to" label="To *" />
+        </div>
+        <DropDown
+          label="Leave Type *"
+          options={SEI_LEAVES.map((item) => ({
+            text: item.name,
+            value: item.name,
+          }))}
+        />
         <TextArea
           required
           name="leave_reason"
-          label="Reason"
+          label="Reason *"
           placeholder="Type your reason here..."
         />
         <Button loading={isLoading} disabled={isLoading}>
           Submit
         </Button>
+        <p className="text-xs">
+          10 days of Casual Leave in a calendar year, 10 days of Sick Leave (SL)
+          in a calendar year, 84 days of paid Maternity Leave is allowed to
+          females who have to deliver a child
+        </p>
       </form>
     </DialogBody>
   );

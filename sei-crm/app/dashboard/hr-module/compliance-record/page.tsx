@@ -2,6 +2,7 @@
 
 import { BASE_API } from "@/app/constant";
 import Button from "@/components/Button";
+import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
 import FileItem from "@/components/HR/FileItem";
 import FolderItem from "@/components/HR/FolderItem";
@@ -10,7 +11,11 @@ import Pagination from "@/components/Pagination";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { IStorageResponse, ISuccess } from "@/types";
 import axios from "axios";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ReadonlyURLSearchParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import React from "react";
 import { BsCloudUpload } from "react-icons/bs";
 import { FiFolderPlus } from "react-icons/fi";
@@ -19,13 +24,24 @@ import { RiSearchLine } from "react-icons/ri";
 import { useQuery } from "react-query";
 import { useDispatch } from "react-redux";
 
-async function fetchData(folder_id: string | null) {
-  return (await axios.get(`${BASE_API}/storage?folder_id=${folder_id ?? 0}`))
-    .data;
+async function fetchData(searchParams: ReadonlyURLSearchParams) {
+  return (
+    await axios.get(
+      `${BASE_API}/storage?folder_id=${
+        searchParams.get("folder_id") ?? 0
+      }&institute=${searchParams.get("institute") || "Kolkata"}`
+    )
+  ).data;
 }
 
-async function searchFile(keyword: string | null) {
-  return (await axios.get(`${BASE_API}/storage/search?q=${keyword}`)).data;
+async function searchFile(searchParams: ReadonlyURLSearchParams) {
+  return (
+    await axios.get(
+      `${BASE_API}/storage/search?q=${searchParams.get("search")}&institute=${
+        searchParams.get("institute") || "Kolkata"
+      }`
+    )
+  ).data;
 }
 
 export default function ComplianceRecord() {
@@ -36,8 +52,8 @@ export default function ComplianceRecord() {
     queryKey: ["fetch-files-and-folders", searchParams.toString()],
     queryFn: async () =>
       searchParams.has("search")
-        ? searchFile(searchParams.get("search"))
-        : fetchData(searchParams.get("folder_id")),
+        ? searchFile(searchParams)
+        : fetchData(searchParams),
   });
 
   // const {
@@ -82,7 +98,7 @@ export default function ComplianceRecord() {
     route.push(
       `/dashboard/hr-module/compliance-record?search=${formData.get(
         "search_input"
-      )}`
+      )}&institute=${searchParams.get("institute") || "Kolkata"}`
     );
   };
 
@@ -115,6 +131,18 @@ export default function ComplianceRecord() {
             <RiSearchLine className="mt-2 cursor-pointer" size={20} />
           </button>
         </form>
+        {!searchParams.has("folder_id") && !searchParams.has("search") && (
+          <DropDown
+            changeSearchParamsOnChange
+            label="Choose Campus"
+            name="institute"
+            options={[
+              { text: "Kolkata", value: "Kolkata" },
+              { text: "Faridabad", value: "Faridabad" },
+            ]}
+            defaultValue={searchParams.get("institute") || "Kolkata"}
+          />
+        )}
         {searchParams.has("folder_id") && (
           <div className="flex items-center gap-3 justify-end">
             <Button
@@ -137,7 +165,6 @@ export default function ComplianceRecord() {
       </div>
 
       {/* Folders */}
-
       {data?.data.folders.length !== 0 && (
         <div className="space-y-5">
           <h2 className="font-semibold text-sm text-gray-500">Folders</h2>

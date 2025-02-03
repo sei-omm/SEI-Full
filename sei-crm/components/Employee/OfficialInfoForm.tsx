@@ -20,6 +20,7 @@ import { queryClient } from "@/redux/MyProvider";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 
 interface IProps {
+  isNewEmployee: boolean;
   departements?: IDepartment[];
   employeeInfo?: IEmployee;
   employeeID: number | "add-employee" | "add-faculty";
@@ -32,6 +33,7 @@ async function getPayscales() {
 }
 
 export default function OfficialInfoForm({
+  isNewEmployee,
   employeeInfo,
   departements,
   employeeID,
@@ -112,18 +114,23 @@ export default function OfficialInfoForm({
             label="Date Of Joining *"
             date={getDate(new Date(joinDate || ""))}
           />
-          <Input
-            name="login_email"
-            key={"login_email"}
-            // type="email"
-            // label="Employee Login Email"
-            label="Employee ID"
-            placeholder="010125(01)K"
-            defaultValue={employeeInfo?.login_email || ""}
-            // defaultValue={employeeInfo?.joining_date}
-          />
+          {!isNewEmployee ? (
+            <Input
+              name="login_email"
+              key={"login_email"}
+              viewOnly={true}
+              // type="email"
+              // label="Employee Login Email"
+              label="Employee ID"
+              placeholder="SEI01012501K"
+              defaultValue={employeeInfo?.login_email}
+              // defaultValue={employeeInfo?.joining_date}
+            />
+          ) : null}
+
           <Input
             defaultValue={employeeInfo?.login_password || ""}
+            // maxLength={12}
             required
             name="login_password"
             label="Employee Login Password *"
@@ -234,7 +241,6 @@ export default function OfficialInfoForm({
             name="institute"
             defaultValue={employeeInfo?.institute}
           />
-
           <HandleDataSuspense
             error={payscale.error}
             isLoading={payscale.isLoading}
@@ -270,20 +276,22 @@ export default function OfficialInfoForm({
             )}
           </HandleDataSuspense>
 
-          <DropDown
-            onChange={(item) => setProvidedAnyAssets(item.value)}
-            label="Provide Any Assets"
-            options={[
-              { text: "No", value: "No" },
-              { text: "Yes", value: "Yes" },
-            ]}
-            defaultValue={providedAnyAssets}
-          />
+          {!isNewEmployee ? (
+            <DropDown
+              onChange={(item) => setProvidedAnyAssets(item.value)}
+              label="Provide Any Assets"
+              options={[
+                { text: "No", value: "No" },
+                { text: "Yes", value: "Yes" },
+              ]}
+              defaultValue={providedAnyAssets}
+            />
+          ) : null}
         </div>
       </div>
 
       {/* Official Assets Info */}
-      {providedAnyAssets === "Yes" ? (
+      {providedAnyAssets === "Yes" && !isNewEmployee ? (
         <div className="p-10 border card-shdow rounded-3xl space-y-5">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold pb-6">

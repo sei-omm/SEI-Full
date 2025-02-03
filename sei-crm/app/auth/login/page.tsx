@@ -4,7 +4,7 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import { setInfo } from "@/app/utils/saveInfo";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import { ISuccess } from "@/types";
+import { EmployeeLoginInfoType, ISuccess } from "@/types";
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -26,7 +26,7 @@ export default function Login() {
         "Content-Type": "application/json",
       },
       onSuccess: async (
-        data: ISuccess<{ token: string; profile_image: string; name: string }>
+        data: ISuccess<EmployeeLoginInfoType>
       ) => {
         await setInfo("login-token", data.data.token);
         await setInfo(
@@ -34,6 +34,7 @@ export default function Login() {
           JSON.stringify({
             name: data.data.name,
             profile_image: data.data.profile_image,
+            employee_id: data.data.employee_id,
           })
         );
 

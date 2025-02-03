@@ -499,8 +499,8 @@ export default function EmployeeInfo({ employeeID }: IProps) {
               <Input
                 key={"next_to_kin"}
                 name="next_to_kin"
-                label="Next To Kin"
-                placeholder="Type Here Next To Kin"
+                label="Next Of Kin (As Per Aadhar)"
+                placeholder="Type Here Next Of Kin (As Per Aadhar)"
                 defaultValue={employeeInfo?.next_to_kin}
               />
               <Input
@@ -515,6 +515,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
 
           {/* Official Information */}
           <OfficialInfoForm
+            isNewEmployee = {isNewEmployee}
             employeeID={employeeID}
             employeeInstituteRef={employeeInstitute}
             onDateOfJoinChnage={onDateOfJoinChnage}
@@ -678,10 +679,12 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   <div>
                     <Input
                       viewOnly
+                      aria-hidden="true"
+                      step="any"
                       moneyInput={true}
                       required
                       type="number"
-                      // name="gratuity"
+                      name="gratuity"
                       onChange={(e) => handleSalaryInput(e, 7)}
                       label="Gratuity"
                       placeholder="200"
@@ -730,6 +733,46 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Employee Leave Deatils */}
+        <div className="p-10 border card-shdow rounded-3xl">
+          <h2 className="text-2xl font-semibold pb-6">Leave information</h2>
+
+          <div className="flex items-center gap-5 flex-wrap *:flex-grow">
+            <Input
+              viewOnly={!isNewEmployee}
+              key="cl"
+              required
+              name="cl"
+              label="Casual Leave"
+              defaultValue={employeeInfo?.leave_details[0].cl}
+            />
+            <Input
+              viewOnly={!isNewEmployee}
+              key="sl"
+              required
+              name="sl"
+              label="Sick Leave"
+              defaultValue={employeeInfo?.leave_details[0].sl}
+            />
+            <Input
+              viewOnly={!isNewEmployee}
+              key="el"
+              required
+              name="el"
+              label="Earned Leave"
+              defaultValue={employeeInfo?.leave_details[0].el}
+            />
+            <Input
+              viewOnly={!isNewEmployee}
+              key="ml"
+              required
+              name="ml"
+              label="Maternity Leave"
+              defaultValue={employeeInfo?.leave_details[0].ml}
+            />
           </div>
         </div>
 

@@ -7,6 +7,6 @@ export const generateEmployeeId = (isoDate : string, institute : string, dbID : 
   const year = dateObj.getUTCFullYear();
 
   // const formattedDate = `${month}${day}${year}`;
-  return `${month}${day}${year}(${dbID})${institute?.slice(0,1).toUpperCase()}`
+  return `SEI${day}${month}${year % 100}${dbID}${institute?.slice(0,1).toUpperCase()}`
   // console.log(formattedDate); // Output: 01102025
 };

@@ -73,4 +73,4 @@ employeeRoute
   .delete(
     "/faculty-assign-course/:faculty_id/:course_id",
     removeFacultyCourseSubject
-  );
+  )

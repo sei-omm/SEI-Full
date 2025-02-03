@@ -1,5 +1,8 @@
+"use client";
+
 import { InputTypes } from "@/types";
-import { LegacyRef } from "react";
+import { LegacyRef, useState } from "react";
+import { FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
 
 interface IProps extends InputTypes {
   wrapperCss?: string;
@@ -14,6 +17,8 @@ interface IProps extends InputTypes {
 }
 
 export default function Input(props: IProps) {
+  const [passwordVisibility, setPasswordVisibility] = useState(false);
+
   return (
     <div className={props.wrapperCss}>
       {props.hideLabel ? null : (
@@ -35,13 +40,22 @@ export default function Input(props: IProps) {
         </span>
         <input
           // onInput={(e) => props.onDateChange?.(e.currentTarget.value)}
-          type="text"
           {...props}
+          type={props.type === "password" && passwordVisibility ? "text" : props.type}
           ref={props.referal}
           className={`outline-none placeholder:text-gray-400 w-full text-sm ${
             props.className
           } ${props.viewOnly ? "hidden" : "block"}`}
         />
+        {props.type === "password" ? (
+          <div>
+            {passwordVisibility ? (
+              <FaRegEye onClick={() => setPasswordVisibility(false)} size={17} className="cursor-pointer" />
+            ) : (
+              <FaRegEyeSlash onClick={() => setPasswordVisibility(true)} size={18} className="cursor-pointer" />
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );

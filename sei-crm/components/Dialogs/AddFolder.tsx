@@ -21,6 +21,7 @@ export default function AddFolder() {
 
     const reqBody: any = {
       folder_name: formData.get("folder_name"),
+      institute : searchParams.get("institute") || "Kolkata"
     };
 
     if (searchParams.has("folder_id")) {

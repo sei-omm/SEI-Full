@@ -3,6 +3,7 @@ import Joi from "joi";
 export const createdFolderValidator = Joi.object({
   folder_name: Joi.string().required().max(50).label("Folder Name"),
   parent_folder_id: Joi.number().optional().label("Parent Folder ID"),
+  institute : Joi.string().required()
 });
 
 export const renameFolderValidator = Joi.object({
@@ -16,6 +17,7 @@ export const deleteFolderValidator = Joi.object({
 
 export const getFilesAndFoldersValidator = Joi.object({
   folder_id: Joi.number().required().label("Folder Id"),
+  institute : Joi.string().required()
 });
 
 const saveFileInfoToDbValidatorObj = Joi.object({
@@ -24,6 +26,8 @@ const saveFileInfoToDbValidatorObj = Joi.object({
   file_url: Joi.string().required(),
 
   folder_id: Joi.number().optional().label("Folder Id"),
+
+  institute : Joi.string().required()
 });
 
 export const saveFileInfoToDbValidator = Joi.array().items(saveFileInfoToDbValidatorObj).required();

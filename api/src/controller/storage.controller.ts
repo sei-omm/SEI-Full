@@ -79,12 +79,12 @@ export const getFilesAndFolders = asyncErrorHandler(
     if (value.folder_id === -1 || value.folder_id === 0) {
       const response = await transaction([
         {
-          sql: "SELECT * FROM folders WHERE parent_folder_id IS NULL",
-          values: [],
+          sql: "SELECT * FROM folders WHERE parent_folder_id IS NULL AND institute = $1",
+          values: [value.institute],
         },
         {
-          sql: "SELECT * FROM files WHERE folder_id IS NULL",
-          values: [],
+          sql: "SELECT * FROM files WHERE folder_id IS NULL AND institute = $1",
+          values: [value.institute],
         },
       ]);
       return res.status(200).json(
@@ -97,12 +97,12 @@ export const getFilesAndFolders = asyncErrorHandler(
 
     const response = await transaction([
       {
-        sql: "SELECT * FROM folders WHERE parent_folder_id = $1",
-        values: [value.folder_id],
+        sql: "SELECT * FROM folders WHERE parent_folder_id = $1 AND institute = $2",
+        values: [value.folder_id, value.institute],
       },
       {
-        sql: "SELECT * FROM files WHERE folder_id = $1",
-        values: [value.folder_id],
+        sql: "SELECT * FROM files WHERE folder_id = $1 AND institute = $2",
+        values: [value.folder_id, value.institute],
       },
     ]);
     res.status(200).json(
@@ -121,8 +121,8 @@ export const createdFolder = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
 
     await pool.query(
-      `INSERT INTO folders (folder_name, parent_folder_id) VALUES ($1, $2)`,
-      [value.folder_name, value.parent_folder_id]
+      `INSERT INTO folders (folder_name, parent_folder_id, institute) VALUES ($1, $2, $3)`,
+      [value.folder_name, value.parent_folder_id, value.institute]
     );
 
     res.status(201).json(new ApiResponse(201, "New Folder Has Created"));
@@ -168,8 +168,8 @@ export const saveFileInfoToDb = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
 
     await pool.query(
-      `INSERT INTO files (file_name, file_type, file_url, folder_id) VALUES ${
-        sqlPlaceholderCreator(4, value.length).placeholder
+      `INSERT INTO files (file_name, file_type, file_url, folder_id, institute) VALUES ${
+        sqlPlaceholderCreator(5, value.length).placeholder
       }`,
       // [value[0].file_name, value[0].file_type, value[0].file_url, value[0].folder_id]
       value.flatMap((item) => [
@@ -177,6 +177,7 @@ export const saveFileInfoToDb = asyncErrorHandler(
         item.file_type,
         item.file_url,
         item?.folder_id,
+        item.institute
       ])
     );
 
@@ -219,14 +220,17 @@ export const deleteFile = asyncErrorHandler(
 );
 
 export const searchFile = asyncErrorHandler(async (req, res) => {
+  const institute = req.query.institute;
+  if(!institute || institute === "") throw new ErrorHandler(400, "Institute Is Required");
+
   const { LIMIT, OFFSET } = parsePagination(req);
 
   const { rows } = await pool.query(
     `
-    SELECT * FROM files WHERE file_name ILIKE '%' || $1 || '%'
+    SELECT * FROM files WHERE file_name ILIKE '%' || $1 || '%' AND institute = $2
     LIMIT ${LIMIT} OFFSET ${OFFSET}
     `,
-    [req.query.q]
+    [req.query.q, institute]
   );
 
   res

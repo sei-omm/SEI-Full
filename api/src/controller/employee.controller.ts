@@ -231,7 +231,24 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
                   SELECT JSON_AGG(aae)
                   FROM assign_assets_employee aae
                   WHERE aae.to_employee_id = e.id
-              ), '[]') AS assigned_assets
+              ), '[]') AS assigned_assets,
+          (
+            SELECT 
+              json_agg(el.*) 
+            FROM employee_leave el WHERE el.employee_id = e.id AND 
+            el.financial_year_date >= 
+              CASE 
+                  WHEN EXTRACT(MONTH FROM CURRENT_DATE) < 4 
+                  THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT - 1, 4, 1) 
+                  ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT, 4, 1) 
+              END
+            AND el.financial_year_date < 
+              CASE 
+                  WHEN EXTRACT(MONTH FROM CURRENT_DATE) < 4 
+                  THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT, 4, 1) 
+                  ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT + 1, 4, 1) 
+              END
+          ) AS leave_details
         FROM 
             employee e
         LEFT JOIN 
@@ -248,8 +265,7 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
         LEFT JOIN faculty_with_course_subject AS fwcs
         ON fwcs.faculty_id = e.id
 
-        WHERE 
-            e.id = $2
+        WHERE e.id = $2
 
         GROUP BY e.id, d.name, a.status
         ORDER BY 
@@ -279,7 +295,7 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
     // );
 
     // const newSalary = totalSalary - deductions;
-    
+
     const workingTenure = calculateYearsDifference(
       rows[0].joining_date || "",
       new Date().toISOString().split("T")[0]
@@ -317,6 +333,14 @@ export const addNewEmployee = asyncErrorHandler(
         doc_name = EXCLUDED.doc_name
     `;
 
+    const cl = req.body.cl;
+    const sl = req.body.sl;
+    const el = req.body.el;
+    const ml = req.body.ml;
+    delete req.body.cl;
+    delete req.body.sl;
+    delete req.body.el;
+    delete req.body.ml;
     const { columns, params, values } = objectToSqlInsert(req.body);
     const sql = `INSERT INTO ${table_name} ${columns} VALUES ${params} RETURNING id`;
 
@@ -355,6 +379,13 @@ export const addNewEmployee = asyncErrorHandler(
 
         await client.query(sqlForEmployeeDocsInfo, valuesForEmployeeDocsInfo);
       }
+
+      await pool.query(
+        `
+        INSERT INTO employee_leave (employee_id, cl, sl, el, ml) VALUES ($1, $2, $3, $4, $5)
+        `,
+        [employeeGeneratedId, cl, sl, el, ml]
+      );
 
       await client.query("COMMIT");
       client.release();
@@ -426,6 +457,15 @@ export const updateEmployee = asyncErrorHandler(
       );
     }
 
+    // const cl = req.body.cl;
+    // const sl = req.body.sl;
+    // const el = req.body.el;
+    // const ml = req.body.ml;
+    delete req.body.cl;
+    delete req.body.sl;
+    delete req.body.el;
+    delete req.body.ml;
+
     const {
       keys,
       values: valuesForEmployeeInfo,
@@ -449,6 +489,11 @@ export const updateEmployee = asyncErrorHandler(
         values: valuesForEmployeeDocsInfo,
       });
     }
+
+    // trnsationList.push({
+    //   sql: `UPDATE employee_leave SET cl = $1, sl = $2, el = $3, ml = $4 WHERE employee_id = $5`,
+    //   values: [cl, sl, el, ml, id],
+    // });
 
     await transaction(trnsationList);
 
@@ -567,6 +612,7 @@ export const loginEmployee = asyncErrorHandler(
         token: accessToken,
         profile_image: rows[0].profile_image,
         name: rows[0].name,
+        employee_id: rows[0].id,
       })
     );
   }
