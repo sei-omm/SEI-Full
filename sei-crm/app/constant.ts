@@ -149,8 +149,8 @@ export const PAYMENT_MODES = [
 ];
 
 export const SEI_LEAVES = [
-  { name: "Casual Leave", value: 10 },
-  { name: "Sick Leave", value: 10 },
-  { name: "Earned Leave", value: 0 },
-  { name: "Maternity Leave", value: 84 },
+  { id: "cl", name: "Casual Leave", value: 10 },
+  { id: "sl", name: "Sick Leave", value: 10 },
+  { id: "el", name: "Earned Leave", value: 0 },
+  { id: "ml", name: "Maternity Leave", value: 84 },
 ];

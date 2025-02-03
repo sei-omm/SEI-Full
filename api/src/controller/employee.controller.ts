@@ -235,19 +235,7 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
           (
             SELECT 
               json_agg(el.*) 
-            FROM employee_leave el WHERE el.employee_id = e.id AND 
-            el.financial_year_date >= 
-              CASE 
-                  WHEN EXTRACT(MONTH FROM CURRENT_DATE) < 4 
-                  THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT - 1, 4, 1) 
-                  ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT, 4, 1) 
-              END
-            AND el.financial_year_date < 
-              CASE 
-                  WHEN EXTRACT(MONTH FROM CURRENT_DATE) < 4 
-                  THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT, 4, 1) 
-                  ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT + 1, 4, 1) 
-              END
+            FROM employee_leave el WHERE el.employee_id = e.id AND el.financial_year_date >= get_financial_year_start()
           ) AS leave_details
         FROM 
             employee e

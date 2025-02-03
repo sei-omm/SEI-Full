@@ -60,7 +60,7 @@ const sidebarOptions = [
         id: "1-4",
         icon: <GoDiscussionOutdated />,
         name: "Leave Management",
-        slug: "/dashboard/hr-module/leave-management",
+        slug: "/dashboard/hr-module/leave-management?tab=details",
       },
       {
         id: "1-5",

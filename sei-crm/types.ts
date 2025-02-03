@@ -170,6 +170,7 @@ export interface ILeave {
   leave_to: string;
   leave_reason: string;
   leave_status: ILeaveStatus;
+  leave_type : string;
 }
 
 export type InputTypes = React.DetailedHTMLProps<

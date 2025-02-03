@@ -10,8 +10,24 @@ import { getAuthToken } from "@/app/utils/getAuthToken";
 import { queryClient } from "@/redux/MyProvider";
 import DropDown from "../DropDown";
 import { SEI_LEAVES } from "@/app/constant";
+// import { TEmployeeLeave } from "@/types";
 
 export default function AddLeaveRequest() {
+  // const { extraValue } = useSelector((state: RootState) => state.dialogs);
+  // const extraData = extraValue as TEmployeeLeave[] | undefined;
+
+  // const [leavesDropdown, setLeavesDropdown] = useState<
+  //   { id: string; name: string; value: number }[]
+  // >(() => {
+  //   const newValues : any[] = [];
+
+  //   leavesDropdown.forEach(item => {
+  //     if(extraData?.[0][item.id as any])
+  //   })
+
+  //   return [];
+  // });
+
   const { isLoading, mutate } = useDoMutation();
   const dispatch = useDispatch();
 
@@ -39,10 +55,11 @@ export default function AddLeaveRequest() {
           <DateInput required name="leave_to" label="To *" />
         </div>
         <DropDown
+          name="leave_type"
           label="Leave Type *"
           options={SEI_LEAVES.map((item) => ({
             text: item.name,
-            value: item.name,
+            value: item.id,
           }))}
         />
         <TextArea

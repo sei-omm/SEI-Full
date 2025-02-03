@@ -5,6 +5,8 @@ export const createLeaveRequestValidator = Joi.object({
   leave_from: Joi.date().required(),
   leave_to: Joi.date().required(),
   leave_reason: Joi.string().required(),
+
+  leave_type: Joi.string().valid("cl", "sl", "el", "ml").required(),
 });
 
 export const updateLeaveStatusValidator = Joi.object({
@@ -13,4 +15,10 @@ export const updateLeaveStatusValidator = Joi.object({
   leave_from: Joi.date().required(),
   leave_to: Joi.date().required(),
   leave_status: Joi.string().valid("pending", "success", "decline").required(),
+
+  leave_type: Joi.string().valid("cl", "sl", "el", "ml").required(),
+});
+
+export const VEachEmployeLeaveDetails = Joi.object({
+  institute: Joi.string().required(),
 });

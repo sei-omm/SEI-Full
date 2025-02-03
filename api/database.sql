@@ -773,16 +773,27 @@ ALTER TABLE appraisal RENAME COLUMN appraisal_options TO appraisal_options_hod;
 DELETE FROM folders;
 DELETE FROM files;
 
-INSERT INTO folders (folder_name) 
+INSERT INTO folders (folder_name, institute) 
 VALUES 
-    ('Employee Personnel Files'),
-    ('Recruitment Records Folder'),
-    ('Training & Development Files'),
-    ('Performance Management Folder'),
-    ('Attendance & Leave Records Folder'),
-    ('Payroll & Benefits Records Folder'),
-    ('Disciplinary Actions Folder'),
-    ('Exit Records Folder');
+    ('Employee Personnel Files', 'Faridabad'),
+    ('Recruitment Records Folder', 'Faridabad'),
+    ('Training & Development Files', 'Faridabad'),
+    ('Performance Management Folder', 'Faridabad'),
+    ('Attendance & Leave Records Folder', 'Faridabad'),
+    ('Payroll & Benefits Records Folder', 'Faridabad'),
+    ('Disciplinary Actions Folder', 'Faridabad'),
+    ('Exit Records Folder', 'Faridabad');
+
+INSERT INTO folders (folder_name, institute) 
+VALUES 
+    ('Employee Personnel Files', 'Kolkata'),
+    ('Recruitment Records Folder', 'Kolkata'),
+    ('Training & Development Files', 'Kolkata'),
+    ('Performance Management Folder', 'Kolkata'),
+    ('Attendance & Leave Records Folder', 'Kolkata'),
+    ('Payroll & Benefits Records Folder', 'Kolkata'),
+    ('Disciplinary Actions Folder', 'Kolkata'),
+    ('Exit Records Folder', 'Kolkata');
 
 ALTER TABLE employee
 ADD COLUMN next_to_kin VARCHAR(200),
@@ -851,6 +862,19 @@ CREATE TABLE employee_leave (
 -- Then alter the table to add a default
 ALTER TABLE employee_leave 
 ALTER COLUMN financial_year_date SET DEFAULT get_financial_year_start();
+
+INSERT INTO employee_leave (employee_id, cl, sl, el, ml)
+SELECT id, 10, 10, 0, 84 
+FROM employee
+ON CONFLICT (employee_id, financial_year_date) DO NOTHING;
+
+-- NEW DB 03 Feb 2025
+DELETE FROM leave;
+DELETE FROM attendance;
+
+ALTER TABLE leave
+ADD COLUMN leave_type VARCHAR(5) NOT NULL;
+
 
 -- fro clering all table of db
 -- DO $$ 

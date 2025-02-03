@@ -48,6 +48,9 @@ export default function LeaveRequest() {
                   setDialog({
                     dialogId: "add-leave-request",
                     type: "OPEN",
+                    extraValue : {
+                      leave_details : leaveData?.data.leave_details
+                    }
                   })
                 )
               }
@@ -90,6 +93,7 @@ export default function LeaveRequest() {
           </ul>
 
           <HandleSuspence
+            noDataMsg="No Leave Request Avilable"
             isLoading={isFetching}
             dataLength={leaveData?.data.leave_request_list.length}
             error={error}

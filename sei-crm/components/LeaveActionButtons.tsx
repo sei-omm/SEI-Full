@@ -1,65 +1,64 @@
 "use client";
 
 import { MdClose, MdDone } from "react-icons/md";
-import { setStatus } from "@/app/actions/leaveActions";
-import { useEffect, useState, useTransition } from "react";
 import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
-import { toast } from "react-toastify";
-// import { AxiosError } from "axios";
 import { ILeave } from "@/types";
+import { useDoMutation } from "@/app/utils/useDoMutation";
+import { useRouter } from "next/navigation";
+
 
 interface IProps {
-  leaveINFO : ILeave
+  leaveINFO: ILeave;
 }
 
 export default function LeaveActionButtons({ leaveINFO }: IProps) {
-  const [isPending, startTransition] = useTransition();
-  const [errorMsg, setErrMsg] = useState<string | undefined>(undefined);
   const { openDialog, closeDialog } = useLoadingDialog();
+  const route = useRouter();
 
-  function handleDoneButton() {
-    openDialog();
-    startTransition(async () => {
-      const respones = await setStatus(leaveINFO.id, "success", leaveINFO.employee_id, leaveINFO.leave_from, leaveINFO.leave_to);
-      if (!respones.success) {
-        setErrMsg(respones.message);
-      }
+  const { mutate } = useDoMutation(
+    () => {},
+    () => {
       closeDialog();
-    });
-  }
-
-  function handleDelineButton() {
-    openDialog();
-    startTransition(async () => {
-      const respones = await setStatus(leaveINFO.id, "decline", leaveINFO.employee_id, leaveINFO.leave_from, leaveINFO.leave_to);
-      if (!respones.success) {
-        setErrMsg(respones.message);
-      }
-      closeDialog();
-    });
-  }
-
-  useEffect(() => {
-    if (errorMsg != undefined) {
-      toast.error(errorMsg);
     }
-  }, [errorMsg]);
+  );
+
+  function handleActionBtn(status: "success" | "decline") {
+    openDialog();
+    mutate({
+      apiPath: "/hr/leave",
+      method: "patch",
+      formData: {
+        leave_status: status,
+        employee_id: leaveINFO.employee_id,
+        leave_from: leaveINFO.leave_from,
+        leave_to: leaveINFO.leave_to,
+        leave_type: leaveINFO.leave_type,
+      },
+      id: leaveINFO.id,
+      onSuccess() {
+        closeDialog();
+        route.push(`/dashboard/hr-module/leave-management?tab=request&status=${status}`)
+      },
+    });
+  }
 
   return (
     <div className="flex items-center gap-3 *:cursor-pointer">
-      <div
-        title="Approve Request"
-        className="size-5 shadow-2xl border-gray-700 border bg-green-600 flex-center rounded-full text-white"
-      >
-        <MdDone onClick={handleDoneButton} />
-        <span className="hidden">{isPending}</span>
-      </div>
-      <div
-        title="Disapprove Request"
-        className="size-5 shadow-2xl bg-red-600 border-gray-700 border flex-center rounded-full text-white"
-      >
-        <MdClose onClick={handleDelineButton} />
-      </div>
+      {leaveINFO.leave_status === "success" ? (
+        <div
+          title="Disapprove Request"
+          className="size-5 shadow-2xl bg-red-600 border-gray-700 border flex-center rounded-full text-white"
+        >
+          <MdClose onClick={() => handleActionBtn("decline")} />
+        </div>
+      ) : (
+        <div
+          title="Approve Request"
+          className="size-5 shadow-2xl border-gray-700 border bg-green-600 flex-center rounded-full text-white"
+        >
+          <MdDone onClick={() => handleActionBtn("success")} />
+        </div>
+      )}
     </div>
   );
 }

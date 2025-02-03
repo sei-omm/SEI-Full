@@ -9,6 +9,7 @@ import {
   updateDepartment,
 } from "../controller/department.controllers";
 import {
+  getEachEmployeLeaveDetails,
   getRequestedLeaveLists,
   updateLeaveStatus,
 } from "../controller/leave.controller";
@@ -50,6 +51,7 @@ hrRouter
   .delete("/payscale/:item_id", deletePayscale)
 
   .get("/leave", roles(["Admin"]), getRequestedLeaveLists)
+  .get("/leave/employees", getEachEmployeLeaveDetails)
   // .post("/leave", createLeaveRequest) //this will done by employee
   .patch("/leave/:id", updateLeaveStatus)
 

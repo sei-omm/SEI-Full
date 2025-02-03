@@ -39,7 +39,9 @@ export default async function LeaveRequests({ searchParams }: IProps) {
 
   const urlSearchParams = new URLSearchParams(searchParams);
   const response = await fetch(
-    `${BASE_API}/hr/leave?${urlSearchParams.toString()}`,
+    `${BASE_API}/hr/leave?institute=${
+      urlSearchParams.get("institute") || "Kolkata"
+    }`,
     {
       cache: "no-store",
       headers: {
@@ -63,7 +65,7 @@ export default async function LeaveRequests({ searchParams }: IProps) {
 
   return (
     <>
-      <h2 className="text-xl font-semibold py-5">Leave Requests</h2>
+      <h2 className="text-xl font-semibold">Leave Requests</h2>
       <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black card-shdow rounded-xl">
         <table className="min-w-max w-full table-auto">
           <thead className="uppercase w-full border-b border-gray-100">
