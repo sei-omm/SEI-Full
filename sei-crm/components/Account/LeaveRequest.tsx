@@ -9,16 +9,10 @@ import { useQuery } from "react-query";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
 import HandleSuspence from "../HandleSuspence";
-import { ILeave, ISuccess, TEmployeeLeave } from "@/types";
+import { ILeave, ISuccess, TEmployeeLeave, TLeaveDetails } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 
-type TLeaveDetails = {
-  type: string;
-  label: string;
-  value: number;
-  status: string;
-};
 
 export default function LeaveRequest() {
   const dispatch = useDispatch();
@@ -46,19 +40,19 @@ export default function LeaveRequest() {
     onSuccess(data) {
       const leaveArray = [
         {
-          type: "casual",
+          type: "cl",
           label: "Casual Leave",
           value: data.data.leave_details[0].cl,
           status: "Remaining",
         },
         {
-          type: "sick",
+          type: "sl",
           label: "Sick Leave",
           value: data.data.leave_details[0].sl,
           status: "Remaining",
         },
         {
-          type: "earn",
+          type: "el",
           label: "Earned Leave",
           value: data.data.leave_details[0].el,
           status: "Remaining",
@@ -67,7 +61,7 @@ export default function LeaveRequest() {
 
       if (data.data.leave_details[0]?.ml !== null) {
         leaveArray.push({
-          type: "maternity",
+          type: "ml",
           label: "Maternity Leave",
           value: data.data.leave_details[0].ml,
           status: "Remaining",
@@ -179,7 +173,7 @@ export default function LeaveRequest() {
                     dialogId: "add-leave-request",
                     type: "OPEN",
                     extraValue: {
-                      leave_details: leaveData?.data.leave_details,
+                      leave_details: leaves,
                     },
                   })
                 )

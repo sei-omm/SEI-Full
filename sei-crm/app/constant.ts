@@ -147,10 +147,3 @@ export const PAYMENT_MODES = [
   { id: 4, text: "SWIPE CARD" },
   { id: 5, text: "ONLINE" },
 ];
-
-export const SEI_LEAVES = [
-  { id: "cl", name: "Casual Leave", value: 10 },
-  { id: "sl", name: "Sick Leave", value: 10 },
-  { id: "el", name: "Earned Leave", value: 0 },
-  { id: "ml", name: "Maternity Leave", value: 84 },
-];

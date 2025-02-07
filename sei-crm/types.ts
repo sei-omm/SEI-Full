@@ -80,6 +80,14 @@ export type TEmployeeLeave = {
   ml: number | null;
   financial_year_date: string;
 };
+
+export type TLeaveDetails = {
+  type: string;
+  label: string;
+  value: number;
+  status: string;
+};
+
 export type EmployeeType = "Office Staff" | "Faculty";
 export interface IEmployee {
   id: number;
