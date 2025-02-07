@@ -42,8 +42,9 @@ export default function LeaveRequest() {
           },
         })
       ).data,
+    refetchOnMount: true,
     onSuccess(data) {
-      setLeaves([
+      const leaveArray = [
         {
           type: "casual",
           label: "Casual Leave",
@@ -62,13 +63,18 @@ export default function LeaveRequest() {
           value: data.data.leave_details[0].el,
           status: "Remaining",
         },
-        {
+      ];
+
+      if (data.data.leave_details[0]?.ml !== null) {
+        leaveArray.push({
           type: "maternity",
           label: "Maternity Leave",
-          value: data.data.leave_details[0]?.ml,
+          value: data.data.leave_details[0].ml,
           status: "Remaining",
-        },
-      ]);
+        });
+      }
+
+      setLeaves(leaveArray);
     },
   });
 

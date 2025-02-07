@@ -63,9 +63,19 @@ export const getEmployeeLeaveRequest = asyncErrorHandler(
       {
         sql: `
           SELECT 
-            *
-          FROM employee_leave WHERE employee_id = $1
-          AND financial_year_date >= get_financial_year_start()
+            el.employee_id,
+            el.cl,
+            el.sl,
+            el.el,
+            (CASE WHEN e.gender = 'Male' THEN NULL ELSE el.ml END) AS ml,
+            el.financial_year_date
+          FROM employee_leave el
+
+          LEFT JOIN employee e
+          ON e.id = el.employee_id
+
+          WHERE el.employee_id = $1
+          AND el.financial_year_date >= get_financial_year_start()
 
         `,
         values: [res.locals?.employee_id],

@@ -77,7 +77,7 @@ export type TEmployeeLeave = {
   cl: number;
   sl: number;
   el: number;
-  ml: number;
+  ml: number | null;
   financial_year_date: string;
 };
 export type EmployeeType = "Office Staff" | "Faculty";
