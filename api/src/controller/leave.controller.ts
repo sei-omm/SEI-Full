@@ -139,7 +139,7 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
         );
 
       await client.query(
-        `UPDATE employee_leave SET ${leave_type} = ${leave_type} - 1 WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start() RETURNING ${leave_type}`,
+        `UPDATE employee_leave SET ${leave_type} = ${leave_type} - ${total_leave_days} WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start() RETURNING ${leave_type}`,
         [res.locals?.employee_id]
       );
 
@@ -202,7 +202,9 @@ export const updateLeaveStatus = asyncErrorHandler(
             .join(", ")};
         `;
 
-      sql3 = `UPDATE employee_leave SET ${leave_type} = ${leave_type} - 1 WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start() AND ${leave_type} > 0`;
+      const total_leave_days = countDays(value.leave_from, value.leave_to);
+
+      sql3 = `UPDATE employee_leave SET ${leave_type} = ${leave_type} - ${total_leave_days} WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start() AND ${leave_type} > 0`;
 
       const client = await pool.connect();
 
@@ -234,7 +236,8 @@ export const updateLeaveStatus = asyncErrorHandler(
     } else {
       sql1 = `DELETE FROM attendance WHERE employee_id = $1 AND date BETWEEN $2 AND $3`;
       sql2 = `UPDATE ${table_name} SET leave_status = $1 WHERE id = $2`;
-      sql3 = `UPDATE employee_leave SET ${leave_type} = ${leave_type} + 1 WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start()`;
+      const total_leave_days = countDays(value.leave_from, value.leave_to);
+      sql3 = `UPDATE employee_leave SET ${leave_type} = ${leave_type} + ${total_leave_days} WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start()`;
 
       await transaction([
         {
@@ -308,9 +311,11 @@ export const removeLeaveRequestRow = asyncErrorHandler(async (req, res) => {
 
     const leave_type = rows[0].leave_type;
 
+    const total_leave_days = countDays(rows[0].leave_from, rows[0].leave_to);
+
     if (rows[0].leave_status !== "decline") {
       await client.query(
-        `UPDATE employee_leave SET ${leave_type} = ${leave_type} + 1 WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start()`,
+        `UPDATE employee_leave SET ${leave_type} = ${leave_type} + ${total_leave_days} WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start()`,
         [rows[0].employee_id]
       );
     }
