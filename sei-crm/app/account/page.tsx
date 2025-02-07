@@ -119,7 +119,7 @@ export default function Account() {
                 slug: "/account/?tab=payslip",
               },
               {
-                name: "Leave Request",
+                name: "Leave",
                 slug: "/account/?tab=leave-request",
               },
               {

@@ -15,6 +15,7 @@ export const updateLeaveStatusValidator = Joi.object({
   leave_from: Joi.date().required(),
   leave_to: Joi.date().required(),
   leave_status: Joi.string().valid("pending", "success", "decline").required(),
+  previous_status : Joi.string().valid("pending", "success", "decline").required(),
 
   leave_type: Joi.string().valid("cl", "sl", "el", "ml").required(),
 });

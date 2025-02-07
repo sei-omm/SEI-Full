@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { InfoLayout } from "./InfoLayout";
 import Button from "../Button";
 import { IoIosAdd } from "react-icons/io";
@@ -12,10 +12,18 @@ import HandleSuspence from "../HandleSuspence";
 import { ILeave, ISuccess, TEmployeeLeave } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { getAuthToken } from "@/app/utils/getAuthToken";
-import { FaCircleNotch } from "react-icons/fa6";
+
+type TLeaveDetails = {
+  type: string;
+  label: string;
+  value: number;
+  status: string;
+};
 
 export default function LeaveRequest() {
   const dispatch = useDispatch();
+
+  const [leaves, setLeaves] = useState<TLeaveDetails[]>([]);
 
   const {
     data: leaveData,
@@ -34,23 +42,139 @@ export default function LeaveRequest() {
           },
         })
       ).data,
+    onSuccess(data) {
+      setLeaves([
+        {
+          type: "casual",
+          label: "Casual Leave",
+          value: data.data.leave_details[0].cl,
+          status: "Remaining",
+        },
+        {
+          type: "sick",
+          label: "Sick Leave",
+          value: data.data.leave_details[0].sl,
+          status: "Remaining",
+        },
+        {
+          type: "earn",
+          label: "Earned Leave",
+          value: data.data.leave_details[0].el,
+          status: "Remaining",
+        },
+        {
+          type: "maternity",
+          label: "Maternity Leave",
+          value: data.data.leave_details[0]?.ml,
+          status: "Remaining",
+        },
+      ]);
+    },
   });
+
+  const maxValue = 10;
+
+  const getColor = (type: string, value: number) => {
+    if (value <= 2) {
+      return "bg-red-500";
+    } else {
+      return "bg-green-500";
+    }
+
+    // switch (type) {
+    //   case "casual":
+    //     return "bg-green-500";
+    //   case "sick":
+    //     return "bg-red-500";
+    //   case "earn":
+    //     return "bg-yellow-500";
+    //   default:
+    //     return "bg-gray-500";
+    // }
+  };
 
   return (
     <>
       <InfoLayout>
         <div className="relative pb-6 space-y-5">
-          <div>
-            <h2 className="text-2xl font-semibold">Leave Requests</h2>
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-gray-500">
+              Pending Leave Requests
+            </h2>
+            {/* <ul className="flex items-center justify-center gap-4 flex-wrap">
+              <li className="text-sm card-shdow border p-2">
+                <MdOutlinePendingActions />
+                <p>{leaveData?.data.leave_details[0]?.cl}</p>
+                <p className="font-semibold">Casual Leave</p>
+              </li>
+              <li className="flex items-center  gap-2 text-sm">
+                <FaCircleNotch />
+                <span>
+                  <span className="font-semibold">Sick Leave</span> :{" "}
+                  {leaveData?.data.leave_details[0]?.sl}
+                </span>
+              </li>
+              <li className="flex items-center  gap-2 text-sm">
+                <FaCircleNotch />
+                <span>
+                  <span className="font-semibold">Earned Leave</span> :{" "}
+                  {leaveData?.data.leave_details[0]?.el}
+                </span>
+              </li>
+              <li className="flex items-center  gap-2 text-sm">
+                <FaCircleNotch />
+                <span>
+                  <span className="font-semibold">Maternity Leave</span> :{" "}
+                  {leaveData?.data.leave_details[0]?.ml}
+                </span>
+              </li>
+            </ul> */}
+
+            <div className="bg-white rounded-lg shadow-md flex items-start p-4 *:basis-80 *:flex-grow flex-wrap gap-10">
+              {leaves.map((leaf) => (
+                <div key={leaf.type} className="mb-5 last:mb-0">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-2xl font-bold text-gray-800">
+                      <span>{leaf.value.toString().padStart(2, "0")}</span>
+                      <span className="text-xs font-light ml-1">Days</span>
+                    </span>
+                    <div className="text-center">
+                      <h3 className="font-semibold text-gray-700">
+                        {leaf.label}
+                      </h3>
+                      <span className="text-sm text-gray-500 capitalize">
+                        {leaf.status}
+                      </span>
+                    </div>
+                    <div className="w-8"></div>
+                  </div>
+                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${getColor(
+                        leaf.type,
+                        leaf.value
+                      )} transition-all duration-500`}
+                      style={{ width: `${(leaf.value / maxValue) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative">
+            <h2 className="text-sm font-semibold text-gray-500">
+              Leave Requests History
+            </h2>
             <Button
               onClick={() =>
                 dispatch(
                   setDialog({
                     dialogId: "add-leave-request",
                     type: "OPEN",
-                    extraValue : {
-                      leave_details : leaveData?.data.leave_details
-                    }
+                    extraValue: {
+                      leave_details: leaveData?.data.leave_details,
+                    },
                   })
                 )
               }
@@ -60,37 +184,6 @@ export default function LeaveRequest() {
               Add Leave Request
             </Button>
           </div>
-
-          <ul className="flex items-center justify-center gap-4 flex-wrap">
-            <li className="flex items-center  gap-2 text-sm">
-              <FaCircleNotch />
-              <span>
-                <span className="font-semibold">Casual Leave</span> :{" "}
-                {leaveData?.data.leave_details[0]?.cl}
-              </span>
-            </li>
-            <li className="flex items-center  gap-2 text-sm">
-              <FaCircleNotch />
-              <span>
-                <span className="font-semibold">Sick Leave</span> :{" "}
-                {leaveData?.data.leave_details[0]?.sl}
-              </span>
-            </li>
-            <li className="flex items-center  gap-2 text-sm">
-              <FaCircleNotch />
-              <span>
-                <span className="font-semibold">Earned Leave</span> :{" "}
-                {leaveData?.data.leave_details[0]?.el}
-              </span>
-            </li>
-            <li className="flex items-center  gap-2 text-sm">
-              <FaCircleNotch />
-              <span>
-                <span className="font-semibold">Maternity Leave</span> :{" "}
-                {leaveData?.data.leave_details[0]?.ml}
-              </span>
-            </li>
-          </ul>
 
           <HandleSuspence
             noDataMsg="No Leave Request Avilable"

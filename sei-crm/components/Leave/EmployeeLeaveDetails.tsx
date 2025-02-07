@@ -51,6 +51,7 @@ export default function EmployeeLeaveDetails() {
           }`
         )
       ).data,
+    refetchOnMount: true,
 
     onSuccess(data) {
       setTableDatas((preState) => ({

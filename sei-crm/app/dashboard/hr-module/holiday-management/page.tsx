@@ -8,6 +8,7 @@ import ChooseFileInput from "@/components/ChooseFileInput";
 import DropDown from "@/components/DropDown";
 import { ISuccess } from "@/types";
 import axios from "axios";
+import Link from "next/link";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import * as XLSX from "xlsx";
@@ -134,44 +135,53 @@ const HolidayManagement = () => {
   });
   return (
     <div className="w-full space-y-10">
-      <div className="flex items-end gap-5 w-full">
-        <div className="flex-grow flex items-center gap-4 *:flex-grow">
-          <div>
-            <ChooseFileInput
-              accept=".xls, .xlsx"
-              id="excel_file"
-              onFilePicked={(file) => handleFileUpload(file)}
-              label="Choose Holiday Management Excel File"
-              fileName="Choose Holiday Management Excel File"
-              onFileDelete={() => {
-                setExcelData([]);
-              }}
-              disableUpload
-            />
+      <div>
+        <div className="flex items-end gap-5 w-full">
+          <div className="flex-grow flex items-center gap-4 *:flex-grow">
+            <div>
+              <ChooseFileInput
+                accept=".xls, .xlsx"
+                id="excel_file"
+                onFilePicked={(file) => handleFileUpload(file)}
+                label="Choose Holiday Management Excel File"
+                fileName="Choose Holiday Management Excel File"
+                onFileDelete={() => {
+                  setExcelData([]);
+                }}
+                disableUpload
+              />
+            </div>
+            <div className="mt-2">
+              <DropDown
+                onChange={(option) => {
+                  setInstitute(option.value);
+                }}
+                name="institute"
+                label="Choose Campus"
+                options={[
+                  { text: "Kolkata", value: "Kolkata" },
+                  { text: "Faridabad", value: "Faridabad" },
+                ]}
+              />
+            </div>
           </div>
-          <div className="mt-2">
-            <DropDown
-              onChange={(option) => {
-                setInstitute(option.value);
-              }}
-              name="institute"
-              label="Choose Campus"
-              options={[
-                { text: "Kolkata", value: "Kolkata" },
-                { text: "Faridabad", value: "Faridabad" },
-              ]}
-            />
+          <div className="flex-grow-0 pb-1">
+            <Button
+              disabled={isLoading}
+              loading={isLoading}
+              onClick={handleUploadBtn}
+            >
+              Upload
+            </Button>
           </div>
         </div>
-        <div className="flex-grow-0 pb-1">
-          <Button
-            disabled={isLoading}
-            loading={isLoading}
-            onClick={handleUploadBtn}
-          >
-            Upload
-          </Button>
-        </div>
+        <Link
+          className="text-sm text-blue-500 font-medium cursor-pointer"
+          href="/HolidayManagement.xlsx"
+          target="__blank"
+        >
+          Download Excel Format
+        </Link>
       </div>
       <div className="flex items-start gap-5 *:flex-grow">
         <div className="space-y-5">

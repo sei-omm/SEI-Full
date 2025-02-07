@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import DropDown from "../DropDown";
 import { IDepartment, IEmployee } from "@/types";
 import { employeeAuthority } from "@/app/constant";
@@ -11,14 +11,16 @@ interface IProps {
 export default function EAuthorityInfo({ departements, employeeInfo }: IProps) {
   const [currentDepartment, setCurrentDepartment] = useState<
     IDepartment | undefined
-  >(undefined);
+  >(() => {
+    if (departements) {
+      const singleDepartmentInfo = departements?.find(
+        (eDepartment) => eDepartment.id === employeeInfo?.department_id
+      );
 
-  useEffect(() => {
-    const singleDepartmentInfo = departements?.find(
-      (eDepartment) => eDepartment.id === employeeInfo?.department_id
-    );
-    setCurrentDepartment(singleDepartmentInfo);
-  }, [employeeInfo]);
+      if (singleDepartmentInfo) return singleDepartmentInfo;
+      return departements[0];
+    }
+  });
 
   return (
     <>

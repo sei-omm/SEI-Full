@@ -340,7 +340,7 @@ export const addNewEmployee = asyncErrorHandler(
       const { rows } = await client.query(sql, values);
       const employeeGeneratedId = rows[0].id;
 
-      //it's a bad thing to do don't do it. i don't want to run insert query mannualy because of to many column. i don't have time
+      //it's a bad thing to do don't do it. i don't want to run insert query mannualy.
       if (!req.body.login_email || req.body.login_email === "") {
         const employeeID = generateEmployeeId(
           req.body.joining_date,
@@ -570,11 +570,13 @@ export const loginEmployee = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
 
     const { rowCount, rows } = await pool.query(
-      `SELECT login_email, id, institute, login_password, employee_role, name, profile_image FROM ${table_name} WHERE login_email = $1`,
+      `SELECT login_email, id, institute, login_password, employee_role, name, profile_image, is_active FROM ${table_name} WHERE login_email = $1`,
       [value.login_email]
     );
 
     if (rowCount === 0) throw new ErrorHandler(404, "User doesn't found");
+
+    if (!rows[0].is_active) throw new ErrorHandler(404, "Account Has Disabled");
 
     const isMatch = await bcrypt.compare(
       value.login_password,

@@ -22,7 +22,8 @@ export const getRequestedLeaveLists = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
 
     const { LIMIT, OFFSET } = parsePagination(req);
-    const { rows } = await pool.query(`
+    const { rows } = await pool.query(
+      `
       SELECT l.*, e.name AS employee_name, e.profile_image AS employee_profile_image FROM ${table_name} AS l
       JOIN employee AS e
       ON l.employee_id = e.id
@@ -32,7 +33,9 @@ export const getRequestedLeaveLists = asyncErrorHandler(
       ORDER BY id DESC
 
       LIMIT ${LIMIT} OFFSET ${OFFSET}
-    `, [value.institute]);
+    `,
+      [value.institute]
+    );
     res.status(200).json(new ApiResponse(200, "All Leave Requests", rows));
   }
 );
@@ -59,8 +62,11 @@ export const getEmployeeLeaveRequest = asyncErrorHandler(
       },
       {
         sql: `
-        SELECT * FROM employee_leave WHERE employee_id = $1
-        AND financial_year_date >= get_financial_year_start()
+          SELECT 
+            *
+          FROM employee_leave WHERE employee_id = $1
+          AND financial_year_date >= get_financial_year_start()
+
         `,
         values: [res.locals?.employee_id],
       },
@@ -118,9 +124,23 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
         );
       }
 
-      await client.query(
-        `INSERT INTO ${table_name} ${columns} VALUES ${params}`,
+      const { rowCount: totalRowCreated } = await client.query(
+        `
+        INSERT INTO ${table_name} ${columns} VALUES ${params}
+        ON CONFLICT DO NOTHING
+        `,
         values
+      );
+
+      if (totalRowCreated === 0)
+        throw new ErrorHandler(
+          400,
+          "You have already submitted a leave request for this date."
+        );
+
+      await client.query(
+        `UPDATE employee_leave SET ${leave_type} = ${leave_type} - 1 WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start() RETURNING ${leave_type}`,
+        [res.locals?.employee_id]
       );
 
       await client.query("COMMIT");
@@ -182,16 +202,16 @@ export const updateLeaveStatus = asyncErrorHandler(
             .join(", ")};
         `;
 
-      sql3 = `UPDATE employee_leave SET ${leave_type} = ${leave_type} - 1 WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start() RETURNING ${leave_type}`;
+      sql3 = `UPDATE employee_leave SET ${leave_type} = ${leave_type} - 1 WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start() AND ${leave_type} > 0`;
 
       const client = await pool.connect();
 
       try {
         await client.query("BEGIN");
 
-        const { rows } = await client.query(sql3, [req.body.employee_id]);
-        if (rows[0][leave_type] < 0)
-          throw new ErrorHandler(404, "He Don't Have Any Leave Avilable");
+        if (value.previous_status !== "pending") {
+          await client.query(sql3, [req.body.employee_id]);
+        }
 
         await client.query(sql1, [value.leave_status, value.id]);
 
@@ -257,7 +277,7 @@ export const getEachEmployeLeaveDetails = asyncErrorHandler(
       LEFT JOIN employee e
       ON e.id = el.employee_id AND financial_year_date = get_financial_year_start()
 
-      WHERE e.institute = $1
+      WHERE e.institute = $1 AND e.is_active = true
   `,
       [value.institute]
     );
@@ -269,3 +289,132 @@ export const getEachEmployeLeaveDetails = asyncErrorHandler(
       );
   }
 );
+
+export const removeLeaveRequestRow = asyncErrorHandler(async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const { rows } = await client.query(
+      `DELETE FROM leave WHERE id = $1 RETURNING *`,
+      [req.params.id]
+    );
+
+    await client.query(
+      `DELETE FROM attendance WHERE employee_id = $1 AND date BETWEEN $2 AND $3`,
+      [rows[0].employee_id, rows[0].leave_from, rows[0].leave_to]
+    );
+
+    const leave_type = rows[0].leave_type;
+
+    if (rows[0].leave_status !== "decline") {
+      await client.query(
+        `UPDATE employee_leave SET ${leave_type} = ${leave_type} + 1 WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start()`,
+        [rows[0].employee_id]
+      );
+    }
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    client.release();
+    throw new ErrorHandler(400, error?.message);
+  }
+
+  res.status(200).json(new ApiResponse(200, "Leave Request Has Removed"));
+});
+
+export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
+  const { rowCount } = await pool.query(`
+    SELECT 1 
+    FROM earned_leave_history 
+    WHERE DATE_TRUNC('month', month) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+    LIMIT 1
+  `);
+
+  if (rowCount !== 0)
+    return res.status(200).json(new ApiResponse(200, "Have Already Done"));
+
+  //i have to check has employee done 24 days contunius job or not if yes add 1 to existed_earned_leave
+
+  //get all the employee_id  who have done 24 days contunius work (SKIP holiday, and employee_taken leave)
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    const { rows } = await client.query(
+      `
+        WITH current_month_days AS (
+          SELECT DATE_PART('day', (DATE_TRUNC('month', NOW() - INTERVAL '1 month') + INTERVAL '1 month - 1 day')) AS total_days
+        ),
+        current_month_holiday AS (
+          SELECT
+            COUNT(holiday_id) as total_holiday_this_month,
+            institute
+          FROM holiday_management
+          WHERE DATE_TRUNC('month', holiday_date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+
+          GROUP BY institute
+        )
+
+        SELECT
+          el.employee_id,
+          cmd.total_days AS total_month_days, 
+          COUNT(a.id) as total_not_present,
+          cmh.total_holiday_this_month,
+          (cmd.total_days - COUNT(a.id) - cmh.total_holiday_this_month) AS total_present_days
+        FROM employee_leave el
+
+        LEFT JOIN employee e
+        ON e.id = el.employee_id
+
+        LEFT JOIN attendance a
+        ON a.employee_id = el.employee_id AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+
+        CROSS JOIN current_month_days cmd
+        LEFT JOIN current_month_holiday cmh
+        ON cmh.institute = e.institute
+
+        GROUP BY el.employee_id, cmd.total_days, cmh.total_holiday_this_month
+
+        HAVING (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24;
+      `
+    );
+
+    // now update earn_leave value with +1
+    const employeeIds = rows.map((item) => item.employee_id).join(",");
+    await client.query(
+      `UPDATE employee_leave SET el = el + 1 WHERE employee_id IN (${employeeIds})`
+    );
+
+    await client.query(
+      `INSERT INTO earned_leave_history (month) VALUES (DATE_TRUNC('month', NOW() - INTERVAL '1 month'))`
+    );
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error: any) {
+    console.log(error);
+    await client.query("ROLLBACK");
+    client.release();
+    throw new ErrorHandler(400, error?.message);
+  }
+
+  res.status(200).json(new ApiResponse(200, "Successfully Updated"));
+});
+
+export const addLeaveValuesYearly = asyncErrorHandler(async (req, res) => {
+  await pool.query(
+    `
+    INSERT INTO employee_leave (employee_id, cl, sl, el, ml)
+    SELECT employee_id, cl + 10, sl + 10, el, 84
+    FROM employee_leave
+    ON CONFLICT (employee_id, financial_year_date) DO NOTHING;
+    `
+  );
+
+  res.status(200).json(new ApiResponse(200, "Successfully Updated"));
+});

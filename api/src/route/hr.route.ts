@@ -9,8 +9,11 @@ import {
   updateDepartment,
 } from "../controller/department.controllers";
 import {
+  addEarnLeaveToAllEmployee,
+  addLeaveValuesYearly,
   getEachEmployeLeaveDetails,
   getRequestedLeaveLists,
+  removeLeaveRequestRow,
   updateLeaveStatus,
 } from "../controller/leave.controller";
 import {
@@ -32,7 +35,12 @@ import {
 } from "../controller/attendance.controller";
 import { getHrDashboardInfo } from "../controller/employee.controller";
 import { roles } from "../middleware/roles";
-import { addPayscale, deletePayscale, getPayscale, updatePayscale } from "../controller/payscale.controller";
+import {
+  addPayscale,
+  deletePayscale,
+  getPayscale,
+  updatePayscale,
+} from "../controller/payscale.controller";
 
 export const hrRouter = Router();
 
@@ -54,6 +62,9 @@ hrRouter
   .get("/leave/employees", getEachEmployeLeaveDetails)
   // .post("/leave", createLeaveRequest) //this will done by employee
   .patch("/leave/:id", updateLeaveStatus)
+  .delete("/leave/:id", removeLeaveRequestRow)
+  .post("/leave/add-earn-leave", addEarnLeaveToAllEmployee) // triggre this api form github action every month
+  .post("/leave/add-yearly-leave", addLeaveValuesYearly) // triggre this api form github action every month
 
   .get("/job", getAllJobs)
   .get("/job/:id", getAJob)

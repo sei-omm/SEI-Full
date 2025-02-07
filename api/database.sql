@@ -80,7 +80,6 @@ CREATE TABLE leave (
     FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE
 );
 
-
 CREATE TABLE job (
     id SERIAL PRIMARY KEY,
     job_title VARCHAR(250) NOT NULL,
@@ -874,6 +873,18 @@ DELETE FROM attendance;
 
 ALTER TABLE leave
 ADD COLUMN leave_type VARCHAR(5) NOT NULL;
+
+-- NEW DB 06 Feb 2025
+--not for all employee only for check in this month earned leave applied or not
+CREATE TABLE earned_leave_history (
+    month DATE DEFAULT DATE_TRUNC('month', NOW())
+);
+
+DELETE FROM attendance;
+DELETE FROM leave;
+
+ALTER TABLE leave
+ADD CONSTRAINT leave_unique_key UNIQUE(employee_id, leave_from, leave_to);
 
 
 -- fro clering all table of db

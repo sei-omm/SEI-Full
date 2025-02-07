@@ -45,7 +45,7 @@ export default function Input(props: IProps) {
           ref={props.referal}
           className={`outline-none placeholder:text-gray-400 w-full text-sm ${
             props.className
-          } ${props.viewOnly ? "hidden" : "block"}`}
+          } ${props.viewOnly ? "hidden" : "block"} !bg-transparent`}
         />
         {props.type === "password" ? (
           <div>
