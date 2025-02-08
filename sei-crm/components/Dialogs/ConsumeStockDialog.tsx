@@ -26,7 +26,7 @@ export default function ConsumeStockDialog() {
       },
       formData,
       onSuccess() {
-        queryClient.invalidateQueries("get-inventory-item-info");
+        queryClient.invalidateQueries(["inventory-item-list"]);
         dispatch(setDialog({ type: "CLOSE", dialogId: "" }));
       },
     });

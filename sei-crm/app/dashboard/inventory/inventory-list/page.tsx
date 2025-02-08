@@ -13,12 +13,15 @@ import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
 import MultiInventoryItemForm from "@/components/SingleLineForms/MultiInventoryItemForm";
+import { setDialog } from "@/redux/slices/dialogs.slice";
 import { ISuccess, TInventoryWithStockItem } from "@/types";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { CiEdit, CiSearch } from "react-icons/ci";
+import { BiLayerMinus } from "react-icons/bi";
+import {  CiSearch } from "react-icons/ci";
+import { IoIosAdd } from "react-icons/io";
 import { useQuery } from "react-query";
+import { useDispatch } from "react-redux";
 
 type TTable = {
   heads: string[];
@@ -29,6 +32,8 @@ export default function InventoryList() {
   const [tableDatas, setTableDatas] = useState<TTable>({
     heads: [
       "Item Name",
+      "Add Stock",
+      "Consume Stock",
       "Category",
       "Sub Category",
       "Opening Stock",
@@ -43,6 +48,8 @@ export default function InventoryList() {
     ],
     body: [],
   });
+
+  const dispatch = useDispatch();
 
   const [selectedCheckboxItemId, setSelectedCheckboxItemId] = useState<
     number | undefined
@@ -73,12 +80,14 @@ export default function InventoryList() {
     onSuccess(data) {
       const body = data.data.map((item) => [
         item.item_name,
+        "actionBtnAddStock",
+        "actionBtnConsumeStock",
         inventoryCatList.find((cat) => cat.category_id === item.category)
           ?.category_name,
         inventorySubCatList.find(
           (subCat) => subCat.sub_category_id === item.sub_category
         )?.sub_category_name,
-        item.opening_stock?.toString(),
+        item.closing_stock?.toString(),
         item.minimum_quantity.toString(),
         item.item_consumed?.toString(),
         // item.closing_stock.toString(),
@@ -213,15 +222,39 @@ export default function InventoryList() {
                         className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
                         key={value}
                       >
-                        {value === "actionBtn" ? (
-                          <div className="flex items-center gap-3">
-                            <Link
-                              className="active:scale-90"
-                              href={`/dashboard/inventory/consumable/`}
-                            >
-                              <CiEdit className="cursor-pointer" size={18} />
-                            </Link>
-                          </div>
+                        {value === "actionBtnAddStock" ? (
+                          <Button
+                            onClick={() =>
+                              dispatch(
+                                setDialog({
+                                  dialogId: "add-inventory-stock",
+                                  type: "OPEN",
+                                  extraValue: {
+                                    item_id: data?.data[rowIndex].item_id,
+                                  },
+                                })
+                              )
+                            }
+                          >
+                            <IoIosAdd size={17} color="#fff" />
+                          </Button>
+                        ) : value === "actionBtnConsumeStock" ? (
+                          <Button
+                            onClick={() => {
+                              dispatch(
+                                setDialog({
+                                  dialogId: "inventory-stock-consume-dialog",
+                                  type: "OPEN",
+                                  extraValue: {
+                                    item_id: data?.data[rowIndex].item_id,
+                                    remain_stock : data?.data[rowIndex].closing_stock
+                                  },
+                                })
+                              );
+                            }}
+                          >
+                            <BiLayerMinus size={17} color="#fff" />
+                          </Button>
                         ) : columnIndex === 0 ? (
                           <div>
                             <input

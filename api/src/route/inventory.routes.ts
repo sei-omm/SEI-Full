@@ -36,6 +36,7 @@ import {
   getSinglePlannedMaintenanceSystem,
   getSingleStockInfo,
   getSingleVendorInfo,
+  getStockCalcluction,
   getVendorFiltersItemInfo,
   getVendorIdName,
   getVendorInfo,
@@ -64,6 +65,7 @@ inventoryRoute
   // .get("/item-stock/calclute/:item_id", calcluteStockInfo)
   // .get("/item-stock/get-last-closing-stock/:item_id", getPreviousOpeningStock)
   .get("/item-stock/get-all/:item_id", getAllItemStockInfo)
+  .get("/item-stock/item/:item_id", getStockCalcluction)
   .post("/item-stock", addNewItemStock)
   .post("/item-stock/multi", addMultiItemStock)
   .post("/item-stock/consumed", consumeStock)
@@ -74,7 +76,7 @@ inventoryRoute
   .get("/maintence-record/excel", streamMaintenceRecordExcelReport)
   // .get("/maintence-record/:record_id", getSingleMaintenceRecord)
   .post("/maintence-record", addNewMaintenceRecord)
-  .post("/maintence-record/multi" ,addMultiMaintenceRecord)
+  .post("/maintence-record/multi", addMultiMaintenceRecord)
   .patch("/maintence-record/:record_id", updateMaintenceRecordStatus)
   // .put("/maintence-record/:record_id", updateMaintenceRecord)
 

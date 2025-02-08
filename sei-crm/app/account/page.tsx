@@ -23,6 +23,7 @@ import { IoOpenOutline } from "react-icons/io5";
 import Link from "next/link";
 import Appraisal from "@/components/Account/Appraisal";
 import AppraisalForm from "@/components/Account/AppraisalForm";
+import TranningList from "@/components/Account/TranningList";
 
 const fetchEmployeeInfo = async (employeeID: string | null) => {
   let headers: any = {
@@ -130,6 +131,10 @@ export default function Account() {
                 name: "Pending Appraisals",
                 slug: "/account/?tab=otherapr",
               },
+              {
+                name: "Tranning Requirement",
+                slug: "/account/?tab=tranning",
+              },
             ]}
           />
         </div>
@@ -150,6 +155,7 @@ export default function Account() {
         {searchParams.get("tab") === "appraisal" && <Appraisal type="own" />}
         {searchParams.get("tab") === "otherapr" && <Appraisal type="others" />}
         {searchParams.get("tab") === "appraisalform" && <AppraisalForm />}
+        {searchParams.get("tab") === "tranning" && <TranningList />}
       </div>
     </HandleSuspence>
   );

@@ -46,6 +46,7 @@ import { filterToSql } from "../utils/filterToSql";
 import { apiPaginationSql } from "../utils/apiPaginationSql";
 import { parsePagination } from "../utils/parsePagination";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
+import { beautifyDate } from "../utils/beautifyDate";
 
 //inventory list
 export const addNewList = asyncErrorHandler(
@@ -68,6 +69,40 @@ export const getAllItemInfo = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { LIMIT, OFFSET } = parsePagination(req);
     const { filterQuery, filterValues } = filterToSql(req.query, "iii");
+
+    //   const { rows } = await pool.query(
+    //     `
+    //       SELECT
+    //           iii.item_id,
+    //           iii.item_name,
+    //           iii.category,
+    //           iii.sub_category,
+    //           iii.minimum_quantity,
+    //           SUM(isi.opening_stock) AS opening_stock,
+    //           SUM(isi.item_consumed) AS item_consumed,
+    //           SUM(isi.opening_stock) - SUM(isi.item_consumed) AS closing_stock,
+    //           iii.current_status,
+    //           iii.current_purchase_date,
+    //           iii.current_vendor_id,
+    //           v.vendor_name AS current_vendor_name,
+    //           iii.cost_per_unit_current,
+    //           iii.cost_per_unit_previous,
+    //           SUM(isi.total_value) AS total_value
+    //       FROM inventory_item_info AS iii
+    //       LEFT JOIN inventory_stock_info AS isi
+    //         ON isi.item_id = iii.item_id
+    //       LEFT JOIN vendor AS v
+    //         ON v.vendor_id = isi.vendor_id
+
+    //       ${filterQuery}
+
+    //       GROUP BY iii.item_id, v.vendor_name
+
+    //       ORDER BY iii.created_at DESC
+    //       LIMIT ${LIMIT} OFFSET ${OFFSET}
+    //  `,
+    //     filterValues
+    //   );
 
     const { rows } = await pool.query(
       `
@@ -99,7 +134,7 @@ export const getAllItemInfo = asyncErrorHandler(
 
         ORDER BY iii.created_at DESC
         LIMIT ${LIMIT} OFFSET ${OFFSET}
-   `,
+  `,
       filterValues
     );
 
@@ -296,6 +331,26 @@ export const getAllItemStockInfo = asyncErrorHandler(
   }
 );
 
+export const getStockCalcluction = asyncErrorHandler(async (req, res) => {
+  const { error } = getAllStockInfo.validate(req.params);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { rows } = await pool.query(
+    `
+      SELECT 
+        COALESCE(SUM(isi.opening_stock), 0) AS total_stock,
+        COALESCE(SUM(isi.item_consumed), 0) AS total_item_consumed,
+        COALESCE(SUM(isi.opening_stock) - SUM(isi.item_consumed), 0) AS remain_stock,
+        COALESCE(SUM(isi.total_value), 0) AS total_spend
+      FROM inventory_stock_info AS isi
+      WHERE isi.item_id = $1
+        `,
+    [req.params.item_id]
+  );
+
+  res.status(200).json(new ApiResponse(200, "", rows[0]));
+});
+
 export const getPreviousOpeningStock = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error } = getPreviousOpeningStockValidator.validate(req.params);
@@ -413,27 +468,84 @@ export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
   const { error, value } = addMultiItemStockValidator.validate(req.body);
   if (error) throw new ErrorHandler(400, error.message);
 
-  await pool.query(
-    `
-    INSERT INTO inventory_stock_info 
-      (opening_stock, item_consumed, closing_stock, status, vendor_id, cost_per_unit_current, total_value, remark, item_id, type, purchase_date)
-    VALUES
-      ${sqlPlaceholderCreator(11, value.length).placeholder}
-    `,
-    value.flatMap((item) => [
-      item.opening_stock,
-      item.item_consumed,
-      item.closing_stock,
-      item.status,
-      item.vendor_id,
-      item.cost_per_unit_current,
-      item.total_value,
-      item.remark,
-      item.item_id,
-      item.type,
-      item.purchase_date,
-    ])
-  );
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const valuesForUpdate: (string | null)[] = [];
+    if (value.length > 1) {
+      const lastIndex = value.length - 1;
+      const lastPrevIndex = value.length - 2;
+      valuesForUpdate.push(value[lastIndex].status);
+      valuesForUpdate.push(value[lastIndex].vendor_id);
+      valuesForUpdate.push(value[lastIndex].cost_per_unit_current);
+      valuesForUpdate.push(value[lastPrevIndex].cost_per_unit_current);
+      valuesForUpdate.push(value[lastIndex].purchase_date);
+      valuesForUpdate.push(value[0].item_id);
+    } else {
+      const { rows, rowCount } = await client.query(
+        ` SELECT cost_per_unit_current, purchase_date  
+          FROM inventory_stock_info 
+          WHERE item_id = $1 
+          ORDER BY purchase_date DESC 
+          LIMIT 1`,
+        [value[0].item_id]
+      );
+      valuesForUpdate.push(value[0].status);
+      valuesForUpdate.push(value[0].vendor_id);
+      valuesForUpdate.push(value[0].cost_per_unit_current);
+      if (rowCount === 0) {
+        valuesForUpdate.push(null);
+      } else {
+        valuesForUpdate.push(rows[0].cost_per_unit_current);
+      }
+      valuesForUpdate.push(value[0].purchase_date);
+      valuesForUpdate.push(value[0].item_id);
+    }
+
+    await client.query(
+      `
+       UPDATE inventory_item_info
+        SET current_status = $1, 
+            current_vendor_id = $2, 
+            cost_per_unit_current = $3, 
+            cost_per_unit_previous = $4,
+            current_purchase_date = $5
+       WHERE item_id = $6
+      `,
+      valuesForUpdate
+    );
+
+    await client.query(
+      `
+      INSERT INTO inventory_stock_info 
+        (opening_stock, item_consumed, closing_stock, status, vendor_id, cost_per_unit_current, total_value, remark, item_id, type, purchase_date)
+      VALUES
+        ${sqlPlaceholderCreator(11, value.length).placeholder}
+      `,
+      value.flatMap((item) => [
+        item.opening_stock,
+        item.item_consumed,
+        item.closing_stock,
+        item.status,
+        item.vendor_id,
+        item.cost_per_unit_current,
+        item.total_value,
+        item.remark,
+        item.item_id,
+        item.type,
+        item.purchase_date,
+      ])
+    );
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    client.release();
+    throw new ErrorHandler(400, error?.message);
+  }
 
   res.status(200).json(new ApiResponse(200, "Stock informations Are Saved"));
 });

@@ -103,85 +103,87 @@ export default function MultiInventoryItemForm({
         </Button>
       </div>
 
-      <form action={handleSubmit} className="space-y-5">
-        {inputs.length === 0 ? null : (
-          <div className="w-full overflow-x-auto space-y-5 pb-20">
-            {inputs.map((item, index) => (
-              <div
-                key={item}
-                className="flex items-center gap-5 *:min-w-60 relative"
-              >
-                <div className="!min-w-6 pt-5">
-                  <AiOutlineDelete
-                    onClick={() => handleDeleteItem(index)}
-                    className="cursor-pointer"
+      {inputs.length === 0 ? null : (
+        <form action={handleSubmit} className="space-y-5 min-h-screen">
+          {inputs.length === 0 ? null : (
+            <div className="w-full overflow-x-auto space-y-5 py-10">
+              {inputs.map((item, index) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-5 *:min-w-60 relative"
+                >
+                  <div className="!min-w-6 pt-5">
+                    <AiOutlineDelete
+                      onClick={() => handleDeleteItem(index)}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                  <Input
+                    required
+                    name="item_name"
+                    label="Name of Item *"
+                    placeholder="Type Item Name"
+                  />
+                  <DropDown
+                    name="category"
+                    label="Category *"
+                    options={inventoryCatList.map((item) => ({
+                      text: item.category_name,
+                      value: item.category_id,
+                    }))}
+                  />
+                  <DropDown
+                    name="sub_category"
+                    label="Sub-Category *"
+                    options={inventorySubCatList.map((item) => ({
+                      text: item.sub_category_name,
+                      value: item.sub_category_id,
+                    }))}
+                  />
+                  <Input
+                    name="where_to_use"
+                    label="Where To Be Used"
+                    placeholder="Enter Where The Item Going To Use"
+                  />
+                  <Input
+                    name="used_by"
+                    label="Used By"
+                    placeholder="Enter Where It Used"
+                  />
+                  <Input
+                    name="description"
+                    label="Description"
+                    placeholder="Type Description"
+                  />
+                  <Input
+                    required
+                    type="number"
+                    name="minimum_quantity"
+                    label="Minimum Quantity to maintain *"
+                    placeholder="0"
+                  />
+                  <DropDown
+                    name="institute"
+                    label="Campus *"
+                    options={[
+                      { text: "Kolkata", value: "Kolkata" },
+                      { text: "Faridabad", value: "Faridabad" },
+                    ]}
                   />
                 </div>
-                <Input
-                  required
-                  name="item_name"
-                  label="Name of Item *"
-                  placeholder="Type Item Name"
-                />
-                <DropDown
-                  name="category"
-                  label="Category *"
-                  options={inventoryCatList.map((item) => ({
-                    text: item.category_name,
-                    value: item.category_id,
-                  }))}
-                />
-                <DropDown
-                  name="sub_category"
-                  label="Sub-Category *"
-                  options={inventorySubCatList.map((item) => ({
-                    text: item.sub_category_name,
-                    value: item.sub_category_id,
-                  }))}
-                />
-                <Input
-                  name="where_to_use"
-                  label="Where To Be Used"
-                  placeholder="Enter Where The Item Going To Use"
-                />
-                <Input
-                  name="used_by"
-                  label="Used By"
-                  placeholder="Enter Where It Used"
-                />
-                <Input
-                  name="description"
-                  label="Description"
-                  placeholder="Type Description"
-                />
-                <Input
-                  required
-                  type="number"
-                  name="minimum_quantity"
-                  label="Minimum Quantity to maintain *"
-                  placeholder="0"
-                />
-                <DropDown
-                  name="institute"
-                  label="Campus *"
-                  options={[
-                    { text: "Kolkata", value: "Kolkata" },
-                    { text: "Faridabad", value: "Faridabad" },
-                  ]}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        {inputs.length !== 0 ? (
-          <div className="w-full flex items-center justify-end">
-            <Button loading={isLoading} disabled={isLoading}>
-              Save Info
-            </Button>
-          </div>
-        ) : null}
-      </form>
+          {inputs.length !== 0 ? (
+            <div className="w-full flex items-center justify-end">
+              <Button loading={isLoading} disabled={isLoading}>
+                Save Info
+              </Button>
+            </div>
+          ) : null}
+        </form>
+      )}
     </div>
   );
 }

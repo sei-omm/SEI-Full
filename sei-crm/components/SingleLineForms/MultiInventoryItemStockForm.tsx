@@ -6,7 +6,7 @@ import { BASE_API } from "@/app/constant";
 import { AiOutlineDelete } from "react-icons/ai";
 import DateInput from "../DateInput";
 import HandleDataSuspense from "../HandleDataSuspense";
-import { useQuery } from "react-query";
+import {  useQuery } from "react-query";
 import axios from "axios";
 import { ISuccess, TVendorIdName } from "@/types";
 import { setDialog } from "@/redux/slices/dialogs.slice";
@@ -25,11 +25,13 @@ async function getVendorIdName() {
 interface IProps {
   remain_stock: number | undefined;
   item_id: number;
+  hideActionBtns?: boolean;
 }
 
 export default function MultiInventoryItemStockForm({
   remain_stock,
   item_id,
+  hideActionBtns,
 }: IProps) {
   const [inputs, setInputs] = useState<number[]>([]);
   const dispatch = useDispatch();
@@ -110,42 +112,45 @@ export default function MultiInventoryItemStockForm({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-6">
-        <Button
-          onClick={() => {
-            const preStates = [...inputs];
+      {hideActionBtns ? null : (
+        <div className="flex items-center gap-6">
+          <Button
+            onClick={() => {
+              const preStates = [...inputs];
 
-            preStates.push(
-              preStates.length === 0 ? 1 : preStates[preStates.length - 1] + 1
-            );
-            setInputs(preStates);
-          }}
-          type="button"
-          className="flex-center gap-2"
-        >
-          <MdOutlineAdd size={18} />
-          Add New Stock
-        </Button>
-        <Button
-          onClick={() =>
-            dispatch(
-              setDialog({
-                dialogId: "inventory-stock-consume-dialog",
-                type: "OPEN",
-                extraValue: {
-                  remain_stock: remain_stock,
-                  item_id,
-                },
-              })
-            )
-          }
-          type="button"
-          className="flex-center gap-2"
-        >
-          <BiLayerMinus size={18} />
-          Consume Stock
-        </Button>
-      </div>
+              preStates.push(
+                preStates.length === 0 ? 1 : preStates[preStates.length - 1] + 1
+              );
+              setInputs(preStates);
+            }}
+            type="button"
+            className="flex-center gap-2"
+          >
+            <MdOutlineAdd size={18} />
+            Add New Stock
+          </Button>
+          <Button
+            onClick={() =>
+              dispatch(
+                setDialog({
+                  dialogId: "inventory-stock-consume-dialog",
+                  type: "OPEN",
+                  extraValue: {
+                    remain_stock: remain_stock,
+                    item_id,
+                  },
+                })
+              )
+            }
+            type="button"
+            className="flex-center gap-2"
+          >
+            <BiLayerMinus size={18} />
+            Consume Stock
+          </Button>
+        </div>
+      )}
+
       <form action={handleFormAction} className="space-y-5">
         {inputs.length === 0 ? null : (
           <div className="w-full overflow-x-auto space-y-5 pb-20">

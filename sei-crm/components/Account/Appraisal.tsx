@@ -77,10 +77,6 @@ export default function Appraisal({ type }: IProps) {
                     Created At {beautifyDate(appraisal.created_at)}
                   </span>
                 </h3>
-                {/* <div> */}
-                {/* <h4 className="text-xs text-gray-500 float-left mr-1">
-                  Status :
-                </h4> */}
                 {type === "others" ? (
                   <div className="flex items-center gap-1 text-xs">
                     <span className="font-semibold text-yellow-700">

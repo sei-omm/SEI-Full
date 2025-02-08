@@ -11,7 +11,6 @@ import Button from "@/components/Button";
 import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
 import Input from "@/components/Input";
-import ProductStockInfo from "@/components/Inventory/ProductStockInfo";
 import { ISuccess, TInventoryItem } from "@/types";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -144,11 +143,11 @@ export default function InventoryListForm({ params }: IProps) {
               </Button>
             </div>
           </div>
-          {isNewItem ? null : (
+          {/* {isNewItem ? null : (
             <ProductStockInfo item_id={inventoryItem?.data.item_id as number} />
-          )}
+          )} */}
 
-          <BackBtn />
+          {/* <BackBtn /> */}
         </div>
       </HandleSuspence>
     </div>

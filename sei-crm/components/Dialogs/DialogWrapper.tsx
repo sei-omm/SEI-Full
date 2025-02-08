@@ -30,6 +30,10 @@ import AddMultipleVendor from "./AddMultipleVendor";
 import AssignAssetDialog from "./AssignAssetDialog";
 import RefundFormDialog from "./RefundFormDialog";
 import GeneratePaymentLinkDialog from "./GeneratePaymentLinkDialog";
+import AddInventoryItemStock from "./AddInventoryItemStock";
+import InductionTrainingForm from "./Tranning/InductionTrainingForm";
+import SkillEnhancementForm from "./Tranning/SkillEnhancementForm";
+import TrainingRequirement from "./Tranning/TrainingRequirement";
 
 type DivType = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -155,6 +159,24 @@ const dialogs = [
     id: "generate-payment-link-dialog",
     component: <GeneratePaymentLinkDialog />,
   },
+
+  {
+    id: "add-inventory-stock",
+    component: <AddInventoryItemStock />,
+  },
+
+  {
+    id: "induction-tranning-form",
+    component: <InductionTrainingForm />,
+  },
+  {
+    id: "skill-enhancement-form",
+    component: <SkillEnhancementForm />,
+  },
+  {
+    id : "training-requirement-form",
+    component : <TrainingRequirement />
+  }
 ];
 
 export default function DialogWrapper(props: DivType) {

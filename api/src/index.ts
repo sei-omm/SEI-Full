@@ -23,6 +23,7 @@ import { receiptRoutes } from "./route/receipt.routes";
 import path from "path";
 import { pool } from "./config/db";
 import { holidayRoutes } from "./route/holiday.routes";
+import { tranningRoutes } from "./route/tranning.routes";
 
 dotenv.config();
 const app = express();
@@ -60,7 +61,8 @@ app.use("/api/v1/storage", storageRouter);
 app.use("/api/v1/inventory", inventoryRoute);
 app.use("/api/v1/notification", notificationRoutes);
 app.use("/api/v1/receipt", receiptRoutes);
-app.use("/api/v1/holiday", holidayRoutes)
+app.use("/api/v1/holiday", holidayRoutes);
+app.use("/api/v1/tranning", tranningRoutes)
 app.use("/api/v1/db", setupDbRoute);
 
 //global error handler

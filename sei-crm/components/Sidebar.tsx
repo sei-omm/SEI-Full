@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { RiRefundLine, RiSettings3Line } from "react-icons/ri";
 import {
+  MdAddTask,
   MdOutlineAddBox,
   MdOutlineDateRange,
   MdOutlineHolidayVillage,
@@ -85,6 +86,12 @@ const sidebarOptions = [
         icon: <MdOutlineHolidayVillage />,
         name: "Holiday Management",
         slug: "/dashboard/hr-module/holiday-management",
+      },
+      {
+        id: "1-10",
+        icon: <MdAddTask />,
+        name: "Tranning Requirement",
+        slug: "/dashboard/hr-module/tranning-requirement",
       },
       // {
       //   id: "1-9",
@@ -403,7 +410,7 @@ export default function Sidebar() {
                     <Link
                       href={submenuInfo.slug}
                       className={`flex items-center text-[0.775rem] font-semibold gap-x-3 py-2 px-3 rounded-lg hover:bg-[#E4E6E9] ${
-                        pathname.includes(submenuInfo.slug)
+                        submenuInfo.slug.includes(pathname)
                           ? "bg-[#E4E6E9]"
                           : "bg-transparent"
                       }`}

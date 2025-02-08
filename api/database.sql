@@ -465,7 +465,7 @@ CREATE TABLE inventory_stock_info (
     remark TEXT,
 
     item_id INTEGER,
-    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE SET NULL,
+    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE CASCADE,
 
     type VARCHAR(8) CHECK(type IN ('add', 'consumed')),
 
@@ -886,6 +886,61 @@ DELETE FROM leave;
 ALTER TABLE leave
 ADD CONSTRAINT leave_unique_key UNIQUE(employee_id, leave_from, leave_to);
 
+-- NEW DB 07 Feb 2025
+DELETE FROM inventory_item_info;
+
+DROP TABLE inventory_stock_info;
+
+CREATE TABLE inventory_stock_info (
+    stock_id SERIAL PRIMARY KEY,
+    
+    opening_stock INTEGER,
+    item_consumed INTEGER,
+    closing_stock INTEGER,
+
+    status TEXT,
+
+    vendor_id INTEGER,
+    FOREIGN KEY (vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL,
+
+    cost_per_unit_current DECIMAL(10, 2),
+    total_value DECIMAL(10, 2),
+    remark TEXT,
+
+    item_id INTEGER,
+    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE CASCADE,
+
+    type VARCHAR(8) CHECK(type IN ('add', 'consumed')),
+
+    purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE tranning_requirement (
+    employee_id INTEGER REFERENCES employee(id) ON DELETE CASCADE,
+
+    it_generated_date DATE,
+    it_completed_date DATE,
+
+    se_generated_date DATE,
+    se_completed_date DATE,
+
+    tr_generated_date DATE,
+    tr_completed_date DATE,
+
+    it_form_data TEXT,
+    se_form_data TEXT,
+    tr_form_date TEXT,
+
+    it_form_is_accepted BOOLEAN DEFAULT false,
+    se_form_is_accepted BOOLEAN DEFAULT false,
+    tr_form_is_accepted BOOLEAN DEFAULT false,
+
+    created_at DATE DEFAULT CURRENT_DATE,
+
+    UNIQUE (employee_id)
+);
 
 -- fro clering all table of db
 -- DO $$ 
