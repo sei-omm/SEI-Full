@@ -42,6 +42,7 @@ export default function TranningList() {
           headers: { ...getAuthToken() },
         })
       ).data,
+    refetchOnMount: true,
   });
 
   return (

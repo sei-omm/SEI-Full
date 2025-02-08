@@ -33,7 +33,7 @@ type TTranningList = {
   employee_id: number;
   profile_image: string;
   name: string;
-  employee_type : string;
+  employee_type: string;
   training_info: TTraningInfo[];
 };
 
@@ -77,6 +77,7 @@ export default function TeacherTraining() {
         ]),
       }));
     },
+    refetchOnMount: true,
   });
 
   return (
@@ -213,13 +214,22 @@ export default function TeacherTraining() {
                                   onClick={() => {
                                     dispatch(
                                       setDialog({
-                                        dialogId: columnIndex === 1 ? "induction-tranning-form" : columnIndex === 2 ? "skill-enhancement-form" : "training-requirement-form",
+                                        dialogId:
+                                          columnIndex === 1
+                                            ? "induction-tranning-form"
+                                            : columnIndex === 2
+                                            ? "skill-enhancement-form"
+                                            : "training-requirement-form",
                                         type: "OPEN",
-                                        extraValue : {
-                                          employee_id : tranningList?.data[rowIndex].employee_id,
-                                          btn_type : "Generate",
-                                          employee_type : tranningList?.data[rowIndex].employee_type
-                                        }
+                                        extraValue: {
+                                          employee_id:
+                                            tranningList?.data[rowIndex]
+                                              .employee_id,
+                                          btn_type: "Generate",
+                                          employee_type:
+                                            tranningList?.data[rowIndex]
+                                              .employee_type,
+                                        },
                                       })
                                     );
                                   }}
