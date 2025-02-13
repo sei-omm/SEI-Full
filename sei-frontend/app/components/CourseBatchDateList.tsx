@@ -4,7 +4,6 @@ import { CourseType } from "../type";
 import { formateDate } from "../utils/formateDate";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getLocalLoginInfo } from "../utils/getLocalLoginInfo";
-import { selectedDateList } from "../constant";
 
 interface IProps {
   course: CourseType
@@ -20,15 +19,15 @@ export default function CourseBatchDateList({ course }: IProps) {
     batchStartDate: string,
     isInWaitingList: boolean
   ) {
-    if (selectedDateList.has(batchStartDate)) {
-      if (selectedDateList.get(batchStartDate) === batchId) {
-        selectedDateList.delete(batchStartDate);
-      } else {
-        return alert("You have already selected a course on the same date.");
-      }
-    }
+    // if (selectedDateList.has(batchStartDate)) {
+    //   if (selectedDateList.get(batchStartDate) === batchId) {
+    //     selectedDateList.delete(batchStartDate);
+    //   } else {
+    //     return alert("You have already selected a course on the same date.");
+    //   }
+    // }
 
-    selectedDateList.set(batchStartDate, batchId);
+    // selectedDateList.set(batchStartDate, batchId);
 
     const loginInfo = getLocalLoginInfo();
     if (loginInfo !== null) {
@@ -56,7 +55,7 @@ export default function CourseBatchDateList({ course }: IProps) {
       );
     }
 
-    const urlSearchParams = new URLSearchParams();
+    const urlSearchParams = new URLSearchParams(searchParams);
     const key = `bid${course.course_id}`;
     if (
       urlSearchParams.has(key) &&

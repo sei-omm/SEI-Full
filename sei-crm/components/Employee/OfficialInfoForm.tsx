@@ -24,8 +24,8 @@ interface IProps {
   departements?: IDepartment[];
   employeeInfo?: IEmployee;
   employeeID: number | "add-employee" | "add-faculty";
-  onDateOfJoinChnage: (value: string) => void;
-  joinDate?: string;
+  // onDateOfJoinChnage: (value: string) => void;
+  // joinDate?: string;
   employeeInstituteRef: React.MutableRefObject<string | null>;
 }
 async function getPayscales() {
@@ -37,8 +37,8 @@ export default function OfficialInfoForm({
   employeeInfo,
   departements,
   employeeID,
-  onDateOfJoinChnage,
-  joinDate,
+  // onDateOfJoinChnage,
+  // joinDate,
   employeeInstituteRef,
 }: IProps) {
   const [providedAnyAssets, setProvidedAnyAssets] = useState("No");
@@ -97,22 +97,25 @@ export default function OfficialInfoForm({
         <h2 className="text-2xl font-semibold pb-6">Official Informations</h2>
         <div className="grid grid-cols-2 gap-x-3 gap-y-4">
           <EAuthorityInfo
+            employeeID={employeeID}
             departements={departements}
             employeeInfo={employeeInfo}
           />
-          <Input
+          {/* <Input
             defaultValue={employeeInfo?.job_title || ""}
             required
             name="job_title"
             label="Job Title *"
             placeholder="Software Engineer"
-          />
+          /> */}
           <DateInput
+            key={"joining_date"}
             required
             name="joining_date"
-            onChange={onDateOfJoinChnage}
+            // onChange={onDateOfJoinChnage}
             label="Date Of Joining *"
-            date={getDate(new Date(joinDate || ""))}
+            // date={getDate(new Date(joinDate || ""))}
+            date={getDate(new Date(employeeInfo?.joining_date || ""))}
           />
           {!isNewEmployee ? (
             <Input
@@ -258,7 +261,7 @@ export default function OfficialInfoForm({
                       value: item.item_value,
                     })) || []
                   }
-                  defaultValue={employeeInfo?.payscale_label}
+                  defaultValue={employeeInfo?.payscale_label || data?.data?.label?.[0]?.item_value}
                 />
                 <DropDown
                   key="Payscale Years"
@@ -270,7 +273,7 @@ export default function OfficialInfoForm({
                       value: item.item_value,
                     })) || []
                   }
-                  defaultValue={employeeInfo?.payscale_year}
+                  defaultValue={employeeInfo?.payscale_year || data?.data?.year?.[0]?.item_value}
                 />
               </>
             )}

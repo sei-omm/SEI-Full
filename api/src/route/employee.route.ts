@@ -17,6 +17,7 @@ import {
   loginEmployee,
   removeEmployee,
   removeFacultyCourseSubject,
+  searchEmployeeName,
   updateAppraisalReport,
   updateAssetReturnDate,
   updateEmployee,
@@ -48,6 +49,7 @@ employeeRoute
   .get("/export-sheet", generateAllEmployeeExcelSheet)
   .get("/marketing-team", getMarketingTeam)
   .get("/leave", isAuthenticated, getEmployeeLeaveRequest)
+  .get("/search", searchEmployeeName)
 
   .get("/appraisal", isAuthenticated, getAppraisalList)
   .get("/appraisal/:appraisal_id", getSingleAppraisal)
@@ -59,9 +61,23 @@ employeeRoute
   .delete("/assets/:assets_id", deleteAssignAssets)
   .patch("/assets/:assets_id", updateAssetReturnDate)
 
-  .get("/:employee_id/document", roles(["Admin", "Own"]), getEmployeeDocuments) //roles not working properly
-  .get("/:id", roles(["Admin", "Own"]), getSingleEmployeeInfo)
-  
+  .get(
+    "/:employee_id/document",
+    roles({
+      roles: ["Admin", "Own"],
+      params: ["employee_id"],
+    }),
+    getEmployeeDocuments
+  )
+  .get(
+    "/:id",
+    roles({
+      roles: ["Admin", "Own"],
+      params: ["id"],
+    }),
+    getSingleEmployeeInfo
+  )
+
   .post("/", addNewEmployee)
   .post("/leave", isAuthenticated, createEmployeeLeaveRequest)
   .put("/:id", updateEmployee)
@@ -73,4 +89,4 @@ employeeRoute
   .delete(
     "/faculty-assign-course/:faculty_id/:course_id",
     removeFacultyCourseSubject
-  )
+  );

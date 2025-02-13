@@ -74,17 +74,20 @@ export default function Account() {
           <div className="space-y-1">
             <h2 className="font-semibold text-xl">{data?.data[0].name}</h2>
             <div className="bg-[#E9F0FD] inline-block text-xs text-[#7199E9] px-2 py-1 rounded-sm font-semibold">
-              {data?.data[0].job_title}
+              {data?.data[0].designation}
             </div>
           </div>
 
           <div className="absolute right-6 bottom-20 flex items-center gap-3">
-            <Link href={"/dashboard"}>
-              <Button className="!bg-transparent !text-black !shadow-none !border flex items-center gap-2">
-                <span>Open Crm</span>
-                <IoOpenOutline />
-              </Button>
-            </Link>
+            {data?.data[0].access_to_crm ? (
+              <Link href={"/dashboard"}>
+                <Button className="!bg-transparent !text-black !shadow-none !border flex items-center gap-2">
+                  <span>Open Crm</span>
+                  <IoOpenOutline />
+                </Button>
+              </Link>
+            ) : null}
+
             <Button
               onClick={() => {
                 if (!confirm("Are you sure you want to logout ?")) return;

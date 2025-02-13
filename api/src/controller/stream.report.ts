@@ -6,6 +6,7 @@ import {
   admissionReportValidator,
   courseTrendReportValidator,
   dgsIndosReportValidator,
+  inventoryReportValidator,
   occupancyExcelReportValidator,
   receiptReportValidator,
   refundReportValidator,
@@ -554,9 +555,54 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
   });
 
   const client = await pool.connect();
+  // const query = new QueryStream(
+  //   `
+  //      SELECT
+  //         row_number() OVER () AS sr_no,
+  //         ebc.form_id,
+  //         s.name,
+  //         cb.start_date,
+  //         cb.batch_fee,
+  //         (cb.batch_fee - SUM(p.paid_amount)) AS total_due,
+  //         SUM(p.paid_amount) AS total_paid,
+  //         SUM(p.misc_payment) AS total_misc_payment,
+  //         ff.form_status,
+  //         s.indos_number,
+  //         s.mobile_number,
+  //         s.email,
+  //         STRING_AGG(p.payment_type, ', ') AS payment_types,
+  //         STRING_AGG(p.mode, ', ') AS payment_modes,
+  //         STRING_AGG(p.payment_id, ', ') AS payment_ids,
+  //         STRING_AGG(p.remark, ', ') AS remarks
+  //       FROM enrolled_batches_courses AS ebc
+
+  //       LEFT JOIN students AS s
+  //           ON s.student_id = ebc.student_id
+  //       LEFT JOIN course_batches AS cb
+  //           ON cb.batch_id = ebc.batch_id
+  //       RIGHT JOIN payments AS p
+  //           ON p.batch_id = ebc.batch_id
+  //       LEFT JOIN fillup_forms AS ff
+  //           ON ff.form_id = ebc.form_id
+  //       LEFT JOIN courses AS c
+  //           ON c.course_id = ebc.course_id
+
+  //       WHERE ebc.course_id = $1
+  //             AND cb.start_date = $2
+  //             AND c.institute = $3
+  //             AND c.course_type = $4
+
+  //       GROUP BY p.student_id, ebc.form_id, s.name, cb.start_date, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email, ff.created_at, s.dob, cb.start_date
+  //   `,
+  //   [value.course_id, value.batch_date, value.institute, value.course_type],
+  //   {
+  //     batchSize: 10,
+  //   }
+  // );
+
   const query = new QueryStream(
     `
-       SELECT 
+       SELECT
           row_number() OVER () AS sr_no,
           ebc.form_id,
           s.name,
@@ -573,26 +619,30 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
           STRING_AGG(p.mode, ', ') AS payment_modes,
           STRING_AGG(p.payment_id, ', ') AS payment_ids,
           STRING_AGG(p.remark, ', ') AS remarks
-        FROM enrolled_batches_courses AS ebc
+      FROM course_batches cb
 
-        LEFT JOIN students AS s
-            ON s.student_id = ebc.student_id
-        LEFT JOIN course_batches AS cb
-            ON cb.batch_id = ebc.batch_id
-        RIGHT JOIN payments AS p
-            ON p.batch_id = ebc.batch_id
-        LEFT JOIN fillup_forms AS ff
-            ON ff.form_id = ebc.form_id
-        LEFT JOIN courses AS c
-            ON c.course_id = ebc.course_id
+      LEFT JOIN courses c
+      ON c.course_id = cb.course_id
 
-        WHERE ebc.course_id = $1
+      LEFT JOIN enrolled_batches_courses ebc
+      ON ebc.batch_id = cb.batch_id
+
+      LEFT JOIN students s
+      ON s.student_id = ebc.student_id
+
+      LEFT JOIN fillup_forms ff
+      ON ff.form_id = ebc.form_id
+
+      LEFT JOIN payments AS p
+      ON p.batch_id = cb.batch_id AND p.student_id = s.student_id
+
+        WHERE cb.course_id = $1
               AND cb.start_date = $2
               AND c.institute = $3
               AND c.course_type = $4
                       
-        GROUP BY p.student_id, ebc.form_id, s.name, cb.start_date, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email, ff.created_at, s.dob, cb.start_date
-    `,
+        GROUP BY s.name, ebc.form_id, cb.start_date, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email
+      `,
     [value.course_id, value.batch_date, value.institute, value.course_type],
     {
       batchSize: 10,
@@ -659,7 +709,7 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
   });
   const worksheet = workbook.addWorksheet("Receipt Report");
 
-  worksheet.mergeCells("A1:T1");
+  worksheet.mergeCells("A1:U1");
   worksheet.getCell(
     "A1"
   ).value = `Receipt Report (${value.institute}) ${value.from_date} -> ${value.to_date}`;
@@ -699,7 +749,8 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
     "Misc Remark",
     "Receipt Number",
     "Discount Amount",
-    "Discount Remark"
+    "Discount Remark",
+    "Bank Transaction ID",
   ]);
 
   // Row styling (header row)
@@ -734,7 +785,7 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
       p.form_id,
       p.created_at,
       s.name,
-      cb.batch_fee - (SELECT SUM(paid_amount) FROM payments WHERE batch_id = cb.batch_id) as due_amount,
+      cb.batch_fee - COALESCE(SUM(p.paid_amount) OVER (PARTITION BY cb.batch_id, s.student_id), 0) AS due_amount,
       s.indos_number,
       s.dob,
       c.course_code,
@@ -749,7 +800,8 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
       p.misc_remark,
       p.receipt_no,
       p.discount_amount,
-      p.discount_remark
+      p.discount_remark,
+      p.bank_transaction_id
       FROM payments AS p
 
       LEFT JOIN course_batches AS cb
@@ -764,6 +816,7 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
       WHERE c.institute = $1 AND DATE(p.created_at) BETWEEN $2 AND $3
 
       GROUP BY 
+       s.student_id,
        cb.batch_id,
        p.form_id, 
        cb.batch_fee,
@@ -986,7 +1039,7 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
 
     const query = new QueryStream(
       `
-      SELECT DISTINCT
+      SELECT
           row_number() OVER () AS sr_no,
           cb.start_date AS created_at,
           c.course_name,
@@ -1008,11 +1061,12 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
         INNER JOIN course_batches cb
         ON cb.batch_id = ebc.batch_id
 
-        INNER JOIN payments p
-        ON p.batch_id = ebc.batch_id
-
         INNER JOIN students s
         ON s.student_id = ebc.student_id
+
+        INNER JOIN payments p
+        ON p.batch_id = ebc.batch_id AND p.student_id = s.student_id
+
 
         ${FILTER}
 
@@ -1617,6 +1671,142 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
         GROUP BY s.name, c.course_name, cb.start_date, r.refund_amount, r.refund_reason, r.bank_details, r.created_at, r.executive_name, r.refund_id
     `,
     filtersValues,
+    {
+      batchSize: 10,
+    }
+  );
+
+  const pgStream = client.query(query);
+
+  // Process PostgreSQL stream data and append to Excel sheet
+  pgStream.on("data", (data) => {
+    const excelRow = worksheet.addRow(Object.values(data));
+    // Style the data rows
+    excelRow.eachCell((cell) => {
+      cell.style = {
+        font: { size: 11 },
+        alignment: { horizontal: "center" },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+  });
+
+  pgStream.on("end", () => {
+    workbook.commit();
+    client.release(); // Release the client when done
+  });
+
+  pgStream.on("error", (err) => {
+    client.release();
+  });
+});
+
+export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
+  const { error, value } = inventoryReportValidator.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  // Set response headers for streaming
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="Inventory_Report.xlsx"'
+  );
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+    stream: res,
+    useStyles: true,
+  });
+  const worksheet = workbook.addWorksheet("Inventory Report");
+
+  worksheet.mergeCells("A1:J1");
+  worksheet.getCell("A1").value = `Inventory Report (${value.institute}) ${beautifyDate(value.from_date)} - ${beautifyDate(value.to_date)}`;
+  worksheet.getCell("A1").font = {
+    size: 20,
+    bold: true,
+    color: { argb: "000000" },
+  };
+  worksheet.getCell("A1").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFF00" },
+  };
+  worksheet.getRow(1).height = 30;
+  worksheet.getCell("A1").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+
+  worksheet.addRow([
+    "SR NUMBER",
+    "DATE",
+    "ITEM NAME",
+    "MINIMUM STOCK",
+    "SUPPLIER",
+    "STOCKS ADDED",
+    "EACH STOCK CPU",
+    "EACH STOCK STATUS",
+    "EACH STOCK TOTAL VALUE",
+    "CONSUME STOCK",
+  ]);
+
+  // Row styling (header row)
+  worksheet.getRow(2).eachCell((cell) => {
+    cell.style = {
+      font: {
+        bold: true,
+        size: 12,
+        color: { argb: "000000" },
+      },
+      alignment: { horizontal: "center", vertical: "middle" },
+      fill: {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F4A460" },
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+  });
+
+  const client = await pool.connect();
+  const query = new QueryStream(
+    `
+      SELECT
+        row_number() OVER () AS sr_no,
+        isi.purchase_date,
+        iii.item_name,
+        iii.minimum_quantity,
+        v.vendor_name,
+        STRING_AGG(isi.stock::TEXT, ', ') AS added_stocks,
+        STRING_AGG(isi.cost_per_unit::TEXT, ', ') AS each_stock_cpu,
+        STRING_AGG(isi.status, ', ') AS stock_added_status,
+        STRING_AGG(isi.total_value::TEXT, ', ') AS each_stock_total_value,
+		    (SELECT SUM(consume_stock) FROM inventory_item_consume WHERE item_id = iii.item_id AND consumed_date = isi.purchase_date) AS consumed_stock
+      FROM inventory_item_info iii
+
+      LEFT JOIN vendor v
+      ON v.vendor_id = iii.vendor_id
+
+      LEFT JOIN inventory_stock_info isi
+      ON isi.item_id = iii.item_id
+
+      WHERE iii.institute = $1 AND isi.purchase_date BETWEEN $2 AND $3
+
+      GROUP BY iii.item_id, v.vendor_name, isi.purchase_date
+    `,
+    [value.institute, value.from_date, value.to_date],
     {
       batchSize: 10,
     }

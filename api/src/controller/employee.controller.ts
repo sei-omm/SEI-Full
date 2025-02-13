@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import XLSX from "xlsx-js-style";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import { pool } from "../config/db";
@@ -182,19 +182,20 @@ export const getEmployee = asyncErrorHandler(
             e.id AS employee_id,
             e.name,
             e.profile_image,
-            e.job_title,
+            e.employee_type,
             d.name AS department_name,
             -- COALESCE(a.status, 'Pending') AS attendance_status
-            COALESCE(
-              (SELECT 'Holiday' FROM holiday_management WHERE holiday_date = CURRENT_DATE),
-              COALESCE(a.status, 'Pending')
-            ) AS attendance_status
+            -- COALESCE(
+             -- (SELECT 'Holiday' FROM holiday_management WHERE holiday_date = CURRENT_DATE),
+             --  COALESCE(a.status, 'Pending')
+            -- ) AS attendance_status
+            e.is_active
         FROM 
             employee e
-        LEFT JOIN 
-            attendance a 
-            ON e.id = a.employee_id
-            AND a.date = $${placeholderNum}
+        -- LEFT JOIN 
+        --    attendance 
+        --    ON e.id = a.employee_id
+        --    AND a.date = $${placeholderNum}
         LEFT JOIN 
             department d 
             ON e.department_id = d.id
@@ -204,9 +205,8 @@ export const getEmployee = asyncErrorHandler(
         OFFSET ${OFFSET}
         LIMIT ${LIMIT};
     `;
-    const queryValues = [...filterValues, getDate(date)];
 
-    const { rows } = await pool.query(query, queryValues);
+    const { rows } = await pool.query(query, filterValues);
 
     res.status(200).json(new ApiResponse(200, "All Employee Info", rows));
   }
@@ -236,7 +236,8 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
             SELECT 
               json_agg(el.*) 
             FROM employee_leave el WHERE el.employee_id = e.id AND el.financial_year_date >= get_financial_year_start()
-          ) AS leave_details
+          ) AS leave_details,
+           (CASE WHEN e.employee_role = 'Admin' THEN true ELSE false END) AS access_to_crm
         FROM 
             employee e
         LEFT JOIN 
@@ -321,23 +322,29 @@ export const addNewEmployee = asyncErrorHandler(
         doc_name = EXCLUDED.doc_name
     `;
 
-    const cl = req.body.cl;
-    const sl = req.body.sl;
-    const el = req.body.el;
-    const ml = req.body.ml;
-    delete req.body.cl;
-    delete req.body.sl;
-    delete req.body.el;
-    delete req.body.ml;
+    // const cl = req.body.cl;
+    // const sl = req.body.sl;
+    // const el = req.body.el;
+    // const ml = req.body.ml;
+    // delete req.body.cl;
+    // delete req.body.sl;
+    // delete req.body.el;
+    // delete req.body.ml;
+    const cl = 10;
+    const sl = 10;
+    const el = 0;
+    const ml = 84;
     const { columns, params, values } = objectToSqlInsert(req.body);
-    const sql = `INSERT INTO ${table_name} ${columns} VALUES ${params} RETURNING id`;
 
     const client = await pool.connect();
 
-    const { error: err } = await tryCatch(async () => {
+    try {
       await client.query("BEGIN");
 
-      const { rows } = await client.query(sql, values);
+      const { rows } = await client.query(
+        `INSERT INTO ${table_name} ${columns} VALUES ${params} RETURNING id`,
+        values
+      );
       const employeeGeneratedId = rows[0].id;
 
       //it's a bad thing to do don't do it. i don't want to run insert query mannualy.
@@ -368,7 +375,7 @@ export const addNewEmployee = asyncErrorHandler(
         await client.query(sqlForEmployeeDocsInfo, valuesForEmployeeDocsInfo);
       }
 
-      await pool.query(
+      await client.query(
         `
         INSERT INTO employee_leave (employee_id, cl, sl, el, ml) VALUES ($1, $2, $3, $4, $5)
         `,
@@ -377,11 +384,10 @@ export const addNewEmployee = asyncErrorHandler(
 
       await client.query("COMMIT");
       client.release();
-    });
-
-    if (err) {
+    } catch (error: any) {
       await client.query("ROLLBACK");
       client.release();
+      throw new ErrorHandler(400, error.message);
     }
 
     res
@@ -1112,4 +1118,13 @@ export const updateAssetReturnDate = asyncErrorHandler(async (req, res) => {
   );
 
   res.status(200).json(new ApiResponse(200, "Asset Return Date Updated"));
+});
+
+export const searchEmployeeName = asyncErrorHandler(async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT name, id, employee_type FROM employee WHERE name ILIKE '%' || $1 || '%' LIMIT $2`,
+    [req.query.q, req.query.limit || 10]
+  );
+
+  res.status(200).json(rows);
 });

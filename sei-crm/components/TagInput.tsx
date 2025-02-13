@@ -3,6 +3,9 @@
 import { InputTypes } from "@/types";
 import { KeyboardEvent, LegacyRef, useEffect, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
+import Spinner from "./Spinner";
+
+type TTagInputSuggestion = { text: string; value: any };
 
 interface IProps extends InputTypes {
   wrapperCss?: string;
@@ -10,6 +13,10 @@ interface IProps extends InputTypes {
   hideLabel?: boolean;
   referal?: LegacyRef<HTMLInputElement>;
   hideInput?: boolean;
+  suggestionOptions?: TTagInputSuggestion[];
+  suggestionLoading?: boolean;
+  onSuggestionItemClick?: (option: TTagInputSuggestion) => void;
+  onTagRemove?: (index: number) => void;
 }
 
 export default function TagInput(props: IProps) {
@@ -23,10 +30,22 @@ export default function TagInput(props: IProps) {
     }
   };
 
+  const handleSuggestionOptionClick = (option: TTagInputSuggestion) => {
+    const newArr = [...tags];
+    newArr.push(option.text);
+    setTags(newArr);
+    if (props.onSuggestionItemClick) {
+      props.onSuggestionItemClick(option);
+    }
+  };
+
   const handleRemoveTag = (index: number) => {
     const newArr = [...tags];
     newArr.splice(index, 1);
     setTags(newArr);
+    if (props.onTagRemove) {
+      props.onTagRemove(index);
+    }
   };
 
   useEffect(() => {
@@ -37,7 +56,7 @@ export default function TagInput(props: IProps) {
   }, [props.defaultValue]);
 
   return (
-    <div className={`${props.wrapperCss}`}>
+    <div className={`${props.wrapperCss} !relative`}>
       {props.hideLabel ? null : (
         <span className="block font-semibold text-sm pl-1 mb-[0.5rem]">
           {props.label}
@@ -84,6 +103,29 @@ export default function TagInput(props: IProps) {
           }`}
         />
       </div>
+      {props.suggestionOptions && props.suggestionOptions.length !== 0 ? (
+        <div className="absolute w-full z-40">
+          <div className="mt-1 bg-white shadow-2xl border-2 border-gray-200 rounded-lg">
+            {props.suggestionLoading ? (
+              <div className="flex items-center justify-center py-5">
+                <Spinner size="18px" />
+              </div>
+            ) : (
+              <ul>
+                {props.suggestionOptions.map((item) => (
+                  <li
+                    onClick={() => handleSuggestionOptionClick(item)}
+                    key={item.value}
+                    className="py-2 px-4 text-sm font-medium cursor-pointer hover:bg-gray-200"
+                  >
+                    {item.text}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

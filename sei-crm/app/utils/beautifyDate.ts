@@ -1,15 +1,26 @@
-export const beautifyDate = (dateStr: string) => {
+export const beautifyDate = (
+  dateStr: string,
+  withTime: boolean = false
+): string => {
   if (dateStr === "") return "";
 
   const date = new Date(dateStr);
-
-  //2024-11-01 13:44:17.787182
 
   const formattedDate = new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   }).format(date);
+
+  if (withTime) {
+    const formattedTime = new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true, // Ensures 24-hour format
+    }).format(date);
+
+    return `${formattedDate} ${formattedTime}`;
+  }
 
   return formattedDate;
 };

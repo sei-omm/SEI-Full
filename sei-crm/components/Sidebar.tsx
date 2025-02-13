@@ -287,6 +287,12 @@ const sidebarOptions = [
         name: "Refund Report",
         slug: "/dashboard/report/refund",
       },
+      {
+        id: "5-9",
+        icon: <TbReportSearch />,
+        name: "Inventory Report",
+        slug: "/dashboard/report/inventory",
+      },
     ],
   },
   {
@@ -410,7 +416,8 @@ export default function Sidebar() {
                     <Link
                       href={submenuInfo.slug}
                       className={`flex items-center text-[0.775rem] font-semibold gap-x-3 py-2 px-3 rounded-lg hover:bg-[#E4E6E9] ${
-                        submenuInfo.slug.includes(pathname)
+                        submenuInfo.slug.includes(pathname) &&
+                        pathname !== "/dashboard"
                           ? "bg-[#E4E6E9]"
                           : "bg-transparent"
                       }`}

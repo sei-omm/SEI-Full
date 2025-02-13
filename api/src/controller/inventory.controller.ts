@@ -16,6 +16,7 @@ import {
   addNewPlannedMaintenanceSystemValidator,
   addNewVendorValidator,
   calcluteStockInfoValidator,
+  changeLastDoneDateValidator,
   consumeStockValidator,
   deleteCategoryValidator,
   deleteConsumableItemValidator,
@@ -65,82 +66,112 @@ export const addNewList = asyncErrorHandler(
 );
 
 //for inventory item basic info
+// export const getAllItemInfo = asyncErrorHandler(
+//   async (req: Request, res: Response) => {
+//     const { LIMIT, OFFSET } = parsePagination(req);
+//     const { filterQuery, filterValues } = filterToSql(req.query, "iii");
+
+//     const { rows } = await pool.query(
+//       `
+//         SELECT
+//             iii.item_id,
+//             iii.item_name,
+//             iii.category,
+//             iii.sub_category,
+//             iii.minimum_quantity,
+//             SUM(isi.opening_stock) AS opening_stock,
+//             SUM(isi.item_consumed) AS item_consumed,
+//             SUM(isi.opening_stock) - SUM(isi.item_consumed) AS closing_stock,
+//             iii.current_status,
+//             iii.current_purchase_date,
+//             -- iii.current_vendor_id,
+//             iii.vendor_id,
+//             v.vendor_name AS current_vendor_name,
+//             iii.cost_per_unit_current,
+//             iii.cost_per_unit_previous,
+//             SUM(isi.total_value) AS total_value
+//         FROM inventory_item_info AS iii
+//         LEFT JOIN inventory_stock_info AS isi
+//           ON isi.item_id = iii.item_id
+//         LEFT JOIN vendor AS v
+//           ON v.vendor_id = iii.vendor_id
+
+//         ${filterQuery}
+
+//         GROUP BY iii.item_id, v.vendor_name
+
+//         ORDER BY iii.created_at DESC
+//         LIMIT ${LIMIT} OFFSET ${OFFSET}
+//   `,
+//       filterValues
+//     );
+
+//     res.status(200).json(new ApiResponse(200, "", rows));
+//   }
+// );
+
 export const getAllItemInfo = asyncErrorHandler(
   async (req: Request, res: Response) => {
+    const search = req.query.search;
+    delete req.query.search;
+
     const { LIMIT, OFFSET } = parsePagination(req);
     const { filterQuery, filterValues } = filterToSql(req.query, "iii");
 
-    //   const { rows } = await pool.query(
-    //     `
-    //       SELECT
-    //           iii.item_id,
-    //           iii.item_name,
-    //           iii.category,
-    //           iii.sub_category,
-    //           iii.minimum_quantity,
-    //           SUM(isi.opening_stock) AS opening_stock,
-    //           SUM(isi.item_consumed) AS item_consumed,
-    //           SUM(isi.opening_stock) - SUM(isi.item_consumed) AS closing_stock,
-    //           iii.current_status,
-    //           iii.current_purchase_date,
-    //           iii.current_vendor_id,
-    //           v.vendor_name AS current_vendor_name,
-    //           iii.cost_per_unit_current,
-    //           iii.cost_per_unit_previous,
-    //           SUM(isi.total_value) AS total_value
-    //       FROM inventory_item_info AS iii
-    //       LEFT JOIN inventory_stock_info AS isi
-    //         ON isi.item_id = iii.item_id
-    //       LEFT JOIN vendor AS v
-    //         ON v.vendor_id = isi.vendor_id
-
-    //       ${filterQuery}
-
-    //       GROUP BY iii.item_id, v.vendor_name
-
-    //       ORDER BY iii.created_at DESC
-    //       LIMIT ${LIMIT} OFFSET ${OFFSET}
-    //  `,
-    //     filterValues
-    //   );
-
     const { rows } = await pool.query(
       `
-        SELECT
-            iii.item_id,
-            iii.item_name,
-            iii.category,
-            iii.sub_category,
-            iii.minimum_quantity,
-            SUM(isi.opening_stock) AS opening_stock,
-            SUM(isi.item_consumed) AS item_consumed,
-            SUM(isi.opening_stock) - SUM(isi.item_consumed) AS closing_stock,
-            iii.current_status,
-            iii.current_purchase_date,
-            iii.current_vendor_id,
-            v.vendor_name AS current_vendor_name,
-            iii.cost_per_unit_current,
-            iii.cost_per_unit_previous,
-            SUM(isi.total_value) AS total_value
-        FROM inventory_item_info AS iii
-        LEFT JOIN inventory_stock_info AS isi
-          ON isi.item_id = iii.item_id
-        LEFT JOIN vendor AS v
-          ON v.vendor_id = iii.current_vendor_id
-        
-        ${filterQuery}
+      WITH update_opening_stock AS (
+        UPDATE inventory_item_info SET
+          opening_stock = closing_stock,
+          updated_date = CURRENT_DATE,
+          item_consumed = 0
+        WHERE updated_date != CURRENT_DATE
+        RETURNING opening_stock, item_id
+      )
+      SELECT
+        iii.*,
+        v.vendor_name,
+        COALESCE(u.opening_stock, iii.opening_stock) AS opening_stock
+      FROM inventory_item_info iii
 
-        GROUP BY iii.item_id, v.vendor_name
+      LEFT JOIN vendor v
+      ON v.vendor_id = iii.vendor_id
 
-        ORDER BY iii.created_at DESC
-        LIMIT ${LIMIT} OFFSET ${OFFSET}
-  `,
-      filterValues
+      LEFT JOIN update_opening_stock u 
+      ON u.item_id = iii.item_id
+
+      ${
+        search
+          ? `
+            WHERE iii.item_name ILIKE '%' || $1 || '%' 
+                  OR iii.item_id::TEXT LIKE '%' || $1 || '%'
+      `
+          : filterQuery
+      }
+      
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
+      `,
+      search ? [search] : filterValues
     );
 
-    res.status(200).json(new ApiResponse(200, "", rows));
+    res.status(200).json(new ApiResponse(200, "Inventory Item Info", rows));
   }
 );
+
+export const getItemOfVendor = asyncErrorHandler(async (req, res) => {
+  const { rows } = await pool.query(
+    `
+    SELECT
+      item_id,
+      item_name
+    FROM inventory_item_info
+    WHERE vendor_id = $1
+    `,
+    [req.params.vendor_id]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Vendor Items", rows));
+});
 
 export const getItemsForDropDown = asyncErrorHandler(
   async (req: Request, res: Response) => {
@@ -270,9 +301,9 @@ export const addMulipInventoryItem = asyncErrorHandler(async (req, res) => {
   await pool.query(
     `
     INSERT INTO inventory_item_info
-      (item_name, category, sub_category, where_to_use, used_by, description, minimum_quantity, institute)
+      (item_name, category, sub_category, where_to_use, used_by, description, minimum_quantity, institute, vendor_id)
      VALUES
-      ${sqlPlaceholderCreator(8, value.length).placeholder}
+      ${sqlPlaceholderCreator(9, value.length).placeholder}
     `,
     value.flatMap((item) => [
       item.item_name,
@@ -283,6 +314,7 @@ export const addMulipInventoryItem = asyncErrorHandler(async (req, res) => {
       item.description,
       item.minimum_quantity,
       item.institute,
+      item.vendor_id,
     ])
   );
 
@@ -464,6 +496,92 @@ export const addNewItemStock = asyncErrorHandler(
   }
 );
 
+// export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
+//   const { error, value } = addMultiItemStockValidator.validate(req.body);
+//   if (error) throw new ErrorHandler(400, error.message);
+
+//   const client = await pool.connect();
+
+//   try {
+//     await client.query("BEGIN");
+
+//     const valuesForUpdate: (string | null)[] = [];
+//     if (value.length > 1) {
+//       const lastIndex = value.length - 1;
+//       const lastPrevIndex = value.length - 2;
+//       valuesForUpdate.push(value[lastIndex].status);
+//       valuesForUpdate.push(value[lastIndex].vendor_id);
+//       valuesForUpdate.push(value[lastIndex].cost_per_unit_current);
+//       valuesForUpdate.push(value[lastPrevIndex].cost_per_unit_current);
+//       valuesForUpdate.push(value[lastIndex].purchase_date);
+//       valuesForUpdate.push(value[0].item_id);
+//     } else {
+//       const { rows, rowCount } = await client.query(
+//         ` SELECT cost_per_unit_current, purchase_date
+//           FROM inventory_stock_info
+//           WHERE item_id = $1
+//           ORDER BY purchase_date DESC
+//           LIMIT 1`,
+//         [value[0].item_id]
+//       );
+//       valuesForUpdate.push(value[0].status);
+//       valuesForUpdate.push(value[0].vendor_id);
+//       valuesForUpdate.push(value[0].cost_per_unit_current);
+//       if (rowCount === 0) {
+//         valuesForUpdate.push(null);
+//       } else {
+//         valuesForUpdate.push(rows[0].cost_per_unit_current);
+//       }
+//       valuesForUpdate.push(value[0].purchase_date);
+//       valuesForUpdate.push(value[0].item_id);
+//     }
+
+//     await client.query(
+//       `
+//        UPDATE inventory_item_info
+//         SET current_status = $1,
+//             current_vendor_id = $2,
+//             cost_per_unit_current = $3,
+//             cost_per_unit_previous = $4,
+//             current_purchase_date = $5
+//        WHERE item_id = $6
+//       `,
+//       valuesForUpdate
+//     );
+
+//     await client.query(
+//       `
+//       INSERT INTO inventory_stock_info
+//         (opening_stock, item_consumed, closing_stock, status, vendor_id, cost_per_unit_current, total_value, remark, item_id, type, purchase_date)
+//       VALUES
+//         ${sqlPlaceholderCreator(11, value.length).placeholder}
+//       `,
+//       value.flatMap((item) => [
+//         item.opening_stock,
+//         item.item_consumed,
+//         item.closing_stock,
+//         item.status,
+//         item.vendor_id,
+//         item.cost_per_unit_current,
+//         item.total_value,
+//         item.remark,
+//         item.item_id,
+//         item.type,
+//         item.purchase_date,
+//       ])
+//     );
+
+//     await client.query("COMMIT");
+//     client.release();
+//   } catch (error: any) {
+//     await client.query("ROLLBACK");
+//     client.release();
+//     throw new ErrorHandler(400, error?.message);
+//   }
+
+//   res.status(200).json(new ApiResponse(200, "Stock informations Are Saved"));
+// });
+
 export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
   const { error, value } = addMultiItemStockValidator.validate(req.body);
   if (error) throw new ErrorHandler(400, error.message);
@@ -473,68 +591,80 @@ export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    const valuesForUpdate: (string | null)[] = [];
-    if (value.length > 1) {
-      const lastIndex = value.length - 1;
-      const lastPrevIndex = value.length - 2;
-      valuesForUpdate.push(value[lastIndex].status);
-      valuesForUpdate.push(value[lastIndex].vendor_id);
-      valuesForUpdate.push(value[lastIndex].cost_per_unit_current);
-      valuesForUpdate.push(value[lastPrevIndex].cost_per_unit_current);
-      valuesForUpdate.push(value[lastIndex].purchase_date);
-      valuesForUpdate.push(value[0].item_id);
-    } else {
-      const { rows, rowCount } = await client.query(
-        ` SELECT cost_per_unit_current, purchase_date  
-          FROM inventory_stock_info 
-          WHERE item_id = $1 
-          ORDER BY purchase_date DESC 
-          LIMIT 1`,
-        [value[0].item_id]
-      );
-      valuesForUpdate.push(value[0].status);
-      valuesForUpdate.push(value[0].vendor_id);
-      valuesForUpdate.push(value[0].cost_per_unit_current);
-      if (rowCount === 0) {
-        valuesForUpdate.push(null);
-      } else {
-        valuesForUpdate.push(rows[0].cost_per_unit_current);
-      }
-      valuesForUpdate.push(value[0].purchase_date);
-      valuesForUpdate.push(value[0].item_id);
-    }
-
     await client.query(
       `
-       UPDATE inventory_item_info
-        SET current_status = $1, 
-            current_vendor_id = $2, 
-            cost_per_unit_current = $3, 
-            cost_per_unit_previous = $4,
-            current_purchase_date = $5
-       WHERE item_id = $6
-      `,
-      valuesForUpdate
+      CREATE TEMP TABLE temp_info_table 
+        (
+        item_id INT, 
+        current_purchase_date DATE, 
+        cost_per_unit_current DECIMAL(10, 2),
+        status TEXT,
+        total_value DECIMAL(10, 2),
+        opening_stock INT
+        )
+        
+      `
     );
 
     await client.query(
       `
-      INSERT INTO inventory_stock_info 
-        (opening_stock, item_consumed, closing_stock, status, vendor_id, cost_per_unit_current, total_value, remark, item_id, type, purchase_date)
+      INSERT INTO temp_info_table 
+        (
+          item_id, current_purchase_date, cost_per_unit_current, status, total_value, opening_stock
+        )
       VALUES
-        ${sqlPlaceholderCreator(11, value.length).placeholder}
+        ${sqlPlaceholderCreator(6, value.length).placeholder}
       `,
       value.flatMap((item) => [
-        item.opening_stock,
-        item.item_consumed,
-        item.closing_stock,
+        item.item_id,
+        item.purchase_date,
+        item.cost_per_unit,
         item.status,
-        item.vendor_id,
-        item.cost_per_unit_current,
+        item.total_value,
+        item.stock,
+      ])
+    );
+
+    await client.query(
+      `
+      UPDATE inventory_item_info SET 
+        current_purchase_date = CASE
+          WHEN tmp.current_purchase_date < CURRENT_DATE THEN inventory_item_info.current_purchase_date
+          ELSE tmp.current_purchase_date
+        END,
+        cost_per_unit_previous = CASE
+          WHEN (CURRENT_DATE - tmp.current_purchase_date) = 1 THEN tmp.cost_per_unit_current
+          ELSE inventory_item_info.cost_per_unit_current
+        END,
+        cost_per_unit_current = CASE
+          WHEN tmp.current_purchase_date < CURRENT_DATE THEN inventory_item_info.cost_per_unit_current
+          ELSE tmp.cost_per_unit_current
+        END,
+        -- cost_per_unit_previous = inventory_item_info.cost_per_unit_current,
+        current_status = tmp.status,
+        total_value = inventory_item_info.total_value + tmp.total_value,
+        opening_stock = inventory_item_info.opening_stock + tmp.opening_stock,
+        closing_stock = inventory_item_info.opening_stock + tmp.opening_stock - inventory_item_info.item_consumed
+      FROM temp_info_table tmp
+      WHERE inventory_item_info.item_id = tmp.item_id
+      `
+    );
+
+    //add inof to inventory stock info
+    await client.query(
+      `
+      INSERT INTO inventory_stock_info 
+        (stock, status, cost_per_unit, total_value, remark, item_id, purchase_date)
+      VALUES
+        ${sqlPlaceholderCreator(7, value.length).placeholder}
+      `,
+      value.flatMap((item) => [
+        item.stock,
+        item.status,
+        item.cost_per_unit,
         item.total_value,
         item.remark,
         item.item_id,
-        item.type,
         item.purchase_date,
       ])
     );
@@ -544,22 +674,46 @@ export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
   } catch (error: any) {
     await client.query("ROLLBACK");
     client.release();
-    throw new ErrorHandler(400, error?.message);
+    throw new ErrorHandler(400, error.message);
   }
 
-  res.status(200).json(new ApiResponse(200, "Stock informations Are Saved"));
+  res.status(201).json(new ApiResponse(201, "Stock Info Added"));
 });
 
 export const consumeStock = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { error } = consumeStockValidator.validate(req.body);
+    const { error, value } = consumeStockValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
-    const { columns, values, params } = objectToSqlInsert(req.body);
-    await pool.query(
-      `INSERT INTO inventory_stock_info ${columns} VALUES ${params}`,
-      values
-    );
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      //consume stock date form inventory_item_info table
+      await client.query(
+        `
+        UPDATE inventory_item_info SET 
+          item_consumed = inventory_item_info.item_consumed + $1,
+          closing_stock = inventory_item_info.closing_stock - $1
+        WHERE item_id = $2
+        `,
+        [value.consume_stock, value.item_id]
+      );
+
+      //add new row to inventory_stock_info table
+      const { columns, values, params } = objectToSqlInsert(value);
+      await client.query(
+        `INSERT INTO inventory_item_consume ${columns} VALUES ${params}`,
+        values
+      );
+
+      await client.query("COMMIT");
+      client.release();
+    } catch (error: any) {
+      await client.query("ROLLBACK");
+      client.release();
+      throw new ErrorHandler(400, error.message);
+    }
 
     res.status(200).json(new ApiResponse(200, "Item Has Consumed From Stock"));
   }
@@ -619,7 +773,7 @@ export const getMaintenceRecords = asyncErrorHandler(
         FROM maintence_record AS mr
   
         LEFT JOIN inventory_item_info AS iii
-        ON iii.item_id = mr.item_id
+        ON iii.item_id = mr.item_id AND mr.item_id != NULL
         ${filterQuery}
         ORDER BY mr.created_at DESC
         LIMIT ${LIMIT} OFFSET ${OFFSET}
@@ -662,25 +816,103 @@ export const addMultiMaintenceRecord = asyncErrorHandler(async (req, res) => {
   const { error, value } = addMultiMaintenceRecordValidator.validate(req.body);
   if (error) throw new ErrorHandler(400, error.message);
 
-  await pool.query(
-    `INSERT INTO maintence_record (item_id, maintence_date, work_station, description_of_work, department, assigned_person, approved_by, cost, status, remark, institute, completed_date) VALUES ${
-      sqlPlaceholderCreator(12, value.length).placeholder
-    }`,
-    value.flatMap((item) => [
-      item.item_id,
-      item.maintence_date,
-      item.work_station,
-      item.description_of_work,
-      item.department,
-      item.assigned_person,
-      item.approved_by,
-      item.cost,
-      item.status,
-      item.remark,
-      item.institute,
-      item.completed_date,
-    ])
-  );
+  const inventoryItem: any[] = [];
+  const customItem: any[] = [];
+  value.forEach((item) => {
+    if (item.item_id) {
+      inventoryItem.push(item);
+    } else {
+      customItem.push(item);
+    }
+  });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    if (inventoryItem.length !== 0) {
+      await client.query(
+        `INSERT INTO maintence_record (item_id, maintence_date, work_station, description_of_work, department, assigned_person, approved_by, cost, status, remark, institute, completed_date) VALUES ${
+          sqlPlaceholderCreator(12, inventoryItem.length).placeholder
+        }
+
+        ON CONFLICT (item_id, maintence_date) DO UPDATE SET
+          item_id = EXCLUDED.item_id,
+          maintence_date = EXCLUDED.maintence_date,
+          work_station = EXCLUDED.work_station,
+          description_of_work = EXCLUDED.description_of_work,
+          department = EXCLUDED.department,
+          assigned_person = EXCLUDED.assigned_person,
+          approved_by = EXCLUDED.approved_by,
+          cost = EXCLUDED.cost,
+          status = EXCLUDED.status,
+          remark = EXCLUDED.remark,
+          institute = EXCLUDED.institute,
+          completed_date = EXCLUDED.completed_date
+        
+        `,
+        inventoryItem.flatMap((item) => [
+          item.item_id,
+          item.maintence_date,
+          item.work_station,
+          item.description_of_work,
+          item.department,
+          item.assigned_person,
+          item.approved_by,
+          item.cost,
+          item.status,
+          item.remark,
+          item.institute,
+          item.completed_date,
+        ])
+      );
+    }
+
+    if (customItem.length !== 0) {
+      await client.query(
+        `INSERT INTO maintence_record 
+          (custom_item, maintence_date, work_station, description_of_work, department, assigned_person, approved_by, cost, status, remark, institute, completed_date) 
+        VALUES ${sqlPlaceholderCreator(12, customItem.length).placeholder}
+
+        ON CONFLICT (custom_item, maintence_date) DO UPDATE SET
+        custom_item = EXCLUDED.custom_item,
+        maintence_date = EXCLUDED.maintence_date,
+        work_station = EXCLUDED.work_station,
+        description_of_work = EXCLUDED.description_of_work,
+        department = EXCLUDED.department,
+        assigned_person = EXCLUDED.assigned_person,
+        approved_by = EXCLUDED.approved_by,
+        cost = EXCLUDED.cost,
+        status = EXCLUDED.status,
+        remark = EXCLUDED.remark,
+        institute = EXCLUDED.institute,
+        completed_date = EXCLUDED.completed_date
+        `,
+        customItem.flatMap((item) => [
+          item.custom_item,
+          item.maintence_date,
+          item.work_station,
+          item.description_of_work,
+          item.department,
+          item.assigned_person,
+          item.approved_by,
+          item.cost,
+          item.status,
+          item.remark,
+          item.institute,
+          item.completed_date,
+        ])
+      );
+    }
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error: any) {
+    console.log(error);
+    await client.query("ROLLBACK");
+    client.release();
+    throw new ErrorHandler(400, error.mesage);
+  }
 
   res.status(200).json(new ApiResponse(200, "Maintence Informations Added"));
 });
@@ -721,27 +953,58 @@ export const updateMaintenceRecordStatus = asyncErrorHandler(
   }
 );
 
-export const getMaintenceRecordsExcel = asyncErrorHandler(
-  async (req: Request, res: Response) => {}
-);
+export const deleteMaintenceRecord = asyncErrorHandler(async (req, res) => {
+  await pool.query(`DELETE FROM maintence_record WHERE record_id = $1`, [
+    req.params.record_id,
+  ]);
+
+  res.status(200).json(new ApiResponse(200, "Record Successfully Removed"));
+});
 
 //for planned maintenance system
 export const getPlannedMaintenanceSystem = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { LIMIT, OFFSET } = parsePagination(req);
+    const institute = req.query.institute;
+    // const { rows } = await pool.query(
+    //   `
+    //   SELECT
+    //   pm.*,
+    //   iii.item_name
+    //   FROM planned_maintenance_system AS pm
+
+    //   LEFT JOIN inventory_item_info AS iii
+    //   ON iii.item_id = pm.item_id
+
+    //   ORDER BY planned_maintenance_system_id DESC
+    //   LIMIT ${LIMIT} OFFSET ${OFFSET}
+    //   `
+    // );
+
     const { rows } = await pool.query(
       `
-      SELECT 
-      pm.*,
-      iii.item_name
-      FROM planned_maintenance_system AS pm
+        WITH history_data AS (
+            SELECT DISTINCT ON (planned_maintenance_system_id) *
+            FROM pms_history
+            ORDER BY planned_maintenance_system_id, pms_history_id DESC 
+        )
+        SELECT
+            pm.*,
+            COALESCE(iii.item_name, pm.custom_item) as item_name,
+            hd.*
+        FROM planned_maintenance_system pm
 
-      LEFT JOIN inventory_item_info AS iii
-      ON iii.item_id = pm.item_id
+        LEFT JOIN inventory_item_info iii ON iii.item_id = pm.item_id
 
-      ORDER BY planned_maintenance_system_id DESC
+        LEFT JOIN history_data hd ON hd.planned_maintenance_system_id = pm.planned_maintenance_system_id
+
+      ${institute ? "WHERE pm.institute = $1" : ""}
+
+      ORDER BY hd.created_at DESC
+
       LIMIT ${LIMIT} OFFSET ${OFFSET}
-      `
+      `,
+      institute ? [institute] : []
     );
     res.status(200).json(new ApiResponse(200, "", rows));
   }
@@ -780,29 +1043,148 @@ export const addNewPlannedMaintenanceSystem = asyncErrorHandler(
   }
 );
 
-export const addMultiPlannedMaintenanceSystem = asyncErrorHandler(
+export const addMultiPlannedMaintenanceSystemInventoryItem = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error, value } = addMultiPlannedMaintenanceSystemValidator.validate(
       req.body
     );
     if (error) throw new ErrorHandler(400, error.message);
 
-    await pool.query(
-      `
-      INSERT INTO planned_maintenance_system 
-        (item_id, frequency, last_done, next_due, description, remark)
-      VALUES
-        ${sqlPlaceholderCreator(6, value.length).placeholder}
-      `,
-      value.flatMap((item) => [
-        item.item_id,
-        item.frequency,
-        item.last_done,
-        item.next_due,
-        item.description,
-        item.remark,
-      ])
-    );
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const inventoryItem: any[] = [];
+      const customItem: any[] = [];
+      value.forEach((item) => {
+        if (item.item_id) {
+          inventoryItem.push(item);
+        } else {
+          customItem.push(item);
+        }
+      });
+
+      const idOfNewRecords: number[] = [];
+
+      if (inventoryItem.length !== 0) {
+        const { rows, rowCount } = await client.query(
+          `
+          INSERT INTO planned_maintenance_system
+           (item_id, institute)
+          VALUES
+            ${sqlPlaceholderCreator(2, inventoryItem.length).placeholder}
+          ON CONFLICT (item_id, institute) DO NOTHING
+          RETURNING planned_maintenance_system_id
+          `,
+          inventoryItem.flatMap((item) => [item.item_id, item.institute])
+        );
+
+        if (rowCount === 0) {
+          const { rows: cRows } = await client.query(
+            `
+            SELECT planned_maintenance_system_id 
+            FROM planned_maintenance_system 
+            WHERE item_id IN (${inventoryItem
+              .map((item) => item.item_id)
+              .join(", ")}) AND institute IN ('${inventoryItem
+              .map((item) => item.institute)
+              .join(", ")}');
+            `
+          );
+
+          cRows.forEach((item) => {
+            idOfNewRecords.push(item.planned_maintenance_system_id);
+          });
+        } else {
+          rows.forEach((item) => {
+            idOfNewRecords.push(item.planned_maintenance_system_id);
+          });
+        }
+      }
+
+      if (customItem.length !== 0) {
+        const { rows: rows2, rowCount: rowCount2 } = await client.query(
+          `
+          INSERT INTO planned_maintenance_system
+           (custom_item, institute)
+          VALUES
+            ${sqlPlaceholderCreator(2, customItem.length).placeholder}
+          ON CONFLICT (custom_item, institute) DO NOTHING
+          RETURNING planned_maintenance_system_id
+          `,
+          customItem.flatMap((item) => [item.custom_item, item.institute])
+        );
+
+        if (rowCount2 === 0) {
+          const { rows: cRows } = await client.query(
+            `
+            SELECT planned_maintenance_system_id 
+            FROM planned_maintenance_system 
+            WHERE custom_item IN ('${customItem
+              .map((item) => item.custom_item)
+              .join(", ")}') AND institute IN ('${customItem
+              .map((item) => item.institute)
+              .join(", ")}');
+            `
+          );
+
+          cRows.forEach((item) => {
+            idOfNewRecords.push(item.planned_maintenance_system_id);
+          });
+        } else {
+          rows2.forEach((item) => {
+            idOfNewRecords.push(item.planned_maintenance_system_id);
+          });
+        }
+      }
+
+      const alreadyStoredIds = new Map();
+      let cIdIndex = 0;
+
+      await client.query(
+        `
+        INSERT INTO pms_history
+          (planned_maintenance_system_id, frequency, last_done, next_due, description, remark)
+        VALUES
+         ${sqlPlaceholderCreator(6, value.length).placeholder}
+        `,
+        value.flatMap((item) => {
+          let pmsIdToStore = 0;
+          if (
+            alreadyStoredIds.has(
+              `${item.item_id}-${item.custom_item}-${item.institute}`
+            )
+          ) {
+            pmsIdToStore = alreadyStoredIds.get(
+              `${item.item_id}-${item.custom_item}-${item.institute}`
+            );
+          } else {
+            alreadyStoredIds.set(
+              `${item.item_id}-${item.custom_item}-${item.institute}`,
+              idOfNewRecords[cIdIndex]
+            );
+            pmsIdToStore = idOfNewRecords[cIdIndex];
+            cIdIndex++;
+          }
+          return [
+            pmsIdToStore,
+            item.frequency,
+            item.last_done,
+            item.next_due,
+            item.description,
+            item.remark,
+          ];
+        })
+      );
+
+      await client.query("COMMIT");
+      client.release();
+    } catch (error: any) {
+      await client.query("ROLLBACK");
+      client.release();
+      throw new ErrorHandler(400, error.message);
+    }
 
     res.status(200).json(new ApiResponse(200, "Rows Are Added"));
   }
@@ -828,6 +1210,32 @@ export const updatePlannedMaintenanceSystem = asyncErrorHandler(
       .json(new ApiResponse(200, "Planned Maintenance System Has Updated"));
   }
 );
+
+export const changeLastDoneDate = asyncErrorHandler(async (req, res) => {
+  const { error, value } = changeLastDoneDateValidator.validate({
+    ...req.params,
+    ...req.body,
+  });
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await pool.query(
+    `
+      UPDATE pms_history SET last_done = $1, next_due = $2 WHERE pms_history_id = $3
+    `,
+    [value.last_done, value.next_due, value.pms_history_id]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Last Done Date Has Updated"));
+});
+
+export const deletePmsItem = asyncErrorHandler(async (req, res) => {
+  const pms_id = req.params.pms_id;
+  await pool.query(
+    `DELETE FROM planned_maintenance_system WHERE planned_maintenance_system_id = $1`,
+    [pms_id]
+  );
+  res.status(200).json(new ApiResponse(200, "Info Removed Successfully"));
+});
 
 //for durable
 export const getDurableInfo = asyncErrorHandler(

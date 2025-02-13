@@ -7,6 +7,7 @@ import { RootState } from "@/redux/store";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { queryClient } from "@/redux/MyProvider";
+import { sendNoification } from "@/utils/sendNoification";
 
 export default function ConsumeStockDialog() {
   const { extraValue } = useSelector((state: RootState) => state.dialogs);
@@ -16,7 +17,6 @@ export default function ConsumeStockDialog() {
 
   function handleFormSubmit(formData: FormData) {
     formData.set("item_id", extraValue?.item_id);
-    formData.set("type", "consumed");
 
     mutate({
       apiPath: "/inventory/item-stock/consumed",
@@ -26,6 +26,23 @@ export default function ConsumeStockDialog() {
       },
       formData,
       onSuccess() {
+        const consumeStockValue = parseInt(
+          formData.get("consume_stock")?.toString() || "0"
+        );
+        if (
+          extraValue?.remain_stock - consumeStockValue <
+          extraValue?.minimum_stock
+        ) {
+          //Send Notification
+          sendNoification({
+            notification_title: "Notification From Inventory Management",
+            notification_description: `${extraValue?.item_name} Stock Is Low Please Fullfill The Stock As Soon As Possible`,
+            notification_type: "role_base",
+            employee_roles: ["Admin", "Employee"],
+            notification_link: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/inventory/inventory-list?item_name=${extraValue?.item_name}`,
+          });
+        }
+
         queryClient.invalidateQueries(["inventory-item-list"]);
         dispatch(setDialog({ type: "CLOSE", dialogId: "" }));
       },
@@ -37,16 +54,19 @@ export default function ConsumeStockDialog() {
       <form action={handleFormSubmit} className="space-y-5">
         <div>
           <Input
+            title="Invalid Number Of Item You Want To Consume"
             required
             type="number"
-            name="item_consumed"
-            min={0}
-            max={extraValue?.remain_stock}
+            name="consume_stock"
+            min={1}
+            max={extraValue?.remain_stock || 0}
             label="Number Of Stock Want To Consume *"
           />
           <span className="text-xs text-gray-500">
             Your Have{" "}
-            <span className="font-semibold">{extraValue?.remain_stock}</span>{" "}
+            <span className="font-semibold">
+              {extraValue?.remain_stock || 0}
+            </span>{" "}
             Stock Remain
           </span>
         </div>

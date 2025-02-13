@@ -61,9 +61,15 @@ export default function Informations({ employee_info }: IProps) {
 
         <div className="flex flex-wrap items-start *:basis-60 *:flex-grow gap-x-8 gap-y-4">
           <Info title="Department" value={employee_info?.department_name} />
-          <Info title="Designation" value={employee_info?.designation} />
+          <Info
+            title={
+              employee_info?.employee_type === "Faculty"
+                ? "Designation"
+                : "Job Title"
+            }
+            value={employee_info?.designation}
+          />
           <Info title="Authority" value={employeeAuthorityValue} />
-          <Info title="Job Title" value={employee_info?.job_title} />
           <Info
             title="Date of Joining"
             value={beautifyDate(employee_info?.joining_date || "")}

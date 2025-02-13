@@ -18,6 +18,7 @@ import { objectToSqlConverterUpdate } from "../utils/objectToSql";
 import { transaction } from "../utils/transaction";
 import { tryCatch } from "../utils/tryCatch";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
+import bcrypt from "bcrypt";
 
 const date = new Date();
 
@@ -103,10 +104,32 @@ export const updateEnrollCourseStatus = asyncErrorHandler(
     });
     if (error) throw new ErrorHandler(400, error.message);
 
-    await pool.query(
-      `UPDATE enrolled_batches_courses SET enrollment_status = $1 WHERE enroll_id = $2`,
-      [value.enrollment_status, value.enroll_id]
-    );
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const { rows } = await client.query(
+        `UPDATE enrolled_batches_courses SET enrollment_status = $1 WHERE enroll_id = $2 RETURNING course_id, student_id, batch_id`,
+        [value.enrollment_status, value.enroll_id]
+      );
+
+      if (value.enrollment_status === "Approve") {
+        await client.query(
+          `
+          DELETE FROM payments WHERE student_id = $1 AND course_id = $2 AND batch_id = $3 AND paid_amount < 0
+          `,
+          [rows[0].student_id, rows[0].course_id, rows[0].batch_id]
+        );
+      }
+
+      await client.query("COMMIT");
+      client.release();
+    } catch (error: any) {
+      await client.query("ROLLBACK");
+      client.release();
+      throw new ErrorHandler(400, error.message);
+    }
 
     res.status(200).json(new ApiResponse(200, "Status Successfully Updated"));
   }
@@ -161,6 +184,8 @@ export const createAdmission = asyncErrorHandler(async (req, res) => {
   const { error: tryError, data } = await tryCatch(async () => {
     await client.query("BEGIN");
 
+    const newHashedPassword = await bcrypt.hash(value.password, 10);
+
     //create students row
     const { rows: studentInfo, rowCount } = await client.query(
       `
@@ -197,7 +222,7 @@ export const createAdmission = asyncErrorHandler(async (req, res) => {
         value.issued_by_institute,
         value.issued_by_institute_indos_number,
         value.institute,
-        value.password,
+        newHashedPassword
       ]
     );
     if (rowCount === 0) {

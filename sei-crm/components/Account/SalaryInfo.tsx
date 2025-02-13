@@ -12,7 +12,7 @@ export default function SalaryInfo({ employee_info }: IProps) {
     parseFloat(employee_info?.income_tax || "0") +
     parseFloat(employee_info?.esic || "0") +
     parseFloat(employee_info?.professional_tax || "0") +
-    parseFloat(employee_info?.provident_fund || "0") + 
+    parseFloat(employee_info?.provident_fund || "0") +
     parseFloat(employee_info?.gratuity || "0");
 
   const totalIncome =
@@ -22,6 +22,9 @@ export default function SalaryInfo({ employee_info }: IProps) {
     parseFloat(employee_info?.other_allowances || "0");
 
   const netSalary = totalIncome - totalDeductions;
+
+  const workingTenure = employee_info?.working_tenure || 0;
+  const gratuity = ((15 * (netSalary / 12) * workingTenure) / 26).toFixed(2);
 
   return (
     <>
@@ -42,18 +45,18 @@ export default function SalaryInfo({ employee_info }: IProps) {
           />
           <Info title="ESIC" value={employee_info?.esic} />
           <Info title="Income Tax" value={employee_info?.income_tax} />
-          <Info title="Gratuity" value={employee_info?.gratuity} />
+          <Info title="Gratuity" value={gratuity} />
         </div>
 
         <div className="space-y-4">
           <h2 className="text-sm">
             Total Deductions :{" "}
-            <span className="font-semibold">₹{totalDeductions}</span>
+            <span className="font-semibold">₹{totalDeductions.toFixed(2)}</span>
           </h2>
           <div className="w-full h-[1px] bg-gray-300"></div>
 
           <h2 className="text-sm">
-            Net Salary : <span className="font-semibold">₹{netSalary}</span>
+            Net Salary : <span className="font-semibold">₹{netSalary.toFixed(2)}</span>
           </h2>
           {/* <h2 className="text-xs text-gray-500">
                 Income Tax : <span>-₹50</span>

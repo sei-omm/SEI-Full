@@ -9,18 +9,23 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import BackBtn from "@/components/BackBtn";
 import Button from "@/components/Button";
 import DropDown from "@/components/DropDown";
+import HandleDataSuspense from "@/components/HandleDataSuspense";
 import HandleSuspence from "@/components/HandleSuspence";
 import Input from "@/components/Input";
-import { ISuccess, TInventoryItem } from "@/types";
+import { ISuccess, TInventoryItem, TVendorIdName } from "@/types";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useRef } from "react";
-import { useQuery } from "react-query";
+import { useQueries, UseQueryResult } from "react-query";
 
 interface IProps {
   params: {
     id: "add" | number;
   };
+}
+
+async function getVendorIdName() {
+  return (await axios.get(`${BASE_API}/inventory/vendor/id-name`)).data;
 }
 
 export default function InventoryListForm({ params }: IProps) {
@@ -29,17 +34,25 @@ export default function InventoryListForm({ params }: IProps) {
   const { isLoading: isMutating, mutate } = useDoMutation();
   const route = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const {
-    data: inventoryItem,
-    isFetching,
-    error,
-  } = useQuery<ISuccess<TInventoryItem>>({
-    queryKey: "get-inventory-item-info",
-    queryFn: async () =>
-      (await axios.get(BASE_API + "/inventory/item/" + params.id)).data,
-    enabled: !isNewItem,
-    refetchOnMount: true,
-  });
+
+  const [suppliers, inventoryItem] = useQueries<
+    [
+      UseQueryResult<ISuccess<TVendorIdName[]>>,
+      UseQueryResult<ISuccess<TInventoryItem>>
+    ]
+  >([
+    {
+      queryKey: "get-vendor-id-names",
+      queryFn: getVendorIdName,
+    },
+    {
+      queryKey: "get-inventory-item-info",
+      queryFn: async () =>
+        (await axios.get(BASE_API + "/inventory/item/" + params.id)).data,
+      refetchOnMount: true,
+      enabled: !isNewItem,
+    },
+  ]);
 
   function handleFormSubmit(formData: FormData) {
     mutate({
@@ -58,7 +71,11 @@ export default function InventoryListForm({ params }: IProps) {
 
   return (
     <div>
-      <HandleSuspence isLoading={isFetching} error={error} dataLength={1}>
+      <HandleSuspence
+        isLoading={inventoryItem.isFetching}
+        error={inventoryItem.error}
+        dataLength={1}
+      >
         <div className="space-y-6">
           <div className="bg-white items-start p-10 border card-shdow rounded-3xl space-y-6">
             <form ref={formRef} action={handleFormSubmit} className="space-y-6">
@@ -71,7 +88,7 @@ export default function InventoryListForm({ params }: IProps) {
                   name="item_name"
                   label="Name of Item"
                   placeholder="Type Item Name"
-                  defaultValue={inventoryItem?.data.item_name}
+                  defaultValue={inventoryItem.data?.data.item_name}
                 />
                 <DropDown
                   name="category"
@@ -80,8 +97,26 @@ export default function InventoryListForm({ params }: IProps) {
                     text: item.category_name,
                     value: item.category_id,
                   }))}
-                  defaultValue={inventoryItem?.data.category}
+                  defaultValue={inventoryItem.data?.data.category}
                 />
+                <HandleDataSuspense
+                  error={suppliers.error}
+                  isLoading={suppliers.isFetching}
+                  data={suppliers?.data?.data}
+                >
+                  {(supplier) => (
+                    <DropDown
+                      name="vendor_id"
+                      label="Supplier"
+                      options={
+                        supplier?.map((item) => ({
+                          text: item.vendor_name,
+                          value: item.vendor_id,
+                        })) || []
+                      }
+                    />
+                  )}
+                </HandleDataSuspense>
                 <DropDown
                   name="sub_category"
                   label="Sub-Category"
@@ -89,25 +124,25 @@ export default function InventoryListForm({ params }: IProps) {
                     text: item.sub_category_name,
                     value: item.sub_category_id,
                   }))}
-                  defaultValue={inventoryItem?.data.sub_category}
+                  defaultValue={inventoryItem.data?.data.sub_category}
                 />
                 <Input
                   name="where_to_use"
                   label="Where To Be Used"
                   placeholder="Enter Where The Item Going To Use"
-                  defaultValue={inventoryItem?.data.where_to_use}
+                  defaultValue={inventoryItem.data?.data.where_to_use}
                 />
                 <Input
                   name="used_by"
                   label="Used By"
                   placeholder="Enter Where It Used"
-                  defaultValue={inventoryItem?.data.used_by}
+                  defaultValue={inventoryItem.data?.data.used_by}
                 />
                 <Input
                   name="description"
                   label="Description"
                   placeholder="Type Description"
-                  defaultValue={inventoryItem?.data.description}
+                  defaultValue={inventoryItem.data?.data.description}
                 />
                 <Input
                   required
@@ -115,7 +150,7 @@ export default function InventoryListForm({ params }: IProps) {
                   name="minimum_quantity"
                   label="Minimum Quantity to maintain"
                   placeholder="0"
-                  defaultValue={inventoryItem?.data.minimum_quantity}
+                  defaultValue={inventoryItem.data?.data.minimum_quantity}
                 />
                 <DropDown
                   name="institute"
@@ -124,7 +159,7 @@ export default function InventoryListForm({ params }: IProps) {
                     { text: "Kolkata", value: "Kolkata" },
                     { text: "Faridabad", value: "Faridabad" },
                   ]}
-                  defaultValue={inventoryItem?.data.institute || "Kolkata"}
+                  defaultValue={inventoryItem.data?.data.institute || "Kolkata"}
                 />
               </div>
             </form>

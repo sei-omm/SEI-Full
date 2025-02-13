@@ -31,6 +31,27 @@ export default function SkillEnhancementForm() {
   const dispatch = useDispatch();
 
   const { isLoading, mutate } = useDoMutation();
+
+  const { error, isFetching, data } = useQuery<
+    ISuccess<{ form_data: string | null; record_id: number }>
+  >({
+    queryKey: "get-skill-enhancement-data",
+    queryFn: async () =>
+      (
+        await axios.get(
+          `${BASE_API}/tranning/one-form?employee_id=${extraValue?.employee_id}&tranning_name=Skill Enhancement`
+        )
+      ).data,
+    enabled: extraValue?.btn_type !== "Generate",
+    onSuccess(data) {
+      if (data.data.form_data !== null) {
+        const response = JSON.parse(data.data.form_data) as TrainingRecord;
+        setSerilizeData(response);
+      }
+    },
+    refetchOnMount: true,
+  });
+
   function handleFormSubmit(formData: FormData) {
     if (!confirm("Are you sure you want to send the form ?")) return;
 
@@ -39,45 +60,39 @@ export default function SkillEnhancementForm() {
       formObj[key] = value;
     });
 
+    if (extraValue?.btn_type === "Generate") {
+      mutate({
+        apiPath: "/tranning",
+        method: "post",
+        formData: {
+          tranning_name: "Skill Enhancement",
+          employee_id: extraValue?.employee_id,
+          form_data: JSON.stringify(formObj),
+          action_type: "Generate",
+          employee_visibility: true,
+        },
+        onSuccess() {
+          dispatch(setDialog({ dialogId: "", type: "CLOSE" }));
+          queryClient.invalidateQueries(["get-tranning-history"]);
+        },
+      });
+      return;
+    }
+
     mutate({
-      apiPath: "/tranning",
-      method: "post",
+      apiPath: "/tranning/complete",
+      method: "put",
       formData: {
-        employee_id: extraValue?.employee_id,
-        se_form_data: JSON.stringify(formObj),
-        action_type:
-          extraValue?.btn_type === "Generate" ? "Generate" : "Accept",
+        form_data: JSON.stringify(formObj),
       },
+      id: data?.data.record_id,
       onSuccess() {
         dispatch(setDialog({ dialogId: "", type: "CLOSE" }));
-        if (extraValue?.btn_type === "Generate") {
-          // queryClient.invalidateQueries(["tranning-list"]);
-        } else {
-          queryClient.invalidateQueries(["get-tranning-info"]);
-        }
+        queryClient.invalidateQueries("get-tranning-info");
+        queryClient.invalidateQueries("get-tranning-history");
       },
     });
   }
-
-  const { error, isFetching } = useQuery<
-    ISuccess<{ se_form_data: string | null }>
-  >({
-    queryKey: "get-tranning-form-data",
-    queryFn: async () =>
-      (
-        await axios.get(
-          `${BASE_API}/tranning/one-tranning-form?employee_id=${extraValue?.employee_id}&col_name=se_form_data`
-        )
-      ).data,
-    enabled: extraValue?.btn_type !== "Generate",
-    onSuccess(data) {
-      if (data.data.se_form_data !== null) {
-        const response = JSON.parse(data.data.se_form_data) as TrainingRecord;
-        setSerilizeData(response);
-      }
-    },
-    refetchOnMount: true,
-  });
 
   return (
     <DialogBody className="min-w-[45rem]">

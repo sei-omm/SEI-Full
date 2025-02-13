@@ -739,7 +739,8 @@ export const addPayment = asyncErrorHandler(
           value.payment_type,
           0.0,
           "",
-          receiptNoPrefix
+          receiptNoPrefix,
+          value.bank_transaction_id
         );
       });
     } else if (value.payment_type === "Discount") {
@@ -763,7 +764,8 @@ export const addPayment = asyncErrorHandler(
           value.payment_type,
           parseInt(value.discount_amount ?? 0) / rows.length,
           value.discount_remark,
-          receiptNoPrefix
+          receiptNoPrefix,
+          value.bank_transaction_id
         );
       });
     } else {
@@ -792,15 +794,16 @@ export const addPayment = asyncErrorHandler(
           value.payment_type,
           0.0,
           "",
-          receiptNoPrefix
+          receiptNoPrefix,
+          value.bank_transaction_id
         );
       });
     }
 
     await pool.query(
-      `INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, batch_id, form_id, payment_type, discount_amount, discount_remark, receipt_no)
+      `INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, batch_id, form_id, payment_type, discount_amount, discount_remark, receipt_no, bank_transaction_id)
        VALUES ${
-         sqlPlaceholderCreator(15, valuesToStore.length / 15, {
+         sqlPlaceholderCreator(16, valuesToStore.length / 16, {
            placeHolderNumber: 15,
            value: " || nextval('receipt_no_seq')::TEXT",
          }).placeholder
@@ -883,15 +886,16 @@ export const initiateRefund = asyncErrorHandler(
     await transaction([
       {
         sql: `
-        INSERT INTO refund_details (student_id, course_id, batch_id, form_id, refund_amount, refund_reason, bank_details, executive_name, refund_id, mode, payment_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        INSERT INTO refund_details (student_id, course_id, batch_id, form_id, refund_amount, refund_reason, bank_details, executive_name, refund_id, mode, payment_id, bank_transaction_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         ON CONFLICT (student_id, course_id, batch_id)
         DO UPDATE SET  
                   refund_reason = EXCLUDED.refund_reason,
                   bank_details = EXCLUDED.bank_details,
                   executive_name = EXCLUDED.executive_name,
                   refund_id = EXCLUDED.refund_id,
-                  mode = EXCLUDED.mode
+                  mode = EXCLUDED.mode,
+                  bank_transaction_id = EXCLUDED.bank_transaction_id
         `,
         values: [
           value.student_id,
@@ -905,6 +909,7 @@ export const initiateRefund = asyncErrorHandler(
           value.refund_id || "",
           value.mode,
           Date.now(),
+          value.bank_transaction_id
         ],
       },
 

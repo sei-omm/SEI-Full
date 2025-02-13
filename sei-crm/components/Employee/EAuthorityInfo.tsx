@@ -6,9 +6,14 @@ import { employeeAuthority } from "@/app/constant";
 interface IProps {
   departements?: IDepartment[];
   employeeInfo?: IEmployee;
+  employeeID: number | "add-employee" | "add-faculty";
 }
 
-export default function EAuthorityInfo({ departements, employeeInfo }: IProps) {
+export default function EAuthorityInfo({
+  departements,
+  employeeInfo,
+  employeeID,
+}: IProps) {
   const [currentDepartment, setCurrentDepartment] = useState<
     IDepartment | undefined
   >(() => {
@@ -47,7 +52,13 @@ export default function EAuthorityInfo({ departements, employeeInfo }: IProps) {
         <DropDown
           name="designation"
           key="Designation"
-          label="Designation"
+          label={
+            employeeInfo && employeeInfo.employee_type === "Faculty"
+              ? "Designation"
+              : employeeID === "add-faculty"
+              ? "Designation"
+              : "Job Title"
+          }
           options={
             currentDepartment.designation
               ?.split(",")

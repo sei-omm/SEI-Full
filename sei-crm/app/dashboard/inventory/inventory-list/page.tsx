@@ -6,21 +6,26 @@ import {
   inventorySubCatList,
 } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
-import { getDate } from "@/app/utils/getDate";
+import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import Button from "@/components/Button";
-import DateInput from "@/components/DateInput";
 import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
+import SearchInput from "@/components/SearchInput";
 import MultiInventoryItemForm from "@/components/SingleLineForms/MultiInventoryItemForm";
 import { setDialog } from "@/redux/slices/dialogs.slice";
-import { ISuccess, TInventoryWithStockItem } from "@/types";
-import { useRouter, useSearchParams } from "next/navigation";
+import { ISuccess, TInventoryWithStockItem, TVendorIdName } from "@/types";
+import axios from "axios";
+import {
+  ReadonlyURLSearchParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { useState } from "react";
 import { BiLayerMinus } from "react-icons/bi";
-import {  CiSearch } from "react-icons/ci";
+import { CiSearch } from "react-icons/ci";
 import { IoIosAdd } from "react-icons/io";
-import { useQuery } from "react-query";
+import { useQueries, UseQueryResult } from "react-query";
 import { useDispatch } from "react-redux";
 
 type TTable = {
@@ -28,16 +33,28 @@ type TTable = {
   body: (string | null | undefined)[][];
 };
 
+async function getVendorIdName() {
+  return (await axios.get(`${BASE_API}/inventory/vendor/id-name`)).data;
+}
+
+async function getInventoryTableList(searchParamas: ReadonlyURLSearchParams) {
+  const response = await fetch(
+    BASE_API + "/inventory/item?" + searchParamas.toString()
+  );
+  return await response.json();
+}
+
 export default function InventoryList() {
   const [tableDatas, setTableDatas] = useState<TTable>({
     heads: [
       "Item Name",
-      "Add Stock",
+      // "Add Stock",
       "Consume Stock",
       "Category",
       "Sub Category",
-      "Opening Stock",
       "Minimum Stock",
+      "Opening Stock",
+      "CLOSING STOCK",
       "Consumed Stock",
       "Status",
       "Last Purchased Date",
@@ -67,42 +84,86 @@ export default function InventoryList() {
 
   const route = useRouter();
 
-  const { data, error, isFetching } = useQuery<
-    ISuccess<TInventoryWithStockItem[]>
-  >({
-    queryKey: ["inventory-item-list", searchParamas.toString()],
-    queryFn: async () => {
-      const response = await fetch(
-        BASE_API + "/inventory/item?" + searchParamas.toString()
-      );
-      return await response.json();
-    },
-    onSuccess(data) {
-      const body = data.data.map((item) => [
-        item.item_name,
-        "actionBtnAddStock",
-        "actionBtnConsumeStock",
-        inventoryCatList.find((cat) => cat.category_id === item.category)
-          ?.category_name,
-        inventorySubCatList.find(
-          (subCat) => subCat.sub_category_id === item.sub_category
-        )?.sub_category_name,
-        item.closing_stock?.toString(),
-        item.minimum_quantity.toString(),
-        item.item_consumed?.toString(),
-        // item.closing_stock.toString(),
-        item.current_status,
-        beautifyDate(item.current_purchase_date),
-        item.current_vendor_name,
-        item.cost_per_unit_current?.toString(),
-        item.cost_per_unit_previous?.toString(),
-        `₹${item.total_value}`,
-      ]);
+  // const { data, error, isFetching } = useQuery<
+  //   ISuccess<TInventoryWithStockItem[]>
+  // >({
+  //   queryKey: ["inventory-item-list", searchParamas.toString()],
+  //   queryFn: async () => {
+  //     const response = await fetch(
+  //       BASE_API + "/inventory/item?" + searchParamas.toString()
+  //     );
+  //     return await response.json();
+  //   },
+  //   onSuccess(data) {
+  //     const body = data.data.map((item) => [
+  //       item.item_name,
+  //       "actionBtnAddStock",
+  //       "actionBtnConsumeStock",
+  //       inventoryCatList.find((cat) => cat.category_id === item.category)
+  //         ?.category_name,
+  //       inventorySubCatList.find(
+  //         (subCat) => subCat.sub_category_id === item.sub_category
+  //       )?.sub_category_name,
+  //       item.closing_stock?.toString(),
+  //       item.minimum_quantity.toString(),
+  //       item.item_consumed?.toString(),
+  //       // item.closing_stock.toString(),
+  //       item.current_status,
+  //       beautifyDate(item.current_purchase_date),
+  //       item.current_vendor_name,
+  //       item.cost_per_unit_current?.toString(),
+  //       item.cost_per_unit_previous?.toString(),
+  //       `₹${item.total_value}`,
+  //     ]);
 
-      setTableDatas((prev) => ({ ...prev, body }));
+  //     setTableDatas((prev) => ({ ...prev, body }));
+  //   },
+  //   refetchOnMount: true,
+  // });
+
+  const [suppliers, inventory_list] = useQueries<
+    [
+      UseQueryResult<ISuccess<TVendorIdName[]>>,
+      UseQueryResult<ISuccess<TInventoryWithStockItem[]>>
+    ]
+  >([
+    {
+      queryKey: "get-vendor-id-names",
+      queryFn: getVendorIdName,
     },
-    refetchOnMount: true,
-  });
+    {
+      queryKey: ["inventory-item-list", searchParamas.toString()],
+      queryFn: () => getInventoryTableList(searchParamas),
+      refetchOnMount: true,
+      onSettled(data: any) {
+        const finalData = data as ISuccess<TInventoryWithStockItem[]>;
+        const body = finalData.data.map((item) => [
+          item.item_name,
+          "actionBtnConsumeStock",
+          inventoryCatList.find((cat) => cat.category_id === item.category)
+            ?.category_name,
+          inventorySubCatList.find(
+            (subCat) => subCat.sub_category_id === item.sub_category
+          )?.sub_category_name,
+          item.minimum_quantity.toString(),
+          item.opening_stock?.toString(),
+          item.closing_stock?.toString(),
+          item.item_consumed?.toString(),
+          // item.closing_stock.toString(),
+          item.current_status,
+          item.current_purchase_date
+            ? beautifyDate(item.current_purchase_date)
+            : null,
+          item.vendor_name,
+          item.cost_per_unit_current?.toString(),
+          item.cost_per_unit_previous?.toString(),
+          `₹${item.total_value}`,
+        ]);
+
+        setTableDatas((prev) => ({ ...prev, body }));
+      },
+    },
+  ]);
 
   function handleFilterSumit(formData: FormData) {
     const urlSearchParams = new URLSearchParams();
@@ -141,9 +202,9 @@ export default function InventoryList() {
         />
         <DropDown
           name="category"
-          label="Category"
+          label="Choose Category"
           options={[
-            { text: "Choose Category", value: "-1" },
+            { text: "All Category", value: "-1" },
             ...inventoryCatList.map((cat) => ({
               text: cat.category_name,
               value: cat.category_id,
@@ -151,59 +212,53 @@ export default function InventoryList() {
           ]}
           defaultValue={searchParamas.get("category") || "-1"}
         />
-        <DateInput
+        {/* <DateInput
           label="Choose Purchase Date"
           name="current_purchase_date"
           date={getDate(
             new Date(searchParamas.get("current_purchase_date") || "")
           )}
-        />
+        /> */}
         <Button className="flex-center gap-3 mb-2">
           <CiSearch />
           Search
         </Button>
       </form>
 
-      {/* <div className="flex items-end gap-6">
-        <Link href={"/dashboard/inventory/inventory-list/add"}>
-          <Button className="flex-center gap-3">
-            <IoIosAdd size={18} />
-            Add New Record
-          </Button>
-        </Link>
-        <Button
-          onClick={() => {
-            route.push(
-              `/dashboard/inventory/inventory-list/${selectedCheckboxItemId}`
-            );
-          }}
-          disabled={!selectedCheckboxItemId}
-          className={`flex-center gap-3 ${
-            selectedCheckboxItemId
-              ? "opacity-100 active:scale-95"
-              : "active:!scale-100 opacity-50"
-          }`}
-        >
-          <CiEdit size={18} />
-          Edit Record
-        </Button>
-      </div> */}
-      {/* <MultiInventoryListForm /> */}
-      <MultiInventoryItemForm selectedCheckboxItemId={selectedCheckboxItemId} />
+      <SearchInput
+        placeHolder="Search by item name"
+        handleSearch={(searchText) => {
+          route.push(
+            `/dashboard/inventory/inventory-list?search=${searchText}`,
+            {
+              scroll: false,
+            }
+          );
+        }}
+      />
+
+      <MultiInventoryItemForm
+        selectedCheckboxItemId={selectedCheckboxItemId}
+        supplierError={suppliers.error}
+        suppliersIsFetching={suppliers.isFetching}
+        suppliers={suppliers.data}
+      />
 
       <HandleSuspence
-        isLoading={isFetching}
-        error={error}
-        dataLength={data?.data.length}
+        isLoading={inventory_list.isFetching}
+        error={inventory_list.error}
+        dataLength={inventory_list.data?.data.length}
       >
         <div className="w-full overflow-hidden card-shdow">
           <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black">
             <table className="min-w-max w-full table-auto">
               <thead className="uppercase w-full border-b border-gray-100">
                 <tr>
-                  {tableDatas.heads.map((item) => (
+                  {tableDatas.heads.map((item, index) => (
                     <th
-                      className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
+                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${stickyFirstCol(
+                        index
+                      )}`}
                       key={item}
                     >
                       {item}
@@ -219,7 +274,9 @@ export default function InventoryList() {
                   >
                     {itemArray.map((value, columnIndex) => (
                       <td
-                        className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
+                        className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${stickyFirstCol(
+                          columnIndex
+                        )}`}
                         key={value}
                       >
                         {value === "actionBtnAddStock" ? (
@@ -230,7 +287,9 @@ export default function InventoryList() {
                                   dialogId: "add-inventory-stock",
                                   type: "OPEN",
                                   extraValue: {
-                                    item_id: data?.data[rowIndex].item_id,
+                                    item_id:
+                                      inventory_list.data?.data[rowIndex]
+                                        .item_id,
                                   },
                                 })
                               )
@@ -246,8 +305,16 @@ export default function InventoryList() {
                                   dialogId: "inventory-stock-consume-dialog",
                                   type: "OPEN",
                                   extraValue: {
-                                    item_id: data?.data[rowIndex].item_id,
-                                    remain_stock : data?.data[rowIndex].closing_stock
+                                    item_id:
+                                      inventory_list.data?.data[rowIndex]
+                                        .item_id,
+                                    remain_stock:
+                                      inventory_list.data?.data[rowIndex]
+                                        .closing_stock,
+
+                                    minimum_stock : inventory_list.data?.data[rowIndex].minimum_quantity,
+                                    item_name : inventory_list.data?.data[rowIndex].item_name
+
                                   },
                                 })
                               );
@@ -260,13 +327,13 @@ export default function InventoryList() {
                             <input
                               onChange={() =>
                                 handleCheckboxChange(
-                                  data?.data[rowIndex].item_id
+                                  inventory_list.data?.data[rowIndex].item_id
                                 )
                               }
                               type="checkbox"
                               checked={
                                 selectedCheckboxItemId ===
-                                data?.data[rowIndex]?.item_id
+                                inventory_list.data?.data[rowIndex]?.item_id
                               }
                               className="mr-2 cursor-pointer"
                             />
@@ -284,7 +351,7 @@ export default function InventoryList() {
           </div>
         </div>
       </HandleSuspence>
-      <Pagination dataLength={data?.data.length} />
+      <Pagination dataLength={inventory_list.data?.data.length} />
     </div>
   );
 }

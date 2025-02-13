@@ -67,9 +67,10 @@ export interface IHREmployee {
   employee_id: number;
   name: string;
   profile_image: string;
-  job_title: string;
+  employee_type: string;
   department_name: string;
-  attendance_status: AttendanceStatusType;
+  // attendance_status: AttendanceStatusType;
+  is_active: boolean;
 }
 
 export type TEmployeeLeave = {
@@ -94,7 +95,7 @@ export interface IEmployee {
   name: string;
   employee_id: string | null;
   joining_date: string; // ISO date string
-  job_title: string;
+  // job_title: string;
   department_id: number;
   contact_number: string;
   email_address: string;
@@ -166,6 +167,8 @@ export interface IEmployee {
   // net_salary : number
 
   leave_details: TEmployeeLeave[];
+
+  access_to_crm : boolean;
 }
 
 export type ILeaveStatus = "pending" | "success" | "decline";
@@ -178,7 +181,7 @@ export interface ILeave {
   leave_to: string;
   leave_reason: string;
   leave_status: ILeaveStatus;
-  leave_type : string;
+  leave_type: string;
 }
 
 export type InputTypes = React.DetailedHTMLProps<
@@ -505,27 +508,49 @@ export type TInventoryStock = {
 };
 
 export type TInventoryWithStockItem = {
+  // item_id: number;
+  // item_name: string;
+  // category: number;
+  // sub_category: number;
+  // minimum_quantity: number;
+  // opening_stock: string | null;
+  // item_consumed: string | null;
+  // closing_stock: string | null;
+  // current_status: string | null;
+  // current_purchase_date: string;
+  // current_vendor_id: number | null;
+  // current_vendor_name: string | null;
+  // cost_per_unit_current: string | null;
+  // cost_per_unit_previous: string | null;
+  // total_value: string | null;
+
   item_id: number;
   item_name: string;
   category: number;
   sub_category: number;
+  where_to_use: string;
+  used_by: string;
+  description: string;
   minimum_quantity: number;
-  opening_stock: string | null;
-  item_consumed: string | null;
-  closing_stock: string | null;
   current_status: string | null;
-  current_purchase_date: string;
-  current_vendor_id: number | null;
-  current_vendor_name: string | null;
-  cost_per_unit_current: string | null;
-  cost_per_unit_previous: string | null;
-  total_value: string | null;
+  vendor_id: number;
+  institute: string;
+  created_at: string; // ISO date string
+  closing_stock: number;
+  opening_stock: number;
+  item_consumed: number;
+  total_value: string; // Assuming it's a string due to decimal format
+  cost_per_unit_current: string; // Assuming it's a string due to decimal format
+  cost_per_unit_previous: string; // Assuming it's a string due to decimal format
+  current_purchase_date: string | null; // Nullable date string
+  vendor_name: string;
 };
 
 export type TMaintenanceRecord = {
   record_id: number;
-  item_id: number;
-  item_name: string;
+  item_id: number | null;
+  custom_item: string | null;
+  item_name: string | null;
   maintence_date: string;
   work_station: string;
   description_of_work: string;
@@ -573,6 +598,7 @@ export type TPlannedMaintenanceSystem = {
   description: string;
   remark: string;
   created_at: string;
+  pms_history_id: number;
 };
 
 export type TRefundReport = {
@@ -673,3 +699,12 @@ export type TRefundDetails = {
 };
 
 export type StudentForm = z.infer<typeof studentFormSchema>;
+
+export type TPmsFrequency =
+  | "Daily"
+  | "Weekly"
+  | "Monthly"
+  | "Half Yearly"
+  | "Yearly";
+
+export type TInputSuggestion = { text: string; value: any };

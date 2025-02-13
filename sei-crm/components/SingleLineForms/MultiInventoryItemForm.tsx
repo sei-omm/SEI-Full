@@ -9,19 +9,31 @@ import { inventoryCatList, inventorySubCatList } from "@/app/constant";
 import { AiOutlineDelete } from "react-icons/ai";
 import { queryClient } from "@/redux/MyProvider";
 import { useDoMutation } from "@/app/utils/useDoMutation";
+import HandleDataSuspense from "../HandleDataSuspense";
+import { ISuccess, TVendorIdName } from "@/types";
+import { useDispatch } from "react-redux";
+import { setDialog } from "@/redux/slices/dialogs.slice";
+import Link from "next/link";
 
 interface IProps {
   selectedCheckboxItemId: number | undefined;
+  suppliersIsFetching: boolean;
+  supplierError: any;
+  suppliers?: ISuccess<TVendorIdName[]>;
 }
 
 export default function MultiInventoryItemForm({
   selectedCheckboxItemId,
+  suppliersIsFetching,
+  supplierError,
+  suppliers,
 }: IProps) {
   const route = useRouter();
 
   const [inputs, setInputs] = useState<number[]>([]);
 
   const { isLoading, mutate } = useDoMutation();
+  const dispatch = useDispatch();
 
   function handleSubmit(formData: FormData) {
     const datasToStore: any[] = [];
@@ -30,7 +42,7 @@ export default function MultiInventoryItemForm({
     let obj: any = {};
 
     formData.forEach((value, key) => {
-      if (trackIndex >= 7) {
+      if (trackIndex >= 8) {
         trackIndex = 0;
         if (key === "completed_date" && value === "") {
           obj[key] = null;
@@ -69,38 +81,55 @@ export default function MultiInventoryItemForm({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-end gap-6">
-        <Button
-          onClick={() => {
-            const preStates = [...inputs];
+      <div className="flex items-center justify-between">
+        <div className="flex items-end gap-6">
+          <Button
+            onClick={() => {
+              const preStates = [...inputs];
 
-            preStates.push(
-              preStates.length === 0 ? 1 : preStates[preStates.length - 1] + 1
-            );
-            setInputs(preStates);
-          }}
-          className="flex-center gap-3"
-        >
-          <IoIosAdd size={18} />
-          Add New Item
-        </Button>
+              preStates.push(
+                preStates.length === 0 ? 1 : preStates[preStates.length - 1] + 1
+              );
+              setInputs(preStates);
+            }}
+            className="flex-center gap-3"
+          >
+            <IoIosAdd size={18} />
+            Add New Item
+          </Button>
 
-        <Button
-          onClick={() => {
-            route.push(
-              `/dashboard/inventory/inventory-list/${selectedCheckboxItemId}`
-            );
-          }}
-          disabled={!selectedCheckboxItemId}
-          className={`flex-center gap-3 ${
-            selectedCheckboxItemId
-              ? "opacity-100 active:scale-95"
-              : "active:!scale-100 opacity-50"
-          }`}
-        >
-          <CiEdit size={18} />
-          Edit Record
-        </Button>
+          <Button
+            onClick={() => {
+              route.push(
+                `/dashboard/inventory/inventory-list/${selectedCheckboxItemId}`
+              );
+            }}
+            disabled={!selectedCheckboxItemId}
+            className={`flex-center gap-3 ${
+              selectedCheckboxItemId
+                ? "opacity-100 active:scale-95"
+                : "active:!scale-100 opacity-50"
+            }`}
+          >
+            <CiEdit size={18} />
+            Edit Record
+          </Button>
+
+          <Button
+            onClick={() => {
+              dispatch(
+                setDialog({ dialogId: "add-inventory-stock", type: "OPEN" })
+              );
+            }}
+            className="flex-center gap-3"
+          >
+            <IoIosAdd size={18} />
+            Add Stock
+          </Button>
+        </div>
+        <Link href={"/dashboard/report/inventory"}>
+          <Button>Open Report</Button>
+        </Link>
       </div>
 
       {inputs.length === 0 ? null : (
@@ -140,6 +169,22 @@ export default function MultiInventoryItemForm({
                       value: item.sub_category_id,
                     }))}
                   />
+                  <HandleDataSuspense
+                    error={supplierError}
+                    isLoading={suppliersIsFetching}
+                    data={suppliers?.data}
+                  >
+                    {(supplier) => (
+                      <DropDown
+                        name="vendor_id"
+                        label="Supplier"
+                        options={supplier.map((item) => ({
+                          text: item.vendor_name,
+                          value: item.vendor_id,
+                        }))}
+                      />
+                    )}
+                  </HandleDataSuspense>
                   <Input
                     name="where_to_use"
                     label="Where To Be Used"

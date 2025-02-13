@@ -45,7 +45,13 @@ import {
 export const hrRouter = Router();
 
 hrRouter
-  .get("/dashboard", getHrDashboardInfo)
+  .get(
+    "/dashboard",
+    roles({
+      roles: ["Admin"],
+    }),
+    getHrDashboardInfo
+  )
 
   .get("/department", getAllDepartments)
   .get("/department/:department_id", getSingleDepartment)
@@ -58,7 +64,13 @@ hrRouter
   .put("/payscale/:payscale_id", updatePayscale) // not using
   .delete("/payscale/:item_id", deletePayscale)
 
-  .get("/leave", roles(["Admin"]), getRequestedLeaveLists)
+  .get(
+    "/leave",
+    roles({
+      roles: ["Admin"],
+    }),
+    getRequestedLeaveLists
+  )
   .get("/leave/employees", getEachEmployeLeaveDetails)
   // .post("/leave", createLeaveRequest) //this will done by employee
   .patch("/leave/:id", updateLeaveStatus)

@@ -1,22 +1,40 @@
 "use client";
 
 import { BASE_API } from "@/app/constant";
+import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
 import { beautifyDate } from "@/app/utils/beautifyDate";
+import { getDate } from "@/app/utils/getDate";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
 import MultiPlannedMaintenanceSystem from "@/components/SingleLineForms/MultiPlannedMaintenanceSystem";
-import { ISuccess, TPlannedMaintenanceSystem } from "@/types";
+import { setDialog } from "@/redux/slices/dialogs.slice";
+import { ISuccess, TPlannedMaintenanceSystem, TPmsFrequency } from "@/types";
+import { axiosQuery } from "@/utils/axiosQuery";
+import { getNextDueDate } from "@/utils/getNextDueDate";
 import axios from "axios";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { CiEdit } from "react-icons/ci";
+import { AiOutlineDelete } from "react-icons/ai";
+import {  MdOutlineRemoveRedEye } from "react-icons/md";
 import { useQuery } from "react-query";
+import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
+
 type TTable = {
   heads: string[];
   body: (string | number)[][];
 };
+
 export default function PlannedMaintenanceSystem() {
+  const [dateAndId, setDateAndId] = useState<{
+    date: string;
+    idToUpdate: number;
+    frequency: TPmsFrequency;
+  }>({
+    date: "",
+    idToUpdate: 0,
+    frequency: "Daily",
+  });
   const [tableDatas, setTableDatas] = useState<TTable>({
     heads: [
       "ITEM NAME",
@@ -31,7 +49,9 @@ export default function PlannedMaintenanceSystem() {
   });
   const searchParams = useSearchParams();
 
-  const { data, isFetching, error } = useQuery<
+  const dispatch = useDispatch();
+
+  const { data, isFetching, error, refetch } = useQuery<
     ISuccess<TPlannedMaintenanceSystem[]>
   >({
     queryKey: ["get-planned-maintenance-system", searchParams.toString()],
@@ -61,6 +81,67 @@ export default function PlannedMaintenanceSystem() {
     refetchOnMount: true,
   });
 
+  const handleLastDoneDateChange = (
+    date: string,
+    idToUpdate: number,
+    frequency: TPmsFrequency
+  ) => {
+    setDateAndId({
+      date,
+      idToUpdate,
+      frequency,
+    });
+  };
+
+  const { openDialog, closeDialog } = useLoadingDialog();
+
+  const handleLastDoneChangeBlur = async () => {
+    if (
+      getNextDueDate(dateAndId.date, dateAndId.frequency).toString() ===
+      "Invalid Date"
+    )
+      return;
+
+    if (!confirm("Are you sure you want to update the last done date ?"))
+      return;
+
+    openDialog();
+    const { error } = await axiosQuery({
+      url: `${BASE_API}/inventory/planned-maintenance-system/${dateAndId.idToUpdate}`,
+      method: "patch",
+      data: {
+        last_done: dateAndId.date,
+        next_due: getNextDueDate(dateAndId.date, dateAndId.frequency),
+      },
+    });
+
+    closeDialog();
+    if (error) {
+      return toast.error("Something went wrong while updating last done date");
+    }
+
+    toast.success("Last Done Date Successfully Changed");
+    refetch();
+  };
+
+  const handleDeleteItem = async (pmsItemId: number) => {
+    if (!confirm("Are you sure you want to delete ?")) return;
+
+    openDialog();
+    const { error } = await axiosQuery({
+      url: `${BASE_API}/inventory/planned-maintenance-system/${pmsItemId}`,
+      method: "delete",
+    });
+
+    closeDialog();
+    if (error) {
+      return toast.error("Something went wrong while deleting");
+    }
+
+    toast.success("Last Done Date Successfully Changed");
+    refetch();
+  };
+
   return (
     <div className="space-y-5">
       {/* <div className="flex items-center justify-end gap-6">
@@ -77,6 +158,7 @@ export default function PlannedMaintenanceSystem() {
         isLoading={isFetching}
         error={error}
         dataLength={data?.data.length}
+        noDataMsg="No Record Found"
       >
         <div className="w-full overflow-hidden card-shdow">
           <div className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black">
@@ -106,27 +188,62 @@ export default function PlannedMaintenanceSystem() {
                       >
                         {value === "actionBtn" ? (
                           <div className="flex items-center gap-3">
-                            <Link
+                            {/* <Link
                               className="active:scale-90"
                               href={`/dashboard/inventory/planned-maintenance-system/${data?.data[rowIndex].planned_maintenance_system_id}`}
                             >
                               <CiEdit className="cursor-pointer" size={18} />
-                            </Link>
+                            </Link> */}
+                            <AiOutlineDelete
+                              size={16}
+                              className="cursor-pointer"
+                              onClick={() =>
+                                handleDeleteItem(
+                                  data?.data[rowIndex]?.planned_maintenance_system_id as any
+                                )
+                              }
+                            />
                           </div>
                         ) : columnIndex === 3 || columnIndex === 4 ? (
-                          <span className="text-gray-500">
-                            {beautifyDate(value.toString())}
+                          <span className="text-gray-500 flex items-center gap-2">
+                            {columnIndex === 3 ? (
+                              <>
+                                <input
+                                  onBlur={handleLastDoneChangeBlur}
+                                  onChange={(e) =>
+                                    handleLastDoneDateChange(
+                                      e.currentTarget.value,
+                                      data?.data[rowIndex]?.pms_history_id as any,
+                                      data?.data[rowIndex].frequency as TPmsFrequency
+                                    )
+                                  }
+                                  className="bg-transparent cursor-pointer"
+                                  type="date"
+                                  defaultValue={getDate(new Date(value))}
+                                />
+                              </>
+                            ) : (
+                              beautifyDate(value.toString())
+                            )}
                           </span>
                         ) : columnIndex === 1 ? (
-                          <div className="flex flex-col gap-1">
-                            {value
-                              .toString()
-                              .split("\n")
-                              .slice(0, 2)
-                              .map((item, index) => (
-                                <p key={index}>{item}</p>
-                              ))}
-                            ...
+                          <div className="flex items-center gap-2 line-clamp-1">
+                            {value.toString().slice(0, 30)}..
+                            <MdOutlineRemoveRedEye
+                              onClick={() => {
+                                dispatch(
+                                  setDialog({
+                                    type: "OPEN",
+                                    dialogId: "view-requirement-details",
+                                    extraValue: {
+                                      text: value,
+                                    },
+                                  })
+                                );
+                              }}
+                              className="cursor-pointer"
+                              size={16}
+                            />
                           </div>
                         ) : (
                           value

@@ -135,6 +135,12 @@ export default function RefundForm({
           defaultValue={refund_info.status}
         />
       ) : null}
+
+      <Input
+        name="bank_transaction_id"
+        label="Bank Transaction ID"
+        placeholder="Enter Bank Transaction Id"
+      />
     </div>
   );
 }

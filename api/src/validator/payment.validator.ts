@@ -27,6 +27,7 @@ export const addPaymentValidator = Joi.object({
   mode: Joi.string().required(),
   // course_id: Joi.number().required(),
   form_id: Joi.string().required(),
+  bank_transaction_id : Joi.string().optional().allow("")
 });
 
 export const payDueAmountValidator = Joi.object({
@@ -48,6 +49,7 @@ export const refundPaymentValidator = Joi.object({
   form_id: Joi.string().required(),
 
   status: Joi.string().optional(),
+  bank_transaction_id : Joi.string().optional().allow("")
 });
 
 export const sendPaymentLinkValidator = Joi.object({

@@ -4,6 +4,7 @@ import {
   admissionReportValidator,
   courseTrendReportValidator,
   dgsIndosReportValidator,
+  inventoryReportValidator,
   occupancyReportValidator,
   receiptReportValidator,
   refundReportValidator,
@@ -162,7 +163,7 @@ export const createAdmissionReport = asyncErrorHandler(
     }
 
     const sqlForAdmissionReport = `
-        SELECT DISTINCT
+        SELECT
           s.profile_image,
           s.name,
           cb.start_date AS created_at,
@@ -184,11 +185,11 @@ export const createAdmissionReport = asyncErrorHandler(
         INNER JOIN course_batches cb
         ON cb.batch_id = ebc.batch_id
 
-        INNER JOIN payments p
-        ON p.batch_id = ebc.batch_id
-
         INNER JOIN students s
         ON s.student_id = ebc.student_id
+
+        INNER JOIN payments p
+        ON p.batch_id = ebc.batch_id AND p.student_id = s.student_id
 
         ${FILTER}
 
@@ -943,7 +944,7 @@ export const getBatchReport = asyncErrorHandler(
 
     const { rows } = await pool.query(
       `
-        SELECT 
+       SELECT
           s.name,
           ebc.form_id,
           cb.start_date,
@@ -959,25 +960,29 @@ export const getBatchReport = asyncErrorHandler(
           STRING_AGG(p.mode, ', ') AS payment_modes,
           STRING_AGG(p.payment_id, ', ') AS payment_ids,
           STRING_AGG(p.remark, ', ') AS remarks
-        FROM enrolled_batches_courses AS ebc
+      FROM course_batches cb
 
-        LEFT JOIN students AS s
-            ON s.student_id = ebc.student_id
-        LEFT JOIN course_batches AS cb
-            ON cb.batch_id = ebc.batch_id
-        RIGHT JOIN payments AS p
-            ON p.batch_id = ebc.batch_id
-        LEFT JOIN fillup_forms AS ff
-            ON ff.form_id = ebc.form_id
-        LEFT JOIN courses AS c
-            ON c.course_id = ebc.course_id
+      LEFT JOIN courses c
+      ON c.course_id = cb.course_id
 
-        WHERE ebc.course_id = $1
+      LEFT JOIN enrolled_batches_courses ebc
+      ON ebc.batch_id = cb.batch_id
+
+      LEFT JOIN students s
+      ON s.student_id = ebc.student_id
+
+      LEFT JOIN fillup_forms ff
+      ON ff.form_id = ebc.form_id
+
+      LEFT JOIN payments AS p
+      ON p.batch_id = cb.batch_id AND p.student_id = s.student_id
+
+        WHERE cb.course_id = $1
               AND cb.start_date = $2
               AND c.institute = $3
               AND c.course_type = $4
                       
-        GROUP BY p.student_id, ebc.form_id, s.name, cb.start_date, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email
+        GROUP BY s.name, ebc.form_id, cb.start_date, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email
         LIMIT ${LIMIT} OFFSET ${OFFSET};
       `,
       [value.course_id, value.batch_date, value.institute, value.course_type]
@@ -1169,7 +1174,7 @@ export const getReceiptReport = asyncErrorHandler(
       `
       SELECT
       s.name,
-      cb.batch_fee - (SELECT SUM(paid_amount) FROM payments WHERE batch_id = cb.batch_id) as due_amount,
+      cb.batch_fee - COALESCE(SUM(p.paid_amount) OVER (PARTITION BY cb.batch_id, s.student_id), 0) AS due_amount,
       s.indos_number,
       s.mobile_number,
       s.email,
@@ -1182,7 +1187,8 @@ export const getReceiptReport = asyncErrorHandler(
       p.misc_remark,
       p.receipt_no,
       p.discount_amount,
-      p.discount_remark
+      p.discount_remark,
+      p.bank_transaction_id
       FROM payments AS p
 
       LEFT JOIN course_batches AS cb
@@ -1196,6 +1202,7 @@ export const getReceiptReport = asyncErrorHandler(
       
       WHERE c.institute = $1 AND DATE(p.created_at) BETWEEN $2 AND $3
       GROUP BY 
+      s.student_id,
       cb.batch_id,
       s.name, cb.batch_fee,
       s.indos_number, s.mobile_number, 
@@ -1233,7 +1240,8 @@ export const getReceiptReportExcel = asyncErrorHandler(
       p.payment_id,
       p.remark AS payment_remark,
       p.misc_payment,
-      p.misc_remark
+      p.misc_remark,
+      p.bank_transaction_id
 
       FROM payments AS p
 
@@ -1492,4 +1500,44 @@ export const getRefundReport = asyncErrorHandler(async (req, res) => {
   );
 
   res.status(200).json(new ApiResponse(200, "Refund Report", rows));
+});
+
+export const inventoryReport = asyncErrorHandler(async (req, res) => {
+  const { error, value } = inventoryReportValidator.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { LIMIT, OFFSET } = parsePagination(req);
+
+  const { rows } = await pool.query(
+    `
+    SELECT
+        isi.purchase_date,
+        iii.item_id,
+        iii.item_name,
+        iii.minimum_quantity,
+        iii.vendor_id,
+        v.vendor_name,
+        STRING_AGG(isi.stock::TEXT, ', ') AS added_stocks,
+        STRING_AGG(isi.cost_per_unit::TEXT, ', ') AS each_stock_cpu,
+        STRING_AGG(isi.status, ', ') AS stock_added_status,
+        STRING_AGG(isi.total_value::TEXT, ', ') AS each_stock_total_value,
+		    (SELECT SUM(consume_stock) FROM inventory_item_consume WHERE item_id = iii.item_id AND consumed_date = isi.purchase_date) AS consumed_stock
+      FROM inventory_item_info iii
+
+      LEFT JOIN vendor v
+      ON v.vendor_id = iii.vendor_id
+
+      LEFT JOIN inventory_stock_info isi
+      ON isi.item_id = iii.item_id
+
+      WHERE iii.institute = $1 AND isi.purchase_date BETWEEN $2 AND $3
+
+      GROUP BY iii.item_id, v.vendor_name, isi.purchase_date
+
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
+    `,
+    [value.institute, value.from_date, value.to_date]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Inventory Report", rows));
 });

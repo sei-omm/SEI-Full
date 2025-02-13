@@ -10,7 +10,7 @@ interface IProps {
   label?: string;
   date?: string | null;
   onChange?: (value: string) => void;
-  onBlur? : () => void;
+  onBlur?: () => void;
   required?: boolean;
   type?: React.HTMLInputTypeAttribute;
   max?: number | string;

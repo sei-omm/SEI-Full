@@ -2,83 +2,146 @@ import { pool } from "../config/db";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ErrorHandler } from "../utils/ErrorHandler";
-import { tryCatch } from "../utils/tryCatch";
-import { sendNotificationValidator } from "../validator/notification.validator";
+import { parsePagination } from "../utils/parsePagination";
+import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
+import {
+  createAndSendNotificationValidator,
+  sendNotificationValidator,
+} from "../validator/notification.validator";
 
 export const getNotification = asyncErrorHandler(async (req, res) => {
   const { role, employee_id } = res.locals;
+  const { LIMIT, OFFSET } = parsePagination(req);
 
   const { rows } = await pool.query(
     `
-    SELECT
-     * 
-    FROM notification 
-    WHERE 
-    to_roles LIKE '%' || $1 || '%'
-    OR to_ids LIKE '%' || $2 || '%'
-  `,
-    [role, employee_id]
+    SELECT 
+     n.*,
+     ns.is_readed,
+     ns.notification_sended_id
+    FROM notification_sended ns
+
+    LEFT JOIN notification n
+    ON n.notification_id = ns.notification_id
+
+    WHERE ns.employee_id = $1 OR ns.employee_role = $2
+
+    ORDER BY ns.notification_sended_id DESC
+
+    LIMIT ${LIMIT} OFFSET ${OFFSET}
+    `,
+    [employee_id, role]
   );
 
   res.status(200).json(new ApiResponse(200, "", rows));
 });
 
-export const sendNotification = asyncErrorHandler(async (req, res) => {
-  const { error } = sendNotificationValidator.validate(req.body);
-  if (error) {
+//read mean delete notification
+export const readNotification = asyncErrorHandler(async (req, res) => {
+  await pool.query(
+    `DELETE FROM notification_sended WHERE notification_sended_id = $1`,
+    [req.params.notification_sended_id]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Notification Readed"));
+});
+
+export const createAndSendNotification = asyncErrorHandler(async (req, res) => {
+  const { error, value } = createAndSendNotificationValidator.validate(
+    req.body
+  );
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { notification_type } = value;
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    //add info to notification table
+    const { rows } = await client.query(
+      `
+      INSERT INTO notification
+        (notification_title, notification_description, link)
+      VALUES
+        ($1, $2, $3)
+      RETURNING notification_id
+      `,
+      [
+        value.notification_title,
+        value.notification_description,
+        value.notification_link,
+      ]
+    );
+
+    const createdNotificationID = rows[0].notification_id;
+
+    if (notification_type === "private") {
+      await client.query(
+        `
+        INSERT INTO notification_sended
+         (notification_id, employee_id)
+        VALUES
+          ${sqlPlaceholderCreator(2, value.employee_ids.length).placeholder}
+        `,
+        value.employee_ids.flatMap((item: any) => [createdNotificationID, item])
+      );
+    } else {
+      await client.query(
+        `
+        INSERT INTO notification_sended
+         (notification_id, employee_role)
+        VALUES
+          ${sqlPlaceholderCreator(2, value.employee_roles.length).placeholder}
+        `,
+        value.employee_roles.flatMap((item: any) => [
+          createdNotificationID,
+          item,
+        ])
+      );
+    }
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    client.release();
     throw new ErrorHandler(400, error.message);
   }
 
-  const { notification_type } = req.body;
-  if (notification_type === "private") {
-    const { employee_id } = res.locals; // from employee
+  return res
+    .status(201)
+    .json(new ApiResponse(201, "Notification sent successfully"));
+});
 
-    const client = await pool.connect();
+export const sendNotification = asyncErrorHandler(async (req, res) => {
+  const { error, value } = sendNotificationValidator.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
 
-    const { error: tryError } = await tryCatch(async () => {
-      await client.query("BEGIN");
-
-      //write code
-      const { rows } = await pool.query(
-        "INSERT INTO notification (notification_title, notification_description, from_id) VALUES ($1, $2, $3) RETURNING notification_id",
-        [
-          req.body.notification_title,
-          req.body.notification_description,
-          employee_id
-        ]
-      );
-
-      const newNotificationId = rows[0].notification_id;
-
-      const { rows: toRows } = await pool.query(
-        "INSERT INTO notification_to (notification_id, to_id, to_role) VALUES ($1, $2, $3)",
-        [newNotificationId]
-      );
-
-      await client.query("COMMIT");
-      client.release();
-    });
-
-    if (tryError) {
-      await client.query("ROLLBACK");
-      client.release();
-      throw new ErrorHandler(400, tryError.message);
-    }
-
-    return res
-      .status(201)
-      .json(new ApiResponse(201, "Notification sent successfully"));
+  if (value.notification_type === "private") {
+    await pool.query(
+      `
+      INSERT INTO notification_sended
+       (notification_id, employee_id)
+      VALUES
+        ${sqlPlaceholderCreator(2, value.employee_ids.length).placeholder}
+      `,
+      value.employee_ids.flatMap((item: any) => [value.notification_id, item])
+    );
+  } else {
+    await pool.query(
+      `
+      INSERT INTO notification_sended
+       (notification_id, employee_role)
+      VALUES
+        ${sqlPlaceholderCreator(2, value.employee_roles.length).placeholder}
+      `,
+      value.employee_roles.flatMap((item: any) => [value.notification_id, item])
+    );
   }
 
-  await pool.query(
-    "INSERT INTO notification (notification_title, notification_description, from_role, to_roles) VALUES ($1, $2, $3, $4)",
-    [
-      req.body.notification_title,
-      req.body.notification_description,
-      "Inventory",
-      req.body.to_roles,
-    ]
-  );
-
-  res.status(201).json(new ApiResponse(201, "Notification sent successfully"));
+  return res
+    .status(201)
+    .json(new ApiResponse(201, "Notification sent successfully"));
 });

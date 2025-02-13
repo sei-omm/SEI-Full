@@ -7,29 +7,20 @@ import { useQuery } from "react-query";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
 import { getAuthToken } from "@/app/utils/getAuthToken";
-import { ISuccess } from "@/types";
+import { EmployeeType, ISuccess } from "@/types";
 import HandleSuspence from "../HandleSuspence";
 import Button from "../Button";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { useDispatch } from "react-redux";
+import { beautifyDate } from "@/app/utils/beautifyDate";
 
 type TTranningInfo = {
   employee_id: number;
-  employee_type: string;
-
-  it_completed_date: null | string;
-  it_generated_date: null | string;
-
-  se_generated_date: null | string;
-  se_completed_date: null | string;
-
-  tr_generated_date: null | string;
-  tr_completed_date: null | string;
-
-  created_at: null | string;
-  it_form_is_accepted: boolean;
-  se_form_is_accepted: boolean;
-  tr_form_is_accepted: boolean;
+  employee_type: EmployeeType;
+  record_id: number;
+  tranning_name: string;
+  created_at: string;
+  completed_at: string | null;
 };
 
 export default function TranningList() {
@@ -56,52 +47,18 @@ export default function TranningList() {
           dataLength={data?.data.length}
         >
           <ul className="space-y-5">
-            {data?.data[0]?.it_generated_date ? (
-              <li className="space-y-1 relative border-b-2 pb-3">
+            {data?.data.map((info) => (
+              <li key={info.record_id} className="space-y-1 relative border-b-2 pb-3">
                 <h3 className="text-sm font-semibold space-x-1">
-                  <span>Induction Training</span>
-                </h3>
-                {data?.data[0]?.it_form_is_accepted ? (
-                  <span className="text-green-600 text-sm font-semibold">
-                    Completed
-                  </span>
-                ) : (
-                  <>
-                    <span className="text-yellow-600 text-sm font-semibold">
-                      Waiting For Your Acceptance
-                    </span>
-                    <Button
-                      onClick={() => {
-                        dispatch(
-                          setDialog({
-                            dialogId: "induction-tranning-form",
-                            type: "OPEN",
-                            extraValue: {
-                              employee_id: data.data[0].employee_id,
-                              btn_type: "Accepte",
-                              employee_type: data.data[0].employee_type,
-                            },
-                          })
-                        );
-                      }}
-                      className="absolute top-0 right-0 flex items-center gap-2"
-                    >
-                      <IoOpenOutline />
-                      Open And Accepte
-                    </Button>
-                  </>
-                )}
-              </li>
-            ) : null}
+                  <span>{info.tranning_name}</span>
 
-            {data?.data[0]?.se_generated_date ? (
-              <li className="space-y-1 relative border-b-2 pb-3">
-                <h3 className="text-sm font-semibold space-x-1">
-                  <span>Skill Enhancement</span>
+                  <span className="underline text-gray-600">
+                    Generated At : {beautifyDate(info.created_at)}
+                  </span>
                 </h3>
-                {data?.data[0]?.se_form_is_accepted ? (
+                {info.completed_at ? (
                   <span className="text-green-600 text-sm font-semibold">
-                    Completed
+                    Completed At : {beautifyDate(info.completed_at)}
                   </span>
                 ) : (
                   <>
@@ -112,12 +69,12 @@ export default function TranningList() {
                       onClick={() => {
                         dispatch(
                           setDialog({
-                            dialogId: "skill-enhancement-form",
+                            dialogId: info.tranning_name,
                             type: "OPEN",
                             extraValue: {
-                              employee_id: data.data[0].employee_id,
+                              employee_id: info.employee_id,
                               btn_type: "Accepte",
-                              employee_type: data.data[0].employee_type,
+                              employee_type: info.employee_type,
                             },
                           })
                         );
@@ -125,50 +82,12 @@ export default function TranningList() {
                       className="absolute top-0 right-0 flex items-center gap-2"
                     >
                       <IoOpenOutline />
-                      Open And Accepte
+                      Open And Accept
                     </Button>
                   </>
                 )}
               </li>
-            ) : null}
-
-            {data?.data[0]?.tr_generated_date ? (
-              <li className="space-y-1 relative border-b-2 pb-3">
-                <h3 className="text-sm font-semibold space-x-1">
-                  <span>Training Requirement</span>
-                </h3>
-                {data?.data[0]?.tr_form_is_accepted ? (
-                  <span className="text-green-600 text-sm font-semibold">
-                    Completed
-                  </span>
-                ) : (
-                  <>
-                    <span className="text-yellow-600 text-sm font-semibold">
-                      Waiting For Your Acceptance
-                    </span>
-                    <Button
-                      onClick={() => {
-                        dispatch(
-                          setDialog({
-                            dialogId: "training-requirement-form",
-                            type: "OPEN",
-                            extraValue: {
-                              employee_id: data.data[0].employee_id,
-                              btn_type: "Accepte",
-                              employee_type: data.data[0].employee_type,
-                            },
-                          })
-                        );
-                      }}
-                      className="absolute top-0 right-0 flex items-center gap-2"
-                    >
-                      <IoOpenOutline />
-                      Open And Accepte
-                    </Button>
-                  </>
-                )}
-              </li>
-            ) : null}
+            ))}
           </ul>
         </HandleSuspence>
       </div>

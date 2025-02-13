@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import DropDown from "./DropDown";
 import DateInput from "./DateInput";

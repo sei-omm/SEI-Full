@@ -75,6 +75,8 @@ export const postNewJob = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
 
     const department_name = req.body.department_name;
+    const isInformVendor = req.body.inform_vendor;
+    delete req.body.inform_vendor;
     delete req.body.department_name;
 
     const { columns, params, values } = objectToSqlInsert(req.body);
@@ -84,7 +86,7 @@ export const postNewJob = asyncErrorHandler(
       values
     );
 
-    if (req.body.vendors_email) {
+    if (isInformVendor === "true" && req.body.vendors_email) {
       sendEmail(req.body.vendors_email.split(","), "SEND_JOB_INFO_VENDOR", {
         job_title: req.body.job_title,
         campus: req.body.address,
@@ -108,6 +110,8 @@ export const updateJobPosting = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
 
     const department_name = req.body.department_name;
+    const isInformVendor = req.body.inform_vendor;
+    delete req.body.inform_vendor;
     delete req.body.department_name;
 
     const { keys, values, paramsNum } = objectToSqlConverterUpdate(req.body);
@@ -117,7 +121,7 @@ export const updateJobPosting = asyncErrorHandler(
       [...values, value.id]
     );
 
-    if (req.body.vendors_email) {
+    if (isInformVendor === "true" && req.body.vendors_email) {
       sendEmail(req.body.vendors_email.split(","), "SEND_JOB_INFO_VENDOR", {
         job_title: req.body.job_title,
         campus: req.body.address,

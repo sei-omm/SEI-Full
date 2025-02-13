@@ -38,6 +38,7 @@ export default function ReceiptReport() {
       "RECEIPT NUMBER",
       "DISCOUNT AMOUNT",
       "DISCOUNT REMARK",
+      "BANK TRANSACTION ID"
     ],
     body: [],
   });

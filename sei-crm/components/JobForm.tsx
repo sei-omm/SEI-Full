@@ -104,20 +104,10 @@ export default function JobForm({ action }: IProps) {
       department_name: response[1].data?.data[0].name,
     };
     const informVendor = formData.get("inform_vendor") === "on";
-    formData.delete("inform_vendor");
-    
+    formData.set("inform_vendor", informVendor as any);
+
     formData.forEach((value, key) => {
-      if (
-        key === "vendors_email" &&
-        value !== "" &&
-        informVendor
-      ) {
-        objToStore[key] = value;
-      } else {
-        if (key !== "vendors_email") {
-          objToStore[key] = value;
-        }
-      }
+      objToStore[key] = value;
     });
 
     if (action === "add") {
@@ -171,8 +161,16 @@ export default function JobForm({ action }: IProps) {
               name="address"
               label="Campus *"
               options={[
-                { text: "Kolkata", value: "Kolkata" },
-                { text: "Faridabad", value: "Faridabad" },
+                {
+                  text: "Kolkata",
+                  value:
+                    "'Debamita', B.B.T Road, Vill. - Gopalpur, P.O. Sarkarpool, P.S. - Maheshtala, Kolkata - 700141, India",
+                },
+                {
+                  text: "Faridabad",
+                  value:
+                    "S - 13 Sector 11D Market, Faridabad-121006, Haryana,India",
+                },
               ]}
               defaultValue={response[0].data?.data?.[0]?.address}
             />
@@ -193,7 +191,7 @@ export default function JobForm({ action }: IProps) {
               }
               defaultValue={
                 response[0].data?.data?.[0]?.department ||
-                response[1].data?.data[0].id
+                response[1].data?.data?.[0].id
               }
             />
           </div>
@@ -211,7 +209,7 @@ export default function JobForm({ action }: IProps) {
               name="vendors_email"
               label="Vendors Email"
               placeholder="Type Email And Press Enter"
-              defaultValue={response[0].data?.data[0].vendors_email}
+              defaultValue={response[0].data?.data?.[0].vendors_email}
             />
             <span className="flex items-center gap-2 text-sm">
               <input name="inform_vendor" type="checkbox" />

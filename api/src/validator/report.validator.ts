@@ -74,3 +74,11 @@ export const refundReportValidator = Joi.object({
   end_date: Joi.string().required().label("To Date").optional(),
   page: Joi.number().optional(),
 });
+
+
+export const inventoryReportValidator = Joi.object({
+  institute: Joi.string().required().label("Institute"),
+  from_date: Joi.string().required().label("Start Date"),
+  to_date: Joi.string().required().label("End Date"),
+  page: Joi.number().optional(),
+});

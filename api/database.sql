@@ -13,7 +13,7 @@ CREATE TABLE employee (
     name VARCHAR(255) NOT NULL,
     -- employee_id VARCHAR(7),
     joining_date DATE,
-    job_title VARCHAR(255),
+    -- job_title VARCHAR(255),
     -- department VARCHAR(255),
     department_id INTEGER,
     FOREIGN KEY (department_id) REFERENCES department(id) ON DELETE SET NULL,
@@ -437,8 +437,10 @@ CREATE TABLE inventory_item_info (
 
     -- Additional For Not To Do Much Query For Reports
     current_status TEXT,
+    
     current_vendor_id INTEGER,
     FOREIGN KEY (current_vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL,
+
     cost_per_unit_current DECIMAL(10, 2),
     cost_per_unit_previous DECIMAL(10, 2),
     current_purchase_date DATE DEFAULT CURRENT_DATE,
@@ -532,24 +534,6 @@ CREATE TABLE planned_maintenance_system (
     remark TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE TABLE notification (
-    notification_id SERIAL PRIMARY KEY,
-    notification_title VARCHAR(255),
-    notification_description TEXT,
-    from_id INTEGER,
-    from_role VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE notification_to (
-    notification_id INTEGER,
-    FOREIGN KEY (notification_id) REFERENCES notification(notification_id) ON DELETE CASCADE,
-
-    to_id INTEGER,
-    to_role VARCHAR(255)
-);
-
 
 -- New DBS -> 28 Dec 2024
 
@@ -941,6 +925,152 @@ CREATE TABLE tranning_requirement (
 
     UNIQUE (employee_id)
 );
+
+-- NEW DB 08 Feb 2025
+ALTER TABLE payments
+ADD COLUMN bank_transaction_id VARCHAR(255);
+
+ALTER TABLE refund_details 
+ADD COLUMN bank_transaction_id VARCHAR(255);
+
+-- DROP TABLE pms_history;
+DROP TABLE planned_maintenance_system;
+
+CREATE TABLE planned_maintenance_system (
+    planned_maintenance_system_id SERIAL PRIMARY KEY,
+
+    item_id INTEGER,
+    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE CASCADE,
+
+    custom_item VARCHAR(255),
+
+    institute VARCHAR(30) DEFAULT 'Kolkata',
+
+    UNIQUE (item_id, institute)
+);
+
+CREATE TABLE pms_history (
+    pms_history_id SERIAL PRIMARY KEY,
+
+    planned_maintenance_system_id INTEGER,
+    FOREIGN KEY (planned_maintenance_system_id) REFERENCES planned_maintenance_system(planned_maintenance_system_id) ON DELETE CASCADE,
+
+    frequency VARCHAR(255),
+    last_done DATE,
+    next_due DATE,
+    description TEXT,
+    remark TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE inventory_item_info DROP COLUMN current_vendor_id;
+
+ALTER TABLE inventory_item_info 
+DROP CONSTRAINT IF EXISTS inventory_item_info_vendor_id_fkey, 
+ADD CONSTRAINT inventory_item_info_vendor_id_fkey 
+FOREIGN KEY (vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL;
+
+DELETE FROM inventory_item_info;
+
+ALTER TABLE inventory_item_info DROP COLUMN cost_per_unit_current;
+ALTER TABLE inventory_item_info DROP COLUMN cost_per_unit_previous;
+ALTER TABLE inventory_item_info DROP COLUMN current_purchase_date;
+
+ALTER TABLE inventory_item_info ADD COLUMN cost_per_unit_current DECIMAL(10, 2) DEFAULT 0.00;
+ALTER TABLE inventory_item_info ADD COLUMN cost_per_unit_previous DECIMAL(10, 2) DEFAULT 0.00;
+ALTER TABLE inventory_item_info ADD COLUMN current_purchase_date DATE;
+ALTER TABLE inventory_item_info ADD COLUMN updated_date DATE DEFAULT CURRENT_DATE;
+
+ALTER TABLE inventory_item_info ADD COLUMN closing_stock INTEGER DEFAULT 0;
+ALTER TABLE inventory_item_info ADD COLUMN opening_stock INTEGER DEFAULT 0;
+ALTER TABLE inventory_item_info ADD COLUMN item_consumed INTEGER DEFAULT 0;
+ALTER TABLE inventory_item_info ADD COLUMN total_value DECIMAL(10, 2) DEFAULT 0.00;
+
+ALTER TABLE inventory_stock_info DROP COLUMN item_consumed;
+ALTER TABLE inventory_stock_info DROP COLUMN closing_stock;
+ALTER TABLE inventory_stock_info DROP COLUMN opening_stock;
+ALTER TABLE inventory_stock_info DROP COLUMN vendor_id;
+
+ALTER TABLE inventory_stock_info DROP COLUMN cost_per_unit_current;
+ALTER TABLE inventory_stock_info ADD COLUMN cost_per_unit DECIMAL(10, 2);
+
+ALTER TABLE inventory_stock_info ADD COLUMN stock INT;
+
+CREATE TABLE inventory_item_consume (
+    item_id INTEGER,
+    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE CASCADE,
+
+    remark TEXT,
+    consumed_date DATE DEFAULT CURRENT_DATE,
+
+    consume_stock INTEGER
+);
+
+ALTER TABLE inventory_stock_info DROP COLUMN type;
+
+CREATE TABLE notification (
+    notification_id SERIAL PRIMARY KEY,
+    notification_title VARCHAR(255),
+    notification_description TEXT,
+    link TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notification_sended (
+    notification_sended_id SERIAL PRIMARY KEY,
+    notification_id INTEGER,
+    FOREIGN KEY (notification_id) REFERENCES notification(notification_id) ON DELETE CASCADE,
+
+    employee_id INTEGER,
+    employee_role VARCHAR(255), -- priority will be high
+    is_readed BOOLEAN DEFAULT FALSE
+);
+
+DROP TABLE maintence_record;
+
+CREATE TABLE maintence_record (
+    record_id SERIAL PRIMARY KEY,
+
+    item_id INTEGER,
+    FOREIGN KEY (item_id) REFERENCES inventory_item_info(item_id) ON DELETE CASCADE,
+
+    custom_item VARCHAR(255),
+
+    maintence_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    work_station VARCHAR(255),
+    description_of_work TEXT,
+    department VARCHAR(255),
+    assigned_person VARCHAR(255),
+    approved_by VARCHAR(255),
+    cost VARCHAR(255),
+    status VARCHAR(10),
+    completed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    remark TEXT,
+
+    institute VARCHAR(100),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (item_id, maintence_date),
+    UNIQUE (custom_item, maintence_date)
+);
+
+DROP TABLE tranning_requirement;
+
+CREATE TABLE tranning_requirement (
+    record_id SERIAL PRIMARY KEY,
+    tranning_name  VARCHAR(255), -- This will consider as tranning_id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP,
+
+    employee_id INTEGER,
+    FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE,
+
+    employee_visibility BOOLEAN DEFAULT TRUE,
+    form_data TEXT
+)
+
 
 -- fro clering all table of db
 -- DO $$ 

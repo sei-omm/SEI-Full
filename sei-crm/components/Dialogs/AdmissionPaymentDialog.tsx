@@ -201,6 +201,11 @@ export default function AdmissionPaymentDialog() {
                   }
                 />
                 <Input
+                  name="bank_transaction_id"
+                  label="Bank Transaction ID"
+                  placeholder="Enter Bank Transaction Id"
+                />
+                <Input
                   disabled={isMutating}
                   name="remark"
                   label="Remark (if any)"
@@ -249,9 +254,7 @@ export default function AdmissionPaymentDialog() {
               loading={isMutating}
               className="border border-foreground"
             >
-              {selectedPaymentTypeIndex === 2
-                ? "Initiate Refund"
-                : "Add"}
+              {selectedPaymentTypeIndex === 2 ? "Initiate Refund" : "Add"}
             </Button>
             <Button
               disabled={isMutating || isUpdatingEnrollmentStatus}

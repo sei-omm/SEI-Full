@@ -12,7 +12,7 @@ import EmployeeTypeFilter from "./Employee/EmployeeTypeFilter";
 import Pagination from "./Pagination";
 
 const tableDatas = {
-  heads: ["Name", "Job Title", "Department", "Status", "Action"],
+  heads: ["Name", "Type", "Department", "Status", "Action"],
   body: [
     ["Somnath Gupta", "Finance Manager", "Finance", "Present", "actionBtn"],
     ["Arindam Gupta", "IT Management", "IT", "Absence", "actionBtn"],
@@ -33,9 +33,9 @@ export default async function Contacts({ searchParams }: IProps) {
 
   tableDatas.body = result?.data?.map((employee) => [
     employee.name,
-    employee.job_title,
+    employee.employee_type,
     employee.department_name,
-    employee.attendance_status,
+    `${employee.is_active}`,
     "actionBtn",
   ]);
 
@@ -129,12 +129,10 @@ export default async function Contacts({ searchParams }: IProps) {
                               </div>
                               {value}
                             </div>
-                          ) : value === "Present" ? (
-                            <TagsBtn type="SUCCESS">Present</TagsBtn>
-                          ) : value === "Absent" ? (
-                            <TagsBtn type="FAILED">Absent</TagsBtn>
-                          ) : value === "Pending" ? (
-                            <TagsBtn type="PENDING">Pending</TagsBtn>
+                          ) : value === "true" ? (
+                            <TagsBtn type="SUCCESS">Active</TagsBtn>
+                          ) : value === "false" ? (
+                            <TagsBtn type="FAILED">In Active</TagsBtn>
                           ) : (
                             value
                           )}

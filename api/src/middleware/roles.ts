@@ -5,7 +5,12 @@ import { getAuthToken } from "../utils/getAuthToken";
 import { verifyToken } from "../utils/token";
 import asyncErrorHandler from "./asyncErrorHandler";
 
-export const roles = (requiredRole: TRoles[]) => {
+interface IProps {
+  roles: TRoles[];
+  params?: string[];
+}
+
+export const roles = ({ roles, params }: IProps) => {
   return asyncErrorHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const token = getAuthToken(req);
@@ -26,15 +31,27 @@ export const roles = (requiredRole: TRoles[]) => {
       }
 
       // Check if the userRole matches any of the required roles
-      // if (!requiredRole.includes(userRole as any)) {
-      //   // req.params.id = tokenData.employee_id?.toString() || "0"
-      //   throw new ErrorHandler(403, "Access denied: Insufficient permissions");
+      // if (!roles.includes(userRole as any)) {
+      //   //we will not throw error if "own"
+
+      //   if (!roles.includes("Own")) {
+      //     throw new ErrorHandler(
+      //       403,
+      //       "Access denied: Insufficient permissions"
+      //     );
+      //   }
+
+      //   req.params[params?.[0] as any] = tokenData?.employee_id as any
       // }
 
-      // console.log(tokenData.employee_id)
-
-      if (tokenData.employee_id) {
+      if (tokenData?.student_id) {
+        res.locals.student_id = tokenData.student_id;
+      }
+      if (tokenData?.employee_id) {
         res.locals.employee_id = tokenData.employee_id;
+      }
+      if (tokenData?.role) {
+        res.locals.role = tokenData.role;
       }
 
       next();

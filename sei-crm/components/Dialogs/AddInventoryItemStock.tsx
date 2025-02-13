@@ -1,40 +1,26 @@
 import React, { useState } from "react";
 import DialogBody from "./DialogBody";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
+import { useDispatch } from "react-redux";
 import Button from "../Button";
 import { BASE_API } from "@/app/constant";
 import axios from "axios";
-import { useQueries, UseQueryResult } from "react-query";
+import { useQuery } from "react-query";
 import { ISuccess, TVendorIdName } from "@/types";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
 import { IoIosAdd } from "react-icons/io";
-import { BiLayerMinus } from "react-icons/bi";
-import { GiSandsOfTime } from "react-icons/gi";
-import { PiMoney } from "react-icons/pi";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import InventoryFormItem from "../Inventory/InventoryFormItem";
+import HandleSuspence from "../HandleSuspence";
+import DropDown from "../DropDown";
 
 async function getVendorIdName() {
   return (await axios.get(`${BASE_API}/inventory/vendor/id-name`)).data;
 }
-
-async function getStockInfo(item_id: number) {
-  return (await axios.get(`${BASE_API}/inventory/item-stock/item/${item_id}`))
-    .data;
-}
-
-type TStockInfo = {
-  total_stock: number;
-  total_item_consumed: number;
-  remain_stock: number;
-  total_spend: number;
-};
-
+ 
 export default function AddInventoryItemStock() {
-  const { extraValue } = useSelector((state: RootState) => state.dialogs);
   const [inputs, setInputs] = useState<number[]>([1]);
+  const [currentVendorId, setCurrentVendorid] = useState(-1);
   const dispatch = useDispatch();
 
   function handleDeleteItem(index: number) {
@@ -43,22 +29,37 @@ export default function AddInventoryItemStock() {
     setInputs(newInputs);
   }
 
-  const [suppliers, stock_info] = useQueries<
-    [
-      UseQueryResult<ISuccess<TVendorIdName[]>>,
-      UseQueryResult<ISuccess<TStockInfo>>
-    ]
-  >([
-    {
-      queryKey: "get-vendor-id-names",
-      queryFn: getVendorIdName,
+  // const [suppliers, stock_info] = useQueries<
+  //   [
+  //     UseQueryResult<ISuccess<TVendorIdName[]>>,
+  //     UseQueryResult<ISuccess<TStockInfo>>
+  //   ]
+  // >([
+  //   {
+  //     queryKey: "get-vendor-id-names",
+  //     queryFn: getVendorIdName,
+  //   },
+  //   {
+  //     queryKey: "get-stock-info",
+  //     queryFn: () => getStockInfo(extraValue?.item_id || 0),
+  //     refetchOnMount: true,
+  //   },
+  // ]);
+
+  const {
+    data: suppliers,
+    error,
+    isFetching,
+  } = useQuery<ISuccess<TVendorIdName[]>>({
+    queryKey: "get-vendor-id-names",
+    queryFn: getVendorIdName,
+    onSuccess(data) {
+      if (data.data.length !== 0) {
+        setCurrentVendorid(data.data[0].vendor_id);
+      }
     },
-    {
-      queryKey: "get-stock-info",
-      queryFn: () => getStockInfo(extraValue?.item_id || 0),
-      refetchOnMount: true,
-    },
-  ]);
+    refetchOnMount : true
+  });
 
   const { isLoading, mutate } = useDoMutation();
 
@@ -69,7 +70,7 @@ export default function AddInventoryItemStock() {
     let obj: any = {};
 
     formData.forEach((value, key) => {
-      if (trackIndex >= 10) {
+      if (trackIndex >= 6) {
         trackIndex = 0;
         if (key === "completed_date" && value === "") {
           obj[key] = null;
@@ -103,7 +104,7 @@ export default function AddInventoryItemStock() {
 
   return (
     <DialogBody className="min-w-[65%] max-h-[90%] overflow-y-scroll">
-      <div className="flex items-center w-full">
+      <div className="flex items-center justify-between">
         <Button
           onClick={() => {
             const preStates = [...inputs];
@@ -116,29 +117,23 @@ export default function AddInventoryItemStock() {
         >
           <IoIosAdd size={17} color="#fff" />
         </Button>
-        <div className="flex items-center justify-between w-full px-5">
-          {/* <div className="flex-center gap-2 font-semibold text-xs">
-            <IoLayersOutline />
-            <span>Total Stock : {stock_info.data?.data.total_stock}</span>
-          </div> */}
-
-          <div className="flex-center gap-2 font-semibold text-xs">
-            <BiLayerMinus />
-            <span>
-              Stock Consumed : {stock_info.data?.data.total_item_consumed}
-            </span>
-          </div>
-
-          <div className="flex-center gap-2 font-semibold text-xs">
-            <GiSandsOfTime />
-            <span>Remain Stock : {stock_info.data?.data.remain_stock}</span>
-          </div>
-
-          <div className="flex-center gap-2 font-semibold text-xs">
-            <PiMoney />
-            <span>Total Spend : ₹{stock_info.data?.data.total_spend}</span>
-          </div>
-        </div>
+        <HandleSuspence
+          isLoading={isFetching}
+          error={error}
+          dataLength={suppliers?.data.length}
+        >
+          <DropDown
+            onChange={(option) => setCurrentVendorid(option.value)}
+            key="Choose Supplier"
+            label="Choose Supplier"
+            options={
+              suppliers?.data.map((item) => ({
+                text: item.vendor_name,
+                value: item.vendor_id,
+              })) || []
+            }
+          />
+        </HandleSuspence>
       </div>
       <form action={handleFormAction} className="space-y-5">
         {inputs.length === 0 ? null : (
@@ -147,11 +142,7 @@ export default function AddInventoryItemStock() {
               <InventoryFormItem
                 key={item}
                 handleDeleteBtnClick={() => handleDeleteItem(index)}
-                item_id={extraValue?.item_id || 0}
-                remain_stock={stock_info.data?.data.remain_stock || 0}
-                suppliers={suppliers.data}
-                suppliers_fetching={suppliers.isFetching}
-                suppliers_error={suppliers.error}
+                currentVendorId={currentVendorId}
               />
             ))}
           </div>

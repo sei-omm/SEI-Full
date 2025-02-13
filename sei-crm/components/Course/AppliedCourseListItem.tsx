@@ -59,15 +59,22 @@ export default function AppliedCourseListItem({
             student_course_info: student_course_info,
             selected_tab_index: 2,
             selected_batch_id: enroll_course_info.batch_id,
-            enroll_id
+            enroll_id,
           },
         })
       );
+      currentBtn.current = "enrollment-status-cancel";
+      return;
+    }
 
+    if (
+      !confirm(
+        "After approval, if any refund occurs regarding this course for the current student, it will be removed from payments"
+      )
+    )
       return;
 
-      currentBtn.current = "enrollment-status-cancel";
-    }
+      
 
     const formData = new FormData();
     formData.set("enrollment_status", status);

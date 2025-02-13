@@ -9,7 +9,7 @@ export const employeeSchema = Joi.object({
   name: Joi.string().max(255).required().label("Name"),
   employee_id: Joi.string().length(7).optional().label("Employee ID"),
   joining_date: Joi.date().required().label("Joining Date"),
-  job_title: Joi.string().max(255).optional().label("Job Title"),
+  // job_title: Joi.string().max(255).optional().label("Job Title"),
   department_id: Joi.number().optional().label("department_id"),
   contact_number: Joi.string().max(15).optional().label("Contact Number"),
   email_address: Joi.string()
@@ -126,10 +126,10 @@ export const employeeSchema = Joi.object({
   next_to_kin: Joi.string().optional().allow("").label("Next To Kin"),
   relation_to_self: Joi.string().optional().allow("").label("Relation To Self"),
 
-  cl: Joi.number().required(),
-  sl: Joi.number().required(),
-  el: Joi.number().required(),
-  ml: Joi.number().required(),
+  cl: Joi.number().optional(),
+  sl: Joi.number().optional(),
+  el: Joi.number().optional(),
+  ml: Joi.number().optional(),
 });
 
 export const employeeLoginValidator = Joi.object({

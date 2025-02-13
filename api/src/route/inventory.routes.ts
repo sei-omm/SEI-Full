@@ -3,7 +3,7 @@ import {
   addMulipInventoryItem,
   addMultiItemStock,
   addMultiMaintenceRecord,
-  addMultiPlannedMaintenanceSystem,
+  addMultiPlannedMaintenanceSystemInventoryItem,
   addMultipleVendorItem,
   addNewCategory,
   addNewConsumableItem,
@@ -15,9 +15,12 @@ import {
   addNewPlannedMaintenanceSystem,
   addNewVendorItem,
   calcluteStockInfo,
+  changeLastDoneDate,
   consumeStock,
   deleteCategory,
   deleteConsumableItem,
+  deleteMaintenceRecord,
+  deletePmsItem,
   deleteVendorItem,
   getAllItemInfo,
   getAllItemStockInfo,
@@ -25,6 +28,7 @@ import {
   getConsumableInfo,
   getDurableFiltersItemInfo,
   getDurableInfo,
+  getItemOfVendor,
   getItemsForDropDown,
   getMaintenceRecords,
   getPlannedMaintenanceSystem,
@@ -78,6 +82,7 @@ inventoryRoute
   .post("/maintence-record", addNewMaintenceRecord)
   .post("/maintence-record/multi", addMultiMaintenceRecord)
   .patch("/maintence-record/:record_id", updateMaintenceRecordStatus)
+  .delete("/maintence-record/:record_id", deleteMaintenceRecord)
   // .put("/maintence-record/:record_id", updateMaintenceRecord)
 
   .get("/planned-maintenance-system", getPlannedMaintenanceSystem)
@@ -86,11 +91,16 @@ inventoryRoute
     getSinglePlannedMaintenanceSystem
   )
   .post("/planned-maintenance-system", addNewPlannedMaintenanceSystem)
-  .post("/planned-maintenance-system/multi", addMultiPlannedMaintenanceSystem)
+  .post(
+    "/planned-maintenance-system/multi",
+    addMultiPlannedMaintenanceSystemInventoryItem
+  )
   .put(
     "/planned-maintenance-system/:planned_maintenance_system_id",
     updatePlannedMaintenanceSystem
   )
+  .patch("/planned-maintenance-system/:pms_history_id", changeLastDoneDate)
+  .delete("/planned-maintenance-system/:pms_id", deletePmsItem)
 
   .get("/durable", getDurableInfo)
   .get("/durable/filter-items", getDurableFiltersItemInfo)
@@ -112,8 +122,10 @@ inventoryRoute
   .get("/vendor", getVendorInfo)
   .get("/vendor/id-name", getVendorIdName)
   .get("/vendor/filter-items", getVendorFiltersItemInfo)
+  .get("/vendor/item/:vendor_id", getItemOfVendor)
   .get("/vendor/:vendor_id", getSingleVendorInfo)
   .post("/vendor", addNewVendorItem)
   .post("/vendor/multi", addMultipleVendorItem)
   .put("/vendor/:vendor_id", updateVendorItem)
-  .delete("/vendor/:vendor_id", deleteVendorItem);
+  .delete("/vendor/:vendor_id", deleteVendorItem)
+  

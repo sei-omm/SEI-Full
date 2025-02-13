@@ -13,9 +13,10 @@ import {
   getReceiptReportExcel,
   getRefundReport,
   getStudentsBirthDateReport,
+  inventoryReport,
   sendBirthdateWish,
 } from "../controller/report.controller";
-import { streamAdmissionExcelReport, streamBatchExcelReport, streamCourseTrendExcelReport, streamDgsIndosExcelReport, streamOccupancyExcelReport, streamReceiptExcelReport, streamRefundExcelReport } from "../controller/stream.report";
+import { streamAdmissionExcelReport, streamBatchExcelReport, streamCourseTrendExcelReport, streamDgsIndosExcelReport, streamInventoryReport, streamOccupancyExcelReport, streamReceiptExcelReport, streamRefundExcelReport } from "../controller/stream.report";
 
 export const reportRouter = Router();
 reportRouter
@@ -35,4 +36,6 @@ reportRouter
   .get("/occupancy", getOccupancyReport)
   .get("/occupancy/excel", streamOccupancyExcelReport)
   .get("/refund", getRefundReport)
-  .get("/refund/excel", streamRefundExcelReport);
+  .get("/refund/excel", streamRefundExcelReport)
+  .get("/inventory", inventoryReport)
+  .get("/inventory/excel", streamInventoryReport)

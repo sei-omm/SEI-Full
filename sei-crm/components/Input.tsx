@@ -1,8 +1,9 @@
 "use client";
 
-import { InputTypes } from "@/types";
-import { LegacyRef, useState } from "react";
+import { InputTypes, TInputSuggestion } from "@/types";
+import { LegacyRef, useRef, useState } from "react";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
+import Spinner from "./Spinner";
 
 interface IProps extends InputTypes {
   wrapperCss?: string;
@@ -14,13 +15,18 @@ interface IProps extends InputTypes {
   viewOnly?: boolean;
   viewOnlyText?: string;
   inputLayoutWrapperCss?: string;
+  suggestionOptions?: TInputSuggestion[];
+  suggestionLoading?: boolean;
+  onSuggestionItemClick?: (option: TInputSuggestion) => void;
 }
 
 export default function Input(props: IProps) {
   const [passwordVisibility, setPasswordVisibility] = useState(false);
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
   return (
-    <div className={props.wrapperCss}>
+    <div className={props.wrapperCss + " !relative"}>
       {props.hideLabel ? null : (
         <span className="block font-semibold text-sm pl-1 mb-[0.5rem]">
           {props.label}
@@ -41,8 +47,12 @@ export default function Input(props: IProps) {
         <input
           // onInput={(e) => props.onDateChange?.(e.currentTarget.value)}
           {...props}
-          type={props.type === "password" && passwordVisibility ? "text" : props.type}
-          ref={props.referal}
+          type={
+            props.type === "password" && passwordVisibility
+              ? "text"
+              : props.type
+          }
+          ref={props.referal ?? inputRef}
           className={`outline-none placeholder:text-gray-400 w-full text-sm ${
             props.className
           } ${props.viewOnly ? "hidden" : "block"} !bg-transparent`}
@@ -50,13 +60,54 @@ export default function Input(props: IProps) {
         {props.type === "password" ? (
           <div>
             {passwordVisibility ? (
-              <FaRegEye onClick={() => setPasswordVisibility(false)} size={17} className="cursor-pointer" />
+              <FaRegEye
+                onClick={() => setPasswordVisibility(false)}
+                size={17}
+                className="cursor-pointer"
+              />
             ) : (
-              <FaRegEyeSlash onClick={() => setPasswordVisibility(true)} size={18} className="cursor-pointer" />
+              <FaRegEyeSlash
+                onClick={() => setPasswordVisibility(true)}
+                size={18}
+                className="cursor-pointer"
+              />
             )}
           </div>
         ) : null}
       </div>
+
+      {props.suggestionOptions ? (
+        <div className="absolute w-full z-40 pt-1">
+          {props.suggestionLoading ? (
+            <div
+              className={`flex items-center justify-center py-5 bg-white shadow-2xl border-2 border-gray-200 rounded-lg`}
+            >
+              <Spinner size="18px" />
+            </div>
+          ) : props.suggestionOptions.length !== 0 ? (
+            <div className="bg-white shadow-2xl border-2 border-gray-200 rounded-lg">
+              <ul>
+                {props.suggestionOptions.map((item) => (
+                  <li
+                    onClick={() => {
+                      if (inputRef.current) {
+                        inputRef.current.value = item.text;
+                      }
+                      if (props.onSuggestionItemClick) {
+                        props.onSuggestionItemClick(item);
+                      }
+                    }}
+                    key={item.value}
+                    className="py-2 px-4 text-sm font-medium cursor-pointer hover:bg-gray-200"
+                  >
+                    {item.text}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

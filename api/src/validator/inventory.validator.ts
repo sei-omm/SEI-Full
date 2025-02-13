@@ -69,9 +69,13 @@ export const addNewItemValidator = Joi.object({
   minimum_quantity: Joi.number().required(),
 
   institute: Joi.string().required(),
+
+  vendor_id : Joi.number().required()
 });
 
-export const addMultiItemValidator = Joi.array().items(addNewItemValidator).required();
+export const addMultiItemValidator = Joi.array()
+  .items(addNewItemValidator)
+  .required();
 
 export const updateItemValidator = addNewItemValidator.keys({
   item_id: Joi.number().required(),
@@ -79,31 +83,26 @@ export const updateItemValidator = addNewItemValidator.keys({
 
 //inventory item stock
 export const addNewItemStockValidator = Joi.object({
-  opening_stock: Joi.number().required(),
-  item_consumed: Joi.number().required(),
-  closing_stock: Joi.number().required(),
+  stock: Joi.number().required(),
 
   status: Joi.string().required(),
-
-  vendor_id: Joi.number().required(),
-  cost_per_unit_current: Joi.number().required(),
+  cost_per_unit: Joi.number().required(),
   total_value: Joi.number().required(),
 
   remark: Joi.string().optional().allow(""),
 
   item_id: Joi.number().required(),
 
-  type: Joi.string().valid("add", "consumed").required(),
-
   purchase_date: Joi.string().optional(),
 });
 
-export const addMultiItemStockValidator = Joi.array().items(addNewItemStockValidator).required();
+export const addMultiItemStockValidator = Joi.array()
+  .items(addNewItemStockValidator)
+  .required();
 
 export const consumeStockValidator = Joi.object({
   item_id: Joi.number().required(),
-  item_consumed: Joi.number().required(),
-  type: Joi.string().valid("add", "consumed").required(),
+  consume_stock: Joi.number().required(),
   remark: Joi.string().optional().allow(""),
 });
 
@@ -125,7 +124,7 @@ export const calcluteStockInfoValidator = Joi.object({
 
 //maintence-record
 export const addNewMaintenceRecordValidator = Joi.object({
-  item_id: Joi.number().required(),
+  item_id: Joi.number().optional(),
   maintence_date: Joi.string().required(),
   work_station: Joi.string().required(),
   description_of_work: Joi.string().required(),
@@ -141,6 +140,12 @@ export const addNewMaintenceRecordValidator = Joi.object({
   }),
   remark: Joi.string().optional().allow(""),
   institute: Joi.string().required(),
+
+  custom_item: Joi.string().when(Joi.ref("item_id"), {
+    is: Joi.exist(), // Checks if item_id exists
+    then: Joi.optional(), // If item_id exists, custom_item is optional
+    otherwise: Joi.required(), // If item_id does not exist, custom_item is required
+  }),
 });
 
 export const addMultiMaintenceRecordValidator = Joi.array()
@@ -234,20 +239,31 @@ export const deleteVendorValidator = Joi.object({
 
 //planned maintenance system
 export const addNewPlannedMaintenanceSystemValidator = Joi.object({
-  item_id: Joi.number().required(),
+  item_id: Joi.number().optional(),
+  custom_item: Joi.string().when(Joi.ref("item_id"), {
+    is: Joi.exist(), // Checks if item_id exists
+    then: Joi.optional(), // If item_id exists, custom_item is optional
+    otherwise: Joi.required(), // If item_id does not exist, custom_item is required
+  }),
   frequency: Joi.string().required(),
   last_done: Joi.string().required(),
   next_due: Joi.string().required(),
   description: Joi.string().required(),
   remark: Joi.string().optional().allow(""),
+  institute: Joi.string().required().valid("Kolkata", "Faridabad"),
 });
 
 export const addMultiPlannedMaintenanceSystemValidator = Joi.array()
   .items(addNewPlannedMaintenanceSystemValidator)
   .required();
 
-  
 export const updatePlannedMaintenanceSystemValidator =
   addNewPlannedMaintenanceSystemValidator.keys({
     planned_maintenance_system_id: Joi.number().required(),
   });
+
+export const changeLastDoneDateValidator = Joi.object({
+  pms_history_id: Joi.number().required(),
+  last_done: Joi.string().required(),
+  next_due: Joi.string().required(),
+});

@@ -1,36 +1,36 @@
 import React, { useState } from "react";
 import Input from "../Input";
-import HandleDataSuspense from "../HandleDataSuspense";
 import DateInput from "../DateInput";
 import { AiOutlineDelete } from "react-icons/ai";
 import DropDown from "../DropDown";
-import { ISuccess, TVendorIdName } from "@/types";
+import { ISuccess } from "@/types";
+import HandleSuspence from "../HandleSuspence";
+import { useQuery } from "react-query";
+import axios from "axios";
+import { BASE_API } from "@/app/constant";
 
-// type TStockInfo = {
-//   total_stock: number;
-//   total_item_consumed: number;
-//   remain_stock: number;
-//   total_spend: number;
-// };
+type TVendorItems = {
+  item_id: number;
+  item_name: string;
+};
+
+async function getVendorItems(vendorID: number) {
+  const reponse = await axios.get(
+    `${BASE_API}/inventory/vendor/item/${vendorID}`
+  );
+  return reponse.data;
+}
 
 interface IProps {
   handleDeleteBtnClick: () => void;
-  remain_stock: number;
-  item_id: number;
-  suppliers_fetching : boolean,
-  suppliers_error : any,
-  suppliers: ISuccess<TVendorIdName[]> | undefined;
+  currentVendorId: number;
 }
 
 type TInputId = "opening_stock" | "item_consumed" | "cost_per_unit_current";
 
 export default function InventoryFormItem({
   handleDeleteBtnClick,
-  remain_stock,
-  item_id,
-  suppliers,
-  suppliers_error,
-  suppliers_fetching
+  currentVendorId,
 }: IProps) {
   const [inputValues, setInputValues] = useState<{
     opening_stock: number;
@@ -51,6 +51,16 @@ export default function InventoryFormItem({
     }));
   }
 
+  const {
+    data: vendor_items,
+    error,
+    isFetching,
+  } = useQuery<ISuccess<TVendorItems[]>>({
+    queryKey: ["get-vendor-items", currentVendorId],
+    queryFn: () => getVendorItems(currentVendorId),
+    enabled: currentVendorId !== -1,
+  });
+
   return (
     <div className="flex items-center gap-5 *:min-w-60 relative">
       <div className="!min-w-6 pt-5 ">
@@ -59,52 +69,52 @@ export default function InventoryFormItem({
           className="cursor-pointer"
         />
       </div>
+      <HandleSuspence
+        isLoading={isFetching}
+        error={error}
+        dataLength={vendor_items?.data.length}
+        noDataMsg="No Item Found"
+      >
+        <DropDown
+          name="item_id"
+          label="Items"
+          options={
+            vendor_items?.data.map((item) => ({
+              text: item.item_name,
+              value: item.item_id,
+            })) || []
+          }
+        />
+      </HandleSuspence>
+{/* 
       <Input
         wrapperCss="!min-w-28"
         viewOnly={true}
-        viewOnlyText={remain_stock.toString() || "0"}
         type="number"
         label="Opening Stock"
         placeholder="0"
-      />
+        defaultValue={0}
+      /> */}
 
-      <input hidden type="number" name="item_consumed" value={0} />
-      <input
+      {/* <input hidden type="number" name="item_consumed" value={0} /> */}
+      {/* <input
         hidden
         type="number"
         name="closing_stock"
         value={inputValues.opening_stock - inputValues.item_consumed}
-      />
-      <input hidden name="item_id" value={item_id} />
-      <input hidden name="type" value={"add"} />
+      /> */}
+      {/* <input hidden name="type" value={"add"} /> */}
 
       <Input
         required
         onChange={(e) => handleSomeInputChange("opening_stock", e)}
         type="number"
-        name="opening_stock"
+        name="stock"
         label="New Stock To Add *"
         placeholder="0"
       />
       <Input name="status" label="Status" placeholder="Enter Some Status" />
       <DateInput name="purchase_date" label="Purchased Date" />
-
-      <HandleDataSuspense
-        error={suppliers_error}
-        isLoading={suppliers_fetching}
-        data={suppliers?.data}
-      >
-        {(supplier) => (
-          <DropDown
-            name="vendor_id"
-            label="Supplier"
-            options={supplier.map((item) => ({
-              text: item.vendor_name,
-              value: item.vendor_id,
-            }))}
-          />
-        )}
-      </HandleDataSuspense>
 
       <Input
         required
@@ -113,7 +123,7 @@ export default function InventoryFormItem({
         wrapperCss="!min-w-28"
         //   label="Cost per Unit (Current Cost)"
         label="Cost / Unit"
-        name="cost_per_unit_current"
+        name="cost_per_unit"
         placeholder="0"
         onChange={(e) => handleSomeInputChange("cost_per_unit_current", e)}
       />

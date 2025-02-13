@@ -36,6 +36,7 @@ import { getAuthToken } from "@/app/utils/getAuthToken";
 import { useRouter } from "next/navigation";
 import { IoMdArrowBack } from "react-icons/io";
 import OfficialInfoForm from "./Employee/OfficialInfoForm";
+import { beautifyDate } from "@/app/utils/beautifyDate";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -101,7 +102,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
   );
 
   const [employeeName, setEmployeeName] = useState("Employee Name");
-  const [joinDate, setJoinDate] = useState<string | undefined>(undefined);
+  // const [joinDate, setJoinDate] = useState<string | undefined>(undefined);
   const [age, setAge] = useState(
     employeeInfo?.dob ? calculateAge(employeeInfo.dob) : ""
   );
@@ -205,14 +206,14 @@ export default function EmployeeInfo({ employeeID }: IProps) {
     setEmployeeName(event.currentTarget.value);
   };
 
-  const onDateOfJoinChnage = (value: string) => {
-    setJoinDate(value);
-  };
+  // const onDateOfJoinChnage = (value: string) => {
+  //   setJoinDate(value);
+  // };
 
   //this use effect for set the current department name
   useEffect(() => {
     if (!isNewEmployee) {
-      setJoinDate(employeeInfo?.joining_date || "");
+      // setJoinDate(employeeInfo?.joining_date || "");
       setSelectedProfileIcon(employeeInfo?.profile_image || "");
       const newArray = [...salaryValues];
       newArray[0] = parseInt(employeeInfo?.basic_salary || "0");
@@ -367,16 +368,18 @@ export default function EmployeeInfo({ employeeID }: IProps) {
               {/* <p className="text-sm">
                 Employee ID : <span className="font-semibold">SG14IOM</span>
               </p> */}
-              <p className="text-xs text-gray-500 font-semibold">
-                Date Of Joining :{" "}
-                {joinDate
+              {employeeInfo?.joining_date ? (
+                <p className="text-xs text-gray-500 font-semibold">
+                  Date Of Joining : {beautifyDate(employeeInfo.joining_date)}
+                  {/* {joinDate
                   ? new Date(joinDate).toLocaleDateString("en-US", {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
                     })
-                  : "No Date"}
-              </p>
+                  : "No Date"} */}
+                </p>
+              ) : null}
 
               <div className="space-x-3">
                 <input
@@ -515,13 +518,13 @@ export default function EmployeeInfo({ employeeID }: IProps) {
 
           {/* Official Information */}
           <OfficialInfoForm
-            isNewEmployee = {isNewEmployee}
+            isNewEmployee={isNewEmployee}
             employeeID={employeeID}
             employeeInstituteRef={employeeInstitute}
-            onDateOfJoinChnage={onDateOfJoinChnage}
+            // onDateOfJoinChnage={onDateOfJoinChnage}
             departements={departements}
             employeeInfo={employeeInfo}
-            joinDate={joinDate}
+            // joinDate={joinDate}
           />
 
           {/* Employee Task */}
@@ -737,44 +740,49 @@ export default function EmployeeInfo({ employeeID }: IProps) {
         </div>
 
         {/* Employee Leave Deatils */}
-        <div className="p-10 border card-shdow rounded-3xl">
-          <h2 className="text-2xl font-semibold pb-6">Leave information</h2>
+        {employeeID === "add-employee" ||
+        employeeID === "add-faculty" ? null : (
+          <div className="p-10 border card-shdow rounded-3xl">
+            <h2 className="text-2xl font-semibold pb-6">Leave information</h2>
 
-          <div className="flex items-center gap-5 flex-wrap *:flex-grow">
-            <Input
-              viewOnly={!isNewEmployee}
-              key="cl"
-              required
-              name="cl"
-              label="Casual Leave"
-              defaultValue={employeeInfo?.leave_details[0].cl}
-            />
-            <Input
-              viewOnly={!isNewEmployee}
-              key="sl"
-              required
-              name="sl"
-              label="Sick Leave"
-              defaultValue={employeeInfo?.leave_details[0].sl}
-            />
-            <Input
-              viewOnly={!isNewEmployee}
-              key="el"
-              required
-              name="el"
-              label="Earned Leave"
-              defaultValue={employeeInfo?.leave_details[0].el}
-            />
-            <Input
-              viewOnly={!isNewEmployee}
-              key="ml"
-              required
-              name="ml"
-              label="Maternity Leave"
-              defaultValue={employeeInfo?.leave_details[0].ml}
-            />
+            <div className="flex items-center gap-5 flex-wrap *:flex-grow">
+              <Input
+                viewOnly={!isNewEmployee}
+                key="cl"
+                required
+                name="cl"
+                label="Casual Leave"
+                defaultValue={employeeInfo?.leave_details[0].cl}
+              />
+              <Input
+                viewOnly={!isNewEmployee}
+                key="sl"
+                required
+                name="sl"
+                label="Sick Leave"
+                defaultValue={employeeInfo?.leave_details[0].sl}
+              />
+              <Input
+                viewOnly={!isNewEmployee}
+                key="el"
+                required
+                name="el"
+                label="Earned Leave"
+                defaultValue={employeeInfo?.leave_details[0].el}
+              />
+              {employeeInfo?.gender === "Male" ? null : (
+                <Input
+                  viewOnly={!isNewEmployee}
+                  key="ml"
+                  required
+                  name="ml"
+                  label="Maternity Leave"
+                  defaultValue={employeeInfo?.leave_details[0].ml}
+                />
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Actions Buttons (Form Buttons) */}
         <div className="flex items-center gap-5">

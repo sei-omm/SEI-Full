@@ -252,15 +252,19 @@ async function generateEmployeeAttendance(req: Request) {
 
     holidayList.forEach((hItem) => {
       holidayObj[hItem.holiday_date] = {
-        status : "Holiday",
-        institute : hItem.institute
+        status: "Holiday",
+        institute: hItem.institute,
       };
     });
 
+    let loopCount = 0;
+
     while (needToStopLoop === false) {
+      loopCount++;
       if (
         startDate.toISOString().split("T")[0] ===
-        endDate.toISOString().split("T")[0]
+          endDate.toISOString().split("T")[0] ||
+        loopCount > 3000
       ) {
         needToStopLoop = true;
       }
@@ -271,11 +275,17 @@ async function generateEmployeeAttendance(req: Request) {
         objToStore[key] = "Not Employed";
       } else {
         objToStore[`${key}`] =
-          attendanceObj[`${key}`] ||
-          leavesObj[`${key}`] ||
-          "Pending";
-        if(holidayObj[`${key}`] && holidayObj[`${key}`].institute === objToStore["institute"]) {
-          objToStore[`${key}`] = holidayObj[`${key}`].status
+          attendanceObj[`${key}`] || leavesObj[`${key}`] || "Pending";
+        if (
+          holidayObj[`${key}`] &&
+          holidayObj[`${key}`].institute === objToStore["institute"]
+        ) {
+          objToStore[`${key}`] = holidayObj[`${key}`].status;
+        }
+
+        //check sunday
+        if (startDate.getDay() === 0) {
+          objToStore[`${key}`] = "Sunday";
         }
       }
       startDate.setDate(startDate.getDate() + 1);

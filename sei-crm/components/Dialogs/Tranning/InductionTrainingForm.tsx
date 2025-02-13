@@ -25,14 +25,6 @@ type TrainingRecord = {
 export default function InductionTrainingForm() {
   const { extraValue } = useSelector((state: RootState) => state.dialogs);
   const [serilizeData, setSerilizeData] = useState<TrainingRecord[]>([]);
-  // const [tableDatas, setTableDatas] = useState<TTable>({
-  //   head: [
-  //     "Details of training",
-  //     `Signature Of ${staffOrFaculty} Member`,
-  //     "Signature Of Person Imparting Training",
-  //     "Date",
-  //   ]
-  // });
 
   const dispatch = useDispatch();
 
@@ -60,13 +52,35 @@ export default function InductionTrainingForm() {
         "date",
       ],
       [
-        "3) Familiarisation with delivery of lectures",
+        staffOrFaculty === "Faculty"
+          ? "3) Familiarisation with delivery of lectures"
+          : "3) Familiarisation with Code of Conduct",
         "signOfFaculty",
         "signOfTrannerCoOrdinator",
         "date",
       ],
     ],
   };
+
+  const { error, isFetching, data } = useQuery<
+    ISuccess<{ form_data: string | null; record_id: number }>
+  >({
+    queryKey: "get-tranning-form-data",
+    queryFn: async () =>
+      (
+        await axios.get(
+          `${BASE_API}/tranning/one-form?employee_id=${extraValue?.employee_id}&tranning_name=Induction Training`
+        )
+      ).data,
+    enabled: extraValue?.btn_type !== "Generate",
+    onSuccess(data) {
+      if (data.data.form_data !== null) {
+        const response = JSON.parse(data.data.form_data) as TrainingRecord[];
+        setSerilizeData(response);
+      }
+    },
+    refetchOnMount: true,
+  });
 
   const { isLoading, mutate } = useDoMutation();
   function handleFormSubmit(formData: FormData) {
@@ -90,45 +104,39 @@ export default function InductionTrainingForm() {
       trackIndex++;
     });
 
+    if (extraValue?.btn_type === "Generate") {
+      mutate({
+        apiPath: "/tranning",
+        method: "post",
+        formData: {
+          tranning_name: "Induction Training",
+          employee_id: extraValue?.employee_id,
+          form_data: JSON.stringify(formDataArray),
+          action_type: "Generate",
+          employee_visibility: true,
+        },
+        onSuccess() {
+          dispatch(setDialog({ dialogId: "", type: "CLOSE" }));
+          queryClient.invalidateQueries(["get-tranning-history"]);
+        },
+      });
+      return;
+    }
+
     mutate({
-      apiPath: "/tranning",
-      method: "post",
+      apiPath: "/tranning/complete",
+      method: "put",
       formData: {
-        employee_id: extraValue?.employee_id,
-        it_form_data: JSON.stringify(formDataArray),
-        action_type:
-          extraValue?.btn_type === "Generate" ? "Generate" : "Accept",
+        form_data: JSON.stringify(formDataArray),
       },
+      id: data?.data.record_id,
       onSuccess() {
         dispatch(setDialog({ dialogId: "", type: "CLOSE" }));
-        if (extraValue?.btn_type === "Generate") {
-          // queryClient.invalidateQueries(["tranning-list"]);
-        } else {
-          queryClient.invalidateQueries(["get-tranning-info"]);
-        }
+        queryClient.invalidateQueries("get-tranning-info");
+        queryClient.invalidateQueries("get-tranning-history");
       },
     });
   }
-
-  const { error, isFetching } = useQuery<
-    ISuccess<{ it_form_data: string | null }>
-  >({
-    queryKey: "get-tranning-form-data",
-    queryFn: async () =>
-      (
-        await axios.get(
-          `${BASE_API}/tranning/one-tranning-form?employee_id=${extraValue?.employee_id}&col_name=it_form_data`
-        )
-      ).data,
-    enabled: extraValue?.btn_type !== "Generate",
-    onSuccess(data) {
-      if (data.data.it_form_data !== null) {
-        const response = JSON.parse(data.data.it_form_data) as TrainingRecord[];
-        setSerilizeData(response);
-      }
-    },
-    refetchOnMount: true,
-  });
 
   return (
     <DialogBody className="min-w-[70rem]">

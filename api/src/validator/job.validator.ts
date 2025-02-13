@@ -13,7 +13,12 @@ export const createJobValidator = Joi.object({
   department_name: Joi.string().required(),
   job_description: Joi.string().required().max(2300),
 
-  vendors_email: Joi.string().optional(),
+  inform_vendor: Joi.boolean().required(),
+  vendors_email: Joi.string().when("inform_vendor", {
+    is: true,
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
 });
 
 export const updateJobValidator = Joi.object({
@@ -25,7 +30,12 @@ export const updateJobValidator = Joi.object({
   department_name: Joi.string().required(),
   job_description: Joi.string().required().max(2300),
 
-  vendors_email: Joi.string().optional(),
+  inform_vendor: Joi.boolean().required(),
+  vendors_email: Joi.string().when("inform_vendor", {
+    is: true,
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
 });
 
 export const deleteJobValidator = Joi.object({

@@ -34,6 +34,7 @@ import AddInventoryItemStock from "./AddInventoryItemStock";
 import InductionTrainingForm from "./Tranning/InductionTrainingForm";
 import SkillEnhancementForm from "./Tranning/SkillEnhancementForm";
 import TrainingRequirement from "./Tranning/TrainingRequirement";
+import ViewRequirementDetailsDialog from "./Tranning/ViewRequirementDetailsDialog";
 
 type DivType = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -166,17 +167,21 @@ const dialogs = [
   },
 
   {
-    id: "induction-tranning-form",
+    id: "Induction Training",
     component: <InductionTrainingForm />,
   },
   {
-    id: "skill-enhancement-form",
+    id: "Skill Enhancement",
     component: <SkillEnhancementForm />,
   },
   {
-    id : "training-requirement-form",
-    component : <TrainingRequirement />
-  }
+    id: "Training Requirement",
+    component: <TrainingRequirement />,
+  },
+  {
+    id: "view-requirement-details",
+    component: <ViewRequirementDetailsDialog />,
+  },
 ];
 
 export default function DialogWrapper(props: DivType) {

@@ -284,7 +284,7 @@ export const getEachEmployeLeaveDetails = asyncErrorHandler(
         el.cl,
         el.sl,
         el.el,
-        el.ml
+        CASE WHEN e.gender = 'Male' THEN 'NA' ELSE el.ml::TEXT END
       FROM employee_leave el
 
       LEFT JOIN employee e

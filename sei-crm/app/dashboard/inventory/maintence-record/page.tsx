@@ -1,6 +1,7 @@
 "use client";
 
 import { BASE_API } from "@/app/constant";
+import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import DateDurationFilter from "@/components/DateDurationFilter";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
@@ -8,16 +9,17 @@ import HandleSuspence from "@/components/HandleSuspence";
 import MaintenceStatusBtns from "@/components/Inventory/MaintenceStatusBtns";
 import Pagination from "@/components/Pagination";
 import MultiMaintenceForm from "@/components/SingleLineForms/MultiMaintenceForm";
-import { ISuccess, TMaintenanceRecord } from "@/types";
-import Link from "next/link";
+import { IError, ISuccess, TMaintenanceRecord } from "@/types";
+import { axiosQuery } from "@/utils/axiosQuery";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { CiEdit } from "react-icons/ci";
+import { AiOutlineDelete } from "react-icons/ai";
 import { useQuery } from "react-query";
+import { toast } from "react-toastify";
 
 type TTable = {
   heads: string[];
-  body: (string | number)[][];
+  body: (string | number | null)[][];
 };
 
 export default function MaintenceRecord() {
@@ -35,11 +37,12 @@ export default function MaintenceRecord() {
       "Status",
       "Complete Date",
       "Remarks",
+      "Action",
     ],
     body: [],
   });
 
-  const { isFetching, error, data } = useQuery<ISuccess<TMaintenanceRecord[]>>({
+  const { isFetching, error, data, refetch } = useQuery<ISuccess<TMaintenanceRecord[]>>({
     queryKey: ["maintence-record", searchParams.toString()],
     queryFn: async () => {
       const res = await fetch(
@@ -50,7 +53,7 @@ export default function MaintenceRecord() {
     onSuccess(data) {
       const body = data.data.map((record) => [
         beautifyDate(record.maintence_date),
-        record.item_name,
+        record.item_name || record.custom_item,
         record.description_of_work,
         record.work_station,
         record.department,
@@ -60,12 +63,32 @@ export default function MaintenceRecord() {
         record.status,
         beautifyDate(record.completed_date),
         record.remark,
+        "actionBtn",
       ]);
 
       setTableDatas({ ...tableDatas, body });
     },
     refetchOnMount: true,
   });
+
+  const { closeDialog, openDialog } = useLoadingDialog();
+
+  const handleDelete = async (rowIndex: number) => {
+    if(!confirm("Are you sure you want to delete this item ?")) return;
+
+    openDialog();
+    const recordId = data?.data[rowIndex].record_id;
+    const { error, response } = await axiosQuery<IError, ISuccess>({
+      url: `${BASE_API}/inventory/maintence-record/${recordId}`,
+      method: "delete",
+    });
+
+    closeDialog();
+    if (error) return toast.error(error?.message);
+
+    toast.success(response?.message);
+    refetch();
+  };
 
   return (
     <div className="space-y-5">
@@ -75,7 +98,7 @@ export default function MaintenceRecord() {
 
       <div className="flex items-center justify-end gap-6">
         <GenarateExcelReportBtn
-          hidden={tableDatas.body.length === 0}
+          hidden={searchParams.size === 0 || tableDatas.body.length === 0}
           apiPath={
             "/inventory/maintence-record/excel?" + searchParams.toString()
           }
@@ -121,17 +144,16 @@ export default function MaintenceRecord() {
                       >
                         {value === "actionBtn" ? (
                           <div className="flex items-center gap-3">
-                            <Link
-                              className="active:scale-90"
-                              href={`/dashboard/inventory/consumable/`}
-                            >
-                              <CiEdit className="cursor-pointer" size={18} />
-                            </Link>
+                            <AiOutlineDelete
+                              onClick={() => handleDelete(rowIndex)}
+                              size={16}
+                              className="cursor-pointer active:scale-90"
+                            />
                           </div>
                         ) : columnIndex === 8 ? (
                           <MaintenceStatusBtns
                             id={data?.data[rowIndex].record_id || 0}
-                            value={value.toString()}
+                            value={value?.toString() || ""}
                           />
                         ) : (
                           value

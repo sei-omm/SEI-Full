@@ -1,3 +1,4 @@
+import { getAuthTokenServer } from "@/app/actions/cookies";
 import { BASE_API } from "@/app/constant";
 import Contacts from "@/components/Contacts";
 import { ISuccess } from "@/types";
@@ -33,15 +34,22 @@ const data = [
 interface IProps {
   searchParams: {
     type?: string;
-    institute?:string
+    institute?: string;
   };
 }
 
 export default async function page({ searchParams }: IProps) {
   const urlSearchParams = new URLSearchParams(searchParams);
-  const response = await fetch(`${BASE_API}/hr/dashboard?${urlSearchParams.toString()}`, {
-    cache: "no-store",
-  });
+  const AUTH_TOKEN = await getAuthTokenServer();
+  const response = await fetch(
+    `${BASE_API}/hr/dashboard?${urlSearchParams.toString()}`,
+    {
+      cache: "no-store",
+      headers: {
+        ...AUTH_TOKEN,
+      },
+    }
+  );
   const result = (await response.json()) as ISuccess<{
     total_employees: string;
     active_employees: string;
