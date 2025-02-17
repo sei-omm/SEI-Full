@@ -176,6 +176,12 @@ const sidebarOptions = [
         name: "Course",
         slug: "/dashboard/course/manage-course",
       },
+      {
+        id: "2-2",
+        icon: <MdOutlineDateRange />,
+        name: "Time Table",
+        slug: "/time-table",
+      },
     ],
   },
 
@@ -292,6 +298,12 @@ const sidebarOptions = [
         icon: <TbReportSearch />,
         name: "Inventory Report",
         slug: "/dashboard/report/inventory",
+      },
+      {
+        id: "5-10",
+        icon: <TbReportSearch />,
+        name: "Time Table Report",
+        slug: "/time-table/report",
       },
     ],
   },

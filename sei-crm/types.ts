@@ -168,7 +168,7 @@ export interface IEmployee {
 
   leave_details: TEmployeeLeave[];
 
-  access_to_crm : boolean;
+  access_to_crm: boolean;
 }
 
 export type ILeaveStatus = "pending" | "success" | "decline";
@@ -708,3 +708,35 @@ export type TPmsFrequency =
   | "Yearly";
 
 export type TInputSuggestion = { text: string; value: any };
+
+export type TFaculty = {
+  for_subject_name: string;
+  faculty_id: number;
+  faculty_name: string;
+  profile_image: string;
+};
+
+export type TTimeTableData = {
+  course_id: number;
+  course_name: string;
+  course_code: string;
+  subjects: string[];
+  faculty: TFaculty[];
+  // subject_with_faculty: {
+  //   subject_name: string;
+  //   faculty: {
+  //     faculty_id: number;
+  //     faculty_name: string;
+  //     profile_image: string;
+  //   }[];
+  // }[];
+};
+
+export type TTimeTableParseData = {
+  course_name: string;
+  subjects: string[];
+  faculty: {
+    faculty_name: string;
+    profile_image: string;
+  }[];
+};

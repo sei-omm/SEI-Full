@@ -22,6 +22,8 @@ import {
   getCoursesWithSubject,
   getMultipleBatchWithId,
   changeBatchManually,
+  generateTimeTable,
+  saveTimeTable,
 } from "../controller/course.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 
@@ -30,7 +32,10 @@ export const courseRouter = Router();
 courseRouter
   .get("/", getAllCourse)
   .get("/with-batches/student", getCourseWithBatchStudents)
-  .get("/with-batches", getCoursesWithBatch) /* bydefault with pagination | modify to -> ?nopagination=true || ?course_ids=11,10&institute=Kolkata&nopagination=false&fields=course_id:course_name */
+  .get(
+    "/with-batches",
+    getCoursesWithBatch
+  ) /* bydefault with pagination | modify to -> ?nopagination=true || ?course_ids=11,10&institute=Kolkata&nopagination=false&fields=course_id:course_name */
   .get("/with-subjects", getCoursesWithSubject)
   .get("/search", searchCourse)
   .get("/required-documents", isAuthenticated, getCoursesRequiredDocuments)
@@ -38,10 +43,7 @@ courseRouter
   .get("/get-multi-batch-price", getMultiBatchPrices)
   .get("/drop-down", getCoursesForDropDown)
   .post("/", addNewCourse)
-  .put(
-    "/:course_id",
-    updateCourseInfo
-  )
+  .put("/:course_id", updateCourseInfo)
   .delete("/:course_id", deleteCourse)
   // .post("/enroll/:course_id", isAuthenticated, enrolCourse)
   // .post("/enroll", isAuthenticated, enrolCourse)
@@ -54,4 +56,6 @@ courseRouter
   .delete("/batch/:batch_id", deleteCourseBatch)
   .patch("/batch", isAuthenticated, changeBatchManually) //chnage batch manually -> only access by marketing team
 
+  .get("/time-table", generateTimeTable)
+  .post("/time-table", saveTimeTable)
   .get("/:course_id", getSingleCourse);

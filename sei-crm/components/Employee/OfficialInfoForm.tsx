@@ -216,8 +216,10 @@ export default function OfficialInfoForm({
                 defaultValue={employeeInfo?.teaching_experience}
               />
               <Input
+                required
+                type="number"
                 name="max_teaching_hrs_per_week"
-                label="Max Teaching Hours Per Week"
+                label="Max Teaching Hours Per Week *"
                 placeholder="2 Hours"
                 defaultValue={employeeInfo?.max_teaching_hrs_per_week}
               />

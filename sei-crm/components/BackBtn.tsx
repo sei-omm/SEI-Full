@@ -5,18 +5,27 @@ import Button from "./Button";
 import { IoMdArrowBack } from "react-icons/io";
 import { useRouter } from "next/navigation";
 
-export default function BackBtn() {
+interface IProps {
+  btnText?: string;
+  customRoute?: string;
+}
+
+export default function BackBtn({ btnText, customRoute }: IProps) {
   const route = useRouter();
   return (
     <Button
       type="button"
       onClick={() => {
-        route.back();
+        if (customRoute) {
+          route.push(customRoute);
+        } else {
+          route.back();
+        }
       }}
       className="flex items-center gap-2"
     >
       <IoMdArrowBack />
-      Back
+      {btnText ?? "Back"}
     </Button>
   );
 }

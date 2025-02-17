@@ -10,6 +10,7 @@ import {
   occupancyExcelReportValidator,
   receiptReportValidator,
   refundReportValidator,
+  VTimeTableReport,
 } from "../validator/report.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { beautifyDate } from "../utils/beautifyDate";
@@ -1727,7 +1728,9 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
   const worksheet = workbook.addWorksheet("Inventory Report");
 
   worksheet.mergeCells("A1:J1");
-  worksheet.getCell("A1").value = `Inventory Report (${value.institute}) ${beautifyDate(value.from_date)} - ${beautifyDate(value.to_date)}`;
+  worksheet.getCell("A1").value = `Inventory Report (${
+    value.institute
+  }) ${beautifyDate(value.from_date)} - ${beautifyDate(value.to_date)}`;
   worksheet.getCell("A1").font = {
     size: 20,
     bold: true,
@@ -1821,6 +1824,175 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
     excelRow.eachCell((cell) => {
       cell.style = {
         font: { size: 11 },
+        alignment: { horizontal: "center" },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+  });
+
+  pgStream.on("end", () => {
+    workbook.commit();
+    client.release(); // Release the client when done
+  });
+
+  pgStream.on("error", (err) => {
+    client.release();
+  });
+});
+
+export type TTimeTableParseData = {
+  course_name: string;
+  subjects: string[];
+  faculty: {
+    faculty_name: string;
+    profile_image: string;
+  }[];
+};
+export const stramTimeTableReport = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VTimeTableReport.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  // Set response headers for streaming
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="Time_Table_Report.xlsx"'
+  );
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+    stream: res,
+    useStyles: true,
+  });
+  const worksheet = workbook.addWorksheet("Time Table Report");
+
+  worksheet.mergeCells("A1:I1");
+  worksheet.getCell("A1").value = `Time Table (${
+    value.institute
+  }) ${beautifyDate(value.from_date)} - ${beautifyDate(value.to_date)}`;
+  worksheet.getCell("A1").font = {
+    size: 20,
+    bold: true,
+    color: { argb: "000000" },
+  };
+  worksheet.getCell("A1").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFF00" },
+  };
+  worksheet.getRow(1).height = 30;
+  worksheet.getCell("A1").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+
+  worksheet.addRow([
+    "COURSE NAME",
+    "09:30 AM - 10:30 AM",
+    "10:30 AM - 11:30 AM",
+    "11:45 AM - 12:45 PM",
+    "01:15 PM - 02:15 PM",
+    "02:15 PM - 03:15 PM",
+    "03:30 PM - 04:30 PM",
+    "04:30 PM - 05:30 PM",
+    "05:30 PM - 06:30 PM",
+  ]);
+
+  // Row styling (header row)
+  worksheet.getRow(2).eachCell((cell) => {
+    cell.style = {
+      font: {
+        bold: true,
+        size: 12,
+        color: { argb: "000000" },
+      },
+      alignment: { horizontal: "center", vertical: "middle" },
+      fill: {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F4A460" },
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+  });
+
+  const client = await pool.connect();
+  const query = new QueryStream(
+    `
+      SELECT
+        *,
+        TO_CHAR(date, 'YYYY-MM-DD') AS at_date
+      FROM
+        time_table
+      WHERE 
+          institute = $1 AND date BETWEEN $2 AND $3
+
+      ORDER BY date DESC
+    `,
+    [value.institute, value.from_date, value.to_date],
+    {
+      batchSize: 10,
+    }
+  );
+
+  const pgStream = client.query(query);
+
+  // Process PostgreSQL stream data and append to Excel sheet
+  pgStream.on("data", (data) => {
+    const excelRow = worksheet.addRow([beautifyDate(data.date)]);
+
+    const parseTimeTable = JSON.parse(
+      data.time_table_data
+    ) as TTimeTableParseData[];
+
+
+    worksheet.mergeCells(`A${excelRow.number}:I${excelRow.number}`);
+
+    parseTimeTable.forEach((item) => {
+      const combineSubAndFac: string[] = [];
+      item.subjects.forEach((subject, subIndex) => {
+        combineSubAndFac.push(
+          `${subject}\n${item.faculty[subIndex].faculty_name}`
+        );
+      });
+
+      const innerRow = worksheet.addRow([
+        item.course_name,
+        ...combineSubAndFac,
+      ]);
+
+      innerRow.height = combineSubAndFac.length * 10;
+
+      innerRow.eachCell((cell, colNumber) => {
+        cell.style = {
+          font: { size: 11, bold : colNumber === 1 },
+          alignment: { horizontal: "center", vertical: "middle", wrapText: true },
+          border: {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+            bottom: { style: "thin" },
+          },
+        };
+      });
+    });
+
+    // Style the data rows
+    excelRow.eachCell((cell) => {
+      cell.style = {
+        font: { size: 18, bold: true },
         alignment: { horizontal: "center" },
         border: {
           top: { style: "thin" },

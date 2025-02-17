@@ -82,3 +82,9 @@ export const inventoryReportValidator = Joi.object({
   to_date: Joi.string().required().label("End Date"),
   page: Joi.number().optional(),
 });
+
+export const VTimeTableReport = Joi.object({
+  institute: Joi.string().required(),
+  from_date : Joi.string().required(),
+  to_date : Joi.string().required(),
+})

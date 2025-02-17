@@ -163,3 +163,28 @@ export const VchangeBatchManually = Joi.object({
   course_id: Joi.number().required(),
   student_id: Joi.number().required(),
 });
+
+export const VTimeTable = Joi.object({
+  institute: Joi.string().required(),
+  date: Joi.string().required(),
+});
+
+// export const VSaveTimeTable = Joi.array().items(
+//   Joi.object({
+//     date: Joi.string().required(),
+
+//     course_id: Joi.number().required(),
+//     employee_id: Joi.number().required().allow(null),
+
+//     for_subject_name: Joi.string().required(),
+
+//     institute : Joi.string().required()
+//   })
+// );
+
+export const VSaveTimeTable = Joi.object({
+  date: Joi.string().required(),
+  time_table_data: Joi.string().required(),
+  institute: Joi.string().required(),
+  faculty_ids: Joi.array().items(Joi.number()),
+});

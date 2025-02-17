@@ -10,6 +10,7 @@ import {
   refundReportValidator,
   studentBirthdateReportValidator,
   studentBirthdateWishValidator,
+  VTimeTableReport,
 } from "../validator/report.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { pool } from "../config/db";
@@ -19,6 +20,7 @@ import { sendEmail } from "../utils/sendEmail";
 import Cursor from "pg-cursor";
 import { Readable } from "node:stream";
 import { parsePagination } from "../utils/parsePagination";
+import { VTimeTable } from "../validator/course.validator";
 
 // const sqlForAdmissionReport = `
 //         SELECT
@@ -1540,4 +1542,31 @@ export const inventoryReport = asyncErrorHandler(async (req, res) => {
   );
 
   res.status(200).json(new ApiResponse(200, "Inventory Report", rows));
+});
+
+export const generateTimeTableReport = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VTimeTableReport.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+  const { LIMIT, OFFSET } = parsePagination(req);
+  const { institute, from_date, to_date } = value;
+
+  const { rows } = await pool.query(
+    `
+    SELECT
+    *,
+    TO_CHAR(date, 'YYYY-MM-DD') AS at_date
+    FROM
+      time_table
+    WHERE 
+        institute = $1 AND date BETWEEN $2 AND $3
+
+    ORDER BY date DESC
+
+    LIMIT ${LIMIT} OFFSET ${OFFSET}
+
+    `,
+    [institute, from_date, to_date]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Time Table Report", rows));
 });

@@ -965,6 +965,7 @@ CREATE TABLE pms_history (
 
 
 ALTER TABLE inventory_item_info DROP COLUMN current_vendor_id;
+ALTER TABLE inventory_item_info ADD COLUMN vendor_id INTEGER;
 
 ALTER TABLE inventory_item_info 
 DROP CONSTRAINT IF EXISTS inventory_item_info_vendor_id_fkey, 
@@ -1069,8 +1070,39 @@ CREATE TABLE tranning_requirement (
 
     employee_visibility BOOLEAN DEFAULT TRUE,
     form_data TEXT
-)
+);
 
+-- NEW DB 14 Feb 2025
+ALTER TABLE employee ADD COLUMN faculty_current_working_hours INTEGER DEFAULT 0;
+
+-- CREATE TABLE time_table (
+--     date DATE,
+--     info TEXT,
+--     institute VARCHAR(100),
+--     UNIQUE (date)
+-- );
+
+-- CREATE TABLE time_table (
+--     date DATE,
+
+--     course_id INTEGER,
+--     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
+
+--     employee_id INTEGER,
+--     FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE,
+
+--     for_subject_name TEXT,
+
+--     institute VARCHAR(100)
+-- )
+
+CREATE TABLE time_table (
+    date DATE,
+
+    time_table_data TEXT,
+    
+    institute VARCHAR(100)
+);
 
 -- fro clering all table of db
 -- DO $$ 

@@ -4,7 +4,7 @@ import { pool } from "../config/db";
 import { ApiResponse } from "../utils/ApiResponse";
 import {
   addNewEmployeeAttendanceValidator,
-  updateEmployeeAttendanceValidator,
+  updateBuldAttendanceValidator,
 } from "../validator/attendance.controller";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import XLSX from "xlsx";
@@ -12,6 +12,7 @@ import { months } from "../constant";
 import { filterToSql } from "../utils/filterToSql";
 import { parsePagination } from "../utils/parsePagination";
 import { getDatesInBetween } from "../utils/getDatesInBetween";
+import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 
 const date = new Date();
 const table_name = "attendance";
@@ -420,28 +421,25 @@ export const addNewEmployeeAttendance = asyncErrorHandler(
 export const updateEmployeeAttendance = asyncErrorHandler(
   async (req: Request, res: Response) => {
     //get all the employee
-    const { error } = updateEmployeeAttendanceValidator.validate({
-      ...req.body,
-      ...req.params,
-    });
-
+    const { error, value } = updateBuldAttendanceValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
     const sql = `
-      INSERT INTO ${table_name} (status, employee_id, date)
-      VALUES ($1, $2, $3)
+      INSERT INTO 
+        ${table_name} (status, employee_id, date)
+      VALUES 
+        ${sqlPlaceholderCreator(3, value.length).placeholder}
       ON CONFLICT (employee_id, date)
       DO UPDATE
       SET status = EXCLUDED.status;
     `;
 
-    await pool.query(sql, [
-      req.body.status,
-      req.params.employee_id,
-      req.body.date,
-    ]);
+    await pool.query(
+      sql,
+      value.flatMap((item) => [item.attendance_option, item.employee_id, item.attendance_date])
+    );
 
-    res.status(200).json(new ApiResponse(200, "Employee Attendance Updated"));
+    res.status(200).json(new ApiResponse(200, "Employee Attendances Updated"));
   }
 );
 

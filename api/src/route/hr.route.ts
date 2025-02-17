@@ -93,7 +93,7 @@ hrRouter
   .get("/attendance", getAllEmployeeAllAttendances)
   .get("/attendance/export-sheet", generateAttendanceSheet)
   .post("/attendance", addNewEmployeeAttendance)
-  .patch("/attendance/:employee_id", updateEmployeeAttendance)
+  .patch("/attendance", updateEmployeeAttendance)
 
   .get("/designation", getAllDesignation)
   .post("/designation", addDesignation);
