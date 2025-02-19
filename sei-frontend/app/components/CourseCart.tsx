@@ -56,8 +56,10 @@ export default function CourseCart() {
     queryKey: ["get-batch-info", searchParams.toString()],
     queryFn: async () => {
       const ids: string[] = [];
-      searchParams.forEach((value) => {
-        ids.push(value);
+      searchParams.forEach((value, key) => {
+        if (key.includes("bid")) {
+          ids.push(value);
+        }
       });
       if (ids.length === 0) return;
       return (
@@ -70,7 +72,7 @@ export default function CourseCart() {
 
   return (
     <div
-      className={`${searchParams.size === 0 ? "hidden" : "fixed"}  ${
+      className={`${searchParams.size !== 0 && searchParams.toString().includes("bid") ? "fixed" : "hidden"}  ${
         isExpand ? "bg-white" : "bg-[#E9B858]"
       } border border-gray-300 bottom-10 right-10 z-10 card-shdow shadow-2xl rounded-2xl p-5 sm:right-0 ${
         isExpand ? "sm:left-0" : ""

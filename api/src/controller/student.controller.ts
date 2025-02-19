@@ -30,88 +30,6 @@ const table_name = "students";
 export const getStudentInfo = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const studentIdFromToken = res.locals.student_id;
-
-    // const { rowCount, rows } = await pool.query(
-    //   `SELECT student_id, indos_number, name, email, mobile_number, dob, profile_image FROM ${table_name} WHERE student_id = $1`,
-    //   [studentIdFromToken]
-    // );
-
-    // if (rowCount === 0) throw new ErrorHandler(404, "No Date Found");
-    // res.status(200).json(new ApiResponse(200, "All Student Date", rows[0]));
-
-    // const query = `
-    //   SELECT
-    // s.student_id,
-    // s.name,
-    // s.email,
-    // s.mobile_number,
-    // s.dob,
-    // s.profile_image,
-    // s.indos_number,
-
-    //       c.course_id,
-    //       c.course_name,
-    //       c.require_documents,
-    //       c.course_duration,
-    //       c.total_seats,
-    //       c.remain_seats,
-    //       c.created_at
-    //   FROM
-    //       ${table_name} s
-    //   LEFT JOIN
-    //       enrolled_batches_courses ec ON s.student_id = ec.student_id
-    //   LEFT JOIN
-    //       courses c ON ec.course_id = c.course_id
-    //   WHERE
-    //       s.student_id = $1`;
-
-    // const query = `
-    //   SELECT
-    //     s.student_id,
-    //     s.name,
-    //     s.email,
-    //     s.mobile_number,
-    //     s.dob,
-    //     s.profile_image,
-    //     s.indos_number,
-    //     json_agg(
-    //       json_build_object(
-    //         'course_id', c.course_id,
-    //         'course_code', c.course_code,
-    //         'course_name', c.course_name,
-    //         'institute', c.institute,
-    //         'course_type', c.course_type,
-    //         'require_documents', c.require_documents,
-    //         'course_duration', c.course_duration,
-    //         'course_fee', c.course_fee,
-    //         'min_pay_percentage', c.min_pay_percentage,
-    //         'total_seats', c.total_seats,
-    //         'remain_seats', c.remain_seats,
-    //         'course_visibility', c.course_visibility,
-    //         'course_update_time', c.course_update_time,
-    //         'created_at', c.created_at,
-    //         -- 'enrolled_batch_info', cb.*
-    //         'enrolled_batch_date', cb.start_date,
-    //         'batch_fee', cb.batch_fee
-    //       )
-    //     ) as courses
-
-    //   FROM
-    //      ${table_name} AS s
-    //   LEFT JOIN
-    //       enrolled_batches_courses AS ebc ON s.student_id = ebc.student_id
-    //   LEFT JOIN
-    //       courses AS c ON ebc.course_id = c.course_id
-    //   LEFT JOIN
-    //       course_batches AS cb ON cb.batch_id = ebc.batch_id
-    //   LEFT JOIN
-    //        payments AS p ON p.form_id = ebc.form_id
-    //   WHERE
-    //     s.student_id = $1
-
-    //   GROUP BY s.student_id
-    // `
-
     const query = `
         SELECT
             s.student_id, 
@@ -142,7 +60,7 @@ export const getStudentInfo = asyncErrorHandler(
                         'enrolled_batch_date', cb.start_date,
                         'enrollment_status', ebc.enrollment_status,
                         'enrolled_batch_id', cb.batch_id,
-                        'due_amount', cb.batch_fee - ( SELECT SUM(paid_amount) FROM payments WHERE batch_id = cb.batch_id AND student_id = ebc.student_id )
+                        'due_amount', cb.batch_fee - COALESCE(( SELECT SUM(paid_amount) FROM payments WHERE batch_id = cb.batch_id AND student_id = ebc.student_id ), 0)
                     )
                     ORDER BY ebc.created_at DESC
                 ) FILTER (WHERE c.course_id IS NOT NULL), 
