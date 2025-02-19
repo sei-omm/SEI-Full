@@ -31,6 +31,7 @@ import {
 } from "react-icons/io5";
 import { GrHostMaintenance, GrVend } from "react-icons/gr";
 import { BsReverseLayoutTextSidebarReverse } from "react-icons/bs";
+import { LiaAddressBookSolid, LiaSwatchbookSolid } from "react-icons/lia";
 
 const sidebarOptions = [
   {
@@ -227,12 +228,24 @@ const sidebarOptions = [
     subMenu: [
       {
         id: "4-1",
+        icon: <LiaAddressBookSolid size={16}/>,
+        name: "Books Issue Report",
+        slug: "/dashboard/library/books-issue",
+      },
+      {
+        id: "4-1",
+        icon: <LiaSwatchbookSolid size={16}/>,
+        name: "Physical Library Books",
+        slug: "/dashboard/library/phy-books",
+      },
+      {
+        id: "4-3",
         icon: <IoLibraryOutline />,
         name: "Manage Library",
         slug: "/dashboard/library/item",
       },
       {
-        id: "4-2",
+        id: "4-4",
         icon: <MdOutlineSubject />,
         name: "Manage Library Subjects",
         slug: "/dashboard/library/subject",

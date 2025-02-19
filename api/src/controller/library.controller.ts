@@ -6,7 +6,12 @@ import {
   getLibraryInfoWithFilterValidator,
   getSingleLibraryValidator,
   insertLibraryItemValidator,
+  insertPhysicalLibraryValidator,
+  issueBookToStudentValidator,
+  returnBookToLibraryBulkV,
+  returnBookToLibraryValidator,
   updateLibraryItemValidator,
+  updatePhysicalLibraryValidator,
   updateVisibilityValidator,
 } from "../validator/library.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
@@ -545,3 +550,250 @@ export const updateVisibility = asyncErrorHandler(
       .json(new ApiResponse(200, "Library Visibility Status Has Updated"));
   }
 );
+
+// Physical Library
+
+export const addPhyLibBooks = asyncErrorHandler(async (req, res) => {
+  const { error, value } = insertPhysicalLibraryValidator.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await pool.query(
+    `
+    INSERT INTO phy_lib_books 
+      (book_name, edition, author, row_number, shelf, institute)
+    VALUES
+      ${sqlPlaceholderCreator(6, value.length).placeholder}
+    `,
+    value.flatMap((item) => [
+      item.book_name,
+      item.edition,
+      item.author,
+      item.row_number,
+      item.shelf,
+      item.institute,
+    ])
+  );
+
+  res.status(201).json(new ApiResponse(201, "Books Are Added"));
+});
+
+export const updatePhyLibBooks = asyncErrorHandler(async (req, res) => {
+  const { error, value } = updatePhysicalLibraryValidator.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const placeholders = value
+    .map(
+      (_, i) =>
+        `($${i * 6 + 1}, $${i * 6 + 2}, $${i * 6 + 3}, $${i * 6 + 4}, $${
+          i * 6 + 5
+        }, $${i * 6 + 6})`
+    )
+    .join(", ");
+
+  await pool.query(
+    `
+    UPDATE phy_lib_books AS p
+      SET 
+        book_name = v.book_name, 
+        edition = v.edition, 
+        author = v.author, 
+        row_number = v.row_number::INTEGER, 
+        shelf = v.shelf
+      FROM (VALUES 
+        ${placeholders}
+      ) AS v(phy_lib_book_id, book_name, edition, author, row_number, shelf)
+      WHERE p.phy_lib_book_id = v.phy_lib_book_id::INTEGER;
+    `,
+
+    value.flatMap((book) => [
+      book.phy_lib_book_id,
+      book.book_name,
+      book.edition,
+      book.author,
+      book.row_number,
+      book.shelf,
+    ])
+  );
+  res.status(200).json(new ApiResponse(200, "Book Info Successfully Updated"));
+});
+
+export const issueBooksToStudent = asyncErrorHandler(async (req, res) => {
+  const { error, value } = issueBookToStudentValidator.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await pool.query(
+    `
+    INSERT INTO 
+        phy_lib_book_issue (student_id, course_id, phy_lib_book_id, issue_date, institute)
+    VALUES
+        ${sqlPlaceholderCreator(5, value.info.length).placeholder}
+    `,
+    value.info.flatMap((item: any) => [
+      value.student_id,
+      item.course_id,
+      item.phy_lib_book_id,
+      value.issue_date,
+      value.institute,
+    ])
+  );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Books Successfully Issued to Student"));
+});
+
+export const returnBookBulk = asyncErrorHandler(async (req, res) => {
+  const { error, value } = returnBookToLibraryBulkV.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const placeholder = value
+    .map((_, index) => `($${index * 2 + 1}, $${index * 2 + 2})`)
+    .join(", ");
+
+  await pool.query(
+    `
+  UPDATE phy_lib_book_issue plbi
+  SET return_date = u.return_date::DATE
+  FROM (VALUES ${placeholder}) AS u(phy_lib_book_issue_id, return_date)
+  WHERE plbi.phy_lib_book_issue_id = u.phy_lib_book_issue_id::INTEGER
+  `,
+    value.flatMap((item) => [item.phy_lib_book_issue_id, item.return_date])
+  );
+
+  res.status(200).json(new ApiResponse(200, "Books Successfully Received."));
+});
+
+export const getPhysicalLibBooks = asyncErrorHandler(async (req, res) => {
+  const { LIMIT, OFFSET } = parsePagination(req);
+
+  const { book_name, institute } = req.query;
+
+  let filter = "WHERE";
+  const filterValues: any[] = [];
+  let placeholdernum = 1;
+
+  if (book_name) {
+    filter += ` book_name ILIKE '%' || $${placeholdernum} || '%'`;
+    filterValues.push(book_name);
+    placeholdernum++;
+  }
+
+  if (institute) {
+    if (filter === "WHERE") {
+      filter += ` institute = $${placeholdernum}`;
+    } else {
+      filter += ` AND institute = $${placeholdernum}`;
+    }
+    placeholdernum++;
+    filterValues.push(institute);
+  }
+
+  if (filter === "WHERE") {
+    filter = "";
+  }
+
+  const { rows } = await pool.query(
+    `
+      SELECT * FROM phy_lib_books
+      ${filter}
+      ORDER BY phy_lib_books DESC
+      LIMIT ${LIMIT} OFFSET ${OFFSET}`,
+    filterValues
+  );
+
+  res.status(200).json(new ApiResponse(200, "Books List", rows));
+});
+
+export const getBookIssueList = asyncErrorHandler(async (req, res) => {
+  const { LIMIT, OFFSET } = parsePagination(req);
+
+  const {
+    institute,
+    from_date,
+    to_date,
+    search_by,
+    search_keyword
+  } = req.query;
+
+  let filter = "WHERE";
+  const filterValues: string[] = [];
+  let placeholdernum = 1;
+
+  if (institute) {
+    filter += ` plbi.institute = $${placeholdernum}`;
+    placeholdernum++;
+    filterValues.push(institute as string);
+  }
+
+  if (from_date && to_date) {
+    if (filter === "WHERE") {
+      filter += ` plbi.issue_date BETWEEN $${placeholdernum}`;
+      placeholdernum++;
+      filter += ` AND $${placeholdernum}`;
+    } else {
+      filter += ` AND plbi.issue_date BETWEEN $${placeholdernum}`;
+      placeholdernum++;
+      filter += ` AND $${placeholdernum}`;
+    }
+    placeholdernum++;
+    filterValues.push(from_date as string);
+    filterValues.push(to_date as string);
+  }
+
+  if (search_by && search_keyword && search_by === "indos_number") {
+    placeholdernum = 1;
+    filterValues.length = 0;
+    filter = `WHERE s.indos_number = $${placeholdernum}`;
+    filterValues.push(search_keyword as string);
+  }
+
+  if (search_by && search_keyword && search_by === "course_name") {
+    placeholdernum = 1;
+    filterValues.length = 0;
+    filter = `WHERE c.course_name ILIKE '%' || $${placeholdernum} || '%'`;
+    filterValues.push(search_keyword as string);
+  }
+
+  if (search_by && search_keyword && search_by === "student_name") {
+    placeholdernum = 1;
+    filterValues.length = 0;
+    filter = `WHERE s.name ILIKE '%' || $${placeholdernum} || '%'`;
+    filterValues.push(search_keyword as string);
+  }
+
+  if (filter === "WHERE") filter = "";
+
+
+  const { rows } = await pool.query(
+    `
+    SELECT
+      plbi.phy_lib_book_issue_id,
+      s.name AS student_name,
+      s.indos_number,
+      c.course_name,
+      plb.book_name,
+      plb.edition,
+      plbi.issue_date,
+      plbi.return_date
+    FROM phy_lib_book_issue plbi
+
+    LEFT JOIN students s
+    ON s.student_id = plbi.student_id
+
+    LEFT JOIN courses c
+    ON c.course_id = plbi.course_id
+
+    LEFT JOIN phy_lib_books plb
+    ON plb.phy_lib_book_id = plbi.phy_lib_book_id
+
+    ${filter}
+
+    ORDER BY plbi.issue_date DESC
+
+    LIMIT ${LIMIT} OFFSET ${OFFSET}
+    `,
+    filterValues
+  );
+
+  res.status(200).json(new ApiResponse(200, "Book Issue List", rows));
+});

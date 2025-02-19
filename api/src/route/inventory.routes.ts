@@ -14,6 +14,7 @@ import {
   addNewMaintenceRecord,
   addNewPlannedMaintenanceSystem,
   addNewVendorItem,
+  bulkUpdateMaintenceRecord,
   calcluteStockInfo,
   changeLastDoneDate,
   consumeStock,
@@ -32,6 +33,7 @@ import {
   getItemsForDropDown,
   getMaintenceRecords,
   getPlannedMaintenanceSystem,
+  getPmsItemHistory,
   getPreviousOpeningStock,
   getSingleConsumableInfo,
   getSingleDurableInfo,
@@ -83,9 +85,10 @@ inventoryRoute
   .post("/maintence-record/multi", addMultiMaintenceRecord)
   .patch("/maintence-record/:record_id", updateMaintenceRecordStatus)
   .delete("/maintence-record/:record_id", deleteMaintenceRecord)
-  // .put("/maintence-record/:record_id", updateMaintenceRecord)
+  .put("/maintence-record", bulkUpdateMaintenceRecord)
 
   .get("/planned-maintenance-system", getPlannedMaintenanceSystem)
+  .get("/planned-maintenance-system/history/:planned_maintenance_system_id", getPmsItemHistory)
   .get(
     "/planned-maintenance-system/:planned_maintenance_system_id",
     getSinglePlannedMaintenanceSystem

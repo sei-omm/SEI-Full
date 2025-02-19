@@ -33,6 +33,7 @@ import {
   updateMaintenceRecordValidator,
   updatePlannedMaintenanceSystemValidator,
   updateVendorValidator,
+  VBulkUpdateMaintenceRecord,
 } from "../validator/inventory.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import {
@@ -742,23 +743,37 @@ export const updateItemStock = asyncErrorHandler(
 export const getMaintenceRecords = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { LIMIT, OFFSET } = parsePagination(req);
+
     let filterQuery = "WHERE";
     const filterValues: string[] = [];
+    let paramsNumber = 1;
 
     if (req.query.institute) {
-      filterQuery += " mr.institute = $1";
+      filterQuery += ` mr.institute = $${paramsNumber}`;
       filterValues.push(req.query.institute as string);
+      paramsNumber++;
     }
 
     if (req.query.from_date && req.query.to_date) {
       if (filterQuery === "WHERE") {
-        filterQuery += " mr.created_at BETWEEN $1 AND $2";
+        filterQuery += ` mr.created_at BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
       } else {
-        filterQuery += " AND mr.created_at BETWEEN $2 AND $3";
+        filterQuery += ` AND mr.created_at BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
       }
-
+      paramsNumber++;
+      paramsNumber++;
       filterValues.push(req.query.from_date as string);
       filterValues.push(req.query.to_date as string);
+    }
+
+    if(req.query.status) {
+      if (filterQuery === "WHERE") {
+        filterQuery += ` mr.status = $${paramsNumber}`;
+      } else {
+        filterQuery += ` AND mr.status = $${paramsNumber}`;
+      }
+      paramsNumber++;
+      filterValues.push(req.query.status as string)
     }
 
     if (filterQuery === "WHERE") {
@@ -773,7 +788,7 @@ export const getMaintenceRecords = asyncErrorHandler(
         FROM maintence_record AS mr
   
         LEFT JOIN inventory_item_info AS iii
-        ON iii.item_id = mr.item_id AND mr.item_id != NULL
+        ON iii.item_id = mr.item_id
         ${filterQuery}
         ORDER BY mr.created_at DESC
         LIMIT ${LIMIT} OFFSET ${OFFSET}
@@ -851,20 +866,22 @@ export const addMultiMaintenceRecord = asyncErrorHandler(async (req, res) => {
           completed_date = EXCLUDED.completed_date
         
         `,
-        inventoryItem.flatMap((item) => [
-          item.item_id,
-          item.maintence_date,
-          item.work_station,
-          item.description_of_work,
-          item.department,
-          item.assigned_person,
-          item.approved_by,
-          item.cost,
-          item.status,
-          item.remark,
-          item.institute,
-          item.completed_date,
-        ])
+        inventoryItem.flatMap((item) => {
+          return [
+            item.item_id,
+            item.maintence_date,
+            item.work_station,
+            item.description_of_work,
+            item.department,
+            item.assigned_person,
+            item.approved_by,
+            item.cost,
+            item.status,
+            item.remark,
+            item.institute,
+            item.completed_date,
+          ];
+        })
       );
     }
 
@@ -908,7 +925,6 @@ export const addMultiMaintenceRecord = asyncErrorHandler(async (req, res) => {
     await client.query("COMMIT");
     client.release();
   } catch (error: any) {
-    console.log(error);
     await client.query("ROLLBACK");
     client.release();
     throw new ErrorHandler(400, error.mesage);
@@ -959,6 +975,34 @@ export const deleteMaintenceRecord = asyncErrorHandler(async (req, res) => {
   ]);
 
   res.status(200).json(new ApiResponse(200, "Record Successfully Removed"));
+});
+
+export const bulkUpdateMaintenceRecord = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VBulkUpdateMaintenceRecord.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const values = value
+    .map((_, i) => `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`)
+    .join(", ");
+  const params = value.flatMap((u) => [
+    u.record_id,
+    u.status,
+    u.completed_date,
+  ]);
+
+  await pool.query(
+    `
+      UPDATE maintence_record AS mr
+        SET 
+          status = v.status,
+          completed_date = NULLIF(v.completed_date, 'null')::TIMESTAMP
+        FROM (VALUES ${values}) AS v(record_id, status, completed_date)
+      WHERE mr.record_id = v.record_id::INTEGER
+    `,
+    params
+  );
+
+  res.status(200).json(new ApiResponse(200, "Status Updated"));
 });
 
 //for planned maintenance system
@@ -1235,6 +1279,35 @@ export const deletePmsItem = asyncErrorHandler(async (req, res) => {
     [pms_id]
   );
   res.status(200).json(new ApiResponse(200, "Info Removed Successfully"));
+});
+
+export const getPmsItemHistory = asyncErrorHandler(async (req, res) => {
+  const { planned_maintenance_system_id } = req.params;
+  if (!planned_maintenance_system_id)
+    throw new ErrorHandler(400, "Planned Maintenance System ID is required");
+
+  const { LIMIT, OFFSET } = parsePagination(req);
+
+  const { rows } = await pool.query(
+    `
+    SELECT 
+      last_done,
+      next_due,
+      remark
+    FROM 
+      pms_history 
+    WHERE 
+      planned_maintenance_system_id = $1 
+    ORDER BY 
+      last_done DESC
+    LIMIT ${LIMIT} OFFSET ${OFFSET}
+    `,
+    [planned_maintenance_system_id]
+  );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Planed Maintence Record History", rows));
 });
 
 //for durable

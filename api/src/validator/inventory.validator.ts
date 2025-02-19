@@ -70,7 +70,7 @@ export const addNewItemValidator = Joi.object({
 
   institute: Joi.string().required(),
 
-  vendor_id : Joi.number().required()
+  vendor_id: Joi.number().required(),
 });
 
 export const addMultiItemValidator = Joi.array()
@@ -161,6 +161,18 @@ export const updateMaintenceRecordStatusValidator = Joi.object({
   record_id: Joi.number().required(),
   status: Joi.string().valid("Completed", "Pending").required(),
 });
+
+export const VBulkUpdateMaintenceRecord = Joi.array().items(
+  Joi.object({
+    record_id: Joi.number().required(),
+    status: Joi.string().valid("Completed", "Pending").required(),
+    completed_date: Joi.when("status", {
+      is: "Completed",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+  })
+);
 
 //durable
 export const addNewDurableValidator = Joi.object({

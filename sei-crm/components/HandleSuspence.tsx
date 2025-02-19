@@ -38,7 +38,6 @@ export default function HandleSuspence<K>({
     );
 
   if (error) {
-    console.log(error);
     return <h1>{error.toString()}</h1>;
   }
   if (dataLength === undefined)

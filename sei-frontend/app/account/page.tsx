@@ -29,7 +29,7 @@ export default async function page({ searchParams }: IProps) {
     headers: {
       ...AUTH_HEADER_OBJ,
       "Content-Type": "application/json",
-    }
+    },
   });
 
   if (response.status === 401) return <UnAuthorizedPage />;

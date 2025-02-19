@@ -139,6 +139,7 @@ export default function OfficialInfoForm({
             label="Employee Login Password *"
             type="password"
             placeholder="adminSom@123"
+            autoComplete="new-password"
           />
           {/* <Input
             required

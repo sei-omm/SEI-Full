@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DropDown from "../DropDown";
 import { IDepartment, IEmployee } from "@/types";
 import { employeeAuthority } from "@/app/constant";
@@ -16,16 +16,17 @@ export default function EAuthorityInfo({
 }: IProps) {
   const [currentDepartment, setCurrentDepartment] = useState<
     IDepartment | undefined
-  >(() => {
-    if (departements) {
-      const singleDepartmentInfo = departements?.find(
-        (eDepartment) => eDepartment.id === employeeInfo?.department_id
+  >(undefined);
+
+  useEffect(() => {
+    if (departements?.length && employeeInfo?.department_id) {
+      const singleDepartmentInfo = departements.find(
+        (eDepartment) => eDepartment.id === employeeInfo.department_id
       );
 
-      if (singleDepartmentInfo) return singleDepartmentInfo;
-      return departements[0];
+      setCurrentDepartment(singleDepartmentInfo || departements[0]);
     }
-  });
+  }, [departements, employeeInfo]); // Runs when either changes
 
   return (
     <>
@@ -54,22 +55,21 @@ export default function EAuthorityInfo({
           key="Designation"
           label={
             employeeInfo && employeeInfo.employee_type === "Faculty"
-              ? "Designation"
+              ? "Job Title"
               : employeeID === "add-faculty"
-              ? "Designation"
-              : "Job Title"
+              ? "Job Title"
+              : "Designation"
           }
           options={
             currentDepartment.designation
               ?.split(",")
-              .map((item) => ({ text: item.trim(), value: item.trim() })) || [
-              { text: "helo", value: "hi" },
-            ]
+              .map((item) => ({ text: item.trim(), value: item.trim() })) || []
           }
-          defaultValue={
-            employeeInfo?.designation?.trim() ||
-            currentDepartment?.designation.split(",")[0]
-          }
+          // defaultValue={
+          //   employeeInfo?.designation?.trim() ||
+          //   currentDepartment?.designation.split(",")[0]
+          // }
+          defaultValue={employeeInfo?.designation}
         />
       ) : null}
       <DropDown

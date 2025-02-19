@@ -79,7 +79,7 @@ export default function TranningGenerate() {
   return (
     <div className="pb-4 space-y-3">
       <h2 className="font-semibold text-lg text-gray-600 opacity-70">
-        Generate Tranning Form
+        Generate Training Form
       </h2>
       <form action={handleFormAction} className="gap-3 flex items-end">
         <Input
@@ -101,7 +101,7 @@ export default function TranningGenerate() {
         <div className="flex-grow">
           <DropDown
             name="tranning_name"
-            label="Tranning Name"
+            label="Training Name"
             options={[
               { text: "Induction Training", value: "Induction Training" },
               { text: "Skill Enhancement", value: "Skill Enhancement" },

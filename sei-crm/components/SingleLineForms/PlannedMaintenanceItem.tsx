@@ -13,9 +13,10 @@ import { getNextDueDate } from "@/utils/getNextDueDate";
 
 interface IProps {
   deleteBtnOnClick: () => void;
+  currentCampus : string;
 }
 
-export default function PlannedMaintenanceItem({ deleteBtnOnClick }: IProps) {
+export default function PlannedMaintenanceItem({ deleteBtnOnClick,  currentCampus}: IProps) {
   const [frequency, setFrequency] = useState<TPmsFrequency>("Daily");
   const [newDueDate, setNextDueDate] = useState<Date | null>(null);
   const [lastDoneDate, setLastDoneDate] = useState<string | null>(null);
@@ -135,6 +136,7 @@ export default function PlannedMaintenanceItem({ deleteBtnOnClick }: IProps) {
           { text: "Kolkata", value: "Kolkata" },
           { text: "Faridabad", value: "Faridabad" },
         ]}
+        defaultValue={currentCampus}
       />
     </div>
   );

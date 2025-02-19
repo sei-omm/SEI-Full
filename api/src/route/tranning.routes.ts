@@ -6,6 +6,7 @@ import {
   generateForm,
   completeTranning,
   getTranningHistoryList,
+  renderGeneratedForm,
 } from "../controller/tranning.controllers";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 
@@ -17,4 +18,5 @@ tranningRoutes
   .get("/employee", isAuthenticated, getTranningListEmployee)
   .post("/", generateForm)
   .get("/one-form", getSingleTranningFormData)
-  .put("/complete/:record_id", completeTranning);
+  .put("/complete/:record_id", completeTranning)
+  .get("/render-form/:record_id", renderGeneratedForm)

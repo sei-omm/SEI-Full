@@ -1,6 +1,6 @@
 "use client";
 
-import { BASE_API } from "@/app/constant";
+import { BASE_API, TIME_PERIOD } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import BackBtn from "@/components/BackBtn";
@@ -73,17 +73,7 @@ export default function TimeTableReport() {
         fData.push({
           date: item.date,
           table: {
-            head: [
-              "Course Name",
-              "09:30 am - 10:30 am",
-              "10:30 am - 11:30 am",
-              "11:45 am - 12:45 pm",
-              "01:15 pm - 02:15 pm",
-              "02:15 pm - 03:15 pm",
-              "03:30 pm - 04:30 pm",
-              "04:30 pm - 05:30 pm",
-              "05:30 pm - 06:30 pm",
-            ],
+            head: ["Course Name", ...TIME_PERIOD],
             body: currentPraseData.map((tableinfo) => [
               tableinfo.course_name,
               ...tableinfo.subjects,

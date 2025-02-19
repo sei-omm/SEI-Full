@@ -3,17 +3,23 @@
 import { BASE_API } from "@/app/constant";
 import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
 import { beautifyDate } from "@/app/utils/beautifyDate";
+import Button from "@/components/Button";
 import DateDurationFilter from "@/components/DateDurationFilter";
+import DropDown from "@/components/DropDown";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
-import MaintenceStatusBtns from "@/components/Inventory/MaintenceStatusBtns";
 import Pagination from "@/components/Pagination";
+import MaintenanceBodyItem from "@/components/SingleLineForms/MaintenanceBodyItem";
 import MultiMaintenceForm from "@/components/SingleLineForms/MultiMaintenceForm";
-import { IError, ISuccess, TMaintenanceRecord } from "@/types";
+import {
+  IError,
+  ISuccess,
+  TMaintenanceRecord,
+  TMultiUpdateMantence,
+} from "@/types";
 import { axiosQuery } from "@/utils/axiosQuery";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { AiOutlineDelete } from "react-icons/ai";
 import { useQuery } from "react-query";
 import { toast } from "react-toastify";
 
@@ -24,6 +30,7 @@ type TTable = {
 
 export default function MaintenceRecord() {
   const searchParams = useSearchParams();
+  const [currentCampus, setCurrentCampus] = useState("Kolkata");
   const [tableDatas, setTableDatas] = useState<TTable>({
     heads: [
       "Maintence Date",
@@ -42,7 +49,15 @@ export default function MaintenceRecord() {
     body: [],
   });
 
-  const { isFetching, error, data, refetch } = useQuery<ISuccess<TMaintenanceRecord[]>>({
+  // const multiUpdateDataArray = useRef<TMultiUpdateMantence[]>([]);
+
+  const [multiUpdateDataArray, setMultiUpdateDataArray] = useState<
+    TMultiUpdateMantence[]
+  >([]);
+
+  const { isFetching, error, data, refetch } = useQuery<
+    ISuccess<TMaintenanceRecord[]>
+  >({
     queryKey: ["maintence-record", searchParams.toString()],
     queryFn: async () => {
       const res = await fetch(
@@ -61,7 +76,7 @@ export default function MaintenceRecord() {
         record.approved_by,
         record.cost,
         record.status,
-        beautifyDate(record.completed_date),
+        record.completed_date ? beautifyDate(record.completed_date) : "NA",
         record.remark,
         "actionBtn",
       ]);
@@ -73,13 +88,12 @@ export default function MaintenceRecord() {
 
   const { closeDialog, openDialog } = useLoadingDialog();
 
-  const handleDelete = async (rowIndex: number) => {
-    if(!confirm("Are you sure you want to delete this item ?")) return;
+  const handleDelete = async (record_id: number) => {
+    if (!confirm("Are you sure you want to delete this item ?")) return;
 
     openDialog();
-    const recordId = data?.data[rowIndex].record_id;
     const { error, response } = await axiosQuery<IError, ISuccess>({
-      url: `${BASE_API}/inventory/maintence-record/${recordId}`,
+      url: `${BASE_API}/inventory/maintence-record/${record_id}`,
       method: "delete",
     });
 
@@ -90,11 +104,37 @@ export default function MaintenceRecord() {
     refetch();
   };
 
+  const handleBulkUpdate = async () => {
+    if (!confirm("Are You Sure You Want To Update")) return;
+    openDialog();
+    const { error, response } = await axiosQuery<IError, ISuccess>({
+      url: `${BASE_API}/inventory/maintence-record`,
+      method: "put",
+      data: multiUpdateDataArray,
+    });
+
+    closeDialog();
+    if (error) return toast.error(error.message);
+
+    toast.success(response?.message);
+    setMultiUpdateDataArray([]);
+  };
+
   return (
     <div className="space-y-5">
-      <DateDurationFilter />
+      <DateDurationFilter onCampusChange={(campus) => setCurrentCampus(campus)}>
+        <DropDown
+          name="status"
+          label="Choose Status"
+          options={[
+            { text: "Completed", value: "Completed" },
+            { text: "Pending", value: "Pending" },
+          ]}
+          defaultValue={searchParams.get("status") || "Completed"}
+        />
+      </DateDurationFilter>
 
-      <MultiMaintenceForm />
+      <MultiMaintenceForm currentCampus={currentCampus} />
 
       <div className="flex items-center justify-end gap-6">
         <GenarateExcelReportBtn
@@ -132,41 +172,28 @@ export default function MaintenceRecord() {
                 </tr>
               </thead>
               <tbody>
-                {tableDatas.body.map((itemArray, rowIndex) => (
-                  <tr
+                {tableDatas.body.map((columnArray, rowIndex) => (
+                  <MaintenanceBodyItem
                     key={rowIndex}
-                    className="hover:bg-gray-100 group/bodyitem"
-                  >
-                    {itemArray.map((value, columnIndex) => (
-                      <td
-                        className="text-center text-[14px] py-3 px-5 space-x-3 relative max-w-52"
-                        key={value}
-                      >
-                        {value === "actionBtn" ? (
-                          <div className="flex items-center gap-3">
-                            <AiOutlineDelete
-                              onClick={() => handleDelete(rowIndex)}
-                              size={16}
-                              className="cursor-pointer active:scale-90"
-                            />
-                          </div>
-                        ) : columnIndex === 8 ? (
-                          <MaintenceStatusBtns
-                            id={data?.data[rowIndex].record_id || 0}
-                            value={value?.toString() || ""}
-                          />
-                        ) : (
-                          value
-                        )}
-                      </td>
-                    ))}
-                  </tr>
+                    columnArray={columnArray}
+                    multiUpdateDataArray={multiUpdateDataArray}
+                    setMultiUpdateDataArray={setMultiUpdateDataArray}
+                    onDeleteBtnClick={() => {
+                      handleDelete(data?.data[rowIndex].record_id || 0);
+                    }}
+                    serverData={data?.data[rowIndex]}
+                  />
                 ))}
               </tbody>
             </table>
           </div>
         </div>
       </HandleSuspence>
+      {multiUpdateDataArray.length > 0 && (
+        <div className="flex items-center justify-end">
+          <Button onClick={handleBulkUpdate}>Save Edited Records</Button>
+        </div>
+      )}
       <Pagination dataLength={data?.data.length} />
     </div>
   );

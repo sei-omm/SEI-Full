@@ -25,9 +25,7 @@ export default function Login() {
       headers: {
         "Content-Type": "application/json",
       },
-      onSuccess: async (
-        data: ISuccess<EmployeeLoginInfoType>
-      ) => {
+      onSuccess: async (data: ISuccess<EmployeeLoginInfoType>) => {
         await setInfo("login-token", data.data.token);
         await setInfo(
           "employee-info",

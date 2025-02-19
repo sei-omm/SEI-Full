@@ -7,9 +7,10 @@ import { RiSearchLine } from "react-icons/ri";
 interface IPorps {
   handleSearch: (searchInput: string) => void;
   placeHolder?:string;
+  search_key?:string
 }
 
-export default function SearchInput({ handleSearch, placeHolder }: IPorps) {
+export default function SearchInput({ handleSearch, placeHolder, search_key }: IPorps) {
   const searchParams = useSearchParams();
   return (
     <form
@@ -28,7 +29,7 @@ export default function SearchInput({ handleSearch, placeHolder }: IPorps) {
         name="search_input"
         placeholder={placeHolder ?? "Search.."}
         className="!min-w-80"
-        defaultValue={searchParams.get("search")}
+        defaultValue={searchParams.get(search_key ?? "search")}
       />
       <button type="submit">
         <RiSearchLine className="mt-2 cursor-pointer" size={20} />

@@ -209,14 +209,6 @@ export default function AppraisalForm() {
               defaultValue={appraisal?.data.appraisal_info.achievements}
             />
           </div>
-          <div
-            className={`flex items-center gap-4 ${isNew ? "block" : "hidden"}`}
-          >
-            <BackBtn />
-            <Button loading={isLoading} disabled={isLoading}>
-              Submit
-            </Button>
-          </div>
           {/* Part 2 */}
           <div className="space-y-5">
             <h2 className="text-sm font-semibold text-yellow-700 text-center">
@@ -361,6 +353,15 @@ export default function AppraisalForm() {
 
           <div
             className={`flex items-center gap-4 ${isNew ? "hidden" : "block"}`}
+          >
+            <BackBtn />
+            <Button loading={isLoading} disabled={isLoading}>
+              Submit
+            </Button>
+          </div>
+
+          <div
+            className={`flex items-center gap-4 ${isNew ? "block" : "hidden"}`}
           >
             <BackBtn />
             <Button loading={isLoading} disabled={isLoading}>

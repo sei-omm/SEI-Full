@@ -9,6 +9,7 @@ import {
   saveProfileImage,
   saveStudentDocument,
   saveStudentForm,
+  searchStudent,
   sendResetPasswordEmail,
   setNewPassword,
   verifyOtp,
@@ -30,3 +31,4 @@ studentRouter
   .put("/save-form", isAuthenticated, saveStudentForm)
   .put("/save-doc", isAuthenticated, saveStudentDocument)
   .patch("/save-indos-number", isAuthenticated, saveIndosNumber)
+  .get("/search", searchStudent)

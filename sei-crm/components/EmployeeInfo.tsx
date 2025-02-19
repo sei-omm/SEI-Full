@@ -426,6 +426,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 type="email"
                 label="Email address *"
                 placeholder="somnathgupta112@gmail.com"
+                autoComplete="off"
               />
 
               <Input
@@ -752,7 +753,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 required
                 name="cl"
                 label="Casual Leave"
-                defaultValue={employeeInfo?.leave_details[0].cl}
+                defaultValue={employeeInfo?.leave_details?.[0]?.cl || 0}
               />
               <Input
                 viewOnly={!isNewEmployee}
@@ -760,7 +761,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 required
                 name="sl"
                 label="Sick Leave"
-                defaultValue={employeeInfo?.leave_details[0].sl}
+                defaultValue={employeeInfo?.leave_details?.[0]?.sl || 0}
               />
               <Input
                 viewOnly={!isNewEmployee}
@@ -768,7 +769,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                 required
                 name="el"
                 label="Earned Leave"
-                defaultValue={employeeInfo?.leave_details[0].el}
+                defaultValue={employeeInfo?.leave_details?.[0]?.el || 0}
               />
               {employeeInfo?.gender === "Male" ? null : (
                 <Input
@@ -777,7 +778,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   required
                   name="ml"
                   label="Maternity Leave"
-                  defaultValue={employeeInfo?.leave_details[0].ml}
+                  defaultValue={employeeInfo?.leave_details?.[0].ml || 0}
                 />
               )}
             </div>

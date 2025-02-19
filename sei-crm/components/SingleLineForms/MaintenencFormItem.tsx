@@ -13,6 +13,7 @@ interface IProps {
   itemsForDropDownData:
     | ISuccess<{ item_id: number; item_name: string }[]>
     | undefined;
+  currentCampus : string;
 }
 
 export default function MaintenencFormItem({
@@ -20,6 +21,7 @@ export default function MaintenencFormItem({
   itemsForDropDownData,
   itemsForDropDownError,
   itemsForDropDownIsLoading,
+  currentCampus
 }: IProps) {
   const [status, setStatus] = useState<"Completed" | "Pending">("Completed");
   const [itemFrom, setItemFrom] = useState<"Inventory" | "Custom">("Custom");
@@ -130,11 +132,12 @@ export default function MaintenencFormItem({
       <Input name="remark" label="Remark" placeholder="Type Remark" />
       <DropDown
         name="institute"
-        label="Institute *"
+        label="Campus *"
         options={[
           { text: "Kolkata", value: "Kolkata" },
           { text: "Faridabad", value: "Faridabad" },
         ]}
+        defaultValue={currentCampus}
       />
     </div>
   );

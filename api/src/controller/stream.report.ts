@@ -14,6 +14,7 @@ import {
 } from "../validator/report.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { beautifyDate } from "../utils/beautifyDate";
+import { TIME_PERIOD } from "../constant";
 
 export const streamMaintenceRecordExcelReport = asyncErrorHandler(
   async (req, res) => {
@@ -1707,6 +1708,150 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
   });
 });
 
+// export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
+//   const { error, value } = inventoryReportValidator.validate(req.query);
+//   if (error) throw new ErrorHandler(400, error.message);
+
+//   // Set response headers for streaming
+//   res.setHeader(
+//     "Content-Disposition",
+//     'attachment; filename="Inventory_Report.xlsx"'
+//   );
+//   res.setHeader(
+//     "Content-Type",
+//     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//   );
+
+//   const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+//     stream: res,
+//     useStyles: true,
+//   });
+//   const worksheet = workbook.addWorksheet("Inventory Report");
+
+//   worksheet.mergeCells("A1:K1");
+//   worksheet.getCell("A1").value = `Inventory Report (${
+//     value.institute
+//   }) ${beautifyDate(value.from_date)} - ${beautifyDate(value.to_date)}`;
+//   worksheet.getCell("A1").font = {
+//     size: 20,
+//     bold: true,
+//     color: { argb: "000000" },
+//   };
+//   worksheet.getCell("A1").fill = {
+//     type: "pattern",
+//     pattern: "solid",
+//     fgColor: { argb: "FFFF00" },
+//   };
+//   worksheet.getRow(1).height = 30;
+//   worksheet.getCell("A1").alignment = {
+//     horizontal: "center",
+//     vertical: "middle",
+//   };
+
+//   worksheet.addRow([
+//     "SR NUMBER",
+//     "DATE",
+//     "ITEM NAME",
+//     "MINIMUM STOCK",
+//     "SUPPLIER",
+//     "STOCKS ADDED",
+//     "EACH STOCK CPU",
+//     "EACH STOCK STATUS",
+//     "EACH STOCK TOTAL VALUE",
+//     "CONSUMED STOCK",
+//     "CONSUMED STOCK REMARK"
+//   ]);
+
+//   // Row styling (header row)
+//   worksheet.getRow(2).eachCell((cell) => {
+//     cell.style = {
+//       font: {
+//         bold: true,
+//         size: 12,
+//         color: { argb: "000000" },
+//       },
+//       alignment: { horizontal: "center", vertical: "middle" },
+//       fill: {
+//         type: "pattern",
+//         pattern: "solid",
+//         fgColor: { argb: "F4A460" },
+//       },
+//       border: {
+//         top: { style: "thin" },
+//         left: { style: "thin" },
+//         right: { style: "thin" },
+//         bottom: { style: "thin" },
+//       },
+//     };
+//   });
+
+//   const client = await pool.connect();
+//   const query = new QueryStream(
+//     `
+//       SELECT
+//         row_number() OVER () AS sr_no,
+//         isi.purchase_date,
+//         iii.item_name,
+//         iii.minimum_quantity,
+//         v.vendor_name,
+//         STRING_AGG(isi.stock::TEXT, ' + ') AS added_stocks,
+//         STRING_AGG(isi.cost_per_unit::TEXT, ' + ') AS each_stock_cpu,
+//         STRING_AGG(isi.status, ' + ') AS stock_added_status,
+//         STRING_AGG(isi.total_value::TEXT, ' + ') AS each_stock_total_value,
+// 		    -- (SELECT SUM(consume_stock) FROM inventory_item_consume WHERE item_id = iii.item_id AND consumed_date = isi.purchase_date) AS consumed_stock
+//         STRING_AGG(iic.consume_stock::TEXT, ' + ') AS consumed_stock,
+//         STRING_AGG(iic.remark, ' + ') AS consumed_stock_remark
+//       FROM inventory_item_info iii
+
+//       LEFT JOIN vendor v
+//       ON v.vendor_id = iii.vendor_id
+
+//       LEFT JOIN inventory_stock_info isi
+//       ON isi.item_id = iii.item_id
+
+//       LEFT JOIN inventory_item_consume iic
+//       ON iic.item_id = iii.item_id
+
+//       WHERE iii.institute = $1 AND isi.purchase_date BETWEEN $2 AND $3
+
+//       GROUP BY iii.item_id, v.vendor_name, isi.purchase_date
+//     `,
+//     [value.institute, value.from_date, value.to_date],
+//     {
+//       batchSize: 10,
+//     }
+//   );
+
+//   const pgStream = client.query(query);
+
+//   // Process PostgreSQL stream data and append to Excel sheet
+//   pgStream.on("data", (data) => {
+//     const excelRow = worksheet.addRow(Object.values(data));
+//     // Style the data rows
+//     excelRow.eachCell((cell) => {
+//       cell.style = {
+//         font: { size: 11 },
+//         alignment: { horizontal: "center" },
+//         border: {
+//           top: { style: "thin" },
+//           left: { style: "thin" },
+//           right: { style: "thin" },
+//           bottom: { style: "thin" },
+//         },
+//       };
+//     });
+//   });
+
+//   pgStream.on("end", () => {
+//     workbook.commit();
+//     client.release(); // Release the client when done
+//   });
+
+//   pgStream.on("error", (err) => {
+//     client.release();
+//   });
+// });
+
 export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
   const { error, value } = inventoryReportValidator.validate(req.query);
   if (error) throw new ErrorHandler(400, error.message);
@@ -1727,7 +1872,7 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
   });
   const worksheet = workbook.addWorksheet("Inventory Report");
 
-  worksheet.mergeCells("A1:J1");
+  worksheet.mergeCells("A1:E1");
   worksheet.getCell("A1").value = `Inventory Report (${
     value.institute
   }) ${beautifyDate(value.from_date)} - ${beautifyDate(value.to_date)}`;
@@ -1753,11 +1898,6 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
     "ITEM NAME",
     "MINIMUM STOCK",
     "SUPPLIER",
-    "STOCKS ADDED",
-    "EACH STOCK CPU",
-    "EACH STOCK STATUS",
-    "EACH STOCK TOTAL VALUE",
-    "CONSUME STOCK",
   ]);
 
   // Row styling (header row)
@@ -1786,17 +1926,14 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
   const client = await pool.connect();
   const query = new QueryStream(
     `
-      SELECT
+	  SELECT
         row_number() OVER () AS sr_no,
         isi.purchase_date,
         iii.item_name,
         iii.minimum_quantity,
         v.vendor_name,
-        STRING_AGG(isi.stock::TEXT, ', ') AS added_stocks,
-        STRING_AGG(isi.cost_per_unit::TEXT, ', ') AS each_stock_cpu,
-        STRING_AGG(isi.status, ', ') AS stock_added_status,
-        STRING_AGG(isi.total_value::TEXT, ', ') AS each_stock_total_value,
-		    (SELECT SUM(consume_stock) FROM inventory_item_consume WHERE item_id = iii.item_id AND consumed_date = isi.purchase_date) AS consumed_stock
+		    JSON_AGG(isi.*) AS added_stock_info,
+        JSON_AGG(iic.*) AS consume_stock_info
       FROM inventory_item_info iii
 
       LEFT JOIN vendor v
@@ -1804,6 +1941,9 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
 
       LEFT JOIN inventory_stock_info isi
       ON isi.item_id = iii.item_id
+
+      LEFT JOIN inventory_item_consume iic
+      ON iic.item_id = iii.item_id
 
       WHERE iii.institute = $1 AND isi.purchase_date BETWEEN $2 AND $3
 
@@ -1819,7 +1959,14 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
 
   // Process PostgreSQL stream data and append to Excel sheet
   pgStream.on("data", (data) => {
-    const excelRow = worksheet.addRow(Object.values(data));
+    const excelRow = worksheet.addRow([
+      data.sr_no,
+      data.purchase_date,
+      data.item_name,
+      data.minimum_quantity,
+      data.vendor_name,
+    ]);
+
     // Style the data rows
     excelRow.eachCell((cell) => {
       cell.style = {
@@ -1832,6 +1979,54 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
           bottom: { style: "thin" },
         },
       };
+    });
+
+    const addedStockRow = worksheet.addRow(["", "Added Stock Info"]);
+    // worksheet.mergeCells(`B${headingRow1.number}:E${headingRow1.number}`);
+
+    addedStockRow.eachCell((cell) => {
+      cell.style = {
+        font: { size: 11, bold: true },
+      };
+    });
+
+    data.added_stock_info.forEach((item: any) => {
+      const innerRow = worksheet.addRow([
+        "",
+        `Stock Added : ${item.stock}`,
+        `Cost Per Unit : ${item.cost_per_unit}`,
+        `Purchased At : ${beautifyDate(item.purchase_date)}`,
+      ]);
+      innerRow.eachCell((cell) => {
+        cell.style = {
+          font: { size: 11 },
+        };
+      });
+    });
+
+    const consumeStockRow = worksheet.addRow(["", "Consumed Stock Info"]);
+    consumeStockRow.eachCell((cell) => {
+      cell.style = {
+        font: {
+          size: 11,
+          bold: true,
+          // color: { argb: "D1001F" }
+        },
+      };
+    });
+
+    data.consume_stock_info.forEach((item: any) => {
+      const innerRow = worksheet.addRow([
+        "",
+        `Stock Consumed : ${item.consume_stock}`,
+        `Consumed Date : ${beautifyDate(item.consumed_date)}`,
+        `Remark : ${item.remark}`,
+      ]);
+      innerRow.eachCell((cell) => {
+        cell.style = {
+          font: { size: 11 },
+        };
+      });
     });
   });
 
@@ -1895,14 +2090,15 @@ export const stramTimeTableReport = asyncErrorHandler(async (req, res) => {
 
   worksheet.addRow([
     "COURSE NAME",
-    "09:30 AM - 10:30 AM",
-    "10:30 AM - 11:30 AM",
-    "11:45 AM - 12:45 PM",
-    "01:15 PM - 02:15 PM",
-    "02:15 PM - 03:15 PM",
-    "03:30 PM - 04:30 PM",
-    "04:30 PM - 05:30 PM",
-    "05:30 PM - 06:30 PM",
+    // "09:30 AM - 10:30 AM",
+    // "10:30 AM - 11:30 AM",
+    // "11:45 AM - 12:45 PM",
+    // "01:15 PM - 02:15 PM",
+    // "02:15 PM - 03:15 PM",
+    // "03:30 PM - 04:30 PM",
+    // "04:30 PM - 05:30 PM",
+    // "05:30 PM - 06:30 PM",
+    ...TIME_PERIOD,
   ]);
 
   // Row styling (header row)
@@ -1957,7 +2153,6 @@ export const stramTimeTableReport = asyncErrorHandler(async (req, res) => {
       data.time_table_data
     ) as TTimeTableParseData[];
 
-
     worksheet.mergeCells(`A${excelRow.number}:I${excelRow.number}`);
 
     parseTimeTable.forEach((item) => {
@@ -1977,8 +2172,12 @@ export const stramTimeTableReport = asyncErrorHandler(async (req, res) => {
 
       innerRow.eachCell((cell, colNumber) => {
         cell.style = {
-          font: { size: 11, bold : colNumber === 1 },
-          alignment: { horizontal: "center", vertical: "middle", wrapText: true },
+          font: { size: 11, bold: colNumber === 1 },
+          alignment: {
+            horizontal: "center",
+            vertical: "middle",
+            wrapText: true,
+          },
           border: {
             top: { style: "thin" },
             left: { style: "thin" },

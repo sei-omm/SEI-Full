@@ -23,6 +23,7 @@ type TInventoryItem = {
   stock_added_status: string; // Status message for added stocks
   each_stock_total_value: string; // Total value of added stocks (as a string)
   consumed_stock: string; // Number of stocks consumed (as a string)
+  consumed_stock_remark: string;
 };
 
 export default function InventoryReport() {
@@ -41,7 +42,8 @@ export default function InventoryReport() {
       "EACH STOCK CPU",
       "EACH STOCK STATUS",
       "EACH STOCK TOTAL VALUE",
-      "CONSUME STOCK",
+      "CONSUMED STOCK",
+      "CONSUMED STOCK REMARK",
     ],
     body: [],
   });
@@ -75,6 +77,7 @@ export default function InventoryReport() {
           item.stock_added_status,
           item.each_stock_total_value,
           item.consumed_stock,
+          item.consumed_stock_remark,
         ]);
 
         setTableDatas(oldStates);

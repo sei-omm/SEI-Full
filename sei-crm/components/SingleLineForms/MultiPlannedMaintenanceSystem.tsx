@@ -5,9 +5,11 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
 import PlannedMaintenanceItem from "./PlannedMaintenanceItem";
 import DropDown from "../DropDown";
+import { useSearchParams } from "next/navigation";
 
 export default function MultiPlannedMaintenanceSystem() {
   const [inputs, setInputs] = useState<number[]>([]);
+  const searchParams = useSearchParams();
 
   const { isLoading, mutate } = useDoMutation();
 
@@ -83,6 +85,7 @@ export default function MultiPlannedMaintenanceSystem() {
                 deleteBtnOnClick={() => {
                   handleDeleteItem(index);
                 }}
+                currentCampus={searchParams.get("institute") || "Kolkata"}
               />
             ))}
           </div>

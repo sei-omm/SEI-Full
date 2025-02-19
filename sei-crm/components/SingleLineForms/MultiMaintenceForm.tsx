@@ -11,10 +11,11 @@ import { IoIosAdd } from "react-icons/io";
 import { useQueries, UseQueryResult } from "react-query";
 import MaintenencFormItem from "./MaintenencFormItem";
 
-export default function MultiMaintenceForm() {
+export default function MultiMaintenceForm({currentCampus} : {currentCampus : string}) {
   const [inputs, setInputs] = useState<
     { id: number; status: "Completed" | "Pending" }[]
   >([]);
+
 
   const { isLoading: isMutating, mutate } = useDoMutation();
 
@@ -231,6 +232,7 @@ export default function MultiMaintenceForm() {
                 itemsForDropDownData={itemsForDropDown.data}
                 itemsForDropDownError={itemsForDropDown.error}
                 itemsForDropDownIsLoading={itemsForDropDown.isFetching}
+                currentCampus={currentCampus}
               />
             ))}
           </div>

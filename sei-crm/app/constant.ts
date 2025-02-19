@@ -147,3 +147,14 @@ export const PAYMENT_MODES = [
   { id: 4, text: "SWIPE CARD" },
   { id: 5, text: "ONLINE" },
 ];
+
+export const TIME_PERIOD = [
+  "Period 1",
+  "Period 2",
+  "Period 3",
+  "Period 4",
+  "Period 5",
+  "Period 6",
+  "Period 7",
+  "Period 8",
+];

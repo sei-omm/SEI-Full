@@ -64,8 +64,8 @@ export default function Informations({ employee_info }: IProps) {
           <Info
             title={
               employee_info?.employee_type === "Faculty"
-                ? "Designation"
-                : "Job Title"
+                ? "Job Title"
+                : "Designation"
             }
             value={employee_info?.designation}
           />

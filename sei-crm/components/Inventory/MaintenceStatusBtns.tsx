@@ -1,83 +1,39 @@
 "use client";
 
-import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
 import TagsBtn from "../TagsBtn";
-import { useDoMutation } from "@/app/utils/useDoMutation";
-import { useState } from "react";
+
+type TStatus = "Completed" | "Pending";
 
 interface IProps {
-  id: number;
-  value: string;
+  status: TStatus;
+  onStatusChange?: (status: TStatus) => void;
 }
 
-export default function MaintenceStatusBtns({ value, id }: IProps) {
-  const [initialValue, setInitValue] = useState(value);
-
-  const { openDialog, closeDialog } = useLoadingDialog();
-
-  const { mutate } = useDoMutation(
-    () => {},
-    () => {
-      closeDialog();
-    }
-  );
-
-  const handleCompletedBtn = async () => {
-    openDialog();
-    mutate({
-      apiPath: "/inventory/maintence-record",
-      method: "patch",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      formData: {
-        status: "Completed",
-      },
-      id,
-      onSuccess: () => {
-        closeDialog();
-        setInitValue("Completed");
-      },
-    });
+export default function MaintenceStatusBtns({
+  status,
+  onStatusChange,
+}: IProps) {
+  const handleStatus = (status: TStatus) => {
+    onStatusChange?.(status);
   };
-
-  function handlePendingBtn() {
-    openDialog();
-    mutate({
-      apiPath: "/inventory/maintence-record",
-      method: "patch",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      formData: {
-        status: "Pending",
-      },
-      id,
-      onSuccess: () => {
-        closeDialog();
-        setInitValue("Pending");
-      },
-    });
-  }
 
   return (
     <div className="flex flex-col gap-y-2 group/items">
-      {/* <span className="hidden">{isLoading}</span> */}
       <TagsBtn
-        onClick={handleCompletedBtn}
+        onClick={() => handleStatus("Completed")}
         className={`${
-          initialValue === "Completed" ? "flex" : "hidden"
-        } group-hover/items:!flex`}
+          status === "Completed" ? "flex" : "hidden group-hover/items:!flex"
+        }`}
         type="SUCCESS"
       >
         Completed
       </TagsBtn>
 
       <TagsBtn
-        onClick={handlePendingBtn}
+        onClick={() => handleStatus("Pending")}
         className={`${
-          initialValue === "Pending" ? "flex" : "hidden"
-        } group-hover/items:flex`}
+          status === "Pending" ? "flex group-hover/items:flex" : "hidden"
+        }`}
         type="PENDING"
       >
         Pending

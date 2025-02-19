@@ -35,6 +35,8 @@ import InductionTrainingForm from "./Tranning/InductionTrainingForm";
 import SkillEnhancementForm from "./Tranning/SkillEnhancementForm";
 import TrainingRequirement from "./Tranning/TrainingRequirement";
 import ViewRequirementDetailsDialog from "./Tranning/ViewRequirementDetailsDialog";
+import ViewPmsHistoryDialog from "./ViewPmsHistoryDialog";
+import IssueBookToStudent from "./IssueBookToStudent";
 
 type DivType = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -182,6 +184,16 @@ const dialogs = [
     id: "view-requirement-details",
     component: <ViewRequirementDetailsDialog />,
   },
+
+  {
+    id : "view-pms-history",
+    component : <ViewPmsHistoryDialog />
+  },
+
+  {
+    id : "issue-book-to-student",
+    component : <IssueBookToStudent />
+  }
 ];
 
 export default function DialogWrapper(props: DivType) {

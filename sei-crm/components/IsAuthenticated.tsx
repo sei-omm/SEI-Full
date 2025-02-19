@@ -2,8 +2,8 @@
 
 import { useIsAuthenticated } from "@/app/hooks/useIsAuthenticated";
 import Button from "./Button";
-import LoadingLayout from "./LoadingLayout";
 import Link from "next/link";
+import LoadingLayout from "./LoadingLayout";
 
 interface IProps {
   children: React.ReactNode;

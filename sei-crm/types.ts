@@ -740,3 +740,18 @@ export type TTimeTableParseData = {
     profile_image: string;
   }[];
 };
+
+export type TMultiUpdateMantence = {
+  record_id: number;
+  completed_date: string | null;
+  status: "Completed" | "Pending";
+};
+
+export interface Books {
+  phy_lib_book_id: number;
+  book_name: string;
+  edition: string;
+  author: string;
+  row_number: number;
+  shelf: string;
+}

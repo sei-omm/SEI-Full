@@ -44,7 +44,7 @@ export default function LibraryFilters({ courses }: IProps) {
         label="My Course Books"
         name="course_id"
         options={[
-          { text: "Select Your Course", value: -1 },
+          { text: "All Courses", value: -1 },
           ...courses.map((course) => ({
             text: course.course_name,
             value: course.course_id,
@@ -60,7 +60,7 @@ export default function LibraryFilters({ courses }: IProps) {
         label="All Books"
         name="subject_id"
         options={[
-          { text: "Select Your Book", value: -1 },
+          { text: "All Subjects", value: -1 },
           ...(subjects?.data.map((subject) => ({
             text: subject.subject_name,
             value: subject.subject_id,

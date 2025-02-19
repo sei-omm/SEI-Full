@@ -13,7 +13,6 @@ import { ILeave, ISuccess, TEmployeeLeave, TLeaveDetails } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 
-
 export default function LeaveRequest() {
   const dispatch = useDispatch();
 
@@ -38,32 +37,36 @@ export default function LeaveRequest() {
       ).data,
     refetchOnMount: true,
     onSuccess(data) {
+      console.log(data.data.leave_details);
       const leaveArray = [
         {
           type: "cl",
           label: "Casual Leave",
-          value: data.data.leave_details[0].cl,
+          value: data.data.leave_details[0]?.cl || 0,
           status: "Remaining",
         },
         {
           type: "sl",
           label: "Sick Leave",
-          value: data.data.leave_details[0].sl,
+          value: data.data.leave_details[0]?.sl || 0,
           status: "Remaining",
         },
         {
           type: "el",
           label: "Earned Leave",
-          value: data.data.leave_details[0].el,
+          value: data.data.leave_details[0]?.el || 0,
           status: "Remaining",
         },
       ];
 
-      if (data.data.leave_details[0]?.ml !== null) {
+      if (
+        data.data.leave_details[0]?.ml !== null ||
+        data.data.leave_details[0]?.ml !== undefined
+      ) {
         leaveArray.push({
           type: "ml",
           label: "Maternity Leave",
-          value: data.data.leave_details[0].ml,
+          value: data.data.leave_details[0]?.ml || 0,
           status: "Remaining",
         });
       }
@@ -80,17 +83,6 @@ export default function LeaveRequest() {
     } else {
       return "bg-green-500";
     }
-
-    // switch (type) {
-    //   case "casual":
-    //     return "bg-green-500";
-    //   case "sick":
-    //     return "bg-red-500";
-    //   case "earn":
-    //     return "bg-yellow-500";
-    //   default:
-    //     return "bg-gray-500";
-    // }
   };
 
   return (

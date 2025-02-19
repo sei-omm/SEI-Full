@@ -12,7 +12,7 @@ import {
   useSearchParams,
 } from "next/navigation";
 import axios from "axios";
-import { BASE_API } from "../constant";
+import { BASE_API, TIME_PERIOD } from "../constant";
 import { ISuccess, TTimeTableData } from "@/types";
 import HandleSuspence from "@/components/HandleSuspence";
 import TimeTableCell from "@/components/TimeTableCell";
@@ -24,16 +24,16 @@ type TTable = {
   body: string[][];
 };
 
-const times = [
-  "09:30 am - 10:30 am",
-  "10:30 am - 11:30 am",
-  "11:45 am - 12:45 pm",
-  "01:15 pm - 02:15 pm",
-  "02:15 pm - 03:15 pm",
-  "03:30 pm - 04:30 pm",
-  "04:30 pm - 05:30 pm",
-  "05:30 pm - 06:30 pm",
-];
+// const times = [
+//   "09:30 am - 10:30 am",
+//   "10:30 am - 11:30 am",
+//   "11:45 am - 12:45 pm",
+//   "01:15 pm - 02:15 pm",
+//   "02:15 pm - 03:15 pm",
+//   "03:30 pm - 04:30 pm",
+//   "04:30 pm - 05:30 pm",
+//   "05:30 pm - 06:30 pm",
+// ];
 
 async function generateTimeTable(searchParams: ReadonlyURLSearchParams) {
   return (
@@ -45,7 +45,7 @@ export default function TimeTable() {
   const searchParams = useSearchParams();
   const route = useRouter();
   const [tableDatas, setTableData] = useState<TTable>({
-    heads: ["Course Name", ...times],
+    heads: ["Course Name", ...TIME_PERIOD],
     body: [],
   });
 
@@ -233,8 +233,6 @@ export default function TimeTable() {
           />
           <DateInput
             required
-            // min={new Date().toISOString().split("T")[0]}
-            // max={new Date().toISOString().split("T")[0]}
             name="date"
             label="Choose Date *"
             date={searchParams.get("date")}

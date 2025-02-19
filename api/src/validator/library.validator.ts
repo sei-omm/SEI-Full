@@ -1,4 +1,4 @@
-import Joi from "joi";
+import Joi, { string } from "joi";
 
 export const insertLibraryItemValidator = Joi.object({
   library_file_name: Joi.string().required(),
@@ -26,7 +26,7 @@ export const insertLibraryItemValidator = Joi.object({
     then: Joi.required(),
     otherwise: Joi.optional(),
   }),
-  institute : Joi.string().required()
+  institute: Joi.string().required(),
 });
 
 export const updateLibraryItemValidator = insertLibraryItemValidator.keys({
@@ -38,7 +38,7 @@ export const getSingleLibraryValidator = Joi.object({
 });
 
 export const getLibraryInfoWithFilterValidator = Joi.object({
-  institute : Joi.string().required(),
+  institute: Joi.string().required(),
   visibility: Joi.string()
     .valid("subject-specific", "course-specific")
     .required(),
@@ -63,5 +63,54 @@ export const updateVisibilityValidator = Joi.object({
 });
 
 export const downloadFileValidator = Joi.object({
-  library_item_id : Joi.number().required()
+  library_item_id: Joi.number().required(),
 });
+
+// Physical Library
+
+export const insertPhysicalLibraryValidator = Joi.array().items(
+  Joi.object({
+    book_name: Joi.string().required(),
+    edition: Joi.string().required(),
+    author: Joi.string().required(),
+    row_number: Joi.number().required(),
+    shelf: Joi.string().required(),
+    institute: Joi.string().required(),
+  })
+);
+
+export const updatePhysicalLibraryValidator = Joi.array().items(
+  Joi.object({
+    phy_lib_book_id: Joi.number().required(),
+    book_name: Joi.string().required(),
+    edition: Joi.string().required(),
+    author: Joi.string().required(),
+    row_number: Joi.number().required(),
+    shelf: Joi.string().required(),
+  })
+);
+
+export const issueBookToStudentValidator = Joi.object({
+  student_id: Joi.number().required(),
+  info: Joi.array().items(
+    Joi.object({
+      course_id: Joi.number().required(),
+      phy_lib_book_id: Joi.number().required(),
+    })
+  ),
+
+  issue_date: Joi.string().required(),
+  institute: Joi.string().required(),
+});
+
+export const returnBookToLibraryValidator = Joi.object({
+  phy_lib_book_issue_id: Joi.number().required(),
+  return_date: Joi.string().required(),
+});
+
+export const returnBookToLibraryBulkV = Joi.array().items(
+  Joi.object({
+    phy_lib_book_issue_id: Joi.number().required(),
+    return_date: Joi.string().required(),
+  })
+);

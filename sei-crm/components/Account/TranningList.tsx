@@ -39,7 +39,7 @@ export default function TranningList() {
   return (
     <InfoLayout>
       <div className="relative pb-6 space-y-5">
-        <h2 className="text-2xl font-semibold">Tranning Requirements</h2>
+        <h2 className="text-2xl font-semibold">Training Requirements</h2>
 
         <HandleSuspence
           isLoading={isFetching}

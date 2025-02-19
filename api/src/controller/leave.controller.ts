@@ -376,7 +376,7 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
         )
 
         SELECT
-          el.employee_id,
+          e.id AS employee_id,
           cmd.total_days AS total_month_days, 
           COUNT(a.id) as total_not_present,
           cmh.total_holiday_this_month,
@@ -384,7 +384,7 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
         FROM employee_leave el
 
         LEFT JOIN employee e
-        ON e.id = el.employee_id
+        ON e.joining_date <= CURRENT_DATE - INTERVAL '1 year' AND e.id = el.employee_id
 
         LEFT JOIN attendance a
         ON a.employee_id = el.employee_id AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
@@ -393,9 +393,10 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
         LEFT JOIN current_month_holiday cmh
         ON cmh.institute = e.institute
 
-        GROUP BY el.employee_id, cmd.total_days, cmh.total_holiday_this_month
+        GROUP BY e.id, cmd.total_days, cmh.total_holiday_this_month
 
-        HAVING (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24;
+        HAVING 
+            (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24
       `
     );
 
@@ -422,14 +423,34 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
 });
 
 export const addLeaveValuesYearly = asyncErrorHandler(async (req, res) => {
+  // await pool.query(
+  //   `
+  //   INSERT INTO employee_leave (employee_id, cl, sl, el, ml)
+  //   SELECT employee_id, cl + 10, sl + 10, el, 84
+  //   FROM employee_leave
+  //   ON CONFLICT (employee_id, financial_year_date) DO NOTHING;
+  //   `
+  // );
+
   await pool.query(
     `
     INSERT INTO employee_leave (employee_id, cl, sl, el, ml)
-    SELECT employee_id, cl + 10, sl + 10, el, 84
-    FROM employee_leave
+    SELECT 
+        e.id, 
+        -- COALESCE(el.cl, 10),  -- If not in employee_leave, start with 10
+        10, -- cl aloways 10
+        CASE 
+            WHEN (COALESCE(el.sl, 0) + 10) <= 30 THEN COALESCE(el.sl, 0) + 10
+            ELSE 30
+        END,
+        COALESCE(el.el, 0),  -- Default EL to 0 if not found
+        84
+    FROM employee e
+    LEFT JOIN employee_leave el ON e.id = el.employee_id
     ON CONFLICT (employee_id, financial_year_date) DO NOTHING;
+
     `
-  );
+  )
 
   res.status(200).json(new ApiResponse(200, "Successfully Updated"));
 });

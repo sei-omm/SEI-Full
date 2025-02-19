@@ -1104,6 +1104,37 @@ CREATE TABLE time_table (
     institute VARCHAR(100)
 );
 
+-- NEW DB 18 Feb 2025
+DELETE FROM employee_leave;
+DELETE FROM earned_leave_history;
+
+CREATE TABLE phy_lib_books (
+    phy_lib_book_id SERIAL PRIMARY KEY,
+    book_name VARCHAR(255),
+    edition VARCHAR(255),
+    author VARCHAR(255),
+    row_number INTEGER,
+    shelf VARCHAR(255),
+    institute VARCHAR(100)
+);
+
+CREATE TABLE phy_lib_book_issue (
+    phy_lib_book_issue_id SERIAL PRIMARY KEY,
+
+    student_id BIGINT,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
+
+    course_id BIGINT,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE SET NULL,
+
+    phy_lib_book_id BIGINT,
+    FOREIGN KEY (phy_lib_book_id) REFERENCES phy_lib_books(phy_lib_book_id) ON DELETE CASCADE,
+
+    issue_date DATE,
+    return_date DATE,
+    institute VARCHAR(100)
+);
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

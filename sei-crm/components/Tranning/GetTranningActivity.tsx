@@ -15,6 +15,8 @@ import Button from "../Button";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { useDispatch } from "react-redux";
 import Pagination from "../Pagination";
+import { LuPrinter } from "react-icons/lu";
+import Link from "next/link";
 
 type TTable = {
   heads: string[];
@@ -45,7 +47,13 @@ export default function GetTranningActivity() {
   const dispatch = useDispatch();
 
   const [tableDatas, setTableDatas] = useState<TTable>({
-    heads: ["Employee", "Tranning Name", "Generated At", "Completed At"],
+    heads: [
+      "Employee",
+      "Training Name",
+      "Generated On",
+      "Completed On",
+      "Action",
+    ],
     body: [],
   });
 
@@ -68,6 +76,7 @@ export default function GetTranningActivity() {
             : item.employee_visibility === true
             ? "WAITING"
             : "NULL",
+          "actionBtn",
         ]),
       }));
     },
@@ -77,7 +86,7 @@ export default function GetTranningActivity() {
   return (
     <div className="space-y-6">
       <h2 className="font-semibold text-lg text-gray-600 opacity-70">
-        Tranning History
+        Training History
       </h2>
 
       <HandleSuspence
@@ -168,6 +177,16 @@ export default function GetTranningActivity() {
                                     View & Complete
                                   </Button>
                                 </div>
+                              ) : value === "actionBtn" ? (
+                                <Link
+                                  href={`${BASE_API}/tranning/render-form/${tranningHistoryList?.data[rowIndex].record_id}`}
+                                  target="__blank"
+                                >
+                                  <LuPrinter
+                                    className="active:scale-90"
+                                    size={16}
+                                  />
+                                </Link>
                               ) : (
                                 <div className="flex items-center gap-2 text-green-700">
                                   <IoCheckmarkDoneCircle />
@@ -187,7 +206,7 @@ export default function GetTranningActivity() {
         </div>
       </HandleSuspence>
 
-      <Pagination dataLength={tranningHistoryList?.data.length}/>
+      <Pagination dataLength={tranningHistoryList?.data.length} />
     </div>
   );
 }

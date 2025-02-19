@@ -23,6 +23,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { createToken, verifyToken } from "../utils/token";
 import { sendEmail } from "../utils/sendEmail";
 import { sendOtp } from "../utils/sendOtp";
+import { parsePagination } from "../utils/parsePagination";
 
 const table_name = "students";
 
@@ -141,7 +142,6 @@ export const getStudentInfo = asyncErrorHandler(
                         'enrolled_batch_date', cb.start_date,
                         'enrollment_status', ebc.enrollment_status,
                         'enrolled_batch_id', cb.batch_id,
-                        -- 'due_amount', cb.batch_fee - COALESCE(ap.total_paid, 0)
                         'due_amount', cb.batch_fee - ( SELECT SUM(paid_amount) FROM payments WHERE batch_id = cb.batch_id AND student_id = ebc.student_id )
                     )
                     ORDER BY ebc.created_at DESC
@@ -191,10 +191,9 @@ export const getStudentInfo = asyncErrorHandler(
   }
 );
 
-export const getStudentRegisterFormInfo = asyncErrorHandler(
-  async (_, res) => {
-    const { rows } = await pool.query(
-      `
+export const getStudentRegisterFormInfo = asyncErrorHandler(async (_, res) => {
+  const { rows } = await pool.query(
+    `
        SELECT
         rank,
         nationality,
@@ -211,12 +210,11 @@ export const getStudentRegisterFormInfo = asyncErrorHandler(
        FROM students
        WHERE student_id = $1
       `,
-      [res.locals.student_id]
-    );
+    [res.locals.student_id]
+  );
 
-    res.status(200).json(new ApiResponse(200, "", rows ? rows[0] : null));
-  }
-);
+  res.status(200).json(new ApiResponse(200, "", rows ? rows[0] : null));
+});
 
 export const registerStudent = asyncErrorHandler(
   async (req: Request, res: Response) => {
@@ -521,3 +519,42 @@ export const saveStudentDocument = asyncErrorHandler(
       .json(new ApiResponse(201, "Document Has Successfully Uploaded"));
   }
 );
+
+export const searchStudent = asyncErrorHandler(async (req, res) => {
+  const { student_name } = req.query;
+
+  const { LIMIT, OFFSET } = parsePagination(req);
+
+  const { rows } = await pool.query(
+    `
+    SELECT
+      s.profile_image,
+      s.student_id,
+      s.name,
+      s.indos_number,
+      JSON_AGG(
+        JSON_BUILD_OBJECT (
+          'course_id', c.course_id,
+          'course_name', c.course_name
+          )
+      ) enrolled_courses
+    FROM students s
+
+    LEFT JOIN enrolled_batches_courses ebc
+    ON ebc.student_id = s.student_id
+
+    LEFT JOIN courses c
+    ON c.course_id = ebc.course_id
+
+    WHERE s.name ILIKE '%' || $1 || '%'
+
+    GROUP BY s.student_id
+
+    LIMIT ${LIMIT} OFFSET ${OFFSET}
+
+    `,
+    [student_name]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Student Search Result", rows));
+});

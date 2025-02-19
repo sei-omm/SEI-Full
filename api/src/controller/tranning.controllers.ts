@@ -1,6 +1,7 @@
 import { pool } from "../config/db";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import { ApiResponse } from "../utils/ApiResponse";
+import { beautifyDate } from "../utils/beautifyDate";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { parsePagination } from "../utils/parsePagination";
 import {
@@ -300,4 +301,68 @@ export const getTranningHistoryList = asyncErrorHandler(async (req, res) => {
   );
 
   res.status(200).json(new ApiResponse(200, "Tranning History List", rows));
+});
+
+export const renderGeneratedForm = asyncErrorHandler(async (req, res) => {
+  const { record_id } = req.params;
+
+  const { rows } = await pool.query(
+    `
+      SELECT 
+      tr.created_at AS generated_at,
+      tr.form_data,
+      tr.tranning_name,
+      e.name,
+      e.employee_type,
+      e.designation,
+      e.joining_date,
+      e.institute
+      FROM tranning_requirement tr
+      LEFT JOIN employee e
+      ON e.id = tr.employee_id
+      WHERE record_id = $1
+    `,
+    [record_id]
+  );
+
+  // const render_file_name =
+  //   rows[0].tranning_name === "Induction Training"
+  //     ? "induction_tranning.ejs"
+  //     : rows[0].tranning_name === "Skill Enhancement"
+  //     ? "skill_enhancement_tranning.ejs"
+  //     : "tranning_requirement.ejs";
+
+  const parseData = JSON.parse(rows[0].form_data);
+
+  const common_data = {
+    employee_type: rows[0].employee_type,
+    created_at: rows[0].created_at,
+    employee_name: rows[0].name.toUpperCase(),
+    designation: rows[0].designation,
+    date_of_joining: beautifyDate(rows[0].joining_date),
+    generated_at: beautifyDate(rows[0].generated_at),
+    record_id: String(record_id).padStart(2, "0"),
+    institute: rows[0].institute.toUpperCase(),
+  };
+
+  if (rows[0].tranning_name === "Induction Training") {
+    res.render("induction_tranning.ejs", {
+      ...common_data,
+      form_data: parseData,
+    });
+  }
+
+  if (rows[0].tranning_name === "Skill Enhancement") {
+    res.render("skill_enhancement_tranning.ejs", {
+      ...common_data,
+      form_data: parseData,
+    });
+  }
+
+  if (rows[0].tranning_name === "Training Requirement") {
+    res.render("tranning_requirement.ejs", {
+      ...common_data,
+      form_data: parseData,
+    });
+  }
 });

@@ -16,12 +16,18 @@ interface IProps {
   withMoreFilter?: boolean;
   withStudentRank?: boolean;
   withCourse?: boolean;
+
+  onCampusChange?: (campus : string) => void;
+
+  children?: React.ReactNode;
 }
 
 export default function DateDurationFilter({
   withMoreFilter,
   withStudentRank,
   withCourse,
+  onCampusChange,
+  children
 }: IProps) {
   const searchParams = useSearchParams();
   const route = useRouter();
@@ -147,7 +153,10 @@ export default function DateDurationFilter({
         ) : null}
 
         <DropDown
-          onChange={(institute) => setInstitute(institute.value)}
+          onChange={(institute) => {
+            setInstitute(institute.value);
+            onCampusChange?.(institute.value);
+          }}
           name="institute"
           label="Campus"
           options={[
@@ -171,8 +180,10 @@ export default function DateDurationFilter({
           date={searchParams.get("to_date")}
         />
 
+        {children}
+
         <div className="!mb-2 !flex-grow-0 flex items-center gap-5">
-          <Button className="">Search</Button>
+          <Button className="">Filter</Button>
         </div>
       </form>
     </div>

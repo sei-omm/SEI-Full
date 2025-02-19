@@ -4,6 +4,7 @@ import { BASE_API } from "@/app/constant";
 import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { getDate } from "@/app/utils/getDate";
+import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
 import MultiPlannedMaintenanceSystem from "@/components/SingleLineForms/MultiPlannedMaintenanceSystem";
@@ -15,7 +16,7 @@ import axios from "axios";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AiOutlineDelete } from "react-icons/ai";
-import {  MdOutlineRemoveRedEye } from "react-icons/md";
+import { MdOutlineHistory, MdOutlineRemoveRedEye } from "react-icons/md";
 import { useQuery } from "react-query";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -165,9 +166,11 @@ export default function PlannedMaintenanceSystem() {
             <table className="min-w-max w-full table-auto">
               <thead className="uppercase w-full border-b border-gray-100">
                 <tr>
-                  {tableDatas.heads.map((item) => (
+                  {tableDatas.heads.map((item, headIndex) => (
                     <th
-                      className="text-left text-[14px] font-semibold pb-2 px-5 py-4"
+                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${stickyFirstCol(
+                        headIndex
+                      )}`}
                       key={item}
                     >
                       {item}
@@ -183,7 +186,9 @@ export default function PlannedMaintenanceSystem() {
                   >
                     {itemArray.map((value, columnIndex) => (
                       <td
-                        className="text-center text-[14px] py-3 px-5 space-x-3 relative max-w-52"
+                        className={`text-center text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${stickyFirstCol(
+                          columnIndex
+                        )}`}
                         key={value}
                       >
                         {value === "actionBtn" ? (
@@ -194,12 +199,33 @@ export default function PlannedMaintenanceSystem() {
                             >
                               <CiEdit className="cursor-pointer" size={18} />
                             </Link> */}
+                            <MdOutlineHistory
+                              onClick={() =>
+                                dispatch(
+                                  setDialog({
+                                    type: "OPEN",
+                                    dialogId: "view-pms-history",
+                                    extraValue: {
+                                      item_name: data?.data[rowIndex].item_name,
+                                      planned_maintenance_system_id:
+                                        data?.data[rowIndex]
+                                          .planned_maintenance_system_id,
+                                    },
+                                  })
+                                )
+                              }
+                              title="View History"
+                              size={18}
+                              className="cursor-pointer active:scale-90"
+                            />
+
                             <AiOutlineDelete
                               size={16}
                               className="cursor-pointer"
                               onClick={() =>
                                 handleDeleteItem(
-                                  data?.data[rowIndex]?.planned_maintenance_system_id as any
+                                  data?.data[rowIndex]
+                                    ?.planned_maintenance_system_id as any
                                 )
                               }
                             />
@@ -209,12 +235,15 @@ export default function PlannedMaintenanceSystem() {
                             {columnIndex === 3 ? (
                               <>
                                 <input
+                                  min={getDate(new Date(value))}
                                   onBlur={handleLastDoneChangeBlur}
                                   onChange={(e) =>
                                     handleLastDoneDateChange(
                                       e.currentTarget.value,
-                                      data?.data[rowIndex]?.pms_history_id as any,
-                                      data?.data[rowIndex].frequency as TPmsFrequency
+                                      data?.data[rowIndex]
+                                        ?.pms_history_id as any,
+                                      data?.data[rowIndex]
+                                        .frequency as TPmsFrequency
                                     )
                                   }
                                   className="bg-transparent cursor-pointer"

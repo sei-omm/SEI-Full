@@ -1519,11 +1519,12 @@ export const inventoryReport = asyncErrorHandler(async (req, res) => {
         iii.minimum_quantity,
         iii.vendor_id,
         v.vendor_name,
-        STRING_AGG(isi.stock::TEXT, ', ') AS added_stocks,
-        STRING_AGG(isi.cost_per_unit::TEXT, ', ') AS each_stock_cpu,
-        STRING_AGG(isi.status, ', ') AS stock_added_status,
-        STRING_AGG(isi.total_value::TEXT, ', ') AS each_stock_total_value,
-		    (SELECT SUM(consume_stock) FROM inventory_item_consume WHERE item_id = iii.item_id AND consumed_date = isi.purchase_date) AS consumed_stock
+        STRING_AGG(isi.stock::TEXT, ' + ') AS added_stocks,
+        STRING_AGG(isi.cost_per_unit::TEXT, ' + ') AS each_stock_cpu,
+        STRING_AGG(isi.status, ' + ') AS stock_added_status,
+        STRING_AGG(isi.total_value::TEXT, ' + ') AS each_stock_total_value,
+        STRING_AGG(iic.consume_stock::TEXT, ' + ') AS consumed_stock,
+        STRING_AGG(iic.remark, ' + ') AS consumed_stock_remark
       FROM inventory_item_info iii
 
       LEFT JOIN vendor v
@@ -1531,6 +1532,9 @@ export const inventoryReport = asyncErrorHandler(async (req, res) => {
 
       LEFT JOIN inventory_stock_info isi
       ON isi.item_id = iii.item_id
+
+      LEFT JOIN inventory_item_consume iic
+      ON iic.item_id = iii.item_id
 
       WHERE iii.institute = $1 AND isi.purchase_date BETWEEN $2 AND $3
 

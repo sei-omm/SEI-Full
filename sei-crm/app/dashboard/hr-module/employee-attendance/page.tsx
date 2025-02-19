@@ -151,11 +151,22 @@ export default async function EmployeeAttendance() {
                               const attendance_info = [
                                 ...attendanceToUpdate.current,
                               ];
-                              attendance_info.push({
-                                employee_id: data?.data[index].employee_id || 0,
-                                attendance_date: tables?.heads[childItemIndex],
-                                attendance_option: value,
-                              });
+                              const indexAlreadyExist = attendance_info.findIndex(
+                                (item) => item.employee_id === (data?.data[index].employee_id || 0) && item.attendance_date === tables?.heads[childItemIndex]
+                              );
+                              if(indexAlreadyExist === -1) {
+                                attendance_info.push({
+                                  employee_id: data?.data[index].employee_id || 0,
+                                  attendance_date: tables?.heads[childItemIndex],
+                                  attendance_option: value,
+                                });
+                              } else {
+                                attendance_info[indexAlreadyExist] = ({
+                                  employee_id: data?.data[index].employee_id || 0,
+                                  attendance_date: tables?.heads[childItemIndex],
+                                  attendance_option: value,
+                                });
+                              }
                               attendanceToUpdate.current = attendance_info;
                             }}
                             value={value}
