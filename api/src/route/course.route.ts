@@ -24,6 +24,7 @@ import {
   changeBatchManually,
   generateTimeTable,
   saveTimeTable,
+  draftTimeTable,
 } from "../controller/course.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 
@@ -58,4 +59,5 @@ courseRouter
 
   .get("/time-table", generateTimeTable)
   .post("/time-table", saveTimeTable)
+  .post("/time-table/draft", draftTimeTable)
   .get("/:course_id", getSingleCourse);

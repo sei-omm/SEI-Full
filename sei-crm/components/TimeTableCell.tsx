@@ -1,26 +1,33 @@
-import { ISuccess, TFaculty, TTimeTableData } from "@/types";
+import { TFaculty, TTimeTableData } from "@/types";
 import Image from "next/image";
 import React, { useState } from "react";
 
 interface IProps {
-  serverData: ISuccess<TTimeTableData[]> | undefined;
+  disabled : boolean;
+  serverData: TTimeTableData[] | undefined;
   value: string;
   rowIndex: number;
   colIndex: number;
+  selectedSubjects: any;
+  selectedFaculties: any;
 }
 
 export default function TimeTableCell({
   serverData,
   value,
-  rowIndex
+  rowIndex,
+  colIndex,
+  selectedSubjects,
+  selectedFaculties,
+  disabled
 }: IProps) {
   const [currentFaculty, setCurrentFaculty] = useState(
-    serverData?.data[rowIndex].faculty.find((f) => f.for_subject_name === value)
+    serverData?.[rowIndex].faculty.find((f) => f.for_subject_name === value)
   );
 
   const [currentFaculties, setCurrentFaculties] = useState<TFaculty[]>(() => {
     if (serverData) {
-      return serverData.data[rowIndex].faculty.filter(
+      return serverData?.[rowIndex].faculty.filter(
         (item) => item.for_subject_name === value
       );
     }
@@ -28,11 +35,25 @@ export default function TimeTableCell({
   });
 
   const handleSubjectChange = (value: string) => {
-    setCurrentFaculties(
-      serverData?.data[rowIndex].faculty.filter(
+    const subjectFaculties =
+      serverData?.[rowIndex].faculty.filter(
         (item) => item.for_subject_name === value
-      ) || []
-    );
+      ) || [];
+
+    selectedSubjects[`${rowIndex}${colIndex}`] = value;
+
+    setCurrentFaculties(subjectFaculties);
+
+    if (value === "Choose Subject" || value === "Off Period") {
+      setCurrentFaculty(undefined);
+      if(value === "Choose Subject") {
+        delete selectedSubjects[`${rowIndex}${colIndex}`];
+      }
+      delete selectedFaculties[`${rowIndex}${colIndex}`];
+    } else {
+      setCurrentFaculty(subjectFaculties[0]);
+      selectedFaculties[`${rowIndex}${colIndex}`] = subjectFaculties[0]?.faculty_id;
+    }
   };
 
   return (
@@ -49,39 +70,55 @@ export default function TimeTableCell({
       </div>
       <div className="flex flex-col">
         <select
+          disabled = {disabled}
           onChange={(e) => handleSubjectChange(e.currentTarget.value)}
           name="subject_name"
           defaultValue={value}
           className="px-2 py-1 outline-none cursor-pointer bg-transparent"
         >
-          {serverData?.data[rowIndex].subjects.map((subject) => (
+          <option value="Choose Subject" disabled>
+            Choose Subject
+          </option>
+          {serverData?.[rowIndex].subjects.map((subject) => (
             <option key={subject} value={subject}>
               {subject}
             </option>
           ))}
+          <option value="Off Period">Off Period</option>
         </select>
         <>
           <select
-            name="employee_name"
+            name="faculty_id"
             onChange={(e) => {
+              selectedFaculties[`${rowIndex}${colIndex}`] = parseInt(
+                e.currentTarget.value
+              );
               setCurrentFaculty(
-                serverData?.data[rowIndex].faculty.find(
-                  (f) => f.faculty_name === e.currentTarget.value
+                serverData?.[rowIndex].faculty.find(
+                  (f) => f.faculty_id === parseInt(e.currentTarget.value)
                 )
               );
             }}
-            defaultValue={currentFaculty?.faculty_name || "Not Selected"}
+            defaultValue={currentFaculty?.faculty_id || "Not Selected"}
             className="px-2 py-1 outline-none cursor-pointer bg-transparent"
+            disabled={currentFaculties.length === 0 || disabled}
           >
             {currentFaculties.map((eachFaculty) => (
               <option
                 key={eachFaculty.faculty_id}
-                value={eachFaculty.faculty_name}
+                // value={eachFaculty.faculty_name}
+                value={eachFaculty.faculty_id}
               >
                 {eachFaculty.faculty_name}
               </option>
             ))}
-            <option value={"Not Selected"}>Not Selected</option>
+            {/* <option value={"Not Selected"}>Not Selected</option> */}
+            {/* <option value="Choose Subject" disabled>
+              Choose Faculty
+            </option> */}
+            {currentFaculties.length === 0 && (
+              <option value="No Faculties">No Faculties</option>
+            )}
           </select>
           <input
             name="faculty_profile_image"
@@ -89,9 +126,9 @@ export default function TimeTableCell({
             value={currentFaculty?.profile_image || ""}
           />
           <input
-            name="faculty_id"
+            name="employee_name"
             hidden
-            value={currentFaculty?.faculty_id || ""}
+            value={currentFaculty?.faculty_name || ""}
           />
         </>
       </div>

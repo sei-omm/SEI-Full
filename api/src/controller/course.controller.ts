@@ -19,6 +19,7 @@ import {
   updateCourseValidator,
   updateScheduleCourseBatchValidator,
   VchangeBatchManually,
+  VDraftTimeTable,
   VSaveTimeTable,
   VTimeTable,
 } from "../validator/course.validator";
@@ -30,7 +31,6 @@ import { transaction } from "../utils/transaction";
 import { filterToSql } from "../utils/filterToSql";
 import { tryCatch } from "../utils/tryCatch";
 import { parsePagination } from "../utils/parsePagination";
-import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 
 const table_name = "courses";
 
@@ -1096,141 +1096,202 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
   const { error, value } = VTimeTable.validate(req.query);
   if (error) throw new ErrorHandler(400, error.message);
 
-  const { rows } = await pool.query(
-    `
-        SELECT
-          c.course_id,
-          c.course_name,
-          c.course_code,
-          c.subjects,
-          COALESCE(
-              (
-                  SELECT json_agg(
-                      jsonb_build_object(
-                          'faculty_id', fwcs.faculty_id,
-                          'subject', fwcs.subject,
-                          'faculty_name', e.name,
-                          'profile_image', e.profile_image,
-                          'max_teaching_hrs_per_week', CASE WHEN e.max_teaching_hrs_per_week = '' THEN '0' ELSE e.max_teaching_hrs_per_week END,
-                          'faculty_current_working_hours', e.faculty_current_working_hours,
-                          'is_active', e.is_active
+  const cDate = new Date(value.date);
+  if (cDate.getDay() === 0) {
+    throw new ErrorHandler(
+      405,
+      `You can't prepare time table as it is "Sunday"`
+    );
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const { rowCount, rows: holidayInfo } = await client.query(
+      `SELECT holiday_name FROM holiday_management WHERE holiday_date = $1 AND institute = $2`,
+      [value.date, value.institute]
+    );
+
+    if (rowCount !== 0)
+      throw new ErrorHandler(
+        405,
+        `You can't prepare time table as it is Holiday "${holidayInfo[0].holiday_name}"`
+      );
+
+    const { rows: dreftData, rowCount: dreftCount } = await client.query(
+      `SELECT * FROM time_table_draft WHERE date = $1`,
+      [value.date]
+    );
+    if (dreftCount !== 0) {
+      return res.status(200).json(
+        new ApiResponse(200, "Time Table Info", {
+          type: "draft",
+          result: dreftData[0],
+        })
+      );
+    }
+
+    const { rows } = await client.query(
+      `
+            SELECT
+              c.course_id,
+              c.course_name,
+              c.course_code,
+              c.subjects,
+              COALESCE(
+                  (
+                      SELECT json_agg(
+                          jsonb_build_object(
+                              'faculty_id', fwcs.faculty_id,
+                              'subject', fwcs.subject,
+                              'faculty_name', e.name,
+                              'profile_image', e.profile_image,
+                              'max_teaching_hrs_per_week', CASE WHEN e.max_teaching_hrs_per_week = '' THEN '0' ELSE e.max_teaching_hrs_per_week END,
+                              'faculty_current_working_hours', e.faculty_current_working_hours,
+                              'is_active', e.is_active
+                          )
                       )
-                  )
-                  FROM faculty_with_course_subject fwcs
-                  INNER JOIN employee e ON e.id = fwcs.faculty_id
-                  WHERE fwcs.course_id = c.course_id AND e.is_active = true
-              ),
-              '[]'::json
-          ) AS faculty_details
-          FROM courses c
-          INNER JOIN course_batches cb ON cb.course_id = c.course_id
-          
-          WHERE c.institute = $1
-          AND $2 BETWEEN cb.start_date AND cb.end_date
+                      FROM faculty_with_course_subject fwcs
+                      INNER JOIN employee e ON e.id = fwcs.faculty_id
+                      WHERE fwcs.course_id = c.course_id AND e.is_active = true
+                  ),
+                  '[]'::json
+              ) AS faculty_details
+            FROM courses c
+            INNER JOIN course_batches cb ON cb.course_id = c.course_id
+              
+            WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
+    
+            GROUP BY c.course_id
+        `,
+      [value.institute, value.date]
+    );
+    
+    const outputs = rows as InfoType[];
+    // return res.json(outputs)
 
-          GROUP BY c.course_id
-    `,
-    [value.institute, value.date]
-  );
+    const result: TTimeTable[] = [];
+    const already_assigned_faculty = new Map<
+      number,
+      { par_index: number; fac_position: number }
+    >();
 
-  const outputs = rows as InfoType[];
-
-  const result: TTimeTable[] = [];
-  const already_assigned_faculty = new Map<
-    number,
-    { par_index: number; fac_position: number }
-  >();
-
-  //task :
-  // 1-> assign at list one teacher to each course subject
-  // 2 -> then assign others resurved faculty to the list if related to the course 0(n)3
-
-  outputs.forEach((output, index) => {
-    const course_subjects = output.subjects.split(",");
-
-    const time_table: TTimeTable = {
-      course_id: output.course_id,
-      course_name: output.course_name,
-      course_code: output.course_code,
-      subjects: course_subjects,
-      faculty: [],
-      subject_with_faculty: [],
-    };
-
-    // loop through every subject
-    course_subjects.forEach((subject, subject_index) => {
-      // loop through every faculty_details
-      //  check is inside faculty assign subject current subject include of not
-
-      time_table.subject_with_faculty.push({
-        subject_name: subject,
+    //task :
+    // 1-> assign at list one teacher to each course subject
+    // 2 -> then assign others resurved faculty to the list if related to the course 0(n)3
+    outputs.forEach((output, index) => {
+      const course_subjects = output.subjects.split(",");
+  
+      const time_table: TTimeTable = {
+        course_id: output.course_id,
+        course_name: output.course_name,
+        course_code: output.course_code,
+        subjects: course_subjects,
         faculty: [],
-      });
-
-      for (let i = 0; i < output.faculty_details.length; i++) {
-        const faculty = output.faculty_details[i];
-        if (
-          faculty.subject.includes(subject) &&
-          parseInt(faculty.max_teaching_hrs_per_week) >=
-            faculty.faculty_current_working_hours
-        ) {
-          const already_assign_faculty_info = already_assigned_faculty.get(
-            faculty.faculty_id
-          );
+        subject_with_faculty: [],
+      };
+  
+      // loop through every subject
+      course_subjects.forEach((subject, subject_index) => {
+        // loop through every faculty_details
+        //  check is inside faculty assign subject current subject include of not
+  
+        time_table.subject_with_faculty.push({
+          subject_name: subject,
+          faculty: [],
+        });
+  
+        for (let i = 0; i < output.faculty_details.length; i++) {
+          const faculty = output.faculty_details[i];
 
           if (
-            already_assign_faculty_info &&
-            already_assign_faculty_info.fac_position > 0
+            faculty.subject.includes(subject) &&
+            parseInt(faculty.max_teaching_hrs_per_week) >=
+              faculty.faculty_current_working_hours
           ) {
-            // if faculty already assigned to another course at secound position or more then secound
-            //remove that faculty from that array
-            removeFormArray(
-              result[already_assign_faculty_info.par_index].faculty,
-              already_assign_faculty_info.fac_position
+            const already_assign_faculty_info = already_assigned_faculty.get(
+              faculty.faculty_id
             );
+  
+            if (
+              already_assign_faculty_info &&
+              already_assign_faculty_info.fac_position > 0
+            ) {
+              // if faculty already assigned to another course at secound position or more then secound
+              //remove that faculty from that array
+              removeFormArray(
+                result[already_assign_faculty_info.par_index].faculty,
+                already_assign_faculty_info.fac_position
+              );
+  
+              time_table.subject_with_faculty[subject_index].faculty.push({
+                faculty_id: faculty.faculty_id,
+                faculty_name: faculty.faculty_name,
+                profile_image: faculty.profile_image,
+              });
+  
+              // then assign to current course at first position
+              time_table.faculty.push({
+                for_subject_name: subject,
+                faculty_id: faculty.faculty_id,
+                faculty_name: faculty.faculty_name,
+                profile_image: faculty.profile_image,
+              });
+            }
+  
+            if (!already_assign_faculty_info) {
+              time_table.faculty.push({
+                for_subject_name: subject,
+                faculty_id: faculty.faculty_id,
+                faculty_name: faculty.faculty_name,
+                profile_image: faculty.profile_image,
+              });
+  
+              time_table.subject_with_faculty[subject_index].faculty.push({
+                faculty_id: faculty.faculty_id,
+                faculty_name: faculty.faculty_name,
+                profile_image: faculty.profile_image,
+              });
+  
+              // let fac_position = 0;
+              // const forSubject = new Map<string, string>();
+              // time_table.faculty.forEach((tFaculty) => {
+                
+              // })
 
-            time_table.subject_with_faculty[subject_index].faculty.push({
-              faculty_id: faculty.faculty_id,
-              faculty_name: faculty.faculty_name,
-              profile_image: faculty.profile_image,
-            });
-
-            // then assign to current course at first position
-            time_table.faculty.push({
-              for_subject_name: subject,
-              faculty_id: faculty.faculty_id,
-              faculty_name: faculty.faculty_name,
-              profile_image: faculty.profile_image,
-            });
-          }
-
-          if (!already_assign_faculty_info) {
-            time_table.faculty.push({
-              for_subject_name: subject,
-              faculty_id: faculty.faculty_id,
-              faculty_name: faculty.faculty_name,
-              profile_image: faculty.profile_image,
-            });
-
-            time_table.subject_with_faculty[subject_index].faculty.push({
-              faculty_id: faculty.faculty_id,
-              faculty_name: faculty.faculty_name,
-              profile_image: faculty.profile_image,
-            });
-
-            already_assigned_faculty.set(faculty.faculty_id, {
-              par_index: index,
-              fac_position: time_table.faculty.length - 1,
-            });
+              already_assigned_faculty.set(faculty.faculty_id, {
+                par_index: index,
+                fac_position: time_table.faculty.length - 1,
+                // fac_position
+              });
+            }
           }
         }
-      }
+      });
+  
+      result.push(time_table);
     });
 
-    result.push(time_table);
-  });
+    res.status(200).json(
+      new ApiResponse(200, "Time Table Info", {
+        type: "generated",
+        result: result,
+      })
+    );
 
-  res.status(200).json(new ApiResponse(200, "Time Table Info", result));
+    await client.query("COMMIT");
+    client.release();
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    client.release();
+    if (error?.isOperational) {
+      throw new ErrorHandler(error.statusCode, error.message);
+    } else {
+      throw new ErrorHandler(500, error.message);
+    }
+  }
 });
 
 // export const saveTimeTable = asyncErrorHandler(async (req, res) => {
@@ -1296,6 +1357,11 @@ export const saveTimeTable = asyncErrorHandler(async (req, res) => {
   try {
     await client.query("BEGIN");
 
+    await client.query(
+      `DELETE FROM time_table_draft WHERE date = $1 AND institute = $2`,
+      [value.date, value.institute]
+    );
+
     const { rowCount } = await client.query(
       `SELECT date FROM time_table WHERE date = $1`,
       [value.date]
@@ -1335,4 +1401,27 @@ export const saveTimeTable = asyncErrorHandler(async (req, res) => {
   }
 
   res.status(200).json(new ApiResponse(200, "Time table saved successfully"));
+});
+
+export const draftTimeTable = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VDraftTimeTable.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await pool.query(
+    `
+    INSERT INTO time_table_draft (date, info, institute)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (date, institute) DO UPDATE SET info = $2
+    `,
+    [value.date, value.info, value.institute]
+  );
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        "Time Table Has Been Saved In Draft, You Can Edit It Later Before Saving It In Database"
+      )
+    );
 });

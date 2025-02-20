@@ -508,52 +508,22 @@ export const verifyPayment = asyncErrorHandler(
 
 export const payDueAmount = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { error, value } = payDueAmountValidator.validate(req.body);
+    const { error, value } = payDueAmountValidator.validate({...req.body, student_id : res.locals.student_id});
     if (error) throw new ErrorHandler(400, error.message);
-
-    // const { rows, rowCount } = await pool.query(
-    //   `
-    //   WITH aggregated_payments AS (
-    //       SELECT
-    //           batch_id,
-    //           COALESCE(SUM(paid_amount), 0) AS total_paid
-    //       FROM
-    //           payments
-    //       GROUP BY
-    //           batch_id
-    //   )
-    //   SELECT
-    //     cb.batch_fee,
-    //     cb.batch_fee - COALESCE(ap.total_paid, 0) AS due_amount
-    //   FROM course_batches AS cb
-
-    //   LEFT JOIN
-    //       aggregated_payments AS ap ON ap.batch_id = cb.batch_id
-
-    //   WHERE cb.batch_id = $1
-    //   GROUP BY cb.batch_fee, ap.total_paid
-    //   `,
-    //   [value.batch_id]
-    // );
 
     const { rows, rowCount } = await pool.query(
       `
-      SELECT 
-      COALESCE(cb.batch_fee - SUM(p.paid_amount), 0.00) AS due_amount
-      FROM payments AS p
+        SELECT
+          cb.batch_fee - COALESCE((SELECT SUM(paid_amount) FROM payments WHERE batch_id = $1 AND student_id = $2), 0.00) AS due_amount
+        FROM course_batches cb
 
-      LEFT JOIN course_batches AS cb
-      ON cb.batch_id = $1
-
-      WHERE p.batch_id = $1 AND p.student_id = $2
-
-      GROUP BY cb.batch_fee
-    `,
-      [value.batch_id, res.locals.student_id]
+        WHERE cb.batch_id = $1
+      `,
+      [value.batch_id, value.student_id]
     );
 
     if (rowCount === 0)
-      throw new ErrorHandler(400, "Not Batch Avliable With This Id");
+      throw new ErrorHandler(400, "This Batch Is Not Avilable");
 
     const { id, amount } = await createOrder(
       parseFloat(rows[0].due_amount) * 100
@@ -584,53 +554,44 @@ export const verifyOnlineDuePayment = asyncErrorHandler(
     if (!isPaymentSuccess)
       throw new ErrorHandler(400, "Payment has not done yet");
 
-    // //get the due amount from db
-    // const { rows, rowCount } = await pool.query(
+    // const { rows } = await pool.query(
     //   `
-    //   WITH aggregated_payments AS (
-    //       SELECT
-    //           batch_id,
-    //           form_id,
-    //           COALESCE(SUM(paid_amount), 0) AS total_paid
-    //       FROM
-    //           payments
-    //       GROUP BY
-    //           batch_id, form_id
-    //   )
-    //   SELECT
-    //     cb.batch_fee,
-    //     ap.form_id,
-    //     cb.course_id,
-    //     cb.batch_fee - COALESCE(ap.total_paid, 0) AS due_amount
-    //   FROM course_batches AS cb
+    //   SELECT 
+    //   COALESCE(cb.batch_fee - SUM(p.paid_amount), 0.00) AS due_amount,
+    //   c.institute,
+    //   cb.course_id,
+    //   p.form_id
+    //   FROM payments AS p
 
-    //   LEFT JOIN
-    //       aggregated_payments AS ap ON ap.batch_id = cb.batch_id
+    //   LEFT JOIN course_batches AS cb
+    //   ON cb.batch_id = $1
 
-    //   WHERE cb.batch_id = $1
-    //   GROUP BY cb.batch_fee, ap.total_paid, ap.form_id, cb.course_id
-    //   `,
-    //   [value.batch_id]
+    //   LEFT JOIN courses AS c
+    //   ON c.course_id = cb.course_id
+
+    //   WHERE p.batch_id = $1 AND p.student_id = $2
+
+    //   GROUP BY cb.batch_fee, c.institute, cb.course_id, p.form_id
+    // `,
+    //   [value.batch_id, res.locals.student_id]
     // );
 
     const { rows } = await pool.query(
       `
-      SELECT 
-      COALESCE(cb.batch_fee - SUM(p.paid_amount), 0.00) AS due_amount,
-      c.institute,
-      cb.course_id,
-      p.form_id
-      FROM payments AS p
+      SELECT
+        ebc.course_id,
+        ebc.form_id,
+        c.institute,
+        cb.batch_fee - COALESCE((SELECT SUM(paid_amount) FROM payments WHERE batch_id = $1 AND student_id = $2), 0.00) AS due_amount 
+      FROM enrolled_batches_courses ebc
 
-      LEFT JOIN course_batches AS cb
-      ON cb.batch_id = $1
+      LEFT JOIN courses c
+      ON c.course_id = ebc.course_id
 
-      LEFT JOIN courses AS c
-      ON c.course_id = cb.course_id
-
-      WHERE p.batch_id = $1 AND p.student_id = $2
-
-      GROUP BY cb.batch_fee, c.institute, cb.course_id, p.form_id
+      LEFT JOIN course_batches cb
+      ON cb.batch_id = ebc.batch_id
+      
+      WHERE ebc.batch_id = $1 AND ebc.student_id = $2 
     `,
       [value.batch_id, res.locals.student_id]
     );
@@ -1061,8 +1022,6 @@ export const servePaymentPage = asyncErrorHandler(async (req, res) => {
   }>(token);
   if (error) throw new ErrorHandler(400, "Payment Link Has Expired Or Invalid");
 
-  console.log(data);
-
   res.render("pay", {
     key: process.env.RAZORPAY_KEY_ID,
     order_id: data?.order_id,
@@ -1208,7 +1167,6 @@ export const verifyPaymentForPaymentLink = asyncErrorHandler(
 
     if (tryError) {
       await client.query("ROLLBACK");
-      console.log(tryError);
       client.release();
       throw new ErrorHandler(
         500,

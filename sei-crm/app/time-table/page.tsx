@@ -24,6 +24,17 @@ type TTable = {
   body: string[][];
 };
 
+type DraftResponse = {
+  draft_id: number;
+  info: string;
+  date: string;
+};
+
+type TServerResponse = {
+  type: "generated" | "draft";
+  result: TTimeTableData[] | DraftResponse;
+};
+
 // const times = [
 //   "09:30 am - 10:30 am",
 //   "10:30 am - 11:30 am",
@@ -49,21 +60,58 @@ export default function TimeTable() {
     body: [],
   });
 
+  const [serverData, setServerData] = useState<TTimeTableData[] | undefined>(
+    undefined
+  );
+
   const {
-    data: serverData,
+    // data: serverData,
     isFetching,
     error,
-  } = useQuery<ISuccess<TTimeTableData[]>>({
+  } = useQuery<ISuccess<TServerResponse>>({
     queryKey: ["generate-time-table", searchParams.toString()],
     queryFn: () => generateTimeTable(searchParams),
     onSuccess(data) {
-      setTableData((preState) => ({
-        ...preState,
-        body: data.data.map((item) => [
-          item.course_name,
-          ...item.subjects.map((subject) => subject),
-        ]),
-      }));
+      if (data.data.type === "generated") {
+        const finalResult = data.data.result as TTimeTableData[];
+
+        setTableData((preState) => ({
+          ...preState,
+          body: finalResult.map((item) => [
+            item.course_name,
+            // ...item.subjects.map((subject) => subject),
+            ...[1, 2, 3, 4, 5, 6, 7, 8].map(
+              (_, index) => item.subjects[index] || "Choose Subject"
+            ),
+          ]),
+        }));
+        setServerData(finalResult);
+      } else {
+        const finalResult = data.data.result as DraftResponse;
+        const parseData = JSON.parse(finalResult.info) as {
+          facultiDraf: any;
+          subjectDraf: any;
+          tableInfoDraf: TTimeTableData[];
+        };
+
+        selectedSubjects.current = parseData.subjectDraf;
+        selectedFaculties.current = parseData.facultiDraf;
+
+        setTableData((preState) => ({
+          ...preState,
+          body: parseData.tableInfoDraf.map((item, rowIndex) => [
+            item.course_name,
+            ...[1, 2, 3, 4, 5, 6, 7, 8].map(
+              (_, colIndex) =>
+                parseData.subjectDraf[`${rowIndex}${colIndex + 1}`] ||
+                item.subjects[colIndex] ||
+                "Choose Subject"
+            ),
+          ]),
+        }));
+
+        setServerData(parseData.tableInfoDraf);
+      }
     },
     refetchOnMount: true,
     enabled: searchParams.size !== 0,
@@ -80,6 +128,7 @@ export default function TimeTable() {
   };
 
   const { isLoading, mutate } = useDoMutation();
+  const { isLoading: isSavingDraft, mutate: saveToDraft } = useDoMutation();
 
   const handleFullForm = (formData: FormData) => {
     // const datasToStore: any[] = [];
@@ -122,7 +171,15 @@ export default function TimeTable() {
     //   formData: datasToStore,
     // });
 
+    formData.forEach((value, key) => {
+      console.log(key, value)
+    })
+    return;
+
     if (!confirm("Once Saved You can't edit it latter. Are you sure?")) return;
+
+    const userInput = prompt(`Type "Yes" If You Want To Save It In Database`);
+    if (userInput !== "Yes") return;
 
     type TCobj = {
       course_name: string;
@@ -166,18 +223,18 @@ export default function TimeTable() {
         objToStore.subjects.push(valueString);
       }
 
-      if (key === "employee_name") {
+      if (key === "faculty_profile_image") {
         objToStore.faculty.push({
-          faculty_name:
-            valueString === "Not Selected" ? "Off Period" : valueString,
-          profile_image: "",
+          faculty_name: "",
+          profile_image: valueString,
         });
       }
 
-      if (key === "faculty_profile_image") {
-        objToStore.faculty[currentFacultyIndex].profile_image = valueString;
+      if (key === "employee_name") {
+        objToStore.faculty[currentFacultyIndex].faculty_name = valueString;
         currentFacultyIndex++;
       }
+
       if (key === "faculty_id") {
         if (valueString !== "") {
           faculty_ids.push(parseInt(valueString));
@@ -201,6 +258,25 @@ export default function TimeTable() {
         institute: searchParams.get("institute"),
         faculty_ids: faculty_ids,
         time_table_data: JSON.stringify(dataIWant),
+      },
+    });
+  };
+
+  const selectedSubjects = useRef<any>({});
+  const selectedFaculties = useRef<any>({});
+
+  const handleDraftButton = () => {
+    saveToDraft({
+      apiPath: "/course/time-table/draft",
+      method: "post",
+      formData: {
+        date: searchParams.get("date"),
+        info: JSON.stringify({
+          tableInfoDraf: serverData,
+          subjectDraf: selectedSubjects.current,
+          facultiDraf: selectedFaculties.current,
+        }),
+        institute: searchParams.get("institute"),
       },
     });
   };
@@ -244,7 +320,7 @@ export default function TimeTable() {
       <HandleSuspence
         isLoading={isFetching}
         error={error}
-        dataLength={serverData?.data.length}
+        dataLength={serverData?.length}
         noDataMsg="Not Able To Generate Any Time Table"
       >
         <form
@@ -279,17 +355,20 @@ export default function TimeTable() {
                     >
                       {columnIndex !== 0 ? (
                         <TimeTableCell
+                          disabled={isSavingDraft}
                           serverData={serverData}
                           value={value}
                           rowIndex={rowIndex}
                           colIndex={columnIndex}
+                          selectedSubjects={selectedSubjects.current}
+                          selectedFaculties={selectedFaculties.current}
                         />
                       ) : (
                         <>
                           <input
                             hidden
                             name="course_name"
-                            value={serverData?.data[rowIndex].course_name}
+                            value={serverData?.[rowIndex].course_name}
                           />
                           {value}
                         </>
@@ -306,15 +385,24 @@ export default function TimeTable() {
       <div className="w-full flex items-center justify-between pb-10">
         <BackBtn btnText="Back To Dashboard" customRoute="/dashboard" />
         {searchParams.size === 0 ? null : (
-          <Button
-            loading={isLoading}
-            disabled={isLoading}
-            onClick={() => {
-              formRef.current?.requestSubmit();
-            }}
-          >
-            Save To Database
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              disabled={isSavingDraft}
+              loading={isSavingDraft}
+              onClick={handleDraftButton}
+            >
+              Save As Draft
+            </Button>
+            <Button
+              loading={isLoading}
+              disabled={isLoading || isSavingDraft}
+              onClick={() => {
+                formRef.current?.requestSubmit();
+              }}
+            >
+              Save To Database
+            </Button>
+          </div>
         )}
       </div>
     </section>

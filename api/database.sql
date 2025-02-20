@@ -1135,6 +1135,18 @@ CREATE TABLE phy_lib_book_issue (
     institute VARCHAR(100)
 );
 
+-- NEW DB 20 Feb 2025
+CREATE TABLE time_table_draft (
+    draft_id SERIAL PRIMARY KEY,
+    info TEXT,
+    date DATE,
+    institute VARCHAR(100),
+
+    UNIQUE (date, institute)
+);
+
+DELETE FROM time_table;
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

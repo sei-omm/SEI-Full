@@ -31,6 +31,7 @@ export const addPaymentValidator = Joi.object({
 });
 
 export const payDueAmountValidator = Joi.object({
+  student_id : Joi.number().required(),
   batch_id: Joi.number().required(),
 });
 
