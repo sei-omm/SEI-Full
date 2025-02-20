@@ -91,7 +91,7 @@ const options = {
     headers: {
         Accept: "application/vnd.github.v3+json",
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, // Use env variable
+        Authorization: `Bearer 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`, // Use env variable
         "User-Agent": "MyApp/1.0" // Required by GitHub API
     }
 };
