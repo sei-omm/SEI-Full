@@ -43,7 +43,7 @@ export const readNotification = asyncErrorHandler(async (req, res) => {
     [req.params.notification_sended_id]
   );
 
-  res.status(200).json(new ApiResponse(200, "Notification Readed"));
+  res.status(200).json(new ApiResponse(200, "Notification Read"));
 });
 
 export const createAndSendNotification = asyncErrorHandler(async (req, res) => {

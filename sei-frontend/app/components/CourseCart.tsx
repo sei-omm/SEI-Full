@@ -21,6 +21,8 @@ import axios from "axios";
 import { BASE_API } from "../constant";
 import { IResponse, TCourseBatches } from "../type";
 import HandleLoading from "./HandleLoading";
+import { hasOverlappingBatchDate } from "../utils/hasOverlappingBatchDate";
+import { AiOutlineDelete } from "react-icons/ai";
 
 export default function CourseCart() {
   const dispatch = useDispatch();
@@ -36,15 +38,6 @@ export default function CourseCart() {
   const { scrollingDirection } = useScrollChecker();
 
   const { isAuthenticated } = useIsAuthenticated([loginState]);
-
-  const handleEnrollBtnClick = () => {
-    if (!isAuthenticated) {
-      return dispatch(
-        setDialog({ type: "OPEN", dialogKey: "student-login-dialog" })
-      );
-    }
-    router.push("/apply-course?" + searchParams.toString());
-  };
 
   useEffect(() => {
     setIsExpand(false);
@@ -70,11 +63,38 @@ export default function CourseCart() {
     },
   });
 
+  const handleEnrollBtnClick = () => {
+    if (!isAuthenticated) {
+      return dispatch(
+        setDialog({ type: "OPEN", dialogKey: "student-login-dialog" })
+      );
+    }
+
+    const isOverlaping = hasOverlappingBatchDate(data?.data || []);
+    if (isOverlaping) {
+      return alert(
+        "You are choosing batches with overlapping dates. Please select a different batch."
+      );
+    }
+
+    router.push("/apply-course?" + searchParams.toString());
+  };
+
+  const handleDeleteCourse = (course_id: number) => {
+    const urlSearchParams = new URLSearchParams(searchParams);
+    urlSearchParams.delete(`bid${course_id}`);
+    router.push(`${pathname}?${urlSearchParams.toString()}`, { scroll: false });
+  };
+
   return (
     <div
-      className={`${searchParams.size !== 0 && searchParams.toString().includes("bid") ? "fixed" : "hidden"}  ${
+      className={`${
+        searchParams.size !== 0 && searchParams.toString().includes("bid")
+          ? "fixed"
+          : "hidden"
+      }  ${
         isExpand ? "bg-white" : "bg-[#E9B858]"
-      } border border-gray-300 bottom-10 right-10 z-10 card-shdow shadow-2xl rounded-2xl p-5 sm:right-0 ${
+      } border border-gray-300 bottom-10 right-10 z-10 card-shdow shadow-2xl rounded-2xl p-5 max-w-[35rem] sm:right-0 ${
         isExpand ? "sm:left-0" : ""
       } ${
         scrollingDirection === "DOWN" ? "sm:bottom-5" : "sm:bottom-20"
@@ -120,7 +140,15 @@ export default function CourseCart() {
               <li key={item.batch_id} className="relative">
                 <div className="absolute top-0 bottom-0 w-3 bg-[#E9B858] mt-[1px] rounded-2xl"></div>
                 <div className="pl-5 space-y-1">
-                  <h3 className="font-semibold">{item.course_name}</h3>
+                  <span>
+                    <h3 className="font-semibold line-clamp-1">
+                      {item.course_name}
+                    </h3>
+                    <AiOutlineDelete
+                      onClick={() => handleDeleteCourse(item.course_id)}
+                      className="float-right cursor-pointer active:scale-90"
+                    />
+                  </span>
                   <div className="flex items-center flex-wrap gap-x-5 gap-y-2 *:text-gray-600 *:font-semibold">
                     <div className="flex items-center gap-2">
                       <MdOutlineDateRange />

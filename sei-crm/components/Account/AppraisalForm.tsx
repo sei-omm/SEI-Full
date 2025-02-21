@@ -24,7 +24,11 @@ async function getSingleAppraisal(appraisalId: number) {
     .data;
 }
 
-export default function AppraisalForm() {
+interface IProps {
+  wrapperClassName? : string
+}
+
+export default function AppraisalForm({ wrapperClassName } : IProps) {
   const { mutate, isLoading } = useDoMutation();
   const searchParams = useSearchParams();
   const route = useRouter();
@@ -116,7 +120,7 @@ export default function AppraisalForm() {
   return (
     <>
       {appraisal ? (
-        <InfoLayout className="space-y-3">
+        <InfoLayout className={`space-y-3 ${wrapperClassName}`}>
           <h2 className="text-sm font-semibold text-yellow-700 text-center">
             Appraisal Of
           </h2>
@@ -168,7 +172,7 @@ export default function AppraisalForm() {
         </InfoLayout>
       ) : null}
 
-      <InfoLayout>
+      <InfoLayout className={wrapperClassName}>
         <form action={handleFormAction} className="space-y-8">
           {/* Part 1 */}
           <div className="space-y-5">

@@ -8,8 +8,14 @@ import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
 import DropDown from "../DropDown";
 import { useSearchParams } from "next/navigation";
 import { queryClient } from "@/redux/MyProvider";
+import GenarateExcelReportBtn from "../GenarateExcelReportBtn";
+import { Books } from "@/types";
 
-export default function AddMultiBookForm() {
+interface IProps {
+  bookList: Books[];
+}
+
+export default function AddMultiBookForm({ bookList }: IProps) {
   const [inputs, setInputs] = useState<number[]>([]);
   const searchParams = useSearchParams();
 
@@ -43,7 +49,7 @@ export default function AddMultiBookForm() {
       }
 
       obj[key] = value;
-      obj["institute"] = searchParams.get("institute") || "Kolkata"
+      obj["institute"] = searchParams.get("institute") || "Kolkata";
       loopIndex++;
     });
 
@@ -56,7 +62,7 @@ export default function AddMultiBookForm() {
       formData: dataToStore,
       onSuccess() {
         setInputs([]);
-        queryClient.invalidateQueries(["get-phy-lib-books"])
+        queryClient.invalidateQueries(["get-phy-lib-books"]);
       },
     });
   };
@@ -80,7 +86,13 @@ export default function AddMultiBookForm() {
           ]}
         />
 
-        <Button onClick={addNewFormRow}>Add New Book</Button>
+        <div className="flex items-center gap-4">
+          <GenarateExcelReportBtn
+            hidden={bookList.length === 0}
+            apiPath={`/report/physical-library-book/excel?institute=${searchParams.get("institute") || "Kolkata"}`}
+          />
+          <Button onClick={addNewFormRow}>Add New Book</Button>
+        </div>
       </div>
 
       <form action={handleFormSubmit} className="space-y-3">

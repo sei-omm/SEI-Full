@@ -15,9 +15,10 @@ import {
   getRefundReport,
   getStudentsBirthDateReport,
   inventoryReport,
+  pmsReport,
   sendBirthdateWish,
 } from "../controller/report.controller";
-import { stramTimeTableReport, streamAdmissionExcelReport, streamBatchExcelReport, streamCourseTrendExcelReport, streamDgsIndosExcelReport, streamInventoryReport, streamOccupancyExcelReport, streamReceiptExcelReport, streamRefundExcelReport } from "../controller/stream.report";
+import { stramPhyLibBookReport, stramTimeTableReport, streamAdmissionExcelReport, streamBatchExcelReport, streamCourseTrendExcelReport, streamDgsIndosExcelReport, streamInventoryReport, streamOccupancyExcelReport, streamPmsExcelReport, streamReceiptExcelReport, streamRefundExcelReport } from "../controller/stream.report";
 
 export const reportRouter = Router();
 reportRouter
@@ -42,3 +43,6 @@ reportRouter
   .get("/inventory/excel", streamInventoryReport)
   .get("/time-table", generateTimeTableReport)
   .get("/time-table/excel", stramTimeTableReport)
+  .get("/physical-library-book/excel", stramPhyLibBookReport)
+  .get("/pms", pmsReport)
+  .get("/pms/excel", streamPmsExcelReport)

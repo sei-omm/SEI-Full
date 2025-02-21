@@ -90,15 +90,24 @@ export const updatePhysicalLibraryValidator = Joi.array().items(
   })
 );
 
-export const issueBookToStudentValidator = Joi.object({
-  student_id: Joi.number().required(),
+export const issueBookValidator = Joi.object({
+  student_id: Joi.number().optional(),
+  // employee_id: Joi.number().when(Joi.ref("student_id"), {
+  //   is: Joi.exist(),
+  //   then: Joi.required(),
+  //   otherwise: Joi.optional(),
+  // }),
+  employee_id: Joi.alternatives().conditional("student_id", {
+    is: Joi.exist(),
+    then: Joi.optional(),
+    otherwise: Joi.required(),
+  }),
   info: Joi.array().items(
     Joi.object({
-      course_id: Joi.number().required(),
+      course_id: Joi.number().optional().allow("undefined"),
       phy_lib_book_id: Joi.number().required(),
     })
   ),
-
   issue_date: Joi.string().required(),
   institute: Joi.string().required(),
 });
@@ -114,3 +123,8 @@ export const returnBookToLibraryBulkV = Joi.array().items(
     return_date: Joi.string().required(),
   })
 );
+
+export const bookListReportV = Joi.object({
+  institute : Joi.string().required(),
+  book_name : Joi.string().optional()
+})

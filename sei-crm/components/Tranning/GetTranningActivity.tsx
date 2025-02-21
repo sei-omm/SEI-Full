@@ -179,7 +179,7 @@ export default function GetTranningActivity() {
                                 </div>
                               ) : value === "actionBtn" ? (
                                 <Link
-                                  href={`${BASE_API}/tranning/render-form/${tranningHistoryList?.data[rowIndex].record_id}`}
+                                  href={`${BASE_API}/tranning/render-form/${tranningHistoryList?.data[rowIndex]?.record_id}`}
                                   target="__blank"
                                 >
                                   <LuPrinter

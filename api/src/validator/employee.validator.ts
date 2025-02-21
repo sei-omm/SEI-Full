@@ -166,8 +166,10 @@ export const createAppraisalValidator = Joi.object({
 });
 
 export const getAppraisalListValidator = Joi.object({
+  institute : Joi.string().optional(),
   employee_id: Joi.number().required(),
-  type: Joi.string().valid("own", "others").required(),
+  type: Joi.string().valid("own", "others", "Admin", "Hr").required(),
+  role : Joi.string().required()
 });
 
 export const getSingleAppraisalValidator = Joi.object({

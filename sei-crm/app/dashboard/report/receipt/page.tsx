@@ -129,7 +129,7 @@ export default function ReceiptReport() {
                             ? "text-red-600"
                             : ""
                         } ${stickyFirstCol(colIndex)}`}
-                        key={value}
+                        key={`${rowIndex}${colIndex}`}
                       >
                         {value?.includes("@") ? (
                           <Link

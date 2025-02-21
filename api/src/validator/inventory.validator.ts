@@ -279,3 +279,10 @@ export const changeLastDoneDateValidator = Joi.object({
   last_done: Joi.string().required(),
   next_due: Joi.string().required(),
 });
+
+export const pmsReportV = Joi.object({
+  institute: Joi.string().required().valid("Kolkata", "Faridabad"),
+  from_date: Joi.string().required(),
+  to_date : Joi.string().required(),
+  page : Joi.number().optional()
+})

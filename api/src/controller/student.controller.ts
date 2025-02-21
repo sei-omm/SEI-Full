@@ -440,6 +440,7 @@ export const saveStudentDocument = asyncErrorHandler(
 
 export const searchStudent = asyncErrorHandler(async (req, res) => {
   const { student_name } = req.query;
+  const institute = req.query.institute || "Kolkata";
 
   const { LIMIT, OFFSET } = parsePagination(req);
 
@@ -464,14 +465,14 @@ export const searchStudent = asyncErrorHandler(async (req, res) => {
     LEFT JOIN courses c
     ON c.course_id = ebc.course_id
 
-    WHERE s.name ILIKE '%' || $1 || '%'
+    WHERE s.name ILIKE '%' || $1 || '%' AND s.institute = $2
 
     GROUP BY s.student_id
 
     LIMIT ${LIMIT} OFFSET ${OFFSET}
 
     `,
-    [student_name]
+    [student_name, institute]
   );
 
   res.status(200).json(new ApiResponse(200, "Student Search Result", rows));

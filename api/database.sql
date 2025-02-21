@@ -1147,6 +1147,40 @@ CREATE TABLE time_table_draft (
 
 DELETE FROM time_table;
 
+-- New Db 21 Feb 2025
+DROP TABLE phy_lib_book_issue;
+
+CREATE TABLE phy_lib_book_issue (
+    phy_lib_book_issue_id SERIAL PRIMARY KEY,
+
+    student_id BIGINT,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
+
+    employee_id BIGINT,
+    FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE,
+
+    course_id BIGINT,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE SET NULL,
+
+    phy_lib_book_id BIGINT,
+    FOREIGN KEY (phy_lib_book_id) REFERENCES phy_lib_books(phy_lib_book_id) ON DELETE CASCADE,
+
+    issue_date DATE,
+    return_date DATE,
+    institute VARCHAR(100)
+);
+
+CREATE TABLE generated_employee_each_day (
+    id SERIAL PRIMARY KEY,
+    date DATE DEFAULT CURRENT_DATE,
+    count INTEGER
+);
+
+INSERT INTO generated_employee_each_day (count) VALUES(0);
+
+ALTER TABLE planned_maintenance_system 
+ADD CONSTRAINT unique_custom_item_institute UNIQUE (custom_item, institute);
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

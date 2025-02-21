@@ -755,3 +755,5 @@ export interface Books {
   row_number: number;
   shelf: string;
 }
+
+export type TBookIssueTo = "Faculty" | "Student";

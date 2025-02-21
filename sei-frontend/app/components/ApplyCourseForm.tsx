@@ -88,7 +88,7 @@ export default function ApplyCourseForm({ form_info }: IProps) {
 
     if (isDuplicatedFound) {
       return alert(
-        "You have selected two courses with the same date please delte one of them."
+        "You have selected two courses with the same date please delete one of them."
       );
     }
 

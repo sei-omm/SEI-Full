@@ -347,12 +347,27 @@ export const addNewEmployee = asyncErrorHandler(
       );
       const employeeGeneratedId = rows[0].id;
 
+      const { rows : employeeOrderCountInfo } = await client.query(
+        `
+          UPDATE generated_employee_each_day
+          SET 
+            date = CURRENT_DATE,
+            count = CASE 
+                      WHEN date != CURRENT_DATE THEN 1 
+                      ELSE count + 1 
+                    END
+          WHERE id = (
+            SELECT id FROM generated_employee_each_day ORDER BY id LIMIT 1
+          )
+          RETURNING count
+        `)
+
       //it's a bad thing to do don't do it. i don't want to run insert query mannualy.
       if (!req.body.login_email || req.body.login_email === "") {
         const employeeID = generateEmployeeId(
           req.body.joining_date,
           req.body.institute,
-          employeeGeneratedId
+          String(employeeOrderCountInfo[0].count).padStart(2, '0')
         );
         await client.query(
           `UPDATE employee SET login_email = $1 WHERE id = $2`,
@@ -442,14 +457,14 @@ export const updateEmployee = asyncErrorHandler(
     });
 
     //it will generate employee id automatically if login_email not provided
-    let loginIDorEmail = req.body.login_email;
-    if (!loginIDorEmail || loginIDorEmail === "") {
-      loginIDorEmail = generateEmployeeId(
-        req.body.joining_date,
-        req.body.institute,
-        parseInt(id)
-      );
-    }
+    // let loginIDorEmail = req.body.login_email;
+    // if (!loginIDorEmail || loginIDorEmail === "") {
+    //   loginIDorEmail = generateEmployeeId(
+    //     req.body.joining_date,
+    //     req.body.institute,
+    //     parseInt(id)
+    //   );
+    // }
 
     // const cl = req.body.cl;
     // const sl = req.body.sl;
@@ -466,7 +481,7 @@ export const updateEmployee = asyncErrorHandler(
       paramsNum,
     } = objectToSqlConverterUpdate({
       ...req.body,
-      login_email: loginIDorEmail,
+      // login_email: loginIDorEmail,
     });
 
     const sql = `UPDATE ${table_name} SET ${keys} WHERE id = $${paramsNum}`;
@@ -625,7 +640,7 @@ export const getMarketingTeam = asyncErrorHandler(
         LEFT JOIN 
             department d 
             ON e.department_id = d.id
-        WHERE is_active = true
+        WHERE is_active = true AND d.name = 'Sales & Marketing Department'
         ORDER BY 
             e.name;
     `;
@@ -847,9 +862,13 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
   const { error, value } = getAppraisalListValidator.validate({
     ...req.query,
     employee_id: res.locals.employee_id,
+    role: res.locals.role,
   });
   if (error) throw new ErrorHandler(400, error.message);
 
+
+
+  // value.type -> "own", "others"
   if (value.type === "own") {
     const { rows } = await pool.query(
       `
@@ -893,6 +912,37 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
   //   `,
   //   [appraisalID]
   // )
+
+  if (
+    (value.type === "Admin" || value.type === "Hr") &&
+    (value.role === "Admin" || value.role === "Hr")
+  ) {
+    const { rows } = await pool.query(
+      `
+       SELECT
+        a.appraisal_id,
+        a.created_at,
+        a.employee_id AS appraisal_of_employee_id,
+        e.name AS appraisal_of,
+        e.profile_image,
+        e.email_address
+       FROM appraisal_and_employee aae
+  
+       LEFT JOIN appraisal AS a
+       ON a.appraisal_id = aae.appraisal_id
+  
+       LEFT JOIN employee AS e
+       ON e.id = a.employee_id
+
+       ${value.institute ? "WHERE e.institute = $1" : ""}
+
+       GROUP BY e.id, a.appraisal_id
+      `,
+      value.institute ? [value.institute] : []
+    );
+
+    return res.status(200).json(new ApiResponse(200, "Other Appraisals", rows));
+  }
 
   const { rows } = await pool.query(
     `
@@ -1121,10 +1171,19 @@ export const updateAssetReturnDate = asyncErrorHandler(async (req, res) => {
 });
 
 export const searchEmployeeName = asyncErrorHandler(async (req, res) => {
+  const { LIMIT, OFFSET } = parsePagination(req, req.query.limit as any);
+  const institute = req.query.institute || "Kolkata";
+
   const { rows } = await pool.query(
-    `SELECT name, id, employee_type FROM employee WHERE name ILIKE '%' || $1 || '%' LIMIT $2`,
-    [req.query.q, req.query.limit || 10]
+    `SELECT 
+        name, 
+        id, 
+        employee_type 
+     FROM employee WHERE name ILIKE '%' || $1 || '%' AND institute = $2
+     LIMIT ${LIMIT} OFFSET ${OFFSET}
+     `,
+    [req.query.q, institute]
   );
 
-  res.status(200).json(rows);
+  res.status(200).json(new ApiResponse(200, "", rows));
 });

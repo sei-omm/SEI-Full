@@ -119,7 +119,7 @@ export default function PhysicalLibraryBooks() {
 
   return (
     <>
-      <AddMultiBookForm />
+      <AddMultiBookForm bookList={bookList?.data || []}/>
 
       <div className="space-y-5">
         <SearchInput

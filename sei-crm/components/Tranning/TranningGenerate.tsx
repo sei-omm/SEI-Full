@@ -9,8 +9,9 @@ import DropDown from "../DropDown";
 import Button from "../Button";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { useDispatch } from "react-redux";
-import { EmployeeType, TInputSuggestion } from "@/types";
+import { EmployeeType, ISuccess, TInputSuggestion } from "@/types";
 import Input from "../Input";
+import { useSearchParams } from "next/navigation";
 
 type TSearch = {
   name: string;
@@ -25,17 +26,20 @@ export default function TranningGenerate() {
   const [loading, setLoading] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] =
     useState<TInputSuggestion | null>(null);
+  const searchParams = useSearchParams();
 
   const dispatch = useDispatch();
 
   const searchName = async (searchTerm: string) => {
     try {
       setLoading(true);
-      const { data } = await axios.get<TSearch[]>(
-        `${BASE_API}/employee/search?q=${searchTerm}`
+      const { data } = await axios.get<ISuccess<TSearch[]>>(
+        `${BASE_API}/employee/search?q=${searchTerm}&institute=${
+          searchParams.get("institute") || "Kolkata"
+        }`
       );
-      setSearchResult(data);
-      setReslts(data);
+      setSearchResult(data.data);
+      setReslts(data.data);
     } catch (error) {
       const err = error as AxiosError;
       toast.error(err.message);
@@ -49,7 +53,7 @@ export default function TranningGenerate() {
     _.debounce((searchTerm) => {
       searchName(searchTerm);
     }, 500), // 500ms delay
-    []
+    [searchParams.toString()]
   );
 
   useEffect(() => {
@@ -82,6 +86,20 @@ export default function TranningGenerate() {
         Generate Training Form
       </h2>
       <form action={handleFormAction} className="gap-3 flex items-end">
+        <DropDown
+          changeSearchParamsOnChange
+          onChange={() => {
+            setSearchResult([]);
+            setReslts([]);
+          }}
+          name="institute"
+          label="Campus"
+          options={[
+            { text: "Kolkata", value: "Kolkata" },
+            { text: "Faridabad", value: "Faridabad" },
+          ]}
+          defaultValue={searchParams.get("institute") || "Kolkata"}
+        />
         <Input
           required
           wrapperCss="flex-grow"

@@ -15,6 +15,8 @@ import {
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { beautifyDate } from "../utils/beautifyDate";
 import { TIME_PERIOD } from "../constant";
+import { bookListReportV } from "../validator/library.validator";
+import { pmsReportV } from "../validator/inventory.validator";
 
 export const streamMaintenceRecordExcelReport = asyncErrorHandler(
   async (req, res) => {
@@ -117,7 +119,7 @@ export const streamMaintenceRecordExcelReport = asyncErrorHandler(
       `
     SELECT
       row_number() OVER () AS sr_no,
-      iii.item_name,
+      COALESCE(iii.item_name, mr.custom_item) AS item_name,
       mr.maintence_date,
       mr.work_station,
       mr.description_of_work,
@@ -129,6 +131,7 @@ export const streamMaintenceRecordExcelReport = asyncErrorHandler(
       mr.completed_date,
       mr.remark
     FROM maintence_record AS mr
+
     LEFT JOIN inventory_item_info AS iii
     ON iii.item_id = mr.item_id
 
@@ -1872,7 +1875,7 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
   });
   const worksheet = workbook.addWorksheet("Inventory Report");
 
-  worksheet.mergeCells("A1:E1");
+  worksheet.mergeCells("A1:G1");
   worksheet.getCell("A1").value = `Inventory Report (${
     value.institute
   }) ${beautifyDate(value.from_date)} - ${beautifyDate(value.to_date)}`;
@@ -1897,6 +1900,8 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
     "DATE",
     "ITEM NAME",
     "MINIMUM STOCK",
+    "OPENING STOCK",
+    "CLOSING STOCK",
     "SUPPLIER",
   ]);
 
@@ -1931,6 +1936,8 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
         isi.purchase_date,
         iii.item_name,
         iii.minimum_quantity,
+        iii.opening_stock,
+        iii.closing_stock,
         v.vendor_name,
 		    JSON_AGG(isi.*) AS added_stock_info,
         JSON_AGG(iic.*) AS consume_stock_info
@@ -1964,6 +1971,8 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
       data.purchase_date,
       data.item_name,
       data.minimum_quantity,
+      data.opening_stock,
+      data.closing_stock,
       data.vendor_name,
     ]);
 
@@ -2192,6 +2201,269 @@ export const stramTimeTableReport = asyncErrorHandler(async (req, res) => {
     excelRow.eachCell((cell) => {
       cell.style = {
         font: { size: 18, bold: true },
+        alignment: { horizontal: "center" },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+  });
+
+  pgStream.on("end", () => {
+    workbook.commit();
+    client.release(); // Release the client when done
+  });
+
+  pgStream.on("error", (err) => {
+    client.release();
+  });
+});
+
+export const stramPhyLibBookReport = asyncErrorHandler(async (req, res) => {
+  const { error } = bookListReportV.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { book_name, institute } = req.query;
+
+  // Set response headers for streaming
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="Physical_Library_Book_Report.xlsx"'
+  );
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+    stream: res,
+    useStyles: true,
+  });
+  const worksheet = workbook.addWorksheet("Physical Library Book Report");
+
+  worksheet.mergeCells("A1:E1");
+  worksheet.getCell("A1").value = `Physical Library Book Report (${institute})`;
+  worksheet.getCell("A1").font = {
+    size: 20,
+    bold: true,
+    color: { argb: "000000" },
+  };
+  worksheet.getCell("A1").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFF00" },
+  };
+  worksheet.getRow(1).height = 30;
+  worksheet.getCell("A1").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+
+  worksheet.addRow(["BOOKS NAME", "EDITION/VOL", "AUTHOR", "ROW NO.", "SHELF"]);
+
+  // Row styling (header row)
+  worksheet.getRow(2).eachCell((cell) => {
+    cell.style = {
+      font: {
+        bold: true,
+        size: 12,
+        color: { argb: "000000" },
+      },
+      alignment: { horizontal: "center", vertical: "middle" },
+      fill: {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F4A460" },
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+  });
+
+  let filter = "WHERE";
+  const filterValues: any[] = [];
+  let placeholdernum = 1;
+
+  if (book_name) {
+    filter += ` book_name ILIKE '%' || $${placeholdernum} || '%'`;
+    filterValues.push(book_name);
+    placeholdernum++;
+  }
+
+  if (institute) {
+    if (filter === "WHERE") {
+      filter += ` institute = $${placeholdernum}`;
+    } else {
+      filter += ` AND institute = $${placeholdernum}`;
+    }
+    placeholdernum++;
+    filterValues.push(institute);
+  }
+
+  if (filter === "WHERE") {
+    filter = "";
+  }
+
+  const client = await pool.connect();
+  const query = new QueryStream(
+    `
+      SELECT book_name, edition, author, row_number, shelf FROM phy_lib_books
+      ${filter}
+      ORDER BY phy_lib_books DESC`,
+    filterValues,
+    {
+      batchSize: 10,
+    }
+  );
+
+  const pgStream = client.query(query);
+
+  // Process PostgreSQL stream data and append to Excel sheet
+  pgStream.on("data", (data) => {
+    const excelRow = worksheet.addRow(Object.values(data));
+    // Style the data rows
+    excelRow.eachCell((cell) => {
+      cell.style = {
+        font: { size: 11 },
+        alignment: { horizontal: "center" },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+  });
+
+  pgStream.on("end", () => {
+    workbook.commit();
+    client.release(); // Release the client when done
+  });
+
+  pgStream.on("error", (err) => {
+    client.release();
+  });
+});
+
+export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
+  const { error, value } = pmsReportV.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  // Set response headers for streaming
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="PMS_Report.xlsx"'
+  );
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+    stream: res,
+    useStyles: true,
+  });
+  const worksheet = workbook.addWorksheet("Pms Report");
+
+  worksheet.mergeCells("A1:G1");
+  worksheet.getCell("A1").value = `PMS Report (${value.institute})`;
+  worksheet.getCell("A1").font = {
+    size: 20,
+    bold: true,
+    color: { argb: "000000" },
+  };
+  worksheet.getCell("A1").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFF00" },
+  };
+  worksheet.getRow(1).height = 30;
+  worksheet.getCell("A1").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+
+  worksheet.addRow([
+    "SR NUMBER",
+    "ITEM NAME",
+    "CHECKS / MAINTENANCE REQUIRED",
+    "FREQUENCY",
+    "LAST DONE DATE",
+    "NEXT DUE DATE",
+    "REMARK"
+  ]);
+
+  // Row styling (header row)
+  worksheet.getRow(2).eachCell((cell) => {
+    cell.style = {
+      font: {
+        bold: true,
+        size: 12,
+        color: { argb: "000000" },
+      },
+      alignment: { horizontal: "center", vertical: "middle" },
+      fill: {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F4A460" },
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+  });
+
+  const client = await pool.connect();
+  const query = new QueryStream(
+    `
+    SELECT
+      row_number() OVER () AS sr_no,
+      COALESCE(iii.item_name, pms.custom_item) as item_name,
+      ph.*
+    FROM planned_maintenance_system pms
+
+    LEFT JOIN inventory_item_info iii
+    ON iii.item_id = pms.item_id
+
+    INNER JOIN pms_history ph
+    ON ph.planned_maintenance_system_id = pms.planned_maintenance_system_id
+
+    WHERE ph.last_done BETWEEN $1 AND $2 AND pms.institute = $3
+    `,
+    [value.from_date, value.to_date, value.institute],
+    {
+      batchSize: 10,
+    }
+  );
+
+  const pgStream = client.query(query);
+
+  // Process PostgreSQL stream data and append to Excel sheet
+  pgStream.on("data", (data) => {
+    const excelRow = worksheet.addRow([
+      data.sr_no,
+      data.item_name,
+      data.description,
+      data.frequency,
+      beautifyDate(data.last_done),
+      beautifyDate(data.next_due),
+      data.remark
+    ]);
+    // Style the data rows
+    excelRow.eachCell((cell) => {
+      cell.style = {
+        font: { size: 11 },
         alignment: { horizontal: "center" },
         border: {
           top: { style: "thin" },

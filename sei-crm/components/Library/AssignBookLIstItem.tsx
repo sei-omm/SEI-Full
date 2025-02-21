@@ -4,7 +4,7 @@ import { AiOutlineDelete } from "react-icons/ai";
 import { BASE_API } from "@/app/constant";
 import axios from "axios";
 import { useQuery } from "react-query";
-import { Books, ISuccess } from "@/types";
+import { Books, ISuccess, TBookIssueTo } from "@/types";
 import _ from "lodash";
 import DropDown from "../DropDown";
 
@@ -25,6 +25,7 @@ interface IProps {
   required: boolean;
   onBookAndCourseSelect: (book_id: number, course_id: number) => void;
   courses: Course[];
+  assignTo: TBookIssueTo;
 }
 
 export default function AssignBookListItem({
@@ -33,6 +34,7 @@ export default function AssignBookListItem({
   required,
   onBookAndCourseSelect,
   courses,
+  assignTo,
 }: IProps) {
   const [bookSuggestions, setBookSuggestions] = useState<Books[]>([]);
   const [bookNameQuery, setBookNameQuery] = useState<string | null>(null);
@@ -75,7 +77,10 @@ export default function AssignBookListItem({
           onSuggestionItemClick={(option) => {
             setCurrentBookId(option.value);
             setBookSuggestions([]);
-            onBookAndCourseSelect(option.value, currentCourse || courses[0]?.course_id);
+            onBookAndCourseSelect(
+              option.value,
+              currentCourse || courses[0]?.course_id
+            );
           }}
           onClickOutSide={() => {
             setBookSuggestions([]);
@@ -83,20 +88,22 @@ export default function AssignBookListItem({
         />
       </div>
 
-      <div className="flex-grow">
-        <DropDown
-          onChange={(item) => {
-            setCurrentCourse(item.value);
-            onBookAndCourseSelect(currentBookId, item.value);
-          }}
-          label="Choose Course"
-          options={courses.map((course) => ({
-            text: course.course_name,
-            value: course.course_id,
-          }))}
-          defaultValue={courses[0]?.course_id}
-        />
-      </div>
+      {assignTo === "Student" && (
+        <div className="flex-grow">
+          <DropDown
+            onChange={(item) => {
+              setCurrentCourse(item.value);
+              onBookAndCourseSelect(currentBookId, item.value);
+            }}
+            label="Choose Course"
+            options={courses.map((course) => ({
+              text: course.course_name,
+              value: course.course_id,
+            }))}
+            defaultValue={courses[0]?.course_id}
+          />
+        </div>
+      )}
 
       <AiOutlineDelete
         onClick={onDeleteBtnClick}

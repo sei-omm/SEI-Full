@@ -7,7 +7,7 @@ import {
   getSingleLibraryValidator,
   insertLibraryItemValidator,
   insertPhysicalLibraryValidator,
-  issueBookToStudentValidator,
+  issueBookValidator,
   returnBookToLibraryBulkV,
   returnBookToLibraryValidator,
   updateLibraryItemValidator,
@@ -618,19 +618,20 @@ export const updatePhyLibBooks = asyncErrorHandler(async (req, res) => {
 });
 
 export const issueBooksToStudent = asyncErrorHandler(async (req, res) => {
-  const { error, value } = issueBookToStudentValidator.validate(req.body);
+  const { error, value } = issueBookValidator.validate(req.body);
   if (error) throw new ErrorHandler(400, error.message);
 
   await pool.query(
     `
     INSERT INTO 
-        phy_lib_book_issue (student_id, course_id, phy_lib_book_id, issue_date, institute)
+        phy_lib_book_issue (student_id, employee_id, course_id, phy_lib_book_id, issue_date, institute)
     VALUES
-        ${sqlPlaceholderCreator(5, value.info.length).placeholder}
+        ${sqlPlaceholderCreator(6, value.info.length).placeholder}
     `,
     value.info.flatMap((item: any) => [
-      value.student_id,
-      item.course_id,
+      value.student_id || null,
+      value.employee_id || null,
+      item.course_id || null,
       item.phy_lib_book_id,
       value.issue_date,
       value.institute,
@@ -639,7 +640,7 @@ export const issueBooksToStudent = asyncErrorHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, "Books Successfully Issued to Student"));
+    .json(new ApiResponse(200, "Books Successfully Issued"));
 });
 
 export const returnBookBulk = asyncErrorHandler(async (req, res) => {
@@ -719,6 +720,7 @@ export const getBookIssueList = asyncErrorHandler(async (req, res) => {
   const filterValues: string[] = [];
   let placeholdernum = 1;
 
+  //these are for filtering -- START
   if (institute) {
     filter += ` plbi.institute = $${placeholdernum}`;
     placeholdernum++;
@@ -739,27 +741,49 @@ export const getBookIssueList = asyncErrorHandler(async (req, res) => {
     filterValues.push(from_date as string);
     filterValues.push(to_date as string);
   }
+  //these are for filtering -- END
 
-  if (search_by && search_keyword && search_by === "indos_number") {
+  //these are for searching -- START
+  if (search_by && search_keyword && search_by === "indos_number" && institute) {
     placeholdernum = 1;
     filterValues.length = 0;
-    filter = `WHERE s.indos_number = $${placeholdernum}`;
+    filter = `WHERE s.indos_number = $${placeholdernum} AND plbi.institute = $${placeholdernum + 1}`;
     filterValues.push(search_keyword as string);
+    filterValues.push(institute as string);
   }
 
-  if (search_by && search_keyword && search_by === "course_name") {
+  if (search_by && search_keyword && search_by === "course_name" && institute) {
     placeholdernum = 1;
     filterValues.length = 0;
-    filter = `WHERE c.course_name ILIKE '%' || $${placeholdernum} || '%'`;
+    filter = `WHERE c.course_name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${placeholdernum + 1}`;
     filterValues.push(search_keyword as string);
+    filterValues.push(institute as string);
   }
 
-  if (search_by && search_keyword && search_by === "student_name") {
+  if (search_by && search_keyword && search_by === "student_name" && institute) {
     placeholdernum = 1;
     filterValues.length = 0;
-    filter = `WHERE s.name ILIKE '%' || $${placeholdernum} || '%'`;
+    filter = `WHERE s.name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${placeholdernum + 1}`;
     filterValues.push(search_keyword as string);
+    filterValues.push(institute as string);
   }
+
+  if (search_by && search_keyword && search_by === "faculty_name" && institute) {
+    placeholdernum = 1;
+    filterValues.length = 0;
+    filter = `WHERE e.name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${placeholdernum + 1}`;
+    filterValues.push(search_keyword as string);
+    filterValues.push(institute as string);
+  }
+
+  if (search_by && search_keyword && search_by === "book_name" && institute) {
+    placeholdernum = 1;
+    filterValues.length = 0;
+    filter = `WHERE plb.book_name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${placeholdernum + 1}`;
+    filterValues.push(search_keyword as string);
+    filterValues.push(institute as string);
+  }
+  //these are for searching -- END
 
   if (filter === "WHERE") filter = "";
 
@@ -768,7 +792,7 @@ export const getBookIssueList = asyncErrorHandler(async (req, res) => {
     `
     SELECT
       plbi.phy_lib_book_issue_id,
-      s.name AS student_name,
+      COALESCE(s.name, e.name) AS student_name,
       s.indos_number,
       c.course_name,
       plb.book_name,
@@ -782,6 +806,9 @@ export const getBookIssueList = asyncErrorHandler(async (req, res) => {
 
     LEFT JOIN courses c
     ON c.course_id = plbi.course_id
+
+    LEFT JOIN employee e
+    ON e.id = plbi.employee_id
 
     LEFT JOIN phy_lib_books plb
     ON plb.phy_lib_book_id = plbi.phy_lib_book_id

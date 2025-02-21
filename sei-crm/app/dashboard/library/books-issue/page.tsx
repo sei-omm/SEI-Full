@@ -27,7 +27,9 @@ async function getIssueBookList(searchParams: ReadonlyURLSearchParams) {
   return (
     await axios.get(
       `${BASE_API}/library/physical/books/issue?${
-        searchParams.toString() === "" ? "institute=Kolkata" : searchParams.toString()
+        searchParams.toString() === ""
+          ? "institute=Kolkata"
+          : searchParams.toString()
       }`
     )
   ).data;
@@ -62,11 +64,13 @@ export default function BooksIssue() {
 
   const [updateInfo, setUpdateInfo] = useState<TUpdateInfo[]>([]);
   const [searchBy, setSearchBy] = useState<TSearchBy>("indos_number");
+  const [campus, setCampus] = useState(searchParams.get("institute") || "Kolkata");
   const route = useRouter();
 
   const [issueBookTable, setIssueBookTable] = useState<TTable>({
     head: [
-      "Candidate name",
+      // "Candidate name",
+      "Issued To",
       "INDOS No.",
       "Course Name",
       "Books Name",
@@ -90,8 +94,8 @@ export default function BooksIssue() {
         ...preState,
         body: data.data.map((item) => [
           item.student_name,
-          item.indos_number,
-          item.course_name,
+          item.indos_number || "N/A",
+          item.course_name || "N/A",
           item.book_name,
           item.edition,
           beautifyDate(item.issue_date),
@@ -127,7 +131,7 @@ export default function BooksIssue() {
   return (
     <div className="space-y-4">
       <Button
-        className="fixed bottom-5 right-20 flex items-center gap-3"
+        className="fixed bottom-5 right-20 flex items-center gap-3 z-50"
         onClick={() => {
           dispatch(
             setDialog({ type: "OPEN", dialogId: "issue-book-to-student" })
@@ -142,19 +146,37 @@ export default function BooksIssue() {
 
       <div className="flex items-center gap-2">
         <DropDown
+          name="institute"
+          label=""
+          options={[
+            { text: "Kolkata", value: "Kolkata" },
+            { text: "Faridabad", value: "Faridabad" },
+          ]}
+          defaultValue={searchParams.get("institute") || campus}
+          onChange={(option) => setCampus(option.value)}
+        />
+        <DropDown
           label=""
           options={[
             {
-              text: "Indos Number",
-              value: "indos_number",
+              text: "Faculty Name",
+              value: "faculty_name",
+            },
+            {
+              text: "Student Name",
+              value: "student_name",
+            },
+            {
+              text: "Book Name",
+              value: "book_name",
             },
             {
               text: "Course Name",
               value: "course_name",
             },
             {
-              text: "Student Name",
-              value: "student_name",
+              text: "Indos Number",
+              value: "indos_number",
             },
           ]}
           onChange={(option) => setSearchBy(option.value)}
@@ -164,9 +186,10 @@ export default function BooksIssue() {
           placeHolder={`Search by ${searchBy.replaceAll("_", " ")}`}
           search_key="search_keyword"
           handleSearch={(keyword) => {
-            const urlSearchParams = new URLSearchParams(searchParams);
+            const urlSearchParams = new URLSearchParams();
             urlSearchParams.set("search_by", searchBy);
             urlSearchParams.set("search_keyword", keyword);
+            urlSearchParams.set("institute", campus);
             route.push(
               `/dashboard/library/books-issue?${urlSearchParams.toString()}`
             );

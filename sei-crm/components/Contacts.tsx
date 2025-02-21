@@ -146,7 +146,7 @@ export default async function Contacts({ searchParams }: IProps) {
           </table>
         </div>
       </section>
-      <Pagination />
+      <Pagination dataLength={result?.data?.length}/>
     </>
   );
 }

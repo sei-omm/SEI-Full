@@ -171,11 +171,6 @@ export default function TimeTable() {
     //   formData: datasToStore,
     // });
 
-    formData.forEach((value, key) => {
-      console.log(key, value)
-    })
-    return;
-
     if (!confirm("Once Saved You can't edit it latter. Are you sure?")) return;
 
     const userInput = prompt(`Type "Yes" If You Want To Save It In Database`);

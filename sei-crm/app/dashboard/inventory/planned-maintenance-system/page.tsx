@@ -193,12 +193,6 @@ export default function PlannedMaintenanceSystem() {
                       >
                         {value === "actionBtn" ? (
                           <div className="flex items-center gap-3">
-                            {/* <Link
-                              className="active:scale-90"
-                              href={`/dashboard/inventory/planned-maintenance-system/${data?.data[rowIndex].planned_maintenance_system_id}`}
-                            >
-                              <CiEdit className="cursor-pointer" size={18} />
-                            </Link> */}
                             <MdOutlineHistory
                               onClick={() =>
                                 dispatch(

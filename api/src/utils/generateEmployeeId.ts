@@ -1,4 +1,4 @@
-export const generateEmployeeId = (isoDate : string, institute : string, dbID : number) => {
+export const generateEmployeeId = (isoDate : string, institute : string, dbID : string) => {
   const dateObj = new Date(isoDate);
 
   // Extract month, day, and year

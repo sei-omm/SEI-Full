@@ -278,6 +278,21 @@ export const completeTranning = asyncErrorHandler(async (req, res) => {
 
 export const getTranningHistoryList = asyncErrorHandler(async (req, res) => {
   const { LIMIT, OFFSET } = parsePagination(req);
+
+  const institute = req.query.institute;
+
+  let filter = "WHERE";
+  const filterValues : string[] = [];
+  let placeholderNum = 1;
+
+  if(institute) {
+    filter += ` e.institute = $${placeholderNum}`;
+    filterValues.push(institute as string);
+    placeholderNum++;
+  }
+
+  if(filter === "WHERE") filter = "";
+
   const { rows } = await pool.query(
     `
     SELECT 
@@ -294,10 +309,13 @@ export const getTranningHistoryList = asyncErrorHandler(async (req, res) => {
       tranning_requirement tr 
       LEFT JOIN employee e ON e.id = tr.employee_id
 
+     ${filter}
+
     ORDER BY tr.record_id DESC
 
     LIMIT ${LIMIT} OFFSET ${OFFSET}
-    `
+    `,
+    filterValues
   );
 
   res.status(200).json(new ApiResponse(200, "Tranning History List", rows));

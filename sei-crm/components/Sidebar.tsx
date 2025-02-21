@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
-import { RiRefundLine, RiSettings3Line } from "react-icons/ri";
+import { RiRefundLine } from "react-icons/ri";
 import {
   MdAddTask,
   MdOutlineAddBox,
@@ -32,6 +32,7 @@ import {
 import { GrHostMaintenance, GrVend } from "react-icons/gr";
 import { BsReverseLayoutTextSidebarReverse } from "react-icons/bs";
 import { LiaAddressBookSolid, LiaSwatchbookSolid } from "react-icons/lia";
+import { IoMdSpeedometer } from "react-icons/io";
 
 const sidebarOptions = [
   {
@@ -89,17 +90,17 @@ const sidebarOptions = [
         slug: "/dashboard/hr-module/holiday-management",
       },
       {
+        id: "1-9",
+        icon: <IoMdSpeedometer />,
+        name: "APR Management",
+        slug: "/dashboard/hr-module/performance-management",
+      },
+      {
         id: "1-10",
         icon: <MdAddTask />,
         name: "Tranning Requirement",
         slug: "/dashboard/hr-module/tranning-requirement",
       },
-      // {
-      //   id: "1-9",
-      //   icon: <IoMdSpeedometer />,
-      //   name: "Performance Management",
-      //   slug: "/dashboard/hr-module/performance-management",
-      // },
     ],
   },
 
@@ -228,13 +229,13 @@ const sidebarOptions = [
     subMenu: [
       {
         id: "4-1",
-        icon: <LiaAddressBookSolid size={16}/>,
+        icon: <LiaAddressBookSolid size={16} />,
         name: "Books Issue Report",
         slug: "/dashboard/library/books-issue",
       },
       {
         id: "4-1",
-        icon: <LiaSwatchbookSolid size={16}/>,
+        icon: <LiaSwatchbookSolid size={16} />,
         name: "Physical Library Books",
         slug: "/dashboard/library/phy-books",
       },
@@ -313,27 +314,34 @@ const sidebarOptions = [
         slug: "/dashboard/report/inventory",
       },
       {
+        id: "5-11",
+        icon: <TbReportSearch />,
+        name: "Pms Report",
+        slug: "/dashboard/report/pms",
+      },
+      {
         id: "5-10",
         icon: <TbReportSearch />,
         name: "Time Table Report",
         slug: "/time-table/report",
       },
+      
     ],
   },
-  {
-    id: 6,
-    icon: null,
-    name: "Settings Management",
-    slug: "#",
-    subMenu: [
-      {
-        id: "6-1",
-        icon: <RiSettings3Line />,
-        name: "Settings",
-        slug: "/dashboard/settings/company-details",
-      },
-    ],
-  },
+  // {
+  //   id: 6,
+  //   icon: null,
+  //   name: "Settings Management",
+  //   slug: "#",
+  //   subMenu: [
+  //     {
+  //       id: "6-1",
+  //       icon: <RiSettings3Line />,
+  //       name: "Settings",
+  //       slug: "/dashboard/settings/company-details",
+  //     },
+  //   ],
+  // },
 ];
 
 //selected item color #E4E6E9

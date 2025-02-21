@@ -31,6 +31,7 @@ import { transaction } from "../utils/transaction";
 import { filterToSql } from "../utils/filterToSql";
 import { tryCatch } from "../utils/tryCatch";
 import { parsePagination } from "../utils/parsePagination";
+import { hasOverlappingBatchDate } from "../utils/hasOverlappingBatchDate";
 
 const table_name = "courses";
 
@@ -752,28 +753,82 @@ export const enrollToBatch = asyncErrorHandler(
     //   batchIds
     // );
 
+    // const { rows, rowCount } = await client.query(
+    //   `SELECT
+    //       STRING_AGG(course_id::TEXT, ',') as course_ids,
+    //       SUM(batch_fee) AS total_price,
+    //       CAST(SUM(batch_fee * (min_pay_percentage / 100.0)) AS INT) AS minimum_to_pay
+    //    FROM course_batches WHERE batch_id IN (${paramsSql})
+    //    `,
+    //   batchIds
+    // );
+
+    // const { rows, rowCount } = await pool.query(
+    //   `
+    //   WITH course_totals AS (
+    //     SELECT
+    //         start_date,
+    //         end_date,
+    //         course_id,
+    //         SUM(batch_fee) AS total_price_per_course,
+    //         CAST(SUM(batch_fee * (min_pay_percentage / 100.0)) AS INT) AS minimum_to_pay_per_course
+    //     FROM course_batches
+    //     WHERE batch_id IN (65, 66)
+    //     GROUP BY start_date, end_date, course_id
+    //    )
+    //     SELECT
+    //         course_id,
+    //         start_date,
+    //         end_date,
+    //         SUM(total_price_per_course) OVER () AS total_price,
+    //         SUM(minimum_to_pay_per_course) OVER () AS minimum_to_pay
+    //     FROM course_totals;
+    //   `
+    // )
+
     const { rows, rowCount } = await pool.query(
-      `SELECT
-          STRING_AGG(course_id::TEXT, ',') as course_ids,
+      `
+        SELECT
+          course_id,
+          start_date,
+          end_date,
           SUM(batch_fee) AS total_price,
           CAST(SUM(batch_fee * (min_pay_percentage / 100.0)) AS INT) AS minimum_to_pay
-       FROM course_batches WHERE batch_id IN (${paramsSql})
-       `,
+        FROM course_batches WHERE batch_id IN (${paramsSql})
+
+        GROUP BY course_id, start_date, end_date
+        `,
       batchIds
     );
 
     if (rowCount === 0) throw new ErrorHandler(404, "Course Doesn't found");
 
+    if(hasOverlappingBatchDate(rows)) {
+      throw new ErrorHandler(400, "You have selected two courses with the same date please delete one of them.")
+    }
+
+    const tokenInfo = {
+      course_ids: "",
+      total_price: 0,
+      minimum_to_pay: 0,
+    };
+
+    rows.forEach((item, index) => {
+      tokenInfo.course_ids += index === 0 ? "" : "," + item.course_id;
+      tokenInfo.total_price += parseFloat(item.total_price);
+      tokenInfo.minimum_to_pay += parseFloat(item.total_price);
+    });
+
     //create new order and send back to client side
     const { id, amount } = await createOrder(
       payment_type === "Part-Payment"
-        ? rows[0].minimum_to_pay * 100
-        : rows[0].total_price * 100
+        ? tokenInfo.minimum_to_pay * 100
+        : tokenInfo.total_price * 100
     );
 
     const token_key = createToken(
       {
-        ...rows[0],
+        ...tokenInfo,
         batch_ids: req.query.batch_ids,
         student_id: req.query.student_id, //it could undefined
         payment_type,
@@ -783,7 +838,7 @@ export const enrollToBatch = asyncErrorHandler(
     );
 
     res.status(201).json(
-      new ApiResponse(201, "Order id is created", {
+      new ApiResponse(201, "Order id has created", {
         order_id: id,
         amount,
         razorpay_key: process.env.RAZORPAY_KEY_ID,
@@ -1168,7 +1223,7 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
         `,
       [value.institute, value.date]
     );
-    
+
     const outputs = rows as InfoType[];
     // return res.json(outputs)
 
@@ -1183,7 +1238,7 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
     // 2 -> then assign others resurved faculty to the list if related to the course 0(n)3
     outputs.forEach((output, index) => {
       const course_subjects = output.subjects.split(",");
-  
+
       const time_table: TTimeTable = {
         course_id: output.course_id,
         course_name: output.course_name,
@@ -1192,17 +1247,17 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
         faculty: [],
         subject_with_faculty: [],
       };
-  
+
       // loop through every subject
       course_subjects.forEach((subject, subject_index) => {
         // loop through every faculty_details
         //  check is inside faculty assign subject current subject include of not
-  
+
         time_table.subject_with_faculty.push({
           subject_name: subject,
           faculty: [],
         });
-  
+
         for (let i = 0; i < output.faculty_details.length; i++) {
           const faculty = output.faculty_details[i];
 
@@ -1214,7 +1269,7 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
             const already_assign_faculty_info = already_assigned_faculty.get(
               faculty.faculty_id
             );
-  
+
             if (
               already_assign_faculty_info &&
               already_assign_faculty_info.fac_position > 0
@@ -1225,13 +1280,13 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
                 result[already_assign_faculty_info.par_index].faculty,
                 already_assign_faculty_info.fac_position
               );
-  
+
               time_table.subject_with_faculty[subject_index].faculty.push({
                 faculty_id: faculty.faculty_id,
                 faculty_name: faculty.faculty_name,
                 profile_image: faculty.profile_image,
               });
-  
+
               // then assign to current course at first position
               time_table.faculty.push({
                 for_subject_name: subject,
@@ -1240,7 +1295,7 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
                 profile_image: faculty.profile_image,
               });
             }
-  
+
             if (!already_assign_faculty_info) {
               time_table.faculty.push({
                 for_subject_name: subject,
@@ -1248,17 +1303,17 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
                 faculty_name: faculty.faculty_name,
                 profile_image: faculty.profile_image,
               });
-  
+
               time_table.subject_with_faculty[subject_index].faculty.push({
                 faculty_id: faculty.faculty_id,
                 faculty_name: faculty.faculty_name,
                 profile_image: faculty.profile_image,
               });
-  
+
               // let fac_position = 0;
               // const forSubject = new Map<string, string>();
               // time_table.faculty.forEach((tFaculty) => {
-                
+
               // })
 
               already_assigned_faculty.set(faculty.faculty_id, {
@@ -1270,7 +1325,7 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
           }
         }
       });
-  
+
       result.push(time_table);
     });
 

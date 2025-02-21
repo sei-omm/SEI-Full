@@ -14,7 +14,7 @@ import { Controller, useForm } from "react-hook-form";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import DateInputNew from "../FormInputs/DateInputNew";
 import InputNew from "../FormInputs/InputNew";
 import DropDownNew from "../FormInputs/DropDownNew";
@@ -42,6 +42,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function ManageCourseBatchDialog() {
   const { extraValue } = useSelector((state: RootState) => state.dialogs);
+  const [batchStartDate, setBatchStartDate] = useState("");
   const dispatch = useDispatch();
   const {
     btnType,
@@ -140,9 +141,13 @@ export default function ManageCourseBatchDialog() {
             date={start_date ? getDate(new Date(start_date)) : ""}
             viewOnlyText={start_date ? beautifyDate(start_date) : undefined}
             error={errors.start_date?.message}
+            onChange={(e) => {
+              setBatchStartDate(e.currentTarget.value)
+            }}
           />
           <DateInputNew
             {...register("end_date")}
+            min={batchStartDate}
             viewOnly={!isNewBatch}
             label="Batch End Date *"
             date={end_date ? getDate(new Date(end_date)) : ""}

@@ -21,6 +21,7 @@ import Cursor from "pg-cursor";
 import { Readable } from "node:stream";
 import { parsePagination } from "../utils/parsePagination";
 import { VTimeTable } from "../validator/course.validator";
+import { pmsReportV } from "../validator/inventory.validator";
 
 // const sqlForAdmissionReport = `
 //         SELECT
@@ -1519,6 +1520,8 @@ export const inventoryReport = asyncErrorHandler(async (req, res) => {
         iii.minimum_quantity,
         iii.vendor_id,
         v.vendor_name,
+        iii.opening_stock,
+        iii.closing_stock,
         STRING_AGG(isi.stock::TEXT, ' + ') AS added_stocks,
         STRING_AGG(isi.cost_per_unit::TEXT, ' + ') AS each_stock_cpu,
         STRING_AGG(isi.status, ' + ') AS stock_added_status,
@@ -1573,4 +1576,33 @@ export const generateTimeTableReport = asyncErrorHandler(async (req, res) => {
   );
 
   res.status(200).json(new ApiResponse(200, "Time Table Report", rows));
+});
+
+export const pmsReport = asyncErrorHandler(async (req, res) => {
+  const { error, value } = pmsReportV.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { LIMIT, OFFSET } = parsePagination(req);
+
+  const { rows } = await pool.query(
+    `
+    SELECT
+      COALESCE(iii.item_name, pms.custom_item) as item_name,
+      ph.*
+    FROM planned_maintenance_system pms
+
+    LEFT JOIN inventory_item_info iii
+    ON iii.item_id = pms.item_id
+
+    INNER JOIN pms_history ph
+    ON ph.planned_maintenance_system_id = pms.planned_maintenance_system_id
+
+    WHERE ph.last_done BETWEEN $1 AND $2 AND pms.institute = $3
+
+    LIMIT ${LIMIT} OFFSET ${OFFSET}
+    `,
+    [value.from_date, value.to_date, value.institute]
+  );
+
+  res.status(200).json(new ApiResponse(200, "", rows));
 });

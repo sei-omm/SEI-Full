@@ -102,7 +102,7 @@ export default function Appraisal({ type }: IProps) {
                         >
                           {type === "own"
                             ? item.status === "Pending"
-                              ? "Sended To : "
+                              ? "Sent To : "
                               : item.status === "Approved"
                               ? "Approved By : "
                               : "Rejected By : "

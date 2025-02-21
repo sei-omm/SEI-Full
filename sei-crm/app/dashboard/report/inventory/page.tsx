@@ -24,6 +24,8 @@ type TInventoryItem = {
   each_stock_total_value: string; // Total value of added stocks (as a string)
   consumed_stock: string; // Number of stocks consumed (as a string)
   consumed_stock_remark: string;
+  opening_stock : number;
+  closing_stock : number;
 };
 
 export default function InventoryReport() {
@@ -37,6 +39,8 @@ export default function InventoryReport() {
       "DATE",
       "ITEM NAME",
       "MINIMUM STOCK",
+      "OPENING STOCK",
+      "CLOSING STOCK",
       "SUPPLIER",
       "STOCKS ADDED",
       "EACH STOCK CPU",
@@ -71,6 +75,8 @@ export default function InventoryReport() {
           item.purchase_date,
           item.item_name,
           item.minimum_quantity,
+          item.opening_stock,
+          item.closing_stock,
           item.vendor_name,
           item.added_stocks,
           item.each_stock_cpu,
