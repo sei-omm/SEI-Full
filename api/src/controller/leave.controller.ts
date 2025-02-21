@@ -583,8 +583,6 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
 
     await client.query("COMMIT");
     client.release();
-  } catch (error) {
-    console.log(error);
   } catch (error : any) {
     await client.query("ROLLBACK");
     client.release();
