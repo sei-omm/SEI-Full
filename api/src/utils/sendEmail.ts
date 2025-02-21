@@ -81,3 +81,54 @@ export const sendEmail = async (
     }
   );
 };
+
+// import * as https from "https";
+// import ejs from "ejs";
+
+// const api = "https://api.github.com/repos/sei-omm/send_email/actions/workflows/email.yml/dispatches";
+// const options = {
+//     method: "POST",
+//     headers: {
+//         Accept: "application/vnd.github.v3+json",
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer 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`, // Use env variable
+//         "User-Agent": "MyApp/1.0" // Required by GitHub API
+//     }
+// };
+
+// export const sendEmail = async (
+//   to: string[] | string,
+//   type: string, // Changed `EmailType` to `string` if not defined
+//   templateData?: ejs.Data
+// ) => {
+//     const data = JSON.stringify({
+//         ref: "main",
+//         inputs: {
+//             to: Array.isArray(to) ? to.join(",") : to,
+//             email_type: type,
+//             data: JSON.stringify(templateData || {}) // Prevents `undefined`
+//         }
+//     });
+
+//     return new Promise((resolve, reject) => {
+//         const req = https.request(api, options, (res) => {
+//             let responseData = "";
+
+//             res.setEncoding("utf8");
+//             res.on("data", (chunk) => {
+//                 responseData += chunk;
+//             });
+
+//             res.on("end", () => {
+//                 resolve(responseData);
+//             });
+//         });
+
+//         req.on("error", (error) => {
+//             reject(error);
+//         });
+
+//         req.write(data);
+//         req.end();
+//     });
+// };

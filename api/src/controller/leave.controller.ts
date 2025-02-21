@@ -422,6 +422,87 @@ export const removeLeaveRequestRow = asyncErrorHandler(async (req, res) => {
 //   res.status(200).json(new ApiResponse(200, "Successfully Updated"));
 // });
 
+// export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
+//   const { rowCount } = await pool.query(`
+//     SELECT 1 
+//     FROM earned_leave_history 
+//     WHERE DATE_TRUNC('month', month) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+//     LIMIT 1
+//   `);
+
+//   if (rowCount !== 0)
+//     return res.status(200).json(new ApiResponse(200, "Have Already Done"));
+
+//   //i have to check has employee done 24 days contunius job or not if yes add 1 to existed_earned_leave
+
+//   //get all the employee_id  who have done 24 days contunius work (SKIP holiday, and employee_taken leave)
+
+//   const client = await pool.connect();
+
+//   try {
+//     await client.query("BEGIN");
+//     const { rows } = await client.query(
+//       `
+//         WITH current_month_days AS (
+//           SELECT DATE_PART('day', (DATE_TRUNC('month', NOW() - INTERVAL '1 month') + INTERVAL '1 month - 1 day')) AS total_days
+//         ),
+//         current_month_holiday AS (
+//           SELECT
+//             COUNT(holiday_id) as total_holiday_this_month,
+//             institute
+//           FROM holiday_management
+//           WHERE DATE_TRUNC('month', holiday_date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+
+//           GROUP BY institute
+//         )
+
+//         SELECT
+//           e.id AS employee_id,
+//           cmd.total_days AS total_month_days, 
+//           COUNT(a.id) as total_not_present,
+//           cmh.total_holiday_this_month,
+//           (cmd.total_days - COUNT(a.id) - cmh.total_holiday_this_month) AS total_present_days
+//         FROM employee_leave el
+
+//         LEFT JOIN employee e
+//         ON e.joining_date <= CURRENT_DATE - INTERVAL '1 year' AND e.id = el.employee_id
+
+//         LEFT JOIN attendance a
+//         ON a.employee_id = el.employee_id AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+
+//         CROSS JOIN current_month_days cmd
+//         LEFT JOIN current_month_holiday cmh
+//         ON cmh.institute = e.institute
+
+//         GROUP BY e.id, cmd.total_days, cmh.total_holiday_this_month
+
+//         HAVING 
+//             (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24
+//       `
+//     );
+
+//     // now update earn_leave value with +1
+//     const employeeIds = rows.map((item) => item.employee_id).join(",");
+//     await client.query(
+//       `UPDATE employee_leave SET el = el + 1 WHERE employee_id IN (${employeeIds})`
+//     );
+
+//     await client.query(
+//       `INSERT INTO earned_leave_history (month) VALUES (DATE_TRUNC('month', NOW() - INTERVAL '1 month'))`
+//     );
+
+//     await client.query("COMMIT");
+//     client.release();
+//   } catch (error: any) {
+//     console.log(error);
+//     await client.query("ROLLBACK");
+//     client.release();
+//     throw new ErrorHandler(400, error?.message);
+//   }
+
+//   res.status(200).json(new ApiResponse(200, "Successfully Updated"));
+// });
+
 export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
   const { rowCount } = await pool.query(`
     SELECT 1 
@@ -461,16 +542,34 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
         LEFT JOIN attendance a 
           ON a.employee_id = e.id 
           AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+          COUNT(a.id) AS total_not_present,
+          COALESCE(cmh.total_holiday_this_month, 0) AS total_holiday_this_month,
+          (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) AS total_present_days
+        FROM employee e
+        LEFT JOIN employee_leave el ON e.id = el.employee_id
+        LEFT JOIN attendance a 
+          ON a.employee_id = e.id 
+          AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
         CROSS JOIN current_month_days cmd
+        LEFT JOIN current_month_holiday cmh 
+          ON cmh.institute = e.institute
+        WHERE e.joining_date <= CURRENT_DATE - INTERVAL '1 year'
         LEFT JOIN current_month_holiday cmh 
           ON cmh.institute = e.institute
         WHERE e.joining_date <= CURRENT_DATE - INTERVAL '1 year'
         GROUP BY e.id, cmd.total_days, cmh.total_holiday_this_month
         HAVING (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24
+        HAVING (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24
       `
     );
 
     const employeeIds = rows.map((item) => item.employee_id).join(",");
+
+    if (employeeIds.length > 0) {
+      await client.query(
+        `UPDATE employee_leave SET el = el + 1 WHERE employee_id IN (${employeeIds})`
+      );
+    }
 
     if (employeeIds.length > 0) {
       await client.query(
@@ -484,6 +583,8 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
 
     await client.query("COMMIT");
     client.release();
+  } catch (error) {
+    console.log(error);
   } catch (error : any) {
     await client.query("ROLLBACK");
     client.release();
@@ -492,6 +593,7 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, "Successfully Updated"));
 });
+
 
 export const addLeaveValuesYearly = asyncErrorHandler(async (req, res) => {
   // await pool.query(
