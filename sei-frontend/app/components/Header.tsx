@@ -117,7 +117,7 @@ export default function Header() {
      const userSelectedCampus = localStorage.getItem("user-selected-institute");
      if(userSelectedCampus !== null) {
         const preState = [...nav_items];
-        preState[3].slug = `/our-courses/${userSelectedCampus}`;
+        preState[3].slug = `/our-courses/${userSelectedCampus.toLowerCase()}`;
         setNavItems(preState);
      }
   }, []);
