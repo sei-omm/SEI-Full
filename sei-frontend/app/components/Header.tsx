@@ -17,7 +17,49 @@ import { usePathname } from "next/navigation";
 import SpinnerSvg from "./SpinnerSvg";
 import { useDoLogout } from "../hooks/useDoLogout";
 
-const nav_items = [
+// const nav_items = [
+//   {
+//     name: "Home",
+//     slug: "/",
+//   },
+//   {
+//     name: "About Us",
+//     slug: "/about-us",
+//   },
+//   {
+//     name: "Centers",
+//     slug: "/our-centers",
+//   },
+//   {
+//     name: "Courses",
+//     slug: "/our-courses/kolkata",
+//   },
+//   {
+//     name: "Career",
+//     slug: "/career",
+//   },
+//   {
+//     name: "Contact Us",
+//     slug: "/contact-us",
+//   },
+//   {
+//     name: "Blogs",
+//     slug: "/blogs",
+//   },
+// ];
+
+//brightness-0 invert ->> for make any image form any color to white
+
+export default function Header() {
+  const [mobileNavVisibility, setMobileNevVisibility] = useState(false);
+  const [accountBtnClicked, setAccountBtnClicked] = useState(false);
+  const accountBtnRef = useRef<HTMLLIElement>(null);
+  const pathname = usePathname();
+  const { status: loginStatus } = useSelector(
+    (state: RootState) => state.loginStatus
+  );
+
+  const [nav_items, setNavItems] = useState([
   {
     name: "Home",
     slug: "/",
@@ -46,18 +88,7 @@ const nav_items = [
     name: "Blogs",
     slug: "/blogs",
   },
-];
-
-//brightness-0 invert ->> for make any image form any color to white
-
-export default function Header() {
-  const [mobileNavVisibility, setMobileNevVisibility] = useState(false);
-  const [accountBtnClicked, setAccountBtnClicked] = useState(false);
-  const accountBtnRef = useRef<HTMLLIElement>(null);
-  const pathname = usePathname();
-  const { status: loginStatus } = useSelector(
-    (state: RootState) => state.loginStatus
-  );
+])
 
   const { logout, isLogouting } = useDoLogout();
 
@@ -81,6 +112,15 @@ export default function Header() {
 
     return () => document.removeEventListener("click", checkClickOutside);
   }, [accountBtnClicked]);
+
+  useEffect(() => {
+     const userSelectedCampus = localStorage.getItem("user-selected-institute");
+     if(userSelectedCampus !== null) {
+        const preState = [...nav_items];
+        preState[3].slug = `/our-courses/${userSelectedCampus.toLowerCase()}`;
+        setNavItems(preState);
+     }
+  }, []);
 
   return (
     <div className="w-full h-[100px] flex justify-center flex-col">
