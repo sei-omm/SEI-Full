@@ -27,13 +27,15 @@ export default function SRegister() {
       dob: formData.get("dob"),
       password: formData.get("password"),
       indos_number: formData.get("indos_number"),
+      otp : "12345" // will remove
     };
 
     const { error, response } = await doQuery<
       IResponse<string>,
       IResponse<null>
     >({
-      url: BASE_API + "/student/register",
+      // url: BASE_API + "/student/register",
+      url: BASE_API + "/student/verify-otp",
       method: "POST",
       body: reqBody,
     });
@@ -43,8 +45,9 @@ export default function SRegister() {
     if (error != null) return toast.error(error.message);
 
     toast.success(response?.message);
-    localStorage.setItem("student-info", JSON.stringify(reqBody));
-    dispatch(setDialog({ type: "OPEN", dialogKey: "otp" }));
+    // localStorage.setItem("student-info", JSON.stringify(reqBody));
+    // dispatch(setDialog({ type: "OPEN", dialogKey: "otp" }));
+    dispatch(setDialog({ type: "OPEN", dialogKey: "student-login-dialog" }));
   };
 
   return (
@@ -109,7 +112,8 @@ export default function SRegister() {
           isLoading={isLoading}
           className="!text-foreground !py-2 !bg-[#e9b858] !mt-3 w-full !border !shadow-none !border-gray-600 hover:!bg-background"
         >
-          Verify And Register
+          {/* Verify And Register */}
+          Register
         </Button>
       </form>
       <OpenDialogButton

@@ -105,7 +105,8 @@ export default function PaymentInfoLayout({
 
         <span className="font-semibold">
           <LiaMoneyCheckSolid />
-          Total Paid : ₹{paymentsInfo?.total_paid}
+          {/* Total Paid : ₹{paymentsInfo?.total_paid} */}
+          Total Course Fees Paid : ₹{paymentsInfo?.total_paid}
         </span>
 
         <span className="font-semibold">
@@ -116,6 +117,16 @@ export default function PaymentInfoLayout({
         <span className="font-semibold">
           <LiaMoneyCheckSolid />
           Total Discount : ₹{paymentsInfo?.total_discount}
+        </span>
+
+        <span className="font-semibold">
+          <PiMoney />
+          Total Fees : ₹{paymentsInfo?.total_fees}
+        </span>
+
+        <span className="font-semibold">
+          <MdAvTimer />
+          Total Due Fees : ₹{paymentsInfo?.total_due_fees}
         </span>
       </div>
 
@@ -180,7 +191,7 @@ export default function PaymentInfoLayout({
                         >
                           {
                             <span className="line-clamp-1 inline-flex gap-x-3">
-                              {value === "actionBtn" ? (
+                              {value === "actionBtn" && paymentsInfo.payments[rowIndex].discount_amount <= 0 ? (
                                 <div className="flex-center gap-4">
                                   <Link
                                     href={`${BASE_API}/receipt/payment?form_id=${form_id}&student_id=${student_id}&payment_id=${paymentsInfo.payments[rowIndex].payment_id}`}
@@ -204,7 +215,7 @@ export default function PaymentInfoLayout({
                               ) : columnIndex === 2 ? (
                                 parseFloat(`${value}`)
                               ) : (
-                                value
+                                value === "actionBtn" ? "" : value
                               )}
                             </span>
                           }

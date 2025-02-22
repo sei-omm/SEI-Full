@@ -28,7 +28,7 @@ export default function SLogin() {
       apiPath: "/student/login",
       method: "post",
       formData,
-      onSuccess: async (response : IResponse<TLoginSuccess>) => {
+      onSuccess: async (response: IResponse<TLoginSuccess>) => {
         await setInfo("login-token", response.data.token as string);
         await setInfo("profile-image", response.data.profile_image as string);
         await setInfo("login-info", JSON.stringify(response.data));
@@ -54,11 +54,15 @@ export default function SLogin() {
       </div>
       <form onSubmit={onFormSubmit} className="space-y-2 pt-2">
         <Input
-          label="Email / Indos Number *"
+          // label="Email / Indos Number *"
+          label="Mobile Number *"
           name="email"
           required
           type="text"
-          placeholder="somnathgupta112@gmail.com"
+          pattern="^\d{10}$"
+          title="Please enter a 10-digit mobile number."
+          // placeholder="somnathgupta112@gmail.com"
+          placeholder="Enter Your 10-digit mobile number"
         />
         <Input
           label="Password *"

@@ -1,6 +1,5 @@
 import { pool } from "../config/db";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
-import { ApiResponse } from "../utils/ApiResponse";
 import { beautifyDate } from "../utils/beautifyDate";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { transaction } from "../utils/transaction";

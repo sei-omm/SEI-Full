@@ -157,19 +157,65 @@ export const registerStudent = asyncErrorHandler(
   }
 );
 
+// export const verifyOtp = asyncErrorHandler(
+//   async (req: Request, res: Response) => {
+//     const { error, value } = verifyOtpValidator.validate(req.body);
+//     if (error) throw new ErrorHandler(400, error.message);
+
+//     try {
+//       const { rows, rowCount } = await pool.query(
+//         `SELECT * FROM otps WHERE email = $1`,
+//         [value.email]
+//       );
+//       if (rowCount === 0) throw new ErrorHandler(400, "Send OTP First");
+
+//       if (rows[0].otp != value.otp) throw new ErrorHandler(400, "Wrong OTP");
+
+//       const hashedPassword = await bcrypt.hash(value.password, 10);
+//       value.password = hashedPassword;
+
+//       delete value.otp;
+
+//       const { columns, params, values } = objectToSqlInsert(value);
+
+//       await pool.query(
+//         `INSERT INTO ${table_name} ${columns} VALUES ${params}`,
+//         values
+//       );
+
+//       res
+//         .status(201)
+//         .json(new ApiResponse(201, "Registration Successfully Completed"));
+//     } catch (error) {
+//       throw new ErrorHandler(400, "error");
+//     }
+//   }
+// );
+
 export const verifyOtp = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error, value } = verifyOtpValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
-    try {
-      const { rows, rowCount } = await pool.query(
-        `SELECT * FROM otps WHERE email = $1`,
-        [value.email]
-      );
-      if (rowCount === 0) throw new ErrorHandler(400, "Send OTP First");
+    const client = await pool.connect();
 
-      if (rows[0].otp != value.otp) throw new ErrorHandler(400, "Wrong OTP");
+    try {
+      await client.query("BEGIN");
+
+      const { rowCount, rows } = await client.query(
+        `SELECT mobile_number, email FROM ${table_name} WHERE mobile_number = $1 OR email = $2`,
+        [value.mobile_number, value.email]
+      );
+
+      if(rowCount !== 0) {
+        rows.forEach(item => {
+          if(item.email === value.email) throw new ErrorHandler(400, "This email has already taken try another one");
+          if(item.mobile_number === value.mobile_number.toString()) throw new ErrorHandler(400, "This mobile number has already taken try another one");
+        })
+      }
+  
+      // if (rowCount !== 0)
+      //   throw new ErrorHandler(409, "Account Already Exist Please Login");
 
       const hashedPassword = await bcrypt.hash(value.password, 10);
       value.password = hashedPassword;
@@ -178,7 +224,7 @@ export const verifyOtp = asyncErrorHandler(
 
       const { columns, params, values } = objectToSqlInsert(value);
 
-      await pool.query(
+      await client.query(
         `INSERT INTO ${table_name} ${columns} VALUES ${params}`,
         values
       );
@@ -186,8 +232,13 @@ export const verifyOtp = asyncErrorHandler(
       res
         .status(201)
         .json(new ApiResponse(201, "Registration Successfully Completed"));
-    } catch (error) {
-      throw new ErrorHandler(400, "error");
+
+      await client.query("COMMIT");
+      client.release();
+    } catch (error : any) {
+      await client.query("ROLLBACK");
+      client.release();
+      throw new ErrorHandler(400, error.message)
     }
   }
 );
@@ -223,7 +274,8 @@ export const loginStudent = asyncErrorHandler(
         enrolled_batches_courses AS ebc ON ebc.student_id = s.student_id
       LEFT JOIN
        course_batches cb ON cb.batch_id = ebc.batch_id
-      WHERE s.email = $1 OR s.indos_number = $1
+      -- WHERE s.email = $1 OR s.indos_number = $1 OR s.mobile_number = $1
+      WHERE s.mobile_number = $1
       GROUP BY s.student_id
       `,
       [value.email]

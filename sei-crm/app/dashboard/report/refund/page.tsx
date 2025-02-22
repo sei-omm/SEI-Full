@@ -3,7 +3,7 @@
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
-import CourseWithBatchFilter from "@/components/Filters/CourseWithBatchFilter";
+import ManageAdmissionFilter from "@/components/Admission/ManageAdmissionFilter";
 import CourseWithDateRange from "@/components/Filters/CourseWithDateRange";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
@@ -36,6 +36,8 @@ export default function RefundReport() {
       "REFUND DATE",
       "EXECUTIVE NAME",
       "REFUND ID",
+      "FORM ID",
+      "BANK TRANSACTION ID"
     ],
     body: [],
   });
@@ -48,9 +50,11 @@ export default function RefundReport() {
     error,
   } = useQuery<ISuccess<TRefundReport[]>>({
     queryKey: ["fetch-refund-report", searchParams.toString()],
-    queryFn: async () =>
-      (await axios.get(`${BASE_API}/report/refund?${searchParams.toString()}`))
-        .data,
+    queryFn: async () => {
+      const urlSearchParams = new URLSearchParams(searchParams);
+      urlSearchParams.delete("month_year");
+      return (await axios.get(`${BASE_API}/report/refund?${urlSearchParams.toString()}`)).data
+    },
     enabled: searchParams.size !== 0,
     onSuccess: (data) => {
       setTableDatas((preState) => ({
@@ -71,6 +75,8 @@ export default function RefundReport() {
           item.created_at,
           item.executive_name,
           item.refund_id,
+          item.form_id,
+          item.bank_transaction_id
         ]),
       }));
     },
@@ -79,7 +85,8 @@ export default function RefundReport() {
   return (
     <div className="space-y-3">
       <div className="space-y-3">
-        <CourseWithBatchFilter />
+        {/* <CourseWithBatchFilter /> */}
+        <ManageAdmissionFilter />
         <span className="text-center block text-sm text-gray-500">OR</span>
         <CourseWithDateRange />
 

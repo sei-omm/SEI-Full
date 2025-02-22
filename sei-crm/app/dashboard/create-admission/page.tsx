@@ -144,7 +144,7 @@ export default function CreateAdmission() {
               className="flex items-center gap-4"
             >
               <IoAdd size={20} />
-              Assign Course
+              Add Course
             </Button>
           </div>
 

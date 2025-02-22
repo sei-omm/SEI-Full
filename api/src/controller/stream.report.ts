@@ -1569,7 +1569,7 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
   });
   const worksheet = workbook.addWorksheet("Refund Report");
 
-  worksheet.mergeCells("A1:P1");
+  worksheet.mergeCells("A1:R1");
   worksheet.getCell("A1").value = `Refund Report (${value.institute})`;
   worksheet.getCell("A1").font = {
     size: 20,
@@ -1604,6 +1604,8 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
     "REFUND DATE",
     "EXECUTIVE NAME",
     "REFUND ID",
+    "FORM ID",
+    "BANK TRANSACTION ID"
   ]);
 
   // Row styling (header row)
@@ -1656,7 +1658,9 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
         r.bank_details,
         r.created_at,
         r.executive_name,
-        r.refund_id
+        r.refund_id,
+        STRING_AGG(DISTINCT p.form_id, ', ') AS form_id,
+        STRING_AGG(DISTINCT p.bank_transaction_id, ', ') AS bank_transaction_id
         FROM refund_details AS r
 
         LEFT JOIN courses AS c

@@ -73,6 +73,7 @@ export const refundReportValidator = Joi.object({
   start_date: Joi.string().required().label("From Date").optional(),
   end_date: Joi.string().required().label("To Date").optional(),
   page: Joi.number().optional(),
+  month_year : Joi.string().optional()
 });
 
 

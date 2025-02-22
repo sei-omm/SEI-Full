@@ -269,6 +269,8 @@ export type TPaymentInfo = {
   total_due: number;
   total_misc_payment: number;
   total_discount: number;
+  total_fees : number;
+  total_due_fees : number;
   payments: TStudentPayment[];
 };
 
@@ -617,6 +619,8 @@ export type TRefundReport = {
   created_at: string; // ISO date string
   executive_name: string;
   refund_id: string;
+  form_id : string;
+  bank_transaction_id : string;
 };
 
 export type TDesignation = {
@@ -696,6 +700,7 @@ export type TRefundDetails = {
   created_at: string; // ISO date string
   status: string; // Add other statuses if applicable
   form_id: string;
+  bank_transaction_id : string;
 };
 
 export type StudentForm = z.infer<typeof studentFormSchema>;

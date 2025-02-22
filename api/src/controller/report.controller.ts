@@ -1452,6 +1452,8 @@ export const getRefundReport = asyncErrorHandler(async (req, res) => {
   const { error, value } = refundReportValidator.validate(req.query);
   if (error) throw new ErrorHandler(400, error.message);
 
+  delete req.query.month_year;
+
   const { LIMIT, OFFSET } = parsePagination(req);
 
   const filters = value.start_date
@@ -1479,7 +1481,9 @@ export const getRefundReport = asyncErrorHandler(async (req, res) => {
         r.bank_details,
         r.created_at,
         r.executive_name,
-        r.refund_id
+        r.refund_id,
+        STRING_AGG(DISTINCT p.form_id, ', ') AS form_id,
+        STRING_AGG(DISTINCT p.bank_transaction_id, ', ') AS bank_transaction_id
         FROM refund_details AS r
 
         LEFT JOIN courses AS c

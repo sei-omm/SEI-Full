@@ -247,6 +247,8 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
     total_due: number;
     total_misc_payment: number;
     total_discount: number;
+    total_fees : number;
+    total_due_fees : number;
     payments: any[];
   } = {
     total_paid: 0,
@@ -254,6 +256,8 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
     total_due: 0,
     total_misc_payment: 0,
     total_discount: 0,
+    total_fees : 0,
+    total_due_fees : 0,
     payments: [],
   };
 
@@ -282,9 +286,9 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
   });
 
   // paymentInfo.total_fee = parseInt(data?.getBatchesFeesInfo.rows[0].total_fee || 0) - paymentInfo.total_discount;
-  paymentInfo.total_fee = parseInt(
-    data?.getBatchesFeesInfo.rows[0].total_fee || 0.0
-  );
+  paymentInfo.total_fee =
+    parseInt(data?.getBatchesFeesInfo.rows[0].total_fee || 0.0) -
+    paymentInfo.total_discount;
 
   // paymentInfo.total_due = parseInt(
   //   (
@@ -295,9 +299,12 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
   //   ).toString()
   // );
 
-  paymentInfo.total_due = parseInt(
-    (paymentInfo.total_fee - paymentInfo.total_paid).toString()
-  );
+  // paymentInfo.total_due = parseInt((paymentInfo.total_fee - paymentInfo.total_paid).toString());
+  paymentInfo.total_due = (paymentInfo.total_fee - paymentInfo.total_paid) < 0 ? 0 : (paymentInfo.total_fee - paymentInfo.total_paid);
+
+  paymentInfo.total_fees += paymentInfo.total_fee + paymentInfo.total_misc_payment;
+
+  paymentInfo.total_due_fees += (paymentInfo.total_fees - paymentInfo.total_paid) < 0 ? 0 : (paymentInfo.total_fees - paymentInfo.total_paid);
 
   return {
     course_and_student_info: data?.courseAndStudentInfo.rows[0],
