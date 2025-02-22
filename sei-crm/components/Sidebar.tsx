@@ -139,7 +139,7 @@ const sidebarOptions = [
       {
         id: "7-2",
         icon: <BsReverseLayoutTextSidebarReverse />,
-        name: "Maintence Record",
+        name: "Maintenance Record",
         slug: "/dashboard/inventory/maintence-record",
       },
       {

@@ -803,8 +803,11 @@ export const enrollToBatch = asyncErrorHandler(
 
     if (rowCount === 0) throw new ErrorHandler(404, "Course Doesn't found");
 
-    if(hasOverlappingBatchDate(rows)) {
-      throw new ErrorHandler(400, "You have selected two courses with the same date please delete one of them.")
+    if (hasOverlappingBatchDate(rows)) {
+      throw new ErrorHandler(
+        400,
+        "You have selected two courses with the same date please delete one of them."
+      );
     }
 
     const tokenInfo = {
@@ -1479,4 +1482,11 @@ export const draftTimeTable = asyncErrorHandler(async (req, res) => {
         "Time Table Has Been Saved In Draft, You Can Edit It Later Before Saving It In Database"
       )
     );
+});
+
+export const removeFromDraft = asyncErrorHandler(async (req, res) => {
+  await pool.query(`DELETE FROM time_table_draft WHERE draft_id = $1`, [
+    req.params.draft_id,
+  ]);
+  res.status(200).json(new ApiResponse(200, "Time Table Removed From Draft"));
 });

@@ -18,6 +18,7 @@ import HandleSuspence from "@/components/HandleSuspence";
 import TimeTableCell from "@/components/TimeTableCell";
 import BackBtn from "@/components/BackBtn";
 import { useDoMutation } from "../utils/useDoMutation";
+import { AiOutlineDelete } from "react-icons/ai";
 
 type TTable = {
   heads: string[];
@@ -65,7 +66,7 @@ export default function TimeTable() {
   );
 
   const {
-    // data: serverData,
+    data: sResponse,
     isFetching,
     error,
   } = useQuery<ISuccess<TServerResponse>>({
@@ -276,6 +277,21 @@ export default function TimeTable() {
     });
   };
 
+  const { isLoading: isRemovingFromDraft, mutate: removeDraft } =
+    useDoMutation();
+  const filterFormRef = useRef<HTMLFormElement>(null);
+  const handleRemoveFromDraft = () => {
+    if (!confirm("Are you sure you want to remove and regenerate ?")) return;
+    removeDraft({
+      apiPath: "/course/time-table/draft",
+      method: "delete",
+      id: (sResponse?.data.result as any).draft_id,
+      onSuccess() {
+        route.refresh();
+      },
+    });
+  };
+
   return (
     <section className="h-screen w-full p-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -284,6 +300,7 @@ export default function TimeTable() {
           <p className="text-sm text-gray-600">SEI Educational Trust</p>
         </div>
         <form
+          ref={filterFormRef}
           action={handleTimeTableGeneratorBtn}
           className="flex items-end gap-3"
         >
@@ -345,7 +362,7 @@ export default function TimeTable() {
                     <td
                       className={`text-left text-[14px] py-3 px-5 space-x-3 relative ${stickyFirstCol(
                         columnIndex
-                      )}`}
+                      )} ${columnIndex === 0 ? "max-w-96" : ""}`}
                       key={`${rowIndex}${columnIndex}`}
                     >
                       {columnIndex !== 0 ? (
@@ -365,7 +382,7 @@ export default function TimeTable() {
                             name="course_name"
                             value={serverData?.[rowIndex].course_name}
                           />
-                          {value}
+                          <span>{value}</span>
                         </>
                       )}
                     </td>
@@ -381,8 +398,19 @@ export default function TimeTable() {
         <BackBtn btnText="Back To Dashboard" customRoute="/dashboard" />
         {searchParams.size === 0 ? null : (
           <div className="flex items-center gap-3">
+            {sResponse?.data.type === "draft" && (
+              <Button
+                className="bg-red-500 flex items-center gap-2"
+                disabled={isLoading || isSavingDraft || isRemovingFromDraft}
+                loading={isRemovingFromDraft}
+                onClick={handleRemoveFromDraft}
+              >
+                <AiOutlineDelete />
+                Remove Draft & Regenerate
+              </Button>
+            )}
             <Button
-              disabled={isSavingDraft}
+              disabled={isLoading || isSavingDraft || isRemovingFromDraft}
               loading={isSavingDraft}
               onClick={handleDraftButton}
             >
@@ -390,7 +418,7 @@ export default function TimeTable() {
             </Button>
             <Button
               loading={isLoading}
-              disabled={isLoading || isSavingDraft}
+              disabled={isLoading || isSavingDraft || isRemovingFromDraft}
               onClick={() => {
                 formRef.current?.requestSubmit();
               }}

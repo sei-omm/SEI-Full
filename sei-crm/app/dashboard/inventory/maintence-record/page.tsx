@@ -33,7 +33,7 @@ export default function MaintenceRecord() {
   const [currentCampus, setCurrentCampus] = useState("Kolkata");
   const [tableDatas, setTableDatas] = useState<TTable>({
     heads: [
-      "Maintence Date",
+      "MAINTENANCE Date",
       "Item Name",
       "Description of Work",
       "Work Station",

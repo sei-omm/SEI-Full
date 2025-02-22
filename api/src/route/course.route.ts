@@ -25,6 +25,7 @@ import {
   generateTimeTable,
   saveTimeTable,
   draftTimeTable,
+  removeFromDraft,
 } from "../controller/course.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 
@@ -60,4 +61,5 @@ courseRouter
   .get("/time-table", generateTimeTable)
   .post("/time-table", saveTimeTable)
   .post("/time-table/draft", draftTimeTable)
+  .delete("/time-table/draft/:draft_id", removeFromDraft)
   .get("/:course_id", getSingleCourse);

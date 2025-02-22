@@ -263,34 +263,40 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
       const tempPayInfo =
         paymentInfo.payments[existedPaymentIds.get(item.payment_id)];
       tempPayInfo.paid_amount =
-        parseFloat(tempPayInfo.paid_amount) + parseFloat(item.paid_amount);
+        parseInt(tempPayInfo.paid_amount) + parseInt(item.paid_amount);
       tempPayInfo.misc_payment =
-        parseFloat(tempPayInfo.misc_payment) + parseFloat(item.misc_payment);
+        parseInt(tempPayInfo.misc_payment) + parseInt(item.misc_payment);
       tempPayInfo.discount_amount =
-        parseFloat(tempPayInfo.discount_amount) +
-        parseFloat(item.discount_amount);
+        parseInt(tempPayInfo.discount_amount) + parseInt(item.discount_amount);
     } else {
       paymentInfo.payments.push(item);
       existedPaymentIds.set(item.payment_id, paymentInfo.payments.length - 1);
     }
     // paymentInfo.total_paid = parseFloat(paymentInfo.total_paid.toString()) + parseFloat(item.paid_amount);
-    paymentInfo.total_misc_payment += parseFloat(item.misc_payment || 0.0);
-    paymentInfo.total_paid += parseFloat(
-      item.paid_amount + parseFloat(item.misc_payment) || 0.0
-    );
-    paymentInfo.total_discount += parseFloat(item.discount_amount || 0.0);
+    paymentInfo.total_misc_payment += parseInt(item.misc_payment || 0.0);
+    // paymentInfo.total_paid += parseInt(
+    //   item.paid_amount + parseInt(item.misc_payment) || 0.0
+    // );
+    paymentInfo.total_paid += parseInt(item.paid_amount || 0.0);
+    paymentInfo.total_discount += parseInt(item.discount_amount || 0.0);
   });
 
-  paymentInfo.total_fee =
-    parseFloat(data?.getBatchesFeesInfo.rows[0].total_fee || 0) -
-    paymentInfo.total_discount;
-  paymentInfo.total_due = parseFloat(
-    (
-      paymentInfo.total_fee -
-      paymentInfo.total_paid +
-      paymentInfo.total_misc_payment +
-      paymentInfo.total_discount
-    ).toString()
+  // paymentInfo.total_fee = parseInt(data?.getBatchesFeesInfo.rows[0].total_fee || 0) - paymentInfo.total_discount;
+  paymentInfo.total_fee = parseInt(
+    data?.getBatchesFeesInfo.rows[0].total_fee || 0.0
+  );
+
+  // paymentInfo.total_due = parseInt(
+  //   (
+  //     paymentInfo.total_fee -
+  //     paymentInfo.total_paid +
+  //     paymentInfo.total_misc_payment +
+  //     paymentInfo.total_discount
+  //   ).toString()
+  // );
+
+  paymentInfo.total_due = parseInt(
+    (paymentInfo.total_fee - paymentInfo.total_paid).toString()
   );
 
   return {
