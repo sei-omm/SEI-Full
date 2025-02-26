@@ -146,11 +146,10 @@
 		</p>
 		<ol start="2" type="1" style="margin:0pt; padding-left:0pt">
 			<li style="margin-left:14.11pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
-				Date of Birth<span style="width:9.67pt; display:inline-block">&#xa0;</span><span
-					style="width:36pt; display:inline-block">&#xa0;</span><span
-					style="display:inline-block">17 July 200</span><span
+				Date of Birth<span
+					style="display:inline-block">&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;<%= dob %></span><span
 					style="width:36pt; display:inline-block">&#xa0;</span>:&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-				Age:
+				Age: <%= age %>
 			</li>
 		</ol>
 		<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
@@ -162,7 +161,7 @@
 					style="width:36pt; display:inline-block">&#xa0;</span><span
 					style="width:36pt; display:inline-block">&#xa0;</span><span
 					style="width:36pt; display:inline-block">&#xa0;</span>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-				:<strong> </strong>
+				:<sapn> <%= discipline %></sapn>
 			</li>
 		</ol>
 		<p style="margin-top:0pt; margin-left:18pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
@@ -173,7 +172,7 @@
 				Date of joining <span style="width:33.79pt; display:inline-block">&#xa0;</span><span
 					style="width:36pt; display:inline-block">&#xa0;</span> <span
 					style="width:33.29pt; display:inline-block">&#xa0;</span>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-				:
+				: <%= joining_date %>
 			</li>
 		</ol>
 		<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
@@ -195,8 +194,8 @@
 		<table cellspacing="0" cellpadding="0"
 			style="width:491.25pt; margin-left:8.75pt; border:0.75pt solid #000000; border-collapse:collapse">
 			<tr>
-				<td style="width:479.7pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
-					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+				<td style="width:479.7pt;  padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<!-- <p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
 						&#xa0;
 					</p>
 					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
@@ -213,7 +212,10 @@
 					</p>
 					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
 						&#xa0;
-					</p>
+					</p> -->
+				  <p>
+					<%= duties %>
+				  </p>
 				</td>
 			</tr>
 		</table>

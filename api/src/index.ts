@@ -35,16 +35,16 @@ app.set("views", path.resolve(__dirname, "../public/views"));
 app.use(express.json());
 app.use(cookieParser());
 
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:3000", "http://localhost:3001"]; // Default to localhost:3000
+  
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3001"], // Frontend URL
+    origin: ALLOWED_ORIGINS, // Frontend URL
     credentials: true, // Required for cookies
   })
 );
-
-// const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-//   ? process.env.ALLOWED_ORIGINS.split(",")
-//   : ["http://localhost:3000"]; // Default to localhost:3000
 
 // app.use(
 //   cors({

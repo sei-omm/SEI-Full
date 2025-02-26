@@ -37,6 +37,7 @@ import { AUTHORITY } from "../constant";
 import { sendNotification } from "./notification.controller";
 import { sendNotificationUtil } from "../utils/sendNotificationUtil";
 import { beautifyDate } from "../utils/beautifyDate";
+import { calculateAge } from "../utils/calculateAge";
 
 const table_name = "employee";
 
@@ -1343,10 +1344,17 @@ export const generateAppraisal = asyncErrorHandler(async (req, res) => {
   // singleAppraisalInfo.rows[0]
   // appraisalOfInfo.rows[0]
 
+  const age = calculateAge(appraisalOfInfo.rows[0].dob)
+
   res.render("appraisal.ejs", {
     institute : appraisalOfInfo.rows[0].institute,
     issue_number : value.appraisal_id,
     issue_date : beautifyDate(singleAppraisalInfo.rows[0].created_at),
     employee_name : appraisalOfInfo.rows[0].name,
+    age,
+    dob : beautifyDate(appraisalOfInfo.rows[0].dob),
+    discipline : singleAppraisalInfo.rows[0].discipline,
+    joining_date : beautifyDate(appraisalOfInfo.rows[0].joining_date),
+    duties : singleAppraisalInfo.rows[0].duties,
   });
 });
