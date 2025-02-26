@@ -130,26 +130,31 @@ export const getLibraryInfoForStudent = asyncErrorHandler(
       const { rows } = await pool.query(
         `
         SELECT 
-        l.*
+        l.*,
+        STRING_AGG(s.subject_name, ', ') AS subject_names
         FROM library AS l
 
         LEFT JOIN library_with_subject AS lws
         ON lws.library_id = l.library_id
 
+        LEFT JOIN subjects s
+        ON s.subject_id = lws.subject_id
+
         WHERE lws.subject_id = $1
+
+        GROUP BY l.library_id
       `,
         [itemId]
       );
 
-      res.status(200).json(new ApiResponse(200, "", rows));
-
-      return;
+      return res.status(200).json(new ApiResponse(200, "", rows));
     }
 
     const sql = `
         SELECT 
           l.*,
-          CASE WHEN l.library_file_type <> 'link' THEN SUBSTRING(l.library_resource_link FROM '([^/]+)$') ELSE l.library_resource_link END AS library_resource_link
+          CASE WHEN l.library_file_type <> 'link' THEN SUBSTRING(l.library_resource_link FROM '([^/]+)$') ELSE l.library_resource_link END AS library_resource_link,
+          COALESCE(STRING_AGG(DISTINCT c.course_name, ', '), STRING_AGG(DISTINCT s.subject_name, ', ')) AS course_name
         FROM library AS l
 
         LEFT JOIN library_with_course AS lwc
@@ -160,6 +165,15 @@ export const getLibraryInfoForStudent = asyncErrorHandler(
 
         LEFT JOIN course_batches AS cb
             ON cb.batch_id = ebc.batch_id
+
+        LEFT JOIN courses AS c
+        ON c.course_id = lwc.course_id
+
+        LEFT JOIN library_with_subject AS lws
+        ON lws.library_id = l.library_id
+
+        LEFT JOIN subjects AS s
+        ON s.subject_id = lws.subject_id
 
         WHERE 
             l.is_active = true
@@ -180,6 +194,32 @@ export const getLibraryInfoForStudent = asyncErrorHandler(
     }
 
     const { rows } = await pool.query(sql, valueToStore);
+
+    // const { rows } = await pool.query(
+    //   `
+    //   SELECT
+    //     l.library_id,
+    //     l.library_file_name,
+    //     l.library_file_type,
+    //     l.allow_download,
+    //     CASE WHEN l.library_file_type <> 'link' THEN SUBSTRING(l.library_resource_link FROM '([^/]+)$') ELSE l.library_resource_link END AS library_resource_link,
+    //     l.created_at
+    //   FROM library l
+
+    //   -- Library With Course
+    //   LEFT JOIN library_with_course lwc
+    //   ON lwc.library_id = l.library_id
+
+    //   -- Library With Subject
+    //   LEFT JOIN library_with_subject lws
+    //   ON lws.library_id = l.library_id
+
+    //   LEFT JOIN subjects s
+    //   ON s.subject_id = lws.subject_id
+
+    //   WHERE l.is_active = true
+    //   `
+    // );
 
     res.status(200).json(new ApiResponse(200, "", rows));
 
@@ -638,9 +678,7 @@ export const issueBooksToStudent = asyncErrorHandler(async (req, res) => {
     ])
   );
 
-  res
-    .status(200)
-    .json(new ApiResponse(200, "Books Successfully Issued"));
+  res.status(200).json(new ApiResponse(200, "Books Successfully Issued"));
 });
 
 export const returnBookBulk = asyncErrorHandler(async (req, res) => {
@@ -708,13 +746,8 @@ export const getPhysicalLibBooks = asyncErrorHandler(async (req, res) => {
 export const getBookIssueList = asyncErrorHandler(async (req, res) => {
   const { LIMIT, OFFSET } = parsePagination(req);
 
-  const {
-    institute,
-    from_date,
-    to_date,
-    search_by,
-    search_keyword
-  } = req.query;
+  const { institute, from_date, to_date, search_by, search_keyword } =
+    req.query;
 
   let filter = "WHERE";
   const filterValues: string[] = [];
@@ -744,10 +777,17 @@ export const getBookIssueList = asyncErrorHandler(async (req, res) => {
   //these are for filtering -- END
 
   //these are for searching -- START
-  if (search_by && search_keyword && search_by === "indos_number" && institute) {
+  if (
+    search_by &&
+    search_keyword &&
+    search_by === "indos_number" &&
+    institute
+  ) {
     placeholdernum = 1;
     filterValues.length = 0;
-    filter = `WHERE s.indos_number = $${placeholdernum} AND plbi.institute = $${placeholdernum + 1}`;
+    filter = `WHERE s.indos_number = $${placeholdernum} AND plbi.institute = $${
+      placeholdernum + 1
+    }`;
     filterValues.push(search_keyword as string);
     filterValues.push(institute as string);
   }
@@ -755,23 +795,39 @@ export const getBookIssueList = asyncErrorHandler(async (req, res) => {
   if (search_by && search_keyword && search_by === "course_name" && institute) {
     placeholdernum = 1;
     filterValues.length = 0;
-    filter = `WHERE c.course_name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${placeholdernum + 1}`;
+    filter = `WHERE c.course_name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${
+      placeholdernum + 1
+    }`;
     filterValues.push(search_keyword as string);
     filterValues.push(institute as string);
   }
 
-  if (search_by && search_keyword && search_by === "student_name" && institute) {
+  if (
+    search_by &&
+    search_keyword &&
+    search_by === "student_name" &&
+    institute
+  ) {
     placeholdernum = 1;
     filterValues.length = 0;
-    filter = `WHERE s.name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${placeholdernum + 1}`;
+    filter = `WHERE s.name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${
+      placeholdernum + 1
+    }`;
     filterValues.push(search_keyword as string);
     filterValues.push(institute as string);
   }
 
-  if (search_by && search_keyword && search_by === "faculty_name" && institute) {
+  if (
+    search_by &&
+    search_keyword &&
+    search_by === "faculty_name" &&
+    institute
+  ) {
     placeholdernum = 1;
     filterValues.length = 0;
-    filter = `WHERE e.name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${placeholdernum + 1}`;
+    filter = `WHERE e.name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${
+      placeholdernum + 1
+    }`;
     filterValues.push(search_keyword as string);
     filterValues.push(institute as string);
   }
@@ -779,14 +835,15 @@ export const getBookIssueList = asyncErrorHandler(async (req, res) => {
   if (search_by && search_keyword && search_by === "book_name" && institute) {
     placeholdernum = 1;
     filterValues.length = 0;
-    filter = `WHERE plb.book_name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${placeholdernum + 1}`;
+    filter = `WHERE plb.book_name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${
+      placeholdernum + 1
+    }`;
     filterValues.push(search_keyword as string);
     filterValues.push(institute as string);
   }
   //these are for searching -- END
 
   if (filter === "WHERE") filter = "";
-
 
   const { rows } = await pool.query(
     `

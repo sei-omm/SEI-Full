@@ -11,7 +11,6 @@ import { BASE_API } from "@/app/constant";
 import HandleSuspence from "../HandleSuspence";
 import { ILeave, ISuccess, TEmployeeLeave, TLeaveDetails } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
-import { getAuthToken } from "@/app/utils/getAuthToken";
 
 export default function LeaveRequest() {
   const dispatch = useDispatch();
@@ -27,14 +26,7 @@ export default function LeaveRequest() {
   >({
     queryKey: ["employee-leave-request"],
     queryFn: async () =>
-      (
-        await axios.get(`${BASE_API}/employee/leave`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...getAuthToken(),
-          },
-        })
-      ).data,
+      (await axios.get(`${BASE_API}/employee/leave`)).data,
     refetchOnMount: true,
     onSuccess(data) {
       console.log(data.data.leave_details);

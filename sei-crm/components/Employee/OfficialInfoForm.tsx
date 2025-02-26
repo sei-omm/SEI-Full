@@ -101,20 +101,11 @@ export default function OfficialInfoForm({
             departements={departements}
             employeeInfo={employeeInfo}
           />
-          {/* <Input
-            defaultValue={employeeInfo?.job_title || ""}
-            required
-            name="job_title"
-            label="Job Title *"
-            placeholder="Software Engineer"
-          /> */}
           <DateInput
             key={"joining_date"}
             required
             name="joining_date"
-            // onChange={onDateOfJoinChnage}
             label="Date Of Joining *"
-            // date={getDate(new Date(joinDate || ""))}
             date={getDate(new Date(employeeInfo?.joining_date || ""))}
           />
           {!isNewEmployee ? (

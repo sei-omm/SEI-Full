@@ -222,7 +222,7 @@ export const createAdmission = asyncErrorHandler(async (req, res) => {
         value.issued_by_institute,
         value.issued_by_institute_indos_number,
         value.institute,
-        newHashedPassword
+        newHashedPassword,
       ]
     );
     if (rowCount === 0) {

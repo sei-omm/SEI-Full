@@ -10,7 +10,6 @@ import {
 } from "@/app/constant";
 import { useQuery } from "react-query";
 import HandleSuspence from "../HandleSuspence";
-import { getAuthToken } from "@/app/utils/getAuthToken";
 
 interface IProps {
   employeeType?: string;
@@ -26,12 +25,7 @@ export default function Documentation({ employeeType }: IProps) {
       queryKey: "employee_documents",
       queryFn: async () =>
         (
-          await axios.get(`${BASE_API}/employee/null/document`, {
-            headers: {
-              "Content-Type": "application/json",
-              ...getAuthToken(),
-            },
-          })
+          await axios.get(`${BASE_API}/employee/null/document`)
         ).data,
       onSuccess: (data) => {
         const docsInfo =

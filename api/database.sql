@@ -579,42 +579,42 @@ DROP CONSTRAINT employee_employee_role_check;
 
 -- New DBS -> 08 Jan 2025
 
-CREATE TABLE appraisal (
-    appraisal_id SERIAL PRIMARY KEY,
+-- CREATE TABLE appraisal (
+--     appraisal_id SERIAL PRIMARY KEY,
 
-    employee_id INTEGER,
-    FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+--     employee_id INTEGER,
+--     FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE SET NULL,
 
-    discipline TEXT,
-    duties TEXT,
-    targets TEXT,
-    achievements TEXT,
+--     discipline TEXT,
+--     duties TEXT,
+--     targets TEXT,
+--     achievements TEXT,
 
-    appraisal_options TEXT,
+--     appraisal_options TEXT,
 
-    state_of_health TEXT,
-    integrity TEXT,
+--     state_of_health TEXT,
+--     integrity TEXT,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
 
-CREATE TABLE appraisal_and_employee (
-    item_id SERIAL PRIMARY KEY,
+-- CREATE TABLE appraisal_and_employee (
+--     item_id SERIAL PRIMARY KEY,
 
-    appraisal_id INTEGER,
-    FOREIGN KEY (appraisal_id) REFERENCES appraisal(appraisal_id) ON DELETE CASCADE,
+--     appraisal_id INTEGER,
+--     FOREIGN KEY (appraisal_id) REFERENCES appraisal(appraisal_id) ON DELETE CASCADE,
 
-    from_employee_id INTEGER,
-    FOREIGN KEY (from_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+--     from_employee_id INTEGER,
+--     FOREIGN KEY (from_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
 
-    to_employee_id INTEGER,
-    FOREIGN KEY (to_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+--     to_employee_id INTEGER,
+--     FOREIGN KEY (to_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
 
-    appraisal_status VARCHAR(255) CHECK (appraisal_status IN ('Pending', 'Approved', 'Rejected')) DEFAULT 'Pending',
-    appraisal_remark TEXT,
+--     appraisal_status VARCHAR(255) CHECK (appraisal_status IN ('Pending', 'Approved', 'Rejected')) DEFAULT 'Pending',
+--     appraisal_remark TEXT,
 
-    UNIQUE(from_employee_id, to_employee_id)
-);
+--     UNIQUE(from_employee_id, to_employee_id)
+-- );
 
 ALTER TABLE department
 ADD designation TEXT DEFAULT '';
@@ -746,11 +746,6 @@ ADD CONSTRAINT unique_email UNIQUE (email);
 ALTER TABLE assign_assets_employee
 ADD COLUMN issue_date DATE DEFAULT CURRENT_DATE,
 ADD COLUMN return_date DATE DEFAULT NULL;
-
-ALTER TABLE appraisal
-ADD COLUMN appraisal_options_employee TEXT;
-
-ALTER TABLE appraisal RENAME COLUMN appraisal_options TO appraisal_options_hod;
 
 -- DEFAULT FOLDER NAMES
 DELETE FROM folders;
@@ -1180,6 +1175,71 @@ INSERT INTO generated_employee_each_day (count) VALUES(0);
 
 ALTER TABLE planned_maintenance_system 
 ADD CONSTRAINT unique_custom_item_institute UNIQUE (custom_item, institute);
+
+-- NEW DB 25 Feb 2025
+
+ALTER TABLE attendance DROP CONSTRAINT attendance_status_check;
+
+ALTER TABLE attendance 
+ADD CONSTRAINT attendance_status_check 
+CHECK (status IN ('Present', 'Absent', 'Half Day', 'Sunday', 'Holiday', 'Leave'));
+
+ALTER TABLE employee
+DROP COLUMN authority;
+
+ALTER TABLE employee
+ADD authority VARCHAR(255);
+
+DROP TABLE generated_employee_each_day;
+
+CREATE TABLE generated_employee_each_day (
+    id SERIAL PRIMARY KEY,
+    date DATE DEFAULT CURRENT_DATE,
+    count INTEGER,
+    UNIQUE(date)
+);
+
+
+DROP TABLE appraisal_and_employee;
+DROP TABLE appraisal;
+
+CREATE TABLE appraisal (
+    appraisal_id SERIAL PRIMARY KEY,
+
+    employee_id INTEGER,
+    FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+
+    discipline TEXT,
+    duties TEXT,
+    targets TEXT,
+    achievements TEXT,
+
+    appraisal_options_hod TEXT,
+    appraisal_options_employee TEXT,
+
+    state_of_health TEXT,
+    integrity TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE appraisal_and_employee (
+    item_id SERIAL PRIMARY KEY,
+
+    appraisal_id INTEGER,
+    FOREIGN KEY (appraisal_id) REFERENCES appraisal(appraisal_id) ON DELETE CASCADE,
+
+    from_employee_id INTEGER,
+    FOREIGN KEY (from_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+
+    to_employee_id INTEGER,
+    FOREIGN KEY (to_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+
+    appraisal_status VARCHAR(255) CHECK (appraisal_status IN ('Pending', 'Approved', 'Rejected')) DEFAULT 'Pending',
+    appraisal_remark TEXT,
+
+    UNIQUE(appraisal_id, from_employee_id, to_employee_id)
+);
 
 -- fro clering all table of db
 -- DO $$ 

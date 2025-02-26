@@ -29,3 +29,5 @@ export const TIME_PERIOD = [
   "Period 7",
   "Period 8",
 ];
+
+export const AUTHORITY = ["HOI", "HOD", "UDS", "LDS"];

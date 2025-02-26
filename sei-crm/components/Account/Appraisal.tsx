@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "react-query";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
-import { getAuthToken } from "@/app/utils/getAuthToken";
 import { ISuccess, TAppraisalList } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import HandleSuspence from "../HandleSuspence";
@@ -20,12 +19,7 @@ interface IProps {
 
 async function fetchAppraisals(type: "own" | "others") {
   return (
-    await axios.get(`${BASE_API}/employee/appraisal?type=${type}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthToken(),
-      },
-    })
+    await axios.get(`${BASE_API}/employee/appraisal?type=${type}`)
   ).data;
 }
 

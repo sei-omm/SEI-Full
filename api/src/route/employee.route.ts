@@ -3,9 +3,11 @@ import {
   addNewEmployee,
   assignAssets,
   assignFacultyCourseSubject,
+  checkHoi,
   createAppraisal,
   deleteAssignAssets,
   generateAllEmployeeExcelSheet,
+  generateAppraisal,
   getAppraisalList,
   getAssignedAssets,
   getEmployee,
@@ -52,6 +54,7 @@ employeeRoute
   .get("/search", searchEmployeeName)
 
   .get("/appraisal", isAuthenticated, getAppraisalList)
+  .get("/appraisal/print/:appraisal_id", generateAppraisal)
   .get("/appraisal/:appraisal_id", getSingleAppraisal)
   .post("/appraisal", isAuthenticated, createAppraisal)
   .put("/appraisal/:appraisal_id", isAuthenticated, updateAppraisalReport)
@@ -61,22 +64,7 @@ employeeRoute
   .delete("/assets/:assets_id", deleteAssignAssets)
   .patch("/assets/:assets_id", updateAssetReturnDate)
 
-  .get(
-    "/:employee_id/document",
-    roles({
-      roles: ["Admin", "Own"],
-      params: ["employee_id"],
-    }),
-    getEmployeeDocuments
-  )
-  .get(
-    "/:id",
-    roles({
-      roles: ["Admin", "Own"],
-      params: ["id"],
-    }),
-    getSingleEmployeeInfo
-  )
+  .get("/:employee_id/document", isAuthenticated, getEmployeeDocuments)
 
   .post("/", addNewEmployee)
   .post("/leave", isAuthenticated, createEmployeeLeaveRequest)
@@ -89,4 +77,7 @@ employeeRoute
   .delete(
     "/faculty-assign-course/:faculty_id/:course_id",
     removeFacultyCourseSubject
-  );
+  )
+  .get("/is-hoi-exist", checkHoi)
+
+  .get("/:id", isAuthenticated, getSingleEmployeeInfo);

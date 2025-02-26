@@ -1,12 +1,15 @@
-import { getAuthTokenServer } from "@/app/actions/cookies";
 import { BASE_API } from "@/app/constant";
 import Contacts from "@/components/Contacts";
-import { ISuccess } from "@/types";
+import { CustomErrorPage } from "@/components/CustomErrorPage";
+import { IError, ISuccess } from "@/types";
+import axios, { AxiosError } from "axios";
 import React from "react";
 import { BsPeople } from "react-icons/bs";
 import { FaPeopleGroup } from "react-icons/fa6";
 import { FcLeave } from "react-icons/fc";
 import { MdOutlinePendingActions } from "react-icons/md";
+import UnAuthPage from "@/components/UnAuthPage";
+import { getAuthTokenServer } from "@/app/actions/cookies";
 
 const data = [
   {
@@ -40,27 +43,31 @@ interface IProps {
 
 export default async function page({ searchParams }: IProps) {
   const urlSearchParams = new URLSearchParams(searchParams);
-  const AUTH_TOKEN = await getAuthTokenServer();
-  const response = await fetch(
-    `${BASE_API}/hr/dashboard?${urlSearchParams.toString()}`,
-    {
-      cache: "no-store",
-      headers: {
-        ...AUTH_TOKEN,
-      },
-    }
-  );
-  const result = (await response.json()) as ISuccess<{
-    total_employees: string;
-    active_employees: string;
-    employees_on_leave: string;
-    pending_leave_request: string;
-  }>;
+  const AUTH_TOKEN_SERVER = await getAuthTokenServer();
 
-  data[0].value = result.data.total_employees;
-  data[1].value = result.data.active_employees;
-  data[2].value = result.data.employees_on_leave;
-  data[3].value = result.data.pending_leave_request;
+  try {
+    const { data: result } = await axios.get<
+      ISuccess<{
+        total_employees: string;
+        active_employees: string;
+        employees_on_leave: string;
+        pending_leave_request: string;
+      }>
+    >(`${BASE_API}/hr/dashboard?${urlSearchParams.toString()}`, {
+      headers: {
+        ...AUTH_TOKEN_SERVER,
+      },
+    });
+
+    data[0].value = result.data.total_employees;
+    data[1].value = result.data.active_employees;
+    data[2].value = result.data.employees_on_leave;
+    data[3].value = result.data.pending_leave_request;
+  } catch (error) {
+    const err = error as AxiosError<IError>;
+    if (err.response?.status === 401) return <UnAuthPage />;
+    return <CustomErrorPage message={err.response?.data?.message || ""} />;
+  }
 
   return (
     <section className="w-full">

@@ -41,10 +41,10 @@ export default function LibraryFilters({ courses }: IProps) {
     <>
       <DropDown
         key={"course_id"}
-        label="My Course Books"
+        label="Select Course"
         name="course_id"
         options={[
-          { text: "All Courses", value: -1 },
+          { text: "All", value: -1 },
           ...courses.map((course) => ({
             text: course.course_name,
             value: course.course_id,
@@ -57,10 +57,10 @@ export default function LibraryFilters({ courses }: IProps) {
       />
       <DropDown
         key={"subject_id"}
-        label="All Books"
+        label="Select Subject"
         name="subject_id"
         options={[
-          { text: "All Subjects", value: -1 },
+          { text: "All", value: -1 },
           ...(subjects?.data.map((subject) => ({
             text: subject.subject_name,
             value: subject.subject_id,

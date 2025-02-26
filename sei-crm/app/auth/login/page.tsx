@@ -35,7 +35,6 @@ export default function Login() {
             employee_id: data.data.employee_id,
           })
         );
-
         route.push("/account?tab=informations");
       },
     });

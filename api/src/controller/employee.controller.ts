@@ -7,6 +7,7 @@ import { ErrorHandler } from "../utils/ErrorHandler";
 import {
   assignAssetsValidator,
   assignFacultyCourseSubjectValidator,
+  checkHOIV,
   createAppraisalValidator,
   employeeLoginValidator,
   employeeSchema,
@@ -32,6 +33,10 @@ import { parseNullOrUndefined } from "../utils/parseNullOrUndefined";
 import { parsePagination } from "../utils/parsePagination";
 import { generateEmployeeId } from "../utils/generateEmployeeId";
 import { calculateYearsDifference } from "../utils/calculateYearsDifference";
+import { AUTHORITY } from "../constant";
+import { sendNotification } from "./notification.controller";
+import { sendNotificationUtil } from "../utils/sendNotificationUtil";
+import { beautifyDate } from "../utils/beautifyDate";
 
 const table_name = "employee";
 
@@ -341,33 +346,44 @@ export const addNewEmployee = asyncErrorHandler(
     try {
       await client.query("BEGIN");
 
+      //for checking any hoi already exist of not if exist throw error if not continue
+      const { rowCount, rows: hoiInfo } = await client.query(
+        `SELECT name FROM employee WHERE authority = 'HOI' AND institute = $1 AND is_active = true`,
+        [req.body.institute]
+      );
+
+      if ((rowCount || 0) > 0)
+        throw new ErrorHandler(
+          400,
+          `${hoiInfo[0].name} Exist AS HOI, Choose Diffrent Authority Option`
+        );
+
+      // insert info into employee table
       const { rows } = await client.query(
         `INSERT INTO ${table_name} ${columns} VALUES ${params} RETURNING id`,
         values
       );
+
+      //generate employee_id not database row id
       const employeeGeneratedId = rows[0].id;
 
-      const { rows : employeeOrderCountInfo } = await client.query(
+      const { rows: employeeOrderCountInfo } = await client.query(
         `
-          UPDATE generated_employee_each_day
-          SET 
-            date = CURRENT_DATE,
-            count = CASE 
-                      WHEN date != CURRENT_DATE THEN 1 
-                      ELSE count + 1 
-                    END
-          WHERE id = (
-            SELECT id FROM generated_employee_each_day ORDER BY id LIMIT 1
-          )
-          RETURNING count
-        `)
+          INSERT INTO generated_employee_each_day (date, count)
+          VALUES ($1::DATE, 1)
+          ON CONFLICT (date) DO UPDATE 
+          SET count = COALESCE(generated_employee_each_day.count, 0) + 1
+          RETURNING count;
+        `,
+        [req.body.joining_date]
+      );
 
       //it's a bad thing to do don't do it. i don't want to run insert query mannualy.
       if (!req.body.login_email || req.body.login_email === "") {
         const employeeID = generateEmployeeId(
           req.body.joining_date,
           req.body.institute,
-          String(employeeOrderCountInfo[0].count).padStart(2, '0')
+          String(employeeOrderCountInfo[0].count).padStart(2, "0")
         );
         await client.query(
           `UPDATE employee SET login_email = $1 WHERE id = $2`,
@@ -435,27 +451,6 @@ export const updateEmployee = asyncErrorHandler(
     ) as TEmployeeDocs[];
     delete req.body.employee_docs_info;
 
-    const sqlForEmployeeDocsInfo = `
-      INSERT INTO employee_docs
-      (employee_id, doc_id, doc_uri, doc_name)
-      VALUES
-      ${sqlPlaceholderCreator(4, employeeDocsInfo.length).placeholder}
-      ON CONFLICT (employee_id, doc_id)
-      DO UPDATE SET 
-        doc_uri = EXCLUDED.doc_uri,
-        doc_name = EXCLUDED.doc_name
-    `;
-
-    const valuesForEmployeeDocsInfo: (string | null)[] = [];
-    employeeDocsInfo.forEach((item) => {
-      valuesForEmployeeDocsInfo.push(
-        id,
-        item.doc_id,
-        item.doc_uri,
-        item.doc_name
-      );
-    });
-
     //it will generate employee id automatically if login_email not provided
     // let loginIDorEmail = req.body.login_email;
     // if (!loginIDorEmail || loginIDorEmail === "") {
@@ -475,38 +470,75 @@ export const updateEmployee = asyncErrorHandler(
     delete req.body.el;
     delete req.body.ml;
 
-    const {
-      keys,
-      values: valuesForEmployeeInfo,
-      paramsNum,
-    } = objectToSqlConverterUpdate({
-      ...req.body,
-      // login_email: loginIDorEmail,
-    });
+    const client = await pool.connect();
 
-    const sql = `UPDATE ${table_name} SET ${keys} WHERE id = $${paramsNum}`;
-    valuesForEmployeeInfo.push(id as string);
+    try {
+      await client.query("BEGIN");
 
-    const trnsationList: { sql: string; values: any[] }[] = [];
-    trnsationList.push({
-      sql: sql,
-      values: valuesForEmployeeInfo,
-    });
-    if (valuesForEmployeeDocsInfo.length !== 0) {
-      trnsationList.push({
-        sql: sqlForEmployeeDocsInfo,
-        values: valuesForEmployeeDocsInfo,
+      //for checking any hoi already exist of not if exist throw error if not continue
+
+      if (req.body.authority === "HOI") {
+        const { rowCount, rows } = await client.query(
+          `SELECT id, name FROM employee WHERE authority = 'HOI' AND institute = $1 AND is_active = true`,
+          [req.body.institute]
+        );
+
+        if ((rowCount || 0) > 0 && rows[0].id !== parseInt(id)) {
+          throw new ErrorHandler(
+            400,
+            `${rows[0].name} Exist AS HOI, Choose Diffrent Authority Option`
+          );
+        }
+      }
+
+      // if any document need to update
+      if (employeeDocsInfo.length > 0) {
+        await client.query(
+          `
+          INSERT INTO employee_docs
+          (employee_id, doc_id, doc_uri, doc_name)
+          VALUES
+          ${sqlPlaceholderCreator(4, employeeDocsInfo.length).placeholder}
+          ON CONFLICT (employee_id, doc_id)
+          DO UPDATE SET 
+            doc_uri = EXCLUDED.doc_uri,
+            doc_name = EXCLUDED.doc_name
+          `,
+          employeeDocsInfo.flatMap((item) => [
+            id,
+            item.doc_id,
+            item.doc_uri,
+            item.doc_name,
+          ])
+        );
+      }
+
+      const {
+        keys,
+        values: valuesForEmployeeInfo,
+        paramsNum,
+      } = objectToSqlConverterUpdate({
+        ...req.body,
       });
+
+      valuesForEmployeeInfo.push(id as string);
+
+      // update employee table
+      await client.query(
+        `UPDATE ${table_name} SET ${keys} WHERE id = $${paramsNum}`,
+        valuesForEmployeeInfo
+      );
+
+      await client.query("COMMIT");
+      client.release();
+      res
+        .status(200)
+        .json(new ApiResponse(200, "Employee information updated"));
+    } catch (error: any) {
+      await client.query("ROLLBACK");
+      client.release();
+      throw new ErrorHandler(400, error.message);
     }
-
-    // trnsationList.push({
-    //   sql: `UPDATE employee_leave SET cl = $1, sl = $2, el = $3, ml = $4 WHERE employee_id = $5`,
-    //   values: [cl, sl, el, ml, id],
-    // });
-
-    await transaction(trnsationList);
-
-    res.status(200).json(new ApiResponse(200, "Employee information updated"));
   }
 );
 
@@ -608,7 +640,7 @@ export const loginEmployee = asyncErrorHandler(
       throw new ErrorHandler(400, "Wrong username or password");
     }
 
-    const accessToken = createToken(
+    const refreshToken = createToken(
       {
         employee_id: rows[0].id,
         login_email: rows[0].login_email,
@@ -618,9 +650,15 @@ export const loginEmployee = asyncErrorHandler(
       { expiresIn: "7d" }
     );
 
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false, // Must be false for localhost (without HTTPS)
+      sameSite: "lax", // "lax" works better for local development
+    });
+
     res.status(200).json(
       new ApiResponse(200, "Login Successfully Completed", {
-        token: accessToken,
+        token: refreshToken,
         profile_image: rows[0].profile_image,
         name: rows[0].name,
         employee_id: rows[0].id,
@@ -796,28 +834,50 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
 
   const client = await pool.connect();
 
-  const { error: tryCatchErr } = await tryCatch(async () => {
+  try {
     await client.query("BEGIN");
-
-    const { rows: employeeInfo } = await pool.query(
+    // find current employee info like
+    const { rows: employee1Info } = await client.query(
       `
-      SELECT 
-        e1.id AS employee_id,
-        e1.authority,
-        e1.department_id,
-        e1.designation,
-        COALESCE((
-            SELECT e2.id
-            FROM employee e2
-            WHERE e2.department_id = e1.department_id
-              AND e2.authority > e1.authority
-            ORDER BY e2.authority ASC -- Optional: Get the one with the highest authority
-            LIMIT 1
-          ), NULL) AS higher_authority_employee_id
-      FROM employee e1
-      WHERE e1.id = $1;
+      SELECT
+        id,
+        authority,
+        department_id,
+        institute,
+        name
+      FROM employee ce WHERE ce.id = $1 AND ce.is_active = true;
       `,
       [value.employee_id]
+    );
+
+    // check what is the name of current employee higher authority name ex : if HOD than HOI is higher
+    const currentEmployeeAuthorityIndex = AUTHORITY.findIndex(
+      (item) => item === employee1Info[0].authority
+    );
+    const highAuthorityName: string | undefined =
+      AUTHORITY[currentEmployeeAuthorityIndex - 1];
+
+    // add extra filter if higher authority is HOD than don't need to check department as it will got to HOI
+    let extra_filter = "";
+    const extra_filter_values: string[] = [];
+    if (employee1Info[0].authority !== "HOD") {
+      extra_filter = " AND ha.department_id = $3";
+      extra_filter_values.push(employee1Info[0].department_id);
+    }
+
+    //find id form employee where authority is higher authority name
+    const { rows: highAuthorityInfo } = await client.query(
+      `
+      SELECT
+        id,
+        name
+      FROM employee ha 
+        WHERE ha.authority = $1
+        AND ha.is_active = true
+        AND ha.institute = $2
+      ${extra_filter}
+      `,
+      [highAuthorityName, employee1Info[0].institute, ...extra_filter_values]
     );
 
     const { rows: appraisal } = await client.query(
@@ -834,28 +894,33 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
 
     await client.query(
       `INSERT INTO appraisal_and_employee (appraisal_id, from_employee_id, to_employee_id) VALUES ($1, $2, $3)`,
-      [
-        appraisal[0].appraisal_id,
-        value.employee_id,
-        employeeInfo[0].higher_authority_employee_id,
-      ]
+      [appraisal[0].appraisal_id, value.employee_id, highAuthorityInfo[0].id]
     );
+
+    // await sendNotificationUtil({
+    //   notification_type: "private",
+    //   employee_ids: [highAuthorityInfo[0].id],
+    //   notification_title: "Appraisal Request",
+    //   notification_description: `An appraisal request has come from ${employee1Info[0].name}`,
+    //   client: client,
+    // });
 
     await client.query("COMMIT");
     client.release();
-  });
 
-  if (tryCatchErr) {
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          `The appraisal form has been sent to ${highAuthorityInfo[0].name}`
+        )
+      );
+  } catch (error: any) {
     client.release();
     await client.query("ROLLBACK");
-    throw new ErrorHandler(400, tryCatchErr.message);
+    throw new ErrorHandler(400, error.message);
   }
-
-  res
-    .status(200)
-    .json(
-      new ApiResponse(200, "Appraisal Form Has Sended To Your Higher Authority")
-    );
 });
 
 export const getAppraisalList = asyncErrorHandler(async (req, res) => {
@@ -865,8 +930,6 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
     role: res.locals.role,
   });
   if (error) throw new ErrorHandler(400, error.message);
-
-
 
   // value.type -> "own", "others"
   if (value.type === "own") {
@@ -992,7 +1055,7 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
 
 export const getSingleAppraisal = asyncErrorHandler(async (req, res) => {
   const { error, value } = getSingleAppraisalValidator.validate(req.params);
-  if (error) if (error) throw new ErrorHandler(400, error.message);
+  if (error) throw new ErrorHandler(400, error.message);
 
   const [singleAppraisalInfo, appraisalOfInfo] = await transaction([
     {
@@ -1056,54 +1119,82 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
   const { error: tryCatchErr } = await tryCatch(async () => {
     await client.query("BEGIN");
 
-    const { keys, values, paramsNum } = objectToSqlConverterUpdate(req.body);
-    await pool.query(
-      `UPDATE appraisal SET ${keys} WHERE appraisal_id = $${paramsNum}`,
-      [...values, value.appraisal_id]
-    );
-
-    await pool.query(
-      `UPDATE appraisal_and_employee SET appraisal_status = 'Approved' WHERE appraisal_id = $1 AND to_employee_id = $2`,
-      [value.appraisal_id, value.employee_id]
-    );
-
-    const { rows: employeeInfo } = await pool.query(
+    // find current employee info like
+    const { rows: employee1Info } = await client.query(
       `
-      SELECT 
-        e1.id AS employee_id,
-        e1.authority,
-        e1.department_id,
-        e1.designation,
-        COALESCE((
-            SELECT e2.id
-            FROM employee e2
-            WHERE e2.department_id = e1.department_id
-              AND e2.authority > e1.authority
-            ORDER BY e2.authority ASC -- Optional: Get the one with the highest authority
-            LIMIT 1
-          ), NULL) AS higher_authority_employee_id
-      FROM employee e1
-      WHERE e1.id = $1;
-      `,
+          SELECT
+            id,
+            authority,
+            department_id,
+            institute,
+            name
+          FROM employee ce WHERE ce.id = $1 AND ce.is_active = true;
+          `,
       [value.employee_id]
     );
 
-    if (employeeInfo[0].higher_authority_employee_id !== null) {
+    // check what is the name of current employee higher authority name ex : if HOD than HOI is higher
+    const currentEmployeeAuthorityIndex = AUTHORITY.findIndex(
+      (item) => item === employee1Info[0].authority
+    );
+    const highAuthorityName: string | undefined =
+      AUTHORITY[currentEmployeeAuthorityIndex - 1];
+
+    // if high authority name is not found then consider this form will not go beyond
+    if (highAuthorityName !== undefined) {
+      // add extra filter if higher authority is HOD than don't need to check department as it will got to HOI
+      let extra_filter = "";
+      const extra_filter_values: string[] = [];
+      if (employee1Info[0].authority !== "HOD") {
+        extra_filter = " AND ha.department_id = $3";
+        extra_filter_values.push(employee1Info[0].department_id);
+      }
+
+      //find id form employee where authority is higher authority name
+      const { rows: highAuthorityInfo } = await client.query(
+        `
+      SELECT
+        id,
+        name
+      FROM employee ha 
+        WHERE ha.authority = $1
+        AND ha.is_active = true
+        AND ha.institute = $2
+      ${extra_filter}
+      `,
+        [highAuthorityName, employee1Info[0].institute, ...extra_filter_values]
+      );
+
       await client.query(
         `
         INSERT INTO appraisal_and_employee 
           (appraisal_id, from_employee_id, to_employee_id) 
         VALUES 
           ($1, $2, $3)
-        ON CONFLICT(from_employee_id, to_employee_id) DO NOTHING;
-        `,
-        [
-          value.appraisal_id,
-          value.employee_id,
-          employeeInfo[0].higher_authority_employee_id,
-        ]
+        ON CONFLICT(appraisal_id, from_employee_id, to_employee_id) DO NOTHING;
+  `,
+        [value.appraisal_id, value.employee_id, highAuthorityInfo[0].id]
       );
+
+      // await sendNotificationUtil({
+      //   notification_type: "private",
+      //   employee_ids: [highAuthorityInfo[0].id],
+      //   notification_title: "Appraisal Request",
+      //   notification_description: `An appraisal request has come from ${employee1Info[0].name}`,
+      //   client: client,
+      // });
     }
+
+    const { keys, values, paramsNum } = objectToSqlConverterUpdate(req.body);
+    await client.query(
+      `UPDATE appraisal SET ${keys} WHERE appraisal_id = $${paramsNum}`,
+      [...values, value.appraisal_id]
+    );
+
+    await client.query(
+      `UPDATE appraisal_and_employee SET appraisal_status = 'Approved' WHERE appraisal_id = $1 AND to_employee_id = $2`,
+      [value.appraisal_id, value.employee_id]
+    );
 
     await client.query("COMMIT");
     client.release();
@@ -1186,4 +1277,76 @@ export const searchEmployeeName = asyncErrorHandler(async (req, res) => {
   );
 
   res.status(200).json(new ApiResponse(200, "", rows));
+});
+
+export const checkHoi = asyncErrorHandler(async (req, res) => {
+  const { error, value } = checkHOIV.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { rows, rowCount } = await pool.query(
+    `SELECT name FROM employee WHERE authority = 'HOI' AND institute = $1 AND is_active = true`,
+    [value.institute]
+  );
+
+  res.status(200).json(
+    new ApiResponse(200, "", {
+      isExist: (rowCount || 0) > 0,
+      hoi_name: rows[0] ? rows[0].name : null,
+    })
+  );
+});
+
+export const generateAppraisal = asyncErrorHandler(async (req, res) => {
+  const { error, value } = getSingleAppraisalValidator.validate(req.params);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const [singleAppraisalInfo, appraisalOfInfo] = await transaction([
+    {
+      sql: `
+      SELECT 
+        a.*,
+        JSON_AGG(JSON_OBJECT('employee_id' : e.id, 'name' : e.name, 'remark' : aae.appraisal_remark, 'status' : aae.appraisal_status)) as sended_to
+      FROM appraisal AS a
+
+      LEFT JOIN appraisal_and_employee AS aae
+      ON a.appraisal_id = aae.appraisal_id
+
+      LEFT JOIN employee AS e
+      ON aae.to_employee_id = e.id
+      
+      WHERE a.appraisal_id = $1
+
+      GROUP BY a.appraisal_id
+      `,
+      values: [value.appraisal_id],
+    },
+
+    {
+      sql: `
+
+        SELECT
+          e.name,
+          e.dob,
+          e.joining_date,
+          e.institute
+        FROM appraisal AS a
+
+        LEFT JOIN employee AS e
+        ON a.employee_id = e.id
+
+        WHERE a.appraisal_id = $1
+      `,
+      values: [value.appraisal_id],
+    },
+  ]);
+
+  // singleAppraisalInfo.rows[0]
+  // appraisalOfInfo.rows[0]
+
+  res.render("appraisal.ejs", {
+    institute : appraisalOfInfo.rows[0].institute,
+    issue_number : value.appraisal_id,
+    issue_date : beautifyDate(singleAppraisalInfo.rows[0].created_at),
+    employee_name : appraisalOfInfo.rows[0].name,
+  });
 });

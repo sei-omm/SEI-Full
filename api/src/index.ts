@@ -34,16 +34,31 @@ app.set("view engine", "ejs");
 app.set("views", path.resolve(__dirname, "../public/views"));
 app.use(express.json());
 app.use(cookieParser());
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",")
-  : [];
+
 app.use(
   cors({
-    exposedHeaders: ["Content-Disposition", "Content-Type"],
-    origin: ALLOWED_ORIGINS,
-    credentials: true,
+    origin: ["http://localhost:3000", "http://localhost:3001"], // Frontend URL
+    credentials: true, // Required for cookies
   })
 );
+
+// const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+//   ? process.env.ALLOWED_ORIGINS.split(",")
+//   : ["http://localhost:3000"]; // Default to localhost:3000
+
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     // exposedHeaders: ["Content-Disposition", "Content-Type"],
+//     credentials: true, // Required to send cookies
+//   })
+// );
 
 //parent routes
 app.use("/api/v1/hr", hrRouter);
@@ -62,14 +77,15 @@ app.use("/api/v1/inventory", inventoryRoute);
 app.use("/api/v1/notification", notificationRoutes);
 app.use("/api/v1/receipt", receiptRoutes);
 app.use("/api/v1/holiday", holidayRoutes);
-app.use("/api/v1/tranning", tranningRoutes)
+app.use("/api/v1/tranning", tranningRoutes);
 app.use("/api/v1/db", setupDbRoute);
 
 //global error handler
 app.use(globalErrorController);
 
 app.get("/some", async (req, res) => {
-  const { rows } = await pool.query(`
+  const { rows } = await pool.query(
+    `
               WITH payment_list AS (
                  SELECT
                   *
@@ -123,7 +139,9 @@ app.get("/some", async (req, res) => {
           WHERE ff.form_id = $1
 
           GROUP BY s.student_id, ff.form_status, ff.form_id;
-  `, ['KOL/FORM/2025/47']);
+  `,
+    ["KOL/FORM/2025/47"]
+  );
 
   res.status(200).json(new ApiResponse(200, "", rows));
 });

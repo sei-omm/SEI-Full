@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Input from "./Input";
 import Button from "./Button";
 import { AiOutlineDelete } from "react-icons/ai";
@@ -69,6 +69,8 @@ export default function JobForm({ action }: IProps) {
     dispatch(setDialog({ type: "CLOSE", dialogId: "progress-dialog" }));
   };
 
+  const [informVendorState, setInformVendor] = useState(false);
+
   const response = useQueries<
     [UseQueryResult<ISuccess<IJob[]>>, UseQueryResult<ISuccess<IDepartment[]>>]
   >([
@@ -103,8 +105,14 @@ export default function JobForm({ action }: IProps) {
     const objToStore: any = {
       department_name: response[1].data?.data[0].name,
     };
+
+    if(informVendorState) {};
     const informVendor = formData.get("inform_vendor") === "on";
     formData.set("inform_vendor", informVendor as any);
+
+    if (!informVendor) {
+      formData.delete("vendors_email");
+    }
 
     formData.forEach((value, key) => {
       objToStore[key] = value;
@@ -162,12 +170,12 @@ export default function JobForm({ action }: IProps) {
               label="Campus *"
               options={[
                 {
-                  text: "Kolkata",
+                  text: "Debamita, B.B.T Road, Vill. - Gopalpur, P.O. Sarkarpool, P.S. - Maheshtala, Kolkata - 700141, India",
                   value:
-                    "'Debamita', B.B.T Road, Vill. - Gopalpur, P.O. Sarkarpool, P.S. - Maheshtala, Kolkata - 700141, India",
+                    "Debamita, B.B.T Road, Vill. - Gopalpur, P.O. Sarkarpool, P.S. - Maheshtala, Kolkata - 700141, India",
                 },
                 {
-                  text: "Faridabad",
+                  text: "S - 13 Sector 11D Market, Faridabad-121006, Haryana,India",
                   value:
                     "S - 13 Sector 11D Market, Faridabad-121006, Haryana,India",
                 },
@@ -212,7 +220,13 @@ export default function JobForm({ action }: IProps) {
               defaultValue={response[0].data?.data?.[0].vendors_email}
             />
             <span className="flex items-center gap-2 text-sm">
-              <input name="inform_vendor" type="checkbox" />
+              <input
+                onChange={(e) =>
+                  setInformVendor(e.currentTarget.value === "On")
+                }
+                name="inform_vendor"
+                type="checkbox"
+              />
               <span>Inform Vendors</span>
             </span>
           </div>

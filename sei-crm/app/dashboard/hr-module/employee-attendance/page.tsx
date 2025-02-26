@@ -17,6 +17,7 @@ import HandleSuspence from "@/components/HandleSuspence";
 import { axiosQuery } from "@/utils/axiosQuery";
 import { toast } from "react-toastify";
 import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
+import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 
 type TableTypes = {
   heads: string[];
@@ -43,7 +44,7 @@ export default async function EmployeeAttendance() {
   const { openDialog, closeDialog } = useLoadingDialog();
 
   const { data, isFetching, error } = useQuery<ISuccess<any[]>>({
-    queryKey: "get-attendance",
+    queryKey: ["get-attendance", searchParams.toString()],
     queryFn: () => getAttendance(searchParams),
     onSuccess(data) {
       const heads: string[] = [];
@@ -101,9 +102,9 @@ export default async function EmployeeAttendance() {
               <tr>
                 {tables?.heads.map((item, index) => (
                   <th
-                    className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${
-                      index === 0 ? "sticky left-0 z-10 bg-white p-0" : ""
-                    }`}
+                    className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${stickyFirstCol(
+                      index
+                    )}`}
                     key={index}
                   >
                     {index !== 0
@@ -118,15 +119,13 @@ export default async function EmployeeAttendance() {
             </thead>
             <tbody className="relative">
               {tables?.body.map((itemArray, index) => (
-                <tr key={index} className={``}>
+                <tr key={index}>
                   {itemArray.map((value, childItemIndex) => (
                     <td
-                      className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${
-                        childItemIndex === 0
-                          ? "sticky left-0 z-10 bg-white"
-                          : ""
-                      }`}
-                      key={childItemIndex}
+                      className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${stickyFirstCol(
+                        childItemIndex
+                      )}`}
+                      key={`${index}${childItemIndex}`}
                     >
                       <span className="inline-flex gap-x-3">
                         {childItemIndex === 0 ? (
@@ -151,21 +150,30 @@ export default async function EmployeeAttendance() {
                               const attendance_info = [
                                 ...attendanceToUpdate.current,
                               ];
-                              const indexAlreadyExist = attendance_info.findIndex(
-                                (item) => item.employee_id === (data?.data[index].employee_id || 0) && item.attendance_date === tables?.heads[childItemIndex]
-                              );
-                              if(indexAlreadyExist === -1) {
+                              const indexAlreadyExist =
+                                attendance_info.findIndex(
+                                  (item) =>
+                                    item.employee_id ===
+                                      (data?.data[index].employee_id || 0) &&
+                                    item.attendance_date ===
+                                      tables?.heads[childItemIndex]
+                                );
+                              if (indexAlreadyExist === -1) {
                                 attendance_info.push({
-                                  employee_id: data?.data[index].employee_id || 0,
-                                  attendance_date: tables?.heads[childItemIndex],
+                                  employee_id:
+                                    data?.data[index].employee_id || 0,
+                                  attendance_date:
+                                    tables?.heads[childItemIndex],
                                   attendance_option: value,
                                 });
                               } else {
-                                attendance_info[indexAlreadyExist] = ({
-                                  employee_id: data?.data[index].employee_id || 0,
-                                  attendance_date: tables?.heads[childItemIndex],
+                                attendance_info[indexAlreadyExist] = {
+                                  employee_id:
+                                    data?.data[index].employee_id || 0,
+                                  attendance_date:
+                                    tables?.heads[childItemIndex],
                                   attendance_option: value,
-                                });
+                                };
                               }
                               attendanceToUpdate.current = attendance_info;
                             }}

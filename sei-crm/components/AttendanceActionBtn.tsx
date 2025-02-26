@@ -107,6 +107,7 @@ export default function AttendanceActionBtn({
         currentValue === "Present"
           ? "text-green-700"
           : currentValue === "Absent" ||
+            currentValue === "Leave" ||
             currentValue === "Sunday" ||
             currentValue === "Holiday"
           ? "text-red-600"
@@ -136,6 +137,13 @@ export default function AttendanceActionBtn({
             value={"Present"}
           >
             Present
+          </option>
+          <option
+            selected={currentValue === "Leave"}
+            className="text-red-700"
+            value={"Leave"}
+          >
+            Leave
           </option>
           <option
             selected={currentValue === "Absent"}

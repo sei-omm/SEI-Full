@@ -88,12 +88,7 @@ export const appraisalOptions = [
   },
 ];
 
-export const employeeAuthority = [
-  { name: "Employee", score: 0 },
-  { name: "Reporting Authority", score: 1 },
-  { name: "Review Authority", score: 2 },
-  { name: "HR", score: 3 },
-];
+export const AUTHORITY = ["HOI", "HOD", "UDS", "LDS"];
 
 export const STUDENT_RANKS = [
   "All",

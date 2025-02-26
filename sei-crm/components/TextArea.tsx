@@ -10,6 +10,7 @@ interface IProps
   hideLabel?: boolean;
   referal?: LegacyRef<HTMLTextAreaElement>;
   defaultValue?: any;
+  viewOnly?: boolean;
 }
 
 export default function TextArea(props: IProps) {
@@ -24,7 +25,10 @@ export default function TextArea(props: IProps) {
       <textarea
         {...props}
         ref={props.referal}
-        className={`outline-none border-2 border-gray-200 placeholder:text-gray-400 rounded-lg w-full text-sm px-4 py-3 ${props.className}`}
+        className={`outline-none border-2 border-gray-200 placeholder:text-gray-400 rounded-lg w-full text-sm px-4 py-3 ${
+          props.viewOnly ? "opacity-80 bg-slate-200" : "opacity-100"
+        } ${props.className}`}
+        disabled = {props.viewOnly}
       ></textarea>
     </div>
   );

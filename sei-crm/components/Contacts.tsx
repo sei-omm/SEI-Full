@@ -6,10 +6,9 @@ import Image from "next/image";
 import { BASE_API } from "@/app/constant";
 import { IHREmployee, ISuccess } from "@/types";
 import TagsBtn from "./TagsBtn";
-import { LuFileSpreadsheet } from "react-icons/lu";
-import DownloadFormUrl from "./DownloadFormUrl";
 import EmployeeTypeFilter from "./Employee/EmployeeTypeFilter";
 import Pagination from "./Pagination";
+import GenarateExcelReportBtn from "./GenarateExcelReportBtn";
 
 const tableDatas = {
   heads: ["Name", "Type", "Department", "Status", "Action"],
@@ -42,12 +41,7 @@ export default async function Contacts({ searchParams }: IProps) {
   return (
     <>
       <div className="flex items-center justify-end mb-4">
-        <DownloadFormUrl urlToDownload={BASE_API + "/employee/export-sheet"}>
-          <Button className="!bg-[#34A853] flex-center gap-4">
-            <LuFileSpreadsheet size={20} />
-            Generate Excel Sheet
-          </Button>
-        </DownloadFormUrl>
+        <GenarateExcelReportBtn apiPath={`/report/employee/excel?${urlSearchParams.toString()}`} />
       </div>
       <section className="w-full overflow-hidden card-shdow px-5 py-5">
         {/* table action buttons */}
@@ -146,7 +140,7 @@ export default async function Contacts({ searchParams }: IProps) {
           </table>
         </div>
       </section>
-      <Pagination dataLength={result?.data?.length}/>
+      <Pagination dataLength={result?.data?.length} />
     </>
   );
 }

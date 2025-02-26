@@ -191,7 +191,7 @@ export const updateLeaveStatus = asyncErrorHandler(
         datas.push({
           employee_id: value.employee_id,
           date: leaveStartDate.toISOString().split("T")[0],
-          status: "Absent",
+          status: "Leave",
         });
         leaveStartDate.setDate(leaveStartDate.getDate() + 1);
       }

@@ -103,7 +103,7 @@ export default function LibraryFilters() {
                 })) || []
               }
               defaultValue={
-                urlSearchParams.get("course_id") || course.data[0].course_id
+                urlSearchParams.get("course_id") || course.data[0]?.course_id
               }
             />
           )}

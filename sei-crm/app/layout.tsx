@@ -6,6 +6,7 @@ import DialogWrapper from "@/components/Dialogs/DialogWrapper";
 import PreventRightClick from "@/components/PreventRightClick";
 import { Suspense } from "react";
 import LoadingLayout from "@/components/LoadingLayout";
+import "@/lib/_axiosInterceptor";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

@@ -25,10 +25,10 @@ async function getSingleAppraisal(appraisalId: number) {
 }
 
 interface IProps {
-  wrapperClassName? : string
+  wrapperClassName?: string;
 }
 
-export default function AppraisalForm({ wrapperClassName } : IProps) {
+export default function AppraisalForm({ wrapperClassName }: IProps) {
   const { mutate, isLoading } = useDoMutation();
   const searchParams = useSearchParams();
   const route = useRouter();
@@ -42,9 +42,8 @@ export default function AppraisalForm({ wrapperClassName } : IProps) {
   const appraisalID = searchParams.get("id");
 
   const { data: appraisal } = useQuery<ISuccess<TAppraisal>>({
-    queryKey: "get-single-appraisal",
+    queryKey: ["get-single-appraisal", searchParams.get("id")],
     queryFn: () => getSingleAppraisal(parseInt(appraisalID || "0")),
-    enabled: !isNew,
     onSuccess(data) {
       if (data.data.appraisal_info.appraisal_options_employee) {
         setParsedOptionsEmployee(
@@ -180,37 +179,45 @@ export default function AppraisalForm({ wrapperClassName } : IProps) {
               Part I (to be filled by Faculty & Staff member)
             </h2>
             <Input
+              key={isNew + " 1"}
               required
               name="discipline"
               label="Discipline *"
               placeholder="Type here.."
               defaultValue={appraisal?.data.appraisal_info.discipline}
+              viewOnly={!isNew}
             />
 
             <TextArea
+              key={isNew + " 2"}
               required
               name="duties"
               label="Brief description of duties (please mention point-wise) *"
               placeholder="Type here.."
               rows={6}
               defaultValue={appraisal?.data.appraisal_info.duties}
+              viewOnly={!isNew}
             />
 
             <TextArea
+              key={isNew + " 3"}
               required
               name="targets"
               label="Specify targets / objectives / goals (in quantitative or other terms) of work you set for yourself or that were set for you, eight to ten items of work in the order of priority and your achievement against each target: *"
               placeholder="Type objectives here.."
               rows={6}
               defaultValue={appraisal?.data.appraisal_info.targets}
+              viewOnly={!isNew}
             />
 
             <TextArea
+              key={isNew + " 4"}
               required
               name="achievements"
               label="Achievements *"
               placeholder="Type achievements here.."
               defaultValue={appraisal?.data.appraisal_info.achievements}
+              viewOnly={!isNew}
             />
           </div>
           {/* Part 2 */}
@@ -258,6 +265,7 @@ export default function AppraisalForm({ wrapperClassName } : IProps) {
                               parsedOptionsEmployee?.["employee-" + item.id]
                             }
                             key={parsedOptionsEmployee?.["employee-" + item.id]}
+                            disabled={!isNew}
                           >
                             <option value="1">1</option>
                             <option value="2">2</option>

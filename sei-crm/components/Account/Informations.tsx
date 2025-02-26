@@ -3,7 +3,7 @@ import { InfoLayout } from "./InfoLayout";
 import Info from "../Info";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { calculateAge } from "@/app/utils/calculateAge";
-import { employeeAuthority } from "@/app/constant";
+// import { employeeAuthority } from "@/app/constant";
 import FacultyAssignCourseListview from "../Employee/FacultyAssignCourseListview";
 
 interface IProps {
@@ -11,13 +11,14 @@ interface IProps {
 }
 
 export default function Informations({ employee_info }: IProps) {
-  let employeeAuthorityValue: string | undefined = employeeAuthority[0].name;
+  let employeeAuthorityValue: string | undefined = undefined;
 
   if (employee_info?.authority) {
-    employeeAuthorityValue = employeeAuthority.find(
-      (authority) =>
-        authority.score === parseInt(employee_info.authority || "-1")
-    )?.name;
+    // employeeAuthorityValue = employeeAuthority.find(
+    //   (authority) =>
+    //     authority.score === parseInt(employee_info.authority || "-1")
+    // )?.name;
+    employeeAuthorityValue = employee_info.authority
   }
 
   return (

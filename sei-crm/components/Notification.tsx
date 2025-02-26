@@ -51,11 +51,7 @@ export default function Notification() {
     queryKey: ["my-notification", currentPage],
     queryFn: async () =>
       (
-        await axios.get(`${BASE_API}/notification?page=${currentPage}`, {
-          headers: {
-            ...getAuthToken(),
-          },
-        })
+        await axios.get(`${BASE_API}/notification?page=${currentPage}`)
       ).data,
   });
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DropDown from "../DropDown";
 import { IDepartment, IEmployee } from "@/types";
-import { employeeAuthority } from "@/app/constant";
+import { AUTHORITY } from "@/app/constant";
 
 interface IProps {
   departements?: IDepartment[];
@@ -75,9 +75,9 @@ export default function EAuthorityInfo({
       <DropDown
         name="authority"
         label="Authority"
-        options={employeeAuthority.map((item) => ({
-          text: item.name,
-          value: item.score,
+        options={AUTHORITY.map((item) => ({
+          text: item,
+          value: item,
         }))}
         defaultValue={employeeInfo?.authority}
       />

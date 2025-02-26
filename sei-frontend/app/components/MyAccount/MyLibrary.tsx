@@ -20,6 +20,8 @@ type TLibraryInfo = {
   library_id: number;
   library_file_name: string;
   library_file_type: string;
+  course_name: string | null;
+  subject_names : string | null;
   allow_download: boolean;
   library_resource_link: string;
   created_at: string;
@@ -63,10 +65,10 @@ export default async function MyLibrary({ courses, searchParams }: IProps) {
   const result = (await response.json()) as IResponse<TLibraryInfo[]>;
 
   const tableDatas: TTable = {
-    heads: ["Book Name", "Type", "Publish Date", "Action"],
+    heads: ["Book Name", "Course/Subject", "Publish Date", "Action"],
     body: result.data.map((item) => [
       item.library_file_name,
-      item.library_file_type,
+      item.course_name || item.subject_names || "N/A",
       item.created_at,
       "actionBtn",
     ]),
@@ -179,14 +181,6 @@ export default async function MyLibrary({ courses, searchParams }: IProps) {
                               </span>
                               <span>{value}</span>
                             </div>
-                          ) : columnIndex === 1 ? (
-                            <span>
-                              {
-                                file_types_icons[
-                                  result.data[rowIndex].library_file_type
-                                ].name
-                              }
-                            </span>
                           ) : columnIndex === 2 ? (
                             <span>
                               {formateDate(result.data[rowIndex].created_at)}

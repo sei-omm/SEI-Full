@@ -25,6 +25,8 @@ async function submitInformationToServer<T>(params: ParamsType) {
           // "Content-Type": "multipart/form-data",
           "Content-Type": "application/json",
         },
+
+    withCredentials: true,
   });
 
   return {

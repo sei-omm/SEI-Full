@@ -1,0 +1,943 @@
+<style>
+	.main_div {
+		width: 1000px;
+		margin: 0 auto;
+		border-top: 5px solid #215b89;
+	}
+
+	.check {
+		width: auto;
+		float: right;
+		background: #215b89;
+		padding: 10px 15px;
+		font-size: 12px !important;
+		font-weight: bold;
+		color: #fff !important;
+		margin-right: 5px;
+		margin-top: -5px;
+	}
+
+	#p {
+		font-size: 8px;
+	}
+</style>
+
+
+<section
+	style="margin-left: auto; margin-right: auto; max-width: 650px; display: flex; flex-direction: column; align-items: center;">
+	<div style="width: fit-content; display: flex; flex-direction: column; gap: 8px;">
+		<div style="clear:both">
+			<table cellspacing="0" cellpadding="0"
+				style="width:503.25pt; border:0.75pt solid #000000; border-collapse:collapse">
+				<tr style="height:15pt">
+					<td rowspan="4"
+						style="width:72.5pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:14pt">
+							<img src="data:image/jpeg;base64,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"
+								width="79" height="76" alt="C:\Users\user\Downloads\LOGO.jpg">
+						</p>
+					</td>
+					<td rowspan="4"
+						style="width:254.95pt; border-right-style:solid; border-right-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:18pt">
+							<strong>SEI Educational Trust,</strong>
+						</p>
+						<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:18pt">
+							<strong><%= institute %></strong>
+						</p>
+						<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+							<strong>QUALITY MANAGEMENT SYSTEM FORMS</strong>
+						</p>
+						<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+							<strong>ISO 9001:2015</strong>
+						</p>
+						<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+							<strong>SEI/QSF/HR/04</strong>
+						</p>
+					</td>
+					<td
+						style="width:76.5pt; border-right-style:solid; border-right-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							<strong>ISSUE NO</strong>
+						</p>
+					</td>
+					<td
+						style="width:55.35pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:11pt">
+							<strong><%= issue_number %></strong>
+						</p>
+					</td>
+				</tr>
+				<tr style="height:15.25pt">
+					<td
+						style="width:76.5pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							<strong>ISSUE DATE</strong>
+						</p>
+					</td>
+					<td
+						style="width:55.35pt; border-top-style:solid; border-top-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							<strong><%= issue_date %></strong>
+						</p>
+					</td>
+				</tr>
+				<tr style="height:22.4pt">
+					<td
+						style="width:76.5pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							<strong>REVISION NO.</strong>
+						</p>
+					</td>
+					<td
+						style="width:55.35pt; border-top-style:solid; border-top-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							<strong>00</strong>
+						</p>
+					</td>
+				</tr>
+				<tr style="height:14.95pt">
+					<td
+						style="width:76.5pt; border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							<strong>REVISION DATE</strong>
+						</p>
+					</td>
+					<td
+						style="width:55.35pt; border-top-style:solid; border-top-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							<strong>00</strong>
+						</p>
+					</td>
+				</tr>
+			</table>
+			<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal">
+				&#xa0;
+			</p>
+		</div>
+		<h1 style="margin-top:0pt; margin-bottom:0pt; page-break-after:avoid; line-height:normal; font-size:12pt">
+			<u><span style="font-family:Arial; font-weight:normal; ">Faculty Appraisal Report for the period
+					from</span></u><u><span
+					style="font-family:Arial; font-weight:normal; ">&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
+				</span></u><u><span style="font-family:Arial; font-weight:normal; ">to</span></u><u><span
+					style="font-family:Arial; font-weight:normal; ">&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
+				</span></u><u><span
+					style="font-family:Arial; ">&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
+				</span></u>
+		</h1>
+		<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; line-height:normal">
+			<strong>Part I (to be filled by faculty member)</strong>
+		</p>
+		<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; line-height:normal">
+			<strong>&#xa0;</strong>
+		</p>
+		<ol type="1" style="margin:0pt; padding-left:0pt">
+			<li style="margin-left:14.29pt; line-height:normal; padding-left:3.71pt; font-size:12pt; font-weight:bold">
+				<span style="font-weight:normal">Name of Faculty </span><span
+					style="width:25.97pt; font-weight:normal; display:inline-block">&#xa0;</span><span
+					style="width:36pt; font-weight:normal; display:inline-block">&#xa0;</span><span
+					style="width:36pt; font-weight:normal; display:inline-block">&#xa0;</span><span
+					style="width:36pt; font-weight:normal; display:inline-block">&#xa0;</span><span
+					style="font-weight:normal">: <%= employee_name %></span>
+			</li>
+		</ol>
+		<p style="margin-top:0pt; margin-left:18pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
+			&#xa0;
+		</p>
+		<ol start="2" type="1" style="margin:0pt; padding-left:0pt">
+			<li style="margin-left:14.11pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
+				Date of Birth<span style="width:9.67pt; display:inline-block">&#xa0;</span><span
+					style="width:36pt; display:inline-block">&#xa0;</span><span
+					style="display:inline-block">17 July 200</span><span
+					style="width:36pt; display:inline-block">&#xa0;</span>:&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
+				Age:
+			</li>
+		</ol>
+		<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
+			&#xa0;
+		</p>
+		<ol start="3" type="1" style="margin:0pt; padding-left:0pt">
+			<li style="margin-left:14.11pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
+				Discipline<span style="width:25.25pt; display:inline-block">&#xa0;</span><span
+					style="width:36pt; display:inline-block">&#xa0;</span><span
+					style="width:36pt; display:inline-block">&#xa0;</span><span
+					style="width:36pt; display:inline-block">&#xa0;</span>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
+				:<strong> </strong>
+			</li>
+		</ol>
+		<p style="margin-top:0pt; margin-left:18pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
+			&#xa0;
+		</p>
+		<ol start="4" type="1" style="margin:0pt; padding-left:0pt">
+			<li style="margin-left:14.11pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
+				Date of joining <span style="width:33.79pt; display:inline-block">&#xa0;</span><span
+					style="width:36pt; display:inline-block">&#xa0;</span> <span
+					style="width:33.29pt; display:inline-block">&#xa0;</span>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
+				:
+			</li>
+		</ol>
+		<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
+			&#xa0;
+		</p>
+		<ol start="5" type="1" style="margin:0pt; padding-left:0pt">
+			<li style="margin-left:14.11pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
+				No. of days absence from duty during the year:
+			</li>
+		</ol>
+		<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
+			&#xa0;
+		</p>
+		<ol start="6" type="1" style="margin:0pt; padding-left:0pt">
+			<li style="margin-left:14.11pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
+				Brief description of duties (please mention point-wise):
+			</li>
+		</ol>
+		<table cellspacing="0" cellpadding="0"
+			style="width:491.25pt; margin-left:8.75pt; border:0.75pt solid #000000; border-collapse:collapse">
+			<tr>
+				<td style="width:479.7pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+		</table>
+		<ol start="7" type="1" style="margin:0pt; padding-left:0pt">
+			<li
+				style="margin-left:14.11pt; text-align:justify; line-height:normal; padding-left:3.89pt; font-size:12pt">
+				Specify targets / objectives / goals (in quantitative or other terms) of work you set for yourself or
+				that
+				were set for you, eight to ten items of work in the order of priority and your achievement against each
+				target:
+			</li>
+		</ol>
+		<table cellspacing="0" cellpadding="0"
+			style="width:491.25pt; margin-left:8.75pt; border:0.75pt solid #000000; border-collapse:collapse">
+			<tr>
+				<td
+					style="width:231.4pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+						Target&#xa0; /objectives / goals
+					</p>
+				</td>
+				<td
+					style="width:237.5pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+						Achievements
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:231.4pt; border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+				<td
+					style="width:237.5pt; border-top-style:solid; border-top-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+		</table>
+		<p
+			style="margin-top:0pt; margin-left:36pt; margin-bottom:10pt; text-align:justify; line-height:115%; font-size:1pt">
+			&#xa0;
+		</p>
+		<ol start="8" type="1" style="margin:0pt; padding-left:0pt">
+			<li
+				style="margin-left:14.11pt; text-align:justify; line-height:normal; padding-left:12.89pt; font-size:12pt">
+				(a) Please state briefly the short-falls with reference to the targets / objectives referred to in
+				Col.2,
+				specifying constraints, if any, in achieving the targets.
+			</li>
+		</ol>
+		<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; line-height:normal; font-size:12pt">
+			&#xa0;
+		</p>
+		<p
+			style="margin-top:0pt; margin-left:27pt; margin-bottom:0pt; text-align:justify; line-height:normal; font-size:12pt">
+			(b) Please also indicate items in which there have been significantly higher achievements and your
+			contribution
+			thereto.
+		</p>
+		<p style="margin-top:0pt; margin-bottom:10pt; line-height:normal; font-size:12pt">
+			<span style="width:36pt; display:inline-block">&#xa0;</span><span
+				style="width:36pt; display:inline-block">&#xa0;</span><span
+				style="width:36pt; display:inline-block">&#xa0;</span><span
+				style="width:36pt; display:inline-block">&#xa0;</span><span
+				style="width:36pt; display:inline-block">&#xa0;</span><span
+				style="width:36pt; display:inline-block">&#xa0;</span>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
+			Signature of the faculty
+		</p>
+		<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; line-height:normal">
+			<strong>&#xa0;</strong>
+		</p>
+		<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; line-height:normal">
+			<strong>Part II (to be filled by reporting officer)</strong>
+		</p>
+		<p
+			style="margin-top:0pt; margin-left:36pt; margin-bottom:0pt; text-align:center; line-height:normal; font-size:5pt">
+			&#xa0;
+		</p>
+		<ol type="1" style="margin:0pt; padding-left:0pt">
+			<li
+				style="margin-left:14.11pt; text-align:justify; line-height:normal; padding-left:3.89pt; font-size:12pt">
+				Please state whether you agree with the self appraisal of the faculty reported upon as mentioned. If
+				not,
+				please furnish the factual details.
+			</li>
+		</ol>
+		<p
+			style="margin-top:0pt; margin-left:54pt; margin-bottom:0pt; text-indent:-54pt; text-align:justify; line-height:normal; font-size:12pt">
+			&#xa0;
+		</p>
+		<ol start="2" type="1" style="margin:0pt; padding-left:0pt">
+			<li
+				style="margin-left:14.11pt; margin-bottom:10pt; text-align:justify; line-height:normal; padding-left:3.89pt; font-size:12pt">
+				Assessment of work output / personal attributes / functional competency. <span
+					style="font-size:9pt">(Numerical grading is to be assigned by Reporting authority on a scale of
+					1-10,
+					where 1 refers to the lowest and 10 to the highest grade). </span>
+			</li>
+		</ol>
+		<table cellspacing="0" cellpadding="0" style="width:491.25pt; margin-left:8.75pt; border-collapse:collapse">
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-left:54pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+						Items
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+						Grading assigned by Reporting Authority
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:23.11pt; padding-left:8.39pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Accomplishment of planned work/work allotted as per subject allotted
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="2" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:23.11pt; padding-left:8.39pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Quality of output
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="3" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:23.11pt; padding-left:8.39pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Analytical ability
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="4" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:23.11pt; padding-left:8.39pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Accomplishment of exceptional work / unforeseen tasks performed
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="5" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:23.11pt; padding-left:8.39pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Overall grading on ‘work output’
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr style="height:5.35pt">
+				<td colspan="3"
+					style="width:479.7pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.4pt; padding-left:5.4pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:1pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:22.5pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Attitude to work
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="2" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:22.5pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Sense of responsibility
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="3" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:22.5pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Maintenance of Discipline
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="4" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:22.5pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Communication skills
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="5" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:22.5pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Leadership Qualities
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="6" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:22.5pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Capacity to work in team spirit
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="7" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:22.5pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Capacity to adhere to time-schedule
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="8" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:22.5pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Inter personal relations
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="9" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:22.5pt; font-size:12pt">
+							&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Overall bearing and personality
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<ol start="10" type="1" style="margin:0pt; padding-left:0pt">
+						<li style="margin-left:22.5pt; text-indent:-13.5pt; font-size:12pt; list-style-position:inside">
+							<span
+								style="width:6.81pt; font:7pt 'Times New Roman'; display:inline-block">&#xa0;&#xa0;&#xa0;&#xa0;
+							</span>&#xa0;
+						</li>
+					</ol>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Overall Grading on ‘Personal Attributes’
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr style="height:5.35pt">
+				<td colspan="3"
+					style="width:479.7pt; border-top-style:solid; border-top-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.4pt; padding-left:5.4pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:5pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-left:9.4pt; margin-bottom:0pt; font-size:12pt">
+						1.
+					</p>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Knowledge of Rules / Regulations / procedures in the area of function and ability to apply them
+						correctly
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-left:9.4pt; margin-bottom:0pt; font-size:12pt">
+						2.
+					</p>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Strategic Planning ability
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-left:9.4pt; margin-bottom:0pt; font-size:12pt">
+						3.
+					</p>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Decision making ability
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-indent:9.4pt; font-size:12pt">
+						4.
+					</p>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Coordination ability
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-indent:9.4pt; font-size:12pt">
+						5.
+					</p>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Ability to motivate and develop subordinates
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-indent:9.4pt; font-size:12pt">
+						6.
+					</p>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Initiative
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-indent:9.4pt; font-size:12pt">
+						7.
+					</p>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						Overall Grading on Functional Competency
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+			</tr>
+		</table>
+		<p style="margin-top:0pt; margin-left:72pt; margin-bottom:0pt; line-height:normal; font-size:9pt">
+			&#xa0;
+		</p>
+		<ol start="3" type="1" style="margin:0pt; padding-left:0pt">
+			<li style="margin-left:14.11pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
+				State of Health<span style="width:35.04pt; display:inline-block">&#xa0;</span>:
+			</li>
+			<li
+				style="margin-left:14.11pt; margin-bottom:10pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
+				Integrity<span style="width:30.64pt; display:inline-block">&#xa0;</span><span
+					style="width:36pt; display:inline-block">&#xa0;</span>:
+			</li>
+		</ol>
+		<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
+			Name of Reporting Officer: _________________________ Signature with Date: ______________
+		</p>
+		<p
+			style="margin-top:0pt; margin-left:31.5pt; margin-bottom:0pt; text-indent:-31.5pt; line-height:normal; font-size:12pt">
+			<strong><span
+					style="width:31.5pt; text-indent:0pt; display:inline-block">&#xa0;</span></strong><strong><span
+					style="width:36pt; text-indent:0pt; display:inline-block">&#xa0;</span></strong><strong><span
+					style="width:36pt; text-indent:0pt; display:inline-block">&#xa0;</span></strong><strong><span
+					style="width:36pt; text-indent:0pt; display:inline-block">&#xa0;</span></strong>&#xa0;&#xa0; <span
+				style="width:27.86pt; text-indent:0pt; display:inline-block">&#xa0;</span>(Head of the Institute)
+		</p>
+		<div style="clear:both">
+			<table cellspacing="0" cellpadding="0"
+				style="width:508.9pt; border:0.75pt solid #000000; border-collapse:collapse">
+				<tr style="height:15.45pt">
+					<td
+						style="width:158.55pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							&#xa0;
+						</p>
+					</td>
+					<td
+						style="width:158.6pt; border-right-style:solid; border-right-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							&#xa0;
+						</p>
+					</td>
+					<td
+						style="width:158.6pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							&#xa0;
+						</p>
+					</td>
+				</tr>
+				<tr style="height:16.45pt">
+					<td
+						style="width:158.55pt; border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							CHECKED&#xa0; BY : Q S C
+						</p>
+					</td>
+					<td
+						style="width:158.6pt; border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							PREPARED BY :&#xa0; M R
+						</p>
+					</td>
+					<td
+						style="width:158.6pt; border-top-style:solid; border-top-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+							APPROVED BY : H O I
+						</p>
+					</td>
+				</tr>
+			</table>
+			<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal">
+				&#xa0;
+			</p>
+		</div>
+	</div>
+	<div id="printOption" style="position:fixed;bottom:30px;width:100%">
+		<button class="check no-print"
+			onclick="document.getElementById('printOption').style.visibility = 'hidden'; window.print(); return true;">Print</button>
+	</div>
+</section>

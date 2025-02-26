@@ -109,7 +109,7 @@ export const employeeSchema = Joi.object({
   employee_type: Joi.string().valid("Office Staff", "Faculty"),
   institute: Joi.string().required(),
   designation: Joi.string().optional().allow(""),
-  authority: Joi.number().optional(),
+  authority: Joi.string().optional(),
 
   emergency_contact_number: Joi.string()
     .required()
@@ -201,3 +201,7 @@ export const assignAssetsValidator = Joi.array().items(
     return_date: Joi.string().optional(),
   })
 );
+
+export const checkHOIV = Joi.object({
+  institute : Joi.string().required()
+});

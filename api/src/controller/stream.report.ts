@@ -17,6 +17,8 @@ import { beautifyDate } from "../utils/beautifyDate";
 import { TIME_PERIOD } from "../constant";
 import { bookListReportV } from "../validator/library.validator";
 import { pmsReportV } from "../validator/inventory.validator";
+import { filterToSql } from "../utils/filterToSql";
+import { generateEmployeeAttendance } from "../service/attendance.service";
 
 export const streamMaintenceRecordExcelReport = asyncErrorHandler(
   async (req, res) => {
@@ -1605,7 +1607,7 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
     "EXECUTIVE NAME",
     "REFUND ID",
     "FORM ID",
-    "BANK TRANSACTION ID"
+    "BANK TRANSACTION ID",
   ]);
 
   // Row styling (header row)
@@ -2402,7 +2404,7 @@ export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
     "FREQUENCY",
     "LAST DONE DATE",
     "NEXT DUE DATE",
-    "REMARK"
+    "REMARK",
   ]);
 
   // Row styling (header row)
@@ -2462,7 +2464,7 @@ export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
       data.frequency,
       beautifyDate(data.last_done),
       beautifyDate(data.next_due),
-      data.remark
+      data.remark,
     ]);
     // Style the data rows
     excelRow.eachCell((cell) => {
@@ -2488,3 +2490,341 @@ export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
     client.release();
   });
 });
+
+export const streamEmployeeReport = asyncErrorHandler(async (req, res) => {
+  const institute = req.query.institute;
+  const employee_type = req.query.employee_type;
+
+  const { filterQuery, filterValues } = filterToSql(req.query, "e");
+
+  // Set response headers for streaming
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="Employee_Dashboard.xlsx"`
+  );
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+    stream: res,
+    useStyles: true,
+  });
+  const worksheet = workbook.addWorksheet(`${employee_type} Dashboard`);
+
+  worksheet.mergeCells("A1:AS1");
+  worksheet.getCell("A1").value = `${employee_type} Dashboard Report (${
+    institute || "ALL"
+  })`;
+  worksheet.getCell("A1").font = {
+    size: 20,
+    bold: true,
+    color: { argb: "000000" },
+  };
+  worksheet.getCell("A1").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFF00" },
+  };
+  worksheet.getRow(1).height = 30;
+  worksheet.getCell("A1").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+
+  worksheet.addRow([
+    "SR NUMBER",
+    "EMPLOYEE NAME",
+    "EMPLOYEE ID",
+    "JOINING DATE",
+    "DEPARTMENT",
+    "FIN NUMBER",
+    "INDOS NUMBER",
+    "CDC NUMBER",
+    "GRADE",
+    "QUALIFICATION",
+    "ADDITIONAL QUALIFICATION",
+    "SELLING EXPERIENCE",
+    "TEACHING EXPERIENCE",
+    "CONTACT NUMBER",
+    "EMAIL ADDRESS",
+    "LIVING ADDRESS",
+    "DOB",
+    "GENDER",
+    "MARITAL STATUS",
+    "BANK NAME",
+    "BANK ACCOUNT NUMBER",
+    "ACCOUNT HOLDER NAME",
+    "IFSC CODE",
+    "BASIC SALARY",
+    "HRA",
+    "OTHER ALLOWANCES",
+    "PROVIDENT FUND",
+    "PROFESSIONAL TAX",
+    "ESIC",
+    "INCOME TAX",
+    "IS ACTIVE",
+    "MAX TEACHING HOURS / WEEK",
+    "INSTITUTE",
+    "EMPLOYEE TYPE",
+    "DESIGNATION",
+    "PERMANENT ADDRESS",
+    "EMERGENCY CONTACT NUMBER",
+    "CONTACT PERSON NAME",
+    "CONTACT PERSON RELATION",
+    "PAYSCALE",
+    "PAYSCALE YEAR",
+    "NEXT TO KIN",
+    "RELATION TO SELF",
+    "FACULTY CURRENT WORKING HOURS",
+    "AUTHORITY",
+  ]);
+
+  // Row styling (header row)
+  worksheet.getRow(2).eachCell((cell) => {
+    cell.style = {
+      font: {
+        bold: true,
+        size: 12,
+        color: { argb: "000000" },
+      },
+      alignment: { horizontal: "center", vertical: "middle" },
+      fill: {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F4A460" },
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+  });
+
+  const client = await pool.connect();
+  const query = new QueryStream(
+    `
+    SELECT
+      row_number() OVER () AS sr_no,
+      e.name,
+      e.login_email,
+      e.joining_date,
+      d.name as department_name,
+      e.fin_number,
+      e.indos_number,
+      e.cdc_number,
+      e.grade,
+      e.qualification,
+      e.additional_qualification,
+      e.selling_experience,
+      e.teaching_experience,
+      e.contact_number,
+      e.email_address,
+      e.living_address,
+      e.dob,
+      e.gender,
+      e.marital_status,
+      e.bank_name,
+      e.bank_account_no,
+      e.account_holder_name,
+      e.ifsc_code,
+      e.basic_salary,
+      e.hra,
+      e.other_allowances,
+      e.provident_fund,
+      e.professional_tax,
+      e.esic,
+      e.income_tax,
+      e.is_active,
+      e.max_teaching_hrs_per_week,
+      e.institute,
+      e.employee_type,
+      e.designation,
+      e.permanent_address,
+      e.emergency_contact_number,
+      e.contact_person_name,
+      e.contact_person_relation,
+      e.payscale_label,
+      e.payscale_year,
+      e.next_to_kin,
+      e.relation_to_self,
+      e.faculty_current_working_hours,
+      e.authority
+    FROM employee e
+
+    LEFT JOIN department d ON e.department_id = d.id
+
+    ${filterQuery}
+    `,
+    filterValues,
+    {
+      batchSize: 10,
+    }
+  );
+
+  const pgStream = client.query(query);
+
+  // Process PostgreSQL stream data and append to Excel sheet
+  pgStream.on("data", (data) => {
+    const excelRow = worksheet.addRow(Object.values(data));
+    // Style the data rows
+    excelRow.eachCell((cell) => {
+      cell.style = {
+        font: { size: 11 },
+        alignment: { horizontal: "center" },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+  });
+
+  pgStream.on("end", () => {
+    workbook.commit();
+    client.release(); // Release the client when done
+  });
+
+  pgStream.on("error", (err) => {
+    console.log(err);
+    client.release();
+  });
+});
+
+export const streamAttendanceExcelReport = asyncErrorHandler(
+  async (req, res) => {
+    // Set response headers for streaming
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="Attendance_Report.xlsx"'
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+      stream: res,
+      useStyles: true,
+    });
+    const worksheet = workbook.addWorksheet("Attendance Report");
+
+    const rows = await generateEmployeeAttendance(req);
+
+    worksheet.mergeCells("A1:AD1");
+    worksheet.getCell("A1").value = `Attendance Report`;
+    worksheet.getCell("A1").font = {
+      size: 20,
+      bold: true,
+      color: { argb: "000000" },
+    };
+    worksheet.getCell("A1").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFFF00" },
+    };
+    worksheet.getRow(1).height = 30;
+    worksheet.getCell("A1").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    worksheet.addRow([
+      "SR NUMBER",
+      "ITEM NAME",
+      "CHECKS / MAINTENANCE REQUIRED",
+      "FREQUENCY",
+      "LAST DONE DATE",
+      "NEXT DUE DATE",
+      "REMARK",
+    ]);
+
+    // Row styling (header row)
+    worksheet.getRow(2).eachCell((cell) => {
+      cell.style = {
+        font: {
+          bold: true,
+          size: 12,
+          color: { argb: "000000" },
+        },
+        alignment: { horizontal: "center", vertical: "middle" },
+        fill: {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "F4A460" },
+        },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+
+    const client = await pool.connect();
+    const query = new QueryStream(
+      `
+    SELECT
+      row_number() OVER () AS sr_no,
+      COALESCE(iii.item_name, pms.custom_item) as item_name,
+      ph.*
+    FROM planned_maintenance_system pms
+
+    LEFT JOIN inventory_item_info iii
+    ON iii.item_id = pms.item_id
+
+    INNER JOIN pms_history ph
+    ON ph.planned_maintenance_system_id = pms.planned_maintenance_system_id
+
+    WHERE ph.last_done BETWEEN $1 AND $2 AND pms.institute = $3
+    `,
+      [],
+      {
+        batchSize: 10,
+      }
+    );
+
+    const pgStream = client.query(query);
+
+    // Process PostgreSQL stream data and append to Excel sheet
+    pgStream.on("data", (data) => {
+      const excelRow = worksheet.addRow([
+        data.sr_no,
+        data.item_name,
+        data.description,
+        data.frequency,
+        beautifyDate(data.last_done),
+        beautifyDate(data.next_due),
+        data.remark,
+      ]);
+      // Style the data rows
+      excelRow.eachCell((cell) => {
+        cell.style = {
+          font: { size: 11 },
+          alignment: { horizontal: "center" },
+          border: {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+            bottom: { style: "thin" },
+          },
+        };
+      });
+    });
+
+    pgStream.on("end", () => {
+      workbook.commit();
+      client.release(); // Release the client when done
+    });
+
+    pgStream.on("error", (err) => {
+      client.release();
+    });
+  }
+);

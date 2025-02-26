@@ -6,7 +6,6 @@ import { IoOpenOutline } from "react-icons/io5";
 import { useQuery } from "react-query";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
-import { getAuthToken } from "@/app/utils/getAuthToken";
 import { EmployeeType, ISuccess } from "@/types";
 import HandleSuspence from "../HandleSuspence";
 import Button from "../Button";
@@ -28,11 +27,7 @@ export default function TranningList() {
   const { data, error, isFetching } = useQuery<ISuccess<TTranningInfo[]>>({
     queryKey: ["get-tranning-info"],
     queryFn: async () =>
-      (
-        await axios.get(`${BASE_API}/tranning/employee`, {
-          headers: { ...getAuthToken() },
-        })
-      ).data,
+      (await axios.get(`${BASE_API}/tranning/employee`)).data,
     refetchOnMount: true,
   });
 
@@ -48,7 +43,10 @@ export default function TranningList() {
         >
           <ul className="space-y-5">
             {data?.data.map((info) => (
-              <li key={info.record_id} className="space-y-1 relative border-b-2 pb-3">
+              <li
+                key={info.record_id}
+                className="space-y-1 relative border-b-2 pb-3"
+              >
                 <h3 className="text-sm font-semibold space-x-1">
                   <span>{info.tranning_name}</span>
 
