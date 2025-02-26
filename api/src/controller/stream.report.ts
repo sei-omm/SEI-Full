@@ -2493,7 +2493,7 @@ export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
 
 export const streamEmployeeReport = asyncErrorHandler(async (req, res) => {
   const institute = req.query.institute;
-  const employee_type = req.query.employee_type;
+  const employee_type = req.query.employee_type || "Employee And Faculty";
 
   const { filterQuery, filterValues } = filterToSql(req.query, "e");
 
