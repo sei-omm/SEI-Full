@@ -11,7 +11,9 @@ import {
 import {
   addEarnLeaveToAllEmployee,
   addLeaveValuesYearly,
+  generateLeaveReceipt,
   getEachEmployeLeaveDetails,
+  getOthersLeaveList,
   getRequestedLeaveLists,
   removeLeaveRequestRow,
   updateLeaveStatus,
@@ -41,6 +43,7 @@ import {
   getPayscale,
   updatePayscale,
 } from "../controller/payscale.controller";
+import { isAuthenticated } from "../middleware/isAuthenticated";
 
 export const hrRouter = Router();
 
@@ -64,16 +67,12 @@ hrRouter
   .put("/payscale/:payscale_id", updatePayscale) // not using
   .delete("/payscale/:item_id", deletePayscale)
 
-  .get(
-    "/leave",
-    roles({
-      roles: ["Admin"],
-    }),
-    getRequestedLeaveLists
-  )
+  .get("/leave", isAuthenticated, getRequestedLeaveLists)
+  .get("/leave/other", isAuthenticated, getOthersLeaveList)
   .get("/leave/employees", getEachEmployeLeaveDetails)
+  .get("/leave/receipt/:leave_id", generateLeaveReceipt)
   // .post("/leave", createLeaveRequest) //this will done by employee
-  .patch("/leave/:id", updateLeaveStatus)
+  .patch("/leave/:id", isAuthenticated, updateLeaveStatus)
   .delete("/leave/:id", removeLeaveRequestRow)
   .post("/leave/add-earn-leave", addEarnLeaveToAllEmployee) // triggre this api form github action every month
   .post("/leave/add-yearly-leave", addLeaveValuesYearly) // triggre this api form github action every month

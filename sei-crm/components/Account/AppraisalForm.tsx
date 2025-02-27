@@ -26,9 +26,13 @@ async function getSingleAppraisal(appraisalId: number) {
 
 interface IProps {
   wrapperClassName?: string;
+  disableAll?: boolean; // Make it optional
 }
 
-export default function AppraisalForm({ wrapperClassName }: IProps) {
+export default function AppraisalForm({
+  wrapperClassName,
+  disableAll = false,
+}: IProps) {
   const { mutate, isLoading } = useDoMutation();
   const searchParams = useSearchParams();
   const route = useRouter();
@@ -185,7 +189,7 @@ export default function AppraisalForm({ wrapperClassName }: IProps) {
               label="Discipline *"
               placeholder="Type here.."
               defaultValue={appraisal?.data.appraisal_info.discipline}
-              viewOnly={!isNew}
+              viewOnly={!isNew || disableAll}
             />
 
             <TextArea
@@ -196,7 +200,7 @@ export default function AppraisalForm({ wrapperClassName }: IProps) {
               placeholder="Type here.."
               rows={6}
               defaultValue={appraisal?.data.appraisal_info.duties}
-              viewOnly={!isNew}
+              viewOnly={!isNew || disableAll}
             />
 
             <TextArea
@@ -207,7 +211,7 @@ export default function AppraisalForm({ wrapperClassName }: IProps) {
               placeholder="Type objectives here.."
               rows={6}
               defaultValue={appraisal?.data.appraisal_info.targets}
-              viewOnly={!isNew}
+              viewOnly={!isNew || disableAll}
             />
 
             <TextArea
@@ -217,7 +221,7 @@ export default function AppraisalForm({ wrapperClassName }: IProps) {
               label="Achievements *"
               placeholder="Type achievements here.."
               defaultValue={appraisal?.data.appraisal_info.achievements}
-              viewOnly={!isNew}
+              viewOnly={!isNew || disableAll}
             />
           </div>
           {/* Part 2 */}
@@ -265,7 +269,7 @@ export default function AppraisalForm({ wrapperClassName }: IProps) {
                               parsedOptionsEmployee?.["employee-" + item.id]
                             }
                             key={parsedOptionsEmployee?.["employee-" + item.id]}
-                            disabled={!isNew}
+                            disabled={!isNew || disableAll}
                           >
                             <option value="1">1</option>
                             <option value="2">2</option>
@@ -287,7 +291,7 @@ export default function AppraisalForm({ wrapperClassName }: IProps) {
                           ) : null}
                           <select
                             name={"hod-" + item.id}
-                            disabled={isNew}
+                            disabled={isNew || disableAll}
                             className="border border-gray-500 text-xs px-2 py-1 cursor-pointer outline-none"
                             defaultValue={parsedOptionsHod?.["hod-" + item.id]}
                             key={parsedOptionsHod?.["hod-" + item.id]}
@@ -318,7 +322,7 @@ export default function AppraisalForm({ wrapperClassName }: IProps) {
 
             <Input
               name="state_of_health"
-              viewOnly={isNew}
+              viewOnly={isNew || disableAll}
               viewOnlyText="NA"
               label="State of Health"
               placeholder="Type here.."
@@ -326,7 +330,7 @@ export default function AppraisalForm({ wrapperClassName }: IProps) {
             />
             <Input
               name="integrity"
-              viewOnly={isNew}
+              viewOnly={isNew || disableAll}
               viewOnlyText="NA"
               label="Integrity"
               placeholder="Type here.."
@@ -367,18 +371,22 @@ export default function AppraisalForm({ wrapperClassName }: IProps) {
             className={`flex items-center gap-4 ${isNew ? "hidden" : "block"}`}
           >
             <BackBtn />
-            <Button loading={isLoading} disabled={isLoading}>
-              Submit
-            </Button>
+            {!disableAll && (
+              <Button loading={isLoading} disabled={isLoading}>
+                Submit
+              </Button>
+            )}
           </div>
 
           <div
             className={`flex items-center gap-4 ${isNew ? "block" : "hidden"}`}
           >
             <BackBtn />
-            <Button loading={isLoading} disabled={isLoading}>
-              Submit
-            </Button>
+            {!disableAll && (
+              <Button loading={isLoading} disabled={isLoading}>
+                Submit
+              </Button>
+            )}
           </div>
         </form>
       </InfoLayout>

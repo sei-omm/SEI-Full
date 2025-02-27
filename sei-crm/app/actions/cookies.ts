@@ -9,12 +9,19 @@ export const setCookie = async (key: string, value: string) => {
 };
 
 export const getAuthTokenServer = async () => {
-  const cookieStore = await cookies();
+  // const cookieStore = await cookies();
+  // return {
+  //   Authorization: `Bearer ${cookieStore.get("login-token")?.value}`,
+  // };
   return {
-    Authorization: `Bearer ${cookieStore.get("login-token")?.value}`,
+    Authorization: `Bearer null`,
   };
 };
 
 export const deleteCookie = async (key: string) => {
   (await cookies()).delete(key);
+};
+
+export const getCookie = async (key: string) => {
+  return await cookies().get(key)?.value;
 };

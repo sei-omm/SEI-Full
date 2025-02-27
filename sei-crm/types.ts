@@ -184,6 +184,10 @@ export interface ILeave {
   leave_type: string;
 }
 
+export interface IOtherLeave extends ILeave {
+  row_id: number;
+}
+
 export type InputTypes = React.DetailedHTMLProps<
   React.InputHTMLAttributes<HTMLInputElement>,
   HTMLInputElement

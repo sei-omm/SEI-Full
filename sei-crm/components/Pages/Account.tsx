@@ -24,6 +24,7 @@ import AppraisalForm from "@/components/Account/AppraisalForm";
 import TranningList from "@/components/Account/TranningList";
 import { BASE_API } from "@/app/constant";
 import LoadingLayout from "../LoadingLayout";
+import OtherLeaves from "../Account/OtherLeaves";
 
 const fetchEmployeeInfo = async (employeeID: string | null) => {
   const response = await axios.get(BASE_API + "/employee/" + employeeID);
@@ -110,8 +111,12 @@ export default function Account() {
                 slug: "/account/?tab=payslip",
               },
               {
-                name: "Leave",
+                name: "My Leave",
                 slug: "/account/?tab=leave-request",
+              },
+              {
+                name: "Others Leave",
+                slug: "/account/?tab=other-leave",
               },
               {
                 name: "My Appraisals",
@@ -172,6 +177,11 @@ export default function Account() {
         {searchParams.get("tab") === "tranning" && (
           <Suspense fallback={<LoadingLayout />}>
             <TranningList />
+          </Suspense>
+        )}
+        {searchParams.get("tab") === "other-leave" && (
+          <Suspense fallback={<LoadingLayout />}>
+            <OtherLeaves />
           </Suspense>
         )}
       </div>

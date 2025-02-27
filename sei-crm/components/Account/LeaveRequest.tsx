@@ -29,7 +29,6 @@ export default function LeaveRequest() {
       (await axios.get(`${BASE_API}/employee/leave`)).data,
     refetchOnMount: true,
     onSuccess(data) {
-      console.log(data.data.leave_details);
       const leaveArray = [
         {
           type: "cl",

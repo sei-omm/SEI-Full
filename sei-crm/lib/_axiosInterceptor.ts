@@ -1,7 +1,18 @@
+import { getCookie } from "@/app/actions/cookies";
 import axios from "axios";
 
-axios.interceptors.request.use((config) => {
-  config.withCredentials = true; // Ensure cookies are sent with every request
+axios.interceptors.request.use(async (config) => {
+  config.withCredentials = true;
+
+  // Check if running on the server
+  if (typeof window === "undefined") {
+    const token = await getCookie("refreshToken");
+
+    if (token) {
+      config.headers.Cookie = `refreshToken=${token}`;
+    }
+  }
+
   return config;
 });
 
@@ -15,9 +26,7 @@ axios.interceptors.response.use(
       case 401:
         if (typeof window !== "undefined") {
           // Only run alert on the client-side
-          alert(
-            "Unauthorized! redirecting to login..."
-          );
+          alert("Unauthorized! redirecting to login...");
         }
 
         // Abort all ongoing requests

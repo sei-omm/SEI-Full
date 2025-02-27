@@ -26,14 +26,18 @@ export default function Login() {
         "Content-Type": "application/json",
       },
       onSuccess: async (data: ISuccess<EmployeeLoginInfoType>) => {
-        await setInfo("login-token", data.data.token);
+        // await setInfo("login-token", data.data.token);
         await setInfo(
           "employee-info",
           JSON.stringify({
             name: data.data.name,
             profile_image: data.data.profile_image,
             employee_id: data.data.employee_id,
-          })
+          }),
+          {
+            inLocalstorage: true,
+            inCookie: false,
+          }
         );
         route.push("/account?tab=informations");
       },

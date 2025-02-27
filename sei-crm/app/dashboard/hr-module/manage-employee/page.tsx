@@ -9,7 +9,6 @@ import { FaPeopleGroup } from "react-icons/fa6";
 import { FcLeave } from "react-icons/fc";
 import { MdOutlinePendingActions } from "react-icons/md";
 import UnAuthPage from "@/components/UnAuthPage";
-import { getAuthTokenServer } from "@/app/actions/cookies";
 
 const data = [
   {
@@ -42,8 +41,8 @@ interface IProps {
 }
 
 export default async function page({ searchParams }: IProps) {
+  // const AUTH_TOKEN_OBJ = await getAuthTokenServer();
   const urlSearchParams = new URLSearchParams(searchParams);
-  const AUTH_TOKEN_SERVER = await getAuthTokenServer();
 
   try {
     const { data: result } = await axios.get<
@@ -53,11 +52,7 @@ export default async function page({ searchParams }: IProps) {
         employees_on_leave: string;
         pending_leave_request: string;
       }>
-    >(`${BASE_API}/hr/dashboard?${urlSearchParams.toString()}`, {
-      headers: {
-        ...AUTH_TOKEN_SERVER,
-      },
-    });
+    >(`${BASE_API}/hr/dashboard?${urlSearchParams.toString()}`);
 
     data[0].value = result.data.total_employees;
     data[1].value = result.data.active_employees;

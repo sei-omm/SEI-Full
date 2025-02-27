@@ -11,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
+import { IoPrintSharp } from "react-icons/io5";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { useQuery } from "react-query";
 
@@ -129,6 +130,15 @@ export default function PerformanceManagement() {
                                 href={`/dashboard/hr-module/performance-management/view?id=${appraisal?.data?.[rowIndex].appraisal_id}`}
                               >
                                 <MdOutlineRemoveRedEye
+                                  size={18}
+                                  className="cursor-pointer"
+                                />
+                              </Link>
+                              <Link
+                                target="__blank"
+                                href={`${BASE_API}/employee/appraisal/print/${appraisal?.data?.[rowIndex].appraisal_id}`}
+                              >
+                                <IoPrintSharp
                                   size={18}
                                   className="cursor-pointer"
                                 />

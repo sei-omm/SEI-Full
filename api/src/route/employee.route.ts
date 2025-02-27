@@ -6,6 +6,7 @@ import {
   checkHoi,
   createAppraisal,
   deleteAssignAssets,
+  employeeLogout,
   generateAllEmployeeExcelSheet,
   generateAppraisal,
   getAppraisalList,
@@ -72,6 +73,7 @@ employeeRoute
   .patch("/:id", updateEmployeeActiveStatus)
   .delete("/:id", removeEmployee)
   .post("/login", loginEmployee)
+  .post("/logout", employeeLogout)
   .get("/faculty-assign-course/:faculty_id", getFacultyCourseSubject)
   .post("/faculty-assign-course", assignFacultyCourseSubject)
   .delete(

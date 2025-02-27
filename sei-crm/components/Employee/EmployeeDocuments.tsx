@@ -17,7 +17,7 @@ import {
   OFFICE_STAFF_DOC_INFO,
 } from "@/app/constant";
 import HandleSuspence from "../HandleSuspence";
-import { getAuthToken } from "@/app/utils/getAuthToken";
+// import { getAuthToken } from "@/app/utils/getAuthToken";
 
 interface IProps {
   employeeId: number;
@@ -35,14 +35,7 @@ export default function EmployeeDocuments({
   const { isFetching, error } = useQuery<ISuccess<TEmployeeDocsFromDB[]>>({
     queryKey: "employee_documents",
     queryFn: async () =>
-      (
-        await axios.get(`${BASE_API}/employee/${employeeId}/document`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...getAuthToken(),
-          },
-        })
-      ).data,
+      (await axios.get(`${BASE_API}/employee/${employeeId}/document`)).data,
     onSuccess: (data) => {
       const docsInfo = employeeType === "Faculty" ? FACULTY_DOC_INFO : OFFICE_STAFF_DOC_INFO;
       const newEmployeeInfo = [...docsInfo];

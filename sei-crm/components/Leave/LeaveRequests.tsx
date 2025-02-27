@@ -1,12 +1,14 @@
 import React from "react";
 import Pagination from "../Pagination";
-import { getAuthTokenServer } from "@/app/actions/cookies";
 import { CustomErrorPage } from "../CustomErrorPage";
-import { ILeave, ISuccess } from "@/types";
+import { IError, ILeave, ISuccess } from "@/types";
 import { BASE_API } from "@/app/constant";
 import Image from "next/image";
-import LeaveActionButtons from "../LeaveActionButtons";
 import TagsBtn from "../TagsBtn";
+import { IoPrintSharp } from "react-icons/io5";
+import Link from "next/link";
+import axios, { AxiosError } from "axios";
+import UnAuthPage from "../UnAuthPage";
 
 interface IProps {
   searchParams: any;
@@ -35,33 +37,33 @@ const tableDatas = {
 };
 
 export default async function LeaveRequests({ searchParams }: IProps) {
-  const AUTH_TOKEN_OBJ = await getAuthTokenServer();
+  // const AUTH_TOKEN_OBJ = await getAuthTokenServer();
 
   const urlSearchParams = new URLSearchParams(searchParams);
-  const response = await fetch(
-    `${BASE_API}/hr/leave?institute=${
-      urlSearchParams.get("institute") || "Kolkata"
-    }`,
-    {
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-        ...AUTH_TOKEN_OBJ,
-      },
-    }
-  );
-  if (!response.ok) return <CustomErrorPage message={response.statusText} />;
 
-  const result = (await response.json()) as ISuccess<ILeave[]>;
+  let result: ISuccess<ILeave[]> | null = null;
 
-  tableDatas.body = result.data.map((leaveInfo) => [
-    leaveInfo.employee_name,
-    leaveInfo.leave_from,
-    leaveInfo.leave_to,
-    leaveInfo.leave_reason,
-    leaveInfo.leave_status,
-    "action",
-  ]);
+  try {
+    const { data: serverResponse } = await axios.get<ISuccess<ILeave[]>>(
+      `${BASE_API}/hr/leave?institute=${
+        urlSearchParams.get("institute") || "Kolkata"
+      }`
+    );
+    tableDatas.body = serverResponse.data.map((leaveInfo) => [
+      leaveInfo.employee_name,
+      leaveInfo.leave_from,
+      leaveInfo.leave_to,
+      leaveInfo.leave_reason,
+      leaveInfo.leave_status,
+      "actionBtn",
+    ]);
+
+    result = serverResponse;
+  } catch (error) {
+    const err = error as AxiosError<IError>;
+    if (err.response?.status === 401) return <UnAuthPage />;
+    return <CustomErrorPage message={err.response?.data?.message || ""} />;
+  }
 
   return (
     <>
@@ -81,22 +83,32 @@ export default async function LeaveRequests({ searchParams }: IProps) {
             </tr>
           </thead>
           <tbody>
-            {tableDatas.body.map((itemArray, index) => (
-              <tr key={index} className="hover:bg-gray-100 group/bodyitem">
-                {itemArray.map((value, childItemIndex) => (
+            {tableDatas.body.map((itemArray, rowIndex) => (
+              <tr key={rowIndex} className="hover:bg-gray-100 group/bodyitem">
+                {itemArray.map((value, colIndex) => (
                   <td
                     className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
                     key={value}
                   >
                     <span className="line-clamp-1 inline-flex gap-x-3">
-                      {value === "action" ? (
-                        <LeaveActionButtons leaveINFO={result.data[index]} />
-                      ) : childItemIndex === 0 ? (
+                      {value === "actionBtn" ? (
+                        <div className="flex items-center justify-center">
+                          <Link
+                            target="__blank"
+                            href={`${BASE_API}/hr/leave/receipt/${result?.data[rowIndex].id}`}
+                          >
+                            <IoPrintSharp size={20} />
+                          </Link>
+                        </div>
+                      ) : colIndex === 0 ? (
                         <div className="flex items-center gap-2">
                           <div className="size-10 bg-gray-200 overflow-hidden rounded-full">
                             <Image
                               className="size-full object-cover"
-                              src={result.data[index].employee_profile_image}
+                              src={
+                                result?.data[rowIndex].employee_profile_image ||
+                                ""
+                              }
                               alt="Employee Image"
                               height={90}
                               width={90}
@@ -111,7 +123,7 @@ export default async function LeaveRequests({ searchParams }: IProps) {
                         <TagsBtn type="FAILED">Decline</TagsBtn>
                       ) : value === "pending" ? (
                         <TagsBtn type="PENDING">Pending</TagsBtn>
-                      ) : childItemIndex === 1 || childItemIndex === 2 ? (
+                      ) : colIndex === 1 || colIndex === 2 ? (
                         new Date(value).toLocaleDateString("en-US", {
                           day: "2-digit",
                           month: "short",

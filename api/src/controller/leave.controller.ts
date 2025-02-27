@@ -5,6 +5,8 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import {
   createLeaveRequestValidator,
+  getLeaveReciptV,
+  getOthersLeaveListV,
   updateLeaveStatusValidator,
   VEachEmployeLeaveDetails,
 } from "../validator/leave.validator";
@@ -13,12 +15,17 @@ import { getDate } from "../utils/getDate";
 import { parsePagination } from "../utils/parsePagination";
 import { transaction } from "../utils/transaction";
 import { countDays } from "../utils/countDays";
+import { AUTHORITY } from "../constant";
+import { sendNotificationUtil } from "../utils/sendNotificationUtil";
+import { beautifyDate } from "../utils/beautifyDate";
 
 const table_name = "leave";
 
 export const getRequestedLeaveLists = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { error, value } = VEachEmployeLeaveDetails.validate(req.query);
+    const { error, value } = VEachEmployeLeaveDetails.validate({
+      ...req.query,
+    });
     if (error) throw new ErrorHandler(400, error.message);
 
     const { LIMIT, OFFSET } = parsePagination(req);
@@ -36,23 +43,46 @@ export const getRequestedLeaveLists = asyncErrorHandler(
     `,
       [value.institute]
     );
+
     res.status(200).json(new ApiResponse(200, "All Leave Requests", rows));
   }
 );
 
-// SELECT * FROM employee_leave WHERE employee_id = $1
-//         AND financial_year_date >=
-//           CASE
-//             WHEN EXTRACT(MONTH FROM CURRENT_DATE) < 4
-//             THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT - 1, 4, 1)
-//             ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT, 4, 1)
-//           END
-//         AND financial_year_date <
-//           CASE
-//             WHEN EXTRACT(MONTH FROM CURRENT_DATE) < 4
-//             THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT, 4, 1)
-//             ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::INT + 1, 4, 1)
-//           END
+export const getOthersLeaveList = asyncErrorHandler(async (req, res) => {
+  const { error, value } = getOthersLeaveListV.validate({
+    employee_id: res.locals.employee_id,
+  });
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { rows } = await pool.query(
+    `
+     SELECT
+      l.id,
+      l.employee_id,
+      e.name as employee_name,
+      e.profile_image AS employee_profile_image,
+      l.leave_from,
+      l.leave_to,
+      l.leave_reason,
+      lae.status as leave_status,
+      l.leave_type,
+      lae.item_id AS row_id
+     FROM leave_and_employee lae
+
+     LEFT JOIN leave AS l
+     ON l.id = lae.leave_id
+
+     LEFT JOIN employee AS e
+     ON e.id = l.employee_id
+
+     WHERE lae.to_employee_id = $1
+    `,
+    [value.employee_id]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Others Leave Request", rows));
+});
+
 export const getEmployeeLeaveRequest = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const [leaveRequestList, leaveDetails] = await transaction([
@@ -112,6 +142,7 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
     try {
       await client.query("BEGIN");
 
+      // check is employee have any leave avilable or not
       const { rowCount, rows } = await client.query(
         `
           SELECT ${leave_type} FROM employee_leave
@@ -134,10 +165,54 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
         );
       }
 
-      const { rowCount: totalRowCreated } = await client.query(
+      // get some info about current employee
+      const { rows: currentEmployeeInfo } = await client.query(
+        `SELECT id, authority, department_id, institute FROM employee WHERE id = $1`,
+        [res.locals?.employee_id]
+      );
+
+      let highAuthorityName = "HOD";
+
+      // add extra filter if higher authority is HOD than don't need to check department as it will got to HOI
+      let extra_filter = "";
+      const extra_filter_values: string[] = [];
+      if (currentEmployeeInfo[0].authority !== "HOD") {
+        extra_filter = " AND ha.department_id = $3";
+        extra_filter_values.push(currentEmployeeInfo[0].department_id);
+      } else {
+        // check what is the name of current employee higher authority name ex : if HOD than HOI is higher
+        const currentEmployeeAuthorityIndex = AUTHORITY.findIndex(
+          (item) => item === currentEmployeeInfo[0].authority
+        );
+        const highAuthorityNameInner: string | undefined =
+          AUTHORITY[currentEmployeeAuthorityIndex - 1];
+        highAuthorityName = highAuthorityNameInner;
+      }
+
+      //find id form employee where authority is higher authority
+      const { rows: highAuthorityInfo } = await client.query(
+        `
+          SELECT
+            id,
+            name
+          FROM employee ha 
+            WHERE ha.authority = $1
+            AND ha.is_active = true
+            AND ha.institute = $2
+            ${extra_filter}
+            `,
+        [
+          highAuthorityName,
+          currentEmployeeInfo[0].institute,
+          ...extra_filter_values,
+        ]
+      );
+
+      const { rowCount: totalRowCreated, rows: leave } = await client.query(
         `
         INSERT INTO ${table_name} ${columns} VALUES ${params}
         ON CONFLICT DO NOTHING
+        RETURNING id
         `,
         values
       );
@@ -149,6 +224,11 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
         );
 
       await client.query(
+        `INSERT INTO leave_and_employee (leave_id, from_employee_id, to_employee_id) VALUES ($1, $2, $3)`,
+        [leave[0].id, res.locals?.employee_id, highAuthorityInfo[0].id]
+      );
+
+      await client.query(
         `UPDATE employee_leave SET ${leave_type} = ${leave_type} - ${total_leave_days} WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start() RETURNING ${leave_type}`,
         [res.locals?.employee_id]
       );
@@ -158,6 +238,7 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
     } catch (error: any) {
       await client.query("ROLLBACK");
       client.release();
+      console.log(error);
       throw new ErrorHandler(400, error.message);
     }
 
@@ -170,39 +251,129 @@ export const updateLeaveStatus = asyncErrorHandler(
     const { error, value } = updateLeaveStatusValidator.validate({
       ...req.body,
       ...req.params,
+      who_is_updating_id: res.locals?.employee_id,
     });
 
     if (error) throw new ErrorHandler(400, error.message);
 
-    let sql1 = "";
-    let sql2 = "";
-    let sql3 = "";
+    // let sql1 = "";
+    // let sql2 = "";
+    // let sql3 = "";
 
     const leave_type = req.body.leave_type;
 
     if (value.leave_status === "success") {
-      const leaveStartDate = new Date(getDate(new Date(value.leave_from)));
-      const leaveEndDate = new Date(getDate(new Date(value.leave_to)));
+      //we will now check is it hod or hoi if yes then we will send a notification to the employee
+      //don't update the status of leave table
+      //only update the status of leave_and_employee table status
+      //if it is hr than update leave table status and do other modification like update attendance and other related table
 
-      const datas = [];
+      const client = await pool.connect();
 
-      // Loop through each day
-      while (leaveStartDate <= leaveEndDate) {
-        datas.push({
-          employee_id: value.employee_id,
-          date: leaveStartDate.toISOString().split("T")[0],
-          status: "Leave",
-        });
-        leaveStartDate.setDate(leaveStartDate.getDate() + 1);
-      }
+      try {
+        await client.query("BEGIN");
 
-      sql1 = `
+        await client.query(
+          `UPDATE leave_and_employee SET status = 'success' WHERE item_id = $1`,
+          [value.leave_and_employee_row_id]
+        );
+
+        const { rows: whoIsUpdatingInfo } = await client.query(
+          `
+          SELECT 
+            authority, 
+            institute,
+            d.name as department_name 
+          FROM employee e 
+
+          LEFT JOIN department d
+          ON d.id = e.department_id
+
+          WHERE e.id = $1`,
+          [value.who_is_updating_id]
+        );
+
+        const currentAuthority = whoIsUpdatingInfo[0].authority;
+
+        if (
+          whoIsUpdatingInfo[0].department_name !== "HR Department" &&
+          (currentAuthority === "HOD" || currentAuthority === "HOI")
+        ) {
+          //send a notification to the employee, update leave_and_employee table status, send the requst to the hr
+          await sendNotificationUtil({
+            notification_title: `Leave Request Status`,
+            notification_description: `${currentAuthority} has approved your leave request; it will now be sent to the HR Department for final approval.`,
+            notification_type: "private",
+            employee_ids: [value.employee_id],
+            client: client,
+          });
+
+          const { rows: hrInfo } = await client.query(
+            `
+            SELECT 
+              e.id
+            FROM employee e
+
+            LEFT JOIN department d
+            ON d.id = e.department_id
+
+            WHERE authority = 'HOD' AND institute = $1 AND d.name = 'HR Department'`,
+            [whoIsUpdatingInfo[0].institute]
+          );
+
+          await client.query(
+            `INSERT INTO leave_and_employee (leave_id, from_employee_id, to_employee_id) VALUES ($1, $2, $3)`,
+            [value.id, value.who_is_updating_id, hrInfo[0].id]
+          );
+
+          await client.query("COMMIT");
+          client.release();
+
+          return res
+            .status(200)
+            .json(
+              new ApiResponse(
+                200,
+                "Leave request has been sent to the HR Department."
+              )
+            );
+        }
+
+        const leaveStartDate = new Date(getDate(new Date(value.leave_from)));
+        const leaveEndDate = new Date(getDate(new Date(value.leave_to)));
+
+        const datas = [];
+
+        // Loop through each day
+        while (leaveStartDate <= leaveEndDate) {
+          datas.push({
+            employee_id: value.employee_id,
+            date: leaveStartDate.toISOString().split("T")[0],
+            status: "Leave",
+          });
+          leaveStartDate.setDate(leaveStartDate.getDate() + 1);
+        }
+
+        const total_leave_days = countDays(value.leave_from, value.leave_to);
+
+        if (value.previous_status !== "pending") {
+          await client.query(
+            `UPDATE employee_leave SET ${leave_type} = ${leave_type} - ${total_leave_days} WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start() AND ${leave_type} > 0`,
+            [req.body.employee_id]
+          );
+        }
+
+        await client.query(
+          `
           UPDATE leave
           SET leave_status = $1
           WHERE id = $2;
-        `;
+        `,
+          [value.leave_status, value.id]
+        );
 
-      sql2 = `
+        await client.query(
+          `
           INSERT INTO attendance (employee_id, date, status)
           VALUES ${datas
             .map(
@@ -210,25 +381,7 @@ export const updateLeaveStatus = asyncErrorHandler(
                 `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`
             )
             .join(", ")};
-        `;
-
-      const total_leave_days = countDays(value.leave_from, value.leave_to);
-
-      sql3 = `UPDATE employee_leave SET ${leave_type} = ${leave_type} - ${total_leave_days} WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start() AND ${leave_type} > 0`;
-
-      const client = await pool.connect();
-
-      try {
-        await client.query("BEGIN");
-
-        if (value.previous_status !== "pending") {
-          await client.query(sql3, [req.body.employee_id]);
-        }
-
-        await client.query(sql1, [value.leave_status, value.id]);
-
-        await client.query(
-          sql2,
+        `,
           datas.flatMap((data: any) => [
             data.employee_id,
             data.date,
@@ -244,25 +397,101 @@ export const updateLeaveStatus = asyncErrorHandler(
         throw new ErrorHandler(400, error.message);
       }
     } else {
-      sql1 = `DELETE FROM attendance WHERE employee_id = $1 AND date BETWEEN $2 AND $3`;
-      sql2 = `UPDATE ${table_name} SET leave_status = $1 WHERE id = $2`;
       const total_leave_days = countDays(value.leave_from, value.leave_to);
-      sql3 = `UPDATE employee_leave SET ${leave_type} = ${leave_type} + ${total_leave_days} WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start()`;
 
-      await transaction([
-        {
-          sql: sql1,
-          values: [value.employee_id, value.leave_from, value.leave_to],
-        },
-        {
-          sql: sql2,
-          values: [value.leave_status, value.id],
-        },
-        {
-          sql: sql3,
-          values: [req.body.employee_id],
-        },
-      ]);
+      const client = await pool.connect();
+
+      try {
+        await client.query("BEGIN");
+
+        await client.query(
+          `UPDATE leave_and_employee SET status = 'decline' WHERE item_id = $1`,
+          [value.leave_and_employee_row_id]
+        );
+
+        const { rows: whoIsUpdatingInfo } = await client.query(
+          `
+            SELECT 
+              authority, 
+              institute,
+              d.name as department_name 
+            FROM employee e 
+
+            LEFT JOIN department d
+            ON d.id = e.department_id
+
+            WHERE e.id = $1`,
+          [value.who_is_updating_id]
+        );
+
+        const currentAuthority = whoIsUpdatingInfo[0].authority;
+
+        if (
+          whoIsUpdatingInfo[0].department_name !== "HR Department" &&
+          (currentAuthority === "HOD" || currentAuthority === "HOI")
+        ) {
+          //send a notification to the employee, update leave_and_employee table status, send the requst to the hr
+          await sendNotificationUtil({
+            notification_title: `Leave Request Status`,
+            notification_description: `${currentAuthority} has rejected your leave request.`,
+            notification_type: "private",
+            employee_ids: [value.employee_id],
+            client: client,
+          });
+
+          const { rows: hrInfo } = await client.query(
+            `
+            SELECT 
+              e.id
+            FROM employee e
+
+            LEFT JOIN department d
+            ON d.id = e.department_id
+
+            WHERE authority = 'HOD' AND institute = $1 AND d.name = 'HR Department'`,
+            [whoIsUpdatingInfo[0].institute]
+          );
+
+          // await client.query(
+          //   `INSERT INTO leave_and_employee (leave_id, from_employee_id, to_employee_id) VALUES ($1, $2, $3)`,
+          //   [value.id, value.who_is_updating_id, hrInfo[0].id]
+          // );
+
+          await client.query(
+            `DELETE FROM leave_and_employee WHERE leave_id = $1 AND to_employee_id = $2`,
+            [value.id, hrInfo[0].id]
+          );
+
+          await client.query("COMMIT");
+          client.release();
+
+          return res
+            .status(200)
+            .json(new ApiResponse(200, "The leave request has been rejected."));
+        }
+
+        await client.query(
+          `DELETE FROM attendance WHERE employee_id = $1 AND date BETWEEN $2 AND $3`,
+          [value.employee_id, value.leave_from, value.leave_to]
+        );
+
+        await client.query(
+          `UPDATE ${table_name} SET leave_status = $1 WHERE id = $2`,
+          [value.leave_status, value.id]
+        );
+
+        await client.query(
+          `UPDATE employee_leave SET ${leave_type} = ${leave_type} + ${total_leave_days} WHERE employee_id = $1 AND financial_year_date >= get_financial_year_start()`,
+          [req.body.employee_id]
+        );
+
+        await client.query("COMMIT");
+        client.release();
+      } catch (error: any) {
+        await client.query("ROLLBACK");
+        client.release();
+        throw new ErrorHandler(400, error.message);
+      }
     }
 
     res
@@ -343,8 +572,8 @@ export const removeLeaveRequestRow = asyncErrorHandler(async (req, res) => {
 
 // export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
 //   const { rowCount } = await pool.query(`
-//     SELECT 1 
-//     FROM earned_leave_history 
+//     SELECT 1
+//     FROM earned_leave_history
 //     WHERE DATE_TRUNC('month', month) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
 //     LIMIT 1
 //   `);
@@ -377,7 +606,7 @@ export const removeLeaveRequestRow = asyncErrorHandler(async (req, res) => {
 
 //         SELECT
 //           e.id AS employee_id,
-//           cmd.total_days AS total_month_days, 
+//           cmd.total_days AS total_month_days,
 //           COUNT(a.id) as total_not_present,
 //           cmh.total_holiday_this_month,
 //           (cmd.total_days - COUNT(a.id) - cmh.total_holiday_this_month) AS total_present_days
@@ -395,7 +624,7 @@ export const removeLeaveRequestRow = asyncErrorHandler(async (req, res) => {
 
 //         GROUP BY e.id, cmd.total_days, cmh.total_holiday_this_month
 
-//         HAVING 
+//         HAVING
 //             (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24
 //       `
 //     );
@@ -424,8 +653,8 @@ export const removeLeaveRequestRow = asyncErrorHandler(async (req, res) => {
 
 // export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
 //   const { rowCount } = await pool.query(`
-//     SELECT 1 
-//     FROM earned_leave_history 
+//     SELECT 1
+//     FROM earned_leave_history
 //     WHERE DATE_TRUNC('month', month) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
 //     LIMIT 1
 //   `);
@@ -458,7 +687,7 @@ export const removeLeaveRequestRow = asyncErrorHandler(async (req, res) => {
 
 //         SELECT
 //           e.id AS employee_id,
-//           cmd.total_days AS total_month_days, 
+//           cmd.total_days AS total_month_days,
 //           COUNT(a.id) as total_not_present,
 //           cmh.total_holiday_this_month,
 //           (cmd.total_days - COUNT(a.id) - cmh.total_holiday_this_month) AS total_present_days
@@ -476,7 +705,7 @@ export const removeLeaveRequestRow = asyncErrorHandler(async (req, res) => {
 
 //         GROUP BY e.id, cmd.total_days, cmh.total_holiday_this_month
 
-//         HAVING 
+//         HAVING
 //             (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24
 //       `
 //     );
@@ -583,7 +812,7 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
 
     await client.query("COMMIT");
     client.release();
-  } catch (error : any) {
+  } catch (error: any) {
     await client.query("ROLLBACK");
     client.release();
     throw new ErrorHandler(400, error?.message);
@@ -591,7 +820,6 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, "Successfully Updated"));
 });
-
 
 export const addLeaveValuesYearly = asyncErrorHandler(async (req, res) => {
   // await pool.query(
@@ -621,7 +849,67 @@ export const addLeaveValuesYearly = asyncErrorHandler(async (req, res) => {
     ON CONFLICT (employee_id, financial_year_date) DO NOTHING;
 
     `
-  )
+  );
 
   res.status(200).json(new ApiResponse(200, "Successfully Updated"));
+});
+
+export const generateLeaveReceipt = asyncErrorHandler(async (req, res) => {
+  const { error, value } = getLeaveReciptV.validate(req.params);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const { rows } = await client.query(
+      `
+        SELECT
+          l.id as leave_id,
+          TO_CHAR(l.created_at, 'DD Mon YYYY') as issue_date,
+          e.name,
+          l.employee_id,
+          e.designation,
+          l.leave_from,
+          l.leave_to,
+          l.leave_reason,
+          e.institute
+        FROM leave l
+  
+        LEFT JOIN employee e
+        ON e.id = l.employee_id
+  
+        WHERE l.id = $1
+      `,
+      [value.leave_id]
+    );
+
+    const { rows : totalLeaveInfo } = await client.query(
+      `
+      SELECT 
+        COUNT(employee_id) total_leave 
+      FROM attendance
+      WHERE employee_id = $1 AND date BETWEEN get_financial_year_start() AND get_financial_year_end() AND (status = 'Leave')
+      `,
+      [rows[0].employee_id]
+    )
+
+    const totalDays = countDays(rows[0].leave_from, rows[0].leave_to);
+
+    res.render("leave_format.ejs", {
+      ...rows[0],
+      total_days: totalDays,
+      leave_from: beautifyDate(rows[0].leave_from),
+      leave_to: beautifyDate(rows[0].leave_to),
+      total_leave_days : totalLeaveInfo[0].total_leave
+    });
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error) {
+    await client.query("ROLLBACK");
+    client.release();
+    throw new ErrorHandler(500, "Error generating leave receipt");
+  }
 });

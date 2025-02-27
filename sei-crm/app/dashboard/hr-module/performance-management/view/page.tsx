@@ -6,7 +6,7 @@ import React from "react";
 export default function ViewAppraisal() {
   return (
     <section className="w-full space-y-5">
-      <AppraisalForm wrapperClassName="!w-[100%]" />
+      <AppraisalForm disableAll = {true} wrapperClassName="!w-[100%]" />
     </section>
   );
 }

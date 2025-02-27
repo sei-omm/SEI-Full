@@ -32,7 +32,6 @@ import EmployeeTask from "./EmployeeTask";
 import EmployeeDocuments from "./Employee/EmployeeDocuments";
 import { uploadToVercel } from "@/utils/uploadToVercel";
 import Spinner from "./Spinner";
-import { getAuthToken } from "@/app/utils/getAuthToken";
 import { useRouter } from "next/navigation";
 import { IoMdArrowBack } from "react-icons/io";
 import OfficialInfoForm from "./Employee/OfficialInfoForm";
@@ -50,12 +49,7 @@ const fetchDepartments = async () => {
 };
 
 const fetchEmployeeInfo = async (employeeID: string) => {
-  const response = await axios.get(BASE_API + "/employee/" + employeeID, {
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthToken(),
-    },
-  });
+  const response = await axios.get(BASE_API + "/employee/" + employeeID);
   return response.data;
 };
 

@@ -653,8 +653,11 @@ export const loginEmployee = asyncErrorHandler(
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, // Must be false for localhost (without HTTPS)
-      sameSite: "lax", // "lax" works better for local development
+      secure: process.env.NODE_ENV === "production",
+      // sameSite: "lax", // "lax" works better for local development
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      domain:
+        process.env.NODE_ENV === "production" ? process.env.DOMAIN : undefined,
     });
 
     res.status(200).json(
@@ -667,6 +670,16 @@ export const loginEmployee = asyncErrorHandler(
     );
   }
 );
+
+export const employeeLogout = asyncErrorHandler(async (req, res) => {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    domain: process.env.NODE_ENV === "production" ? process.env.DOMAIN : undefined,
+  });
+  res.status(200).json(new ApiResponse(200, "Successfully Logout"));
+});
 
 export const getMarketingTeam = asyncErrorHandler(
   async (req: Request, res: Response) => {
@@ -837,7 +850,7 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
 
   try {
     await client.query("BEGIN");
-    // find current employee info like
+    // find current employee info
     const { rows: employee1Info } = await client.query(
       `
       SELECT
@@ -866,7 +879,7 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
       extra_filter_values.push(employee1Info[0].department_id);
     }
 
-    //find id form employee where authority is higher authority name
+    //find id form employee where authority is higher authority
     const { rows: highAuthorityInfo } = await client.query(
       `
       SELECT
@@ -1193,7 +1206,7 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
     );
 
     await client.query(
-      `UPDATE appraisal_and_employee SET appraisal_status = 'Approved' WHERE appraisal_id = $1 AND to_employee_id = $2`,
+      `UPDATE appraisal_and_employee SET appraisal_status = 'Approved', approve_date = CURRENT_DATE WHERE appraisal_id = $1 AND to_employee_id = $2`,
       [value.appraisal_id, value.employee_id]
     );
 
@@ -1297,39 +1310,56 @@ export const checkHoi = asyncErrorHandler(async (req, res) => {
   );
 });
 
+function getReferenceDate(joiningDate: string) {
+  const currentDate = new Date();
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(currentDate.getFullYear() - 1);
+
+  if (joiningDate) {
+    const joiningDateObj = new Date(joiningDate);
+    return joiningDateObj > oneYearAgo ? joiningDateObj : oneYearAgo;
+  }
+
+  return oneYearAgo;
+}
+
 export const generateAppraisal = asyncErrorHandler(async (req, res) => {
   const { error, value } = getSingleAppraisalValidator.validate(req.params);
   if (error) throw new ErrorHandler(400, error.message);
 
-  const [singleAppraisalInfo, appraisalOfInfo] = await transaction([
-    {
-      sql: `
-      SELECT 
-        a.*,
-        JSON_AGG(JSON_OBJECT('employee_id' : e.id, 'name' : e.name, 'remark' : aae.appraisal_remark, 'status' : aae.appraisal_status)) as sended_to
-      FROM appraisal AS a
+  const client = await pool.connect();
 
-      LEFT JOIN appraisal_and_employee AS aae
-      ON a.appraisal_id = aae.appraisal_id
+  try {
+    await client.query("BEGIN");
+    const { rows: singleAppraisalInfo } = await client.query(
+      `
+        SELECT 
+          a.*,
+          JSON_AGG(JSON_OBJECT('employee_id' : e.id, 'name' : e.name, 'remark' : aae.appraisal_remark, 'status' : aae.appraisal_status, 'authority' : e.authority, 'approve_date' : aae.approve_date)) as sended_to
+        FROM appraisal AS a
 
-      LEFT JOIN employee AS e
-      ON aae.to_employee_id = e.id
-      
-      WHERE a.appraisal_id = $1
+        LEFT JOIN appraisal_and_employee AS aae
+        ON a.appraisal_id = aae.appraisal_id
 
-      GROUP BY a.appraisal_id
+        LEFT JOIN employee AS e
+        ON aae.to_employee_id = e.id
+        
+        WHERE a.appraisal_id = $1
+
+        GROUP BY a.appraisal_id
       `,
-      values: [value.appraisal_id],
-    },
+      [value.appraisal_id]
+    );
 
-    {
-      sql: `
-
-        SELECT
+    const { rows: appraisalOfInfo } = await client.query(
+      `
+      SELECT
+          id,
           e.name,
           e.dob,
           e.joining_date,
-          e.institute
+          e.institute,
+          e.employee_type
         FROM appraisal AS a
 
         LEFT JOIN employee AS e
@@ -1337,24 +1367,121 @@ export const generateAppraisal = asyncErrorHandler(async (req, res) => {
 
         WHERE a.appraisal_id = $1
       `,
-      values: [value.appraisal_id],
-    },
-  ]);
+      [value.appraisal_id]
+    );
 
-  // singleAppraisalInfo.rows[0]
-  // appraisalOfInfo.rows[0]
+    const from_date = beautifyDate(
+      getReferenceDate(appraisalOfInfo[0].joining_date).toString()
+    );
+    const to_date = beautifyDate(new Date().toString());
 
-  const age = calculateAge(appraisalOfInfo.rows[0].dob)
+    const { rows: totalAbsenceInfo } = await client.query(
+      `
+      SELECT 
+        COUNT(employee_id) total_absence 
+      FROM attendance
+      WHERE employee_id = $1 AND date BETWEEN $2 AND $3 AND (status = 'Absent' OR status = 'Leave')
+      `,
+      [appraisalOfInfo[0].id, from_date, to_date]
+    );
 
-  res.render("appraisal.ejs", {
-    institute : appraisalOfInfo.rows[0].institute,
-    issue_number : value.appraisal_id,
-    issue_date : beautifyDate(singleAppraisalInfo.rows[0].created_at),
-    employee_name : appraisalOfInfo.rows[0].name,
-    age,
-    dob : beautifyDate(appraisalOfInfo.rows[0].dob),
-    discipline : singleAppraisalInfo.rows[0].discipline,
-    joining_date : beautifyDate(appraisalOfInfo.rows[0].joining_date),
-    duties : singleAppraisalInfo.rows[0].duties,
-  });
+    const age = calculateAge(appraisalOfInfo[0].dob);
+
+    const appraisalOptions = [
+      {
+        id: "option-1",
+        text: "Accomplishment of planned work/work allotted as per subject allotted",
+        group: 1,
+      },
+      { id: "option-2", text: "Quality of output", group: 1 },
+      { id: "option-3", text: "Analytical ability", group: 1 },
+      {
+        id: "option-4",
+        text: "Accomplishment of exceptional work / unforeseen tasks performed",
+        group: 1,
+      },
+      { id: "option-5", text: "Overall grading on ‘work output’", group: 1 },
+
+      { id: "option-6", text: "Attitude to work", group: 2 },
+      { id: "option-7", text: "Sense of responsibility", group: 2 },
+      { id: "option-8", text: "Maintenance of Discipline", group: 2 },
+      { id: "option-9", text: "Communication skills", group: 2 },
+      { id: "option-10", text: "Leadership Qualities", group: 2 },
+      { id: "option-11", text: "Capacity to work in team spirit", group: 2 },
+      {
+        id: "option-12",
+        text: "Capacity to adhere to time-schedule",
+        group: 2,
+      },
+      { id: "option-13", text: "Inter personal relations", group: 2 },
+      { id: "option-14", text: "Overall bearing and personality", group: 2 },
+      {
+        id: "option-15",
+        text: "Overall Grading on ‘Personal Attributes’",
+        group: 2,
+      },
+
+      {
+        id: "option-16",
+        text: "Knowledge of Rules / Regulations / procedures in the area of function and ability to apply them correctly",
+        group: 3,
+      },
+      { id: "option-17", text: "Strategic Planning ability", group: 3 },
+      { id: "option-18", text: "Decision making ability", group: 3 },
+      { id: "option-19", text: "Coordination ability", group: 3 },
+      {
+        id: "option-20",
+        text: "Ability to motivate and develop subordinates",
+        group: 3,
+      },
+      { id: "option-21", text: "Initiative", group: 3 },
+      {
+        id: "option-22",
+        text: "Overall Grading on Functional Competency",
+        group: 3,
+      },
+    ];
+
+    const parsedOptionObject = JSON.parse(
+      singleAppraisalInfo[0].appraisal_options_hod || "{}"
+    );
+
+    const hoiInfo = singleAppraisalInfo[0].sended_to.find(
+      (item: any) => item.authority === "HOI" && item.status === "Approved"
+    );
+    res.render("appraisal.ejs", {
+      institute: appraisalOfInfo[0].institute,
+      issue_number: value.appraisal_id,
+      issue_date: beautifyDate(singleAppraisalInfo[0].created_at),
+      employee_name: appraisalOfInfo[0].name,
+      age,
+      dob: beautifyDate(appraisalOfInfo[0].dob),
+      discipline: singleAppraisalInfo[0].discipline,
+      joining_date: beautifyDate(appraisalOfInfo[0].joining_date),
+      duties: singleAppraisalInfo[0].duties,
+      targets: singleAppraisalInfo[0].targets,
+      state_of_health: singleAppraisalInfo[0].state_of_health,
+      integrity: singleAppraisalInfo[0].integrity,
+      employee_type:
+        appraisalOfInfo[0].employee_type === "Office Staff"
+          ? "Staff"
+          : "Faculty",
+
+      appraisal_options: appraisalOptions,
+      option_values_obj: parsedOptionObject,
+      hoi_name: hoiInfo?.name,
+      approve_date_hoi: hoiInfo?.approve_date,
+
+      from_date: from_date,
+      to_date: to_date,
+      total_absence: totalAbsenceInfo[0].total_absence,
+    });
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    client.release();
+    throw new ErrorHandler(400, error.message);
+  }
 });

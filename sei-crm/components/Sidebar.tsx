@@ -11,7 +11,7 @@ import {
   MdOutlineHolidayVillage,
   MdOutlineSubject,
 } from "react-icons/md";
-import { FaPeopleRoof } from "react-icons/fa6";
+import { FaChevronDown, FaPeopleRoof } from "react-icons/fa6";
 import Image from "next/image";
 import { RxDot } from "react-icons/rx";
 import { TbCategory2, TbReportSearch } from "react-icons/tb";
@@ -325,7 +325,6 @@ const sidebarOptions = [
         name: "Time Table Report",
         slug: "/time-table/report",
       },
-      
     ],
   },
   // {
@@ -349,6 +348,8 @@ const sidebarOptions = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isCollapse, setIsCollapse] = useState(false);
+
+  const [currentExpandIndex, setCurrentExpandIndex] = useState(0);
 
   // const [collapseSubmenuIndex, setCollapseSubmenuIndex] = useState(-1);
 
@@ -395,25 +396,17 @@ export default function Sidebar() {
         </div>
       </div>
       <ul className={`space-y-2 mt-5 ${isCollapse ? "hidden" : "block"}`}>
-        {sidebarOptions.map((option) => (
+        {sidebarOptions.map((option, pIndex) => (
           <li key={option.id}>
-            <Link
-              // onClick={
-              //   option.subMenu
-              //     ? () =>
-              //         setCollapseSubmenuIndex((preIndex) =>
-              //           preIndex === index ? -1 : index
-              //         )
-              //     : () => {}
-              // }
-              href={option.slug}
-              className={`flex items-center justify-between py-2 px-3 rounded-lg ${
+            <button
+              onClick={() => setCurrentExpandIndex((prev) => prev === pIndex ? -1 : pIndex)}
+              className={`flex items-center justify-between w-full py-2 px-3 rounded-lg ${
                 option.subMenu ? "" : "hover:bg-[#E4E6E9]"
               } ${
                 pathname.includes(option.slug) && !option.subMenu
                   ? "bg-[#E4E6E9]"
                   : "bg-transparent"
-              } `}
+              } relative`}
             >
               <div className="flex items-center gap-x-2">
                 {option.icon}
@@ -425,24 +418,15 @@ export default function Sidebar() {
                   {option.name}
                 </span>
               </div>
-              {/* {option.subMenu ? (
-                <IoIosArrowDown
-                  className={`${
-                    collapseSubmenuIndex === index ? "rotate-180" : "rotate-0"
-                  } transition-all duration-300`}
-                />
-              ) : null} */}
-            </Link>
 
-            {/* ${
-                  collapseSubmenuIndex === index && isCollapse === false
-                    ? "max-h-[55rem]"
-                    : "max-h-[55rem]"
-                } */}
+              <FaChevronDown size={13} className={`absolute right-0 top-2 ${currentExpandIndex === pIndex ? "rotate-180" : "rotate-0"} transition-all duration-500`} />
+            </button>
 
             {option.subMenu ? (
               <ul
-                className={`w-full ml-4 overflow-hidden transition-all duration-300`}
+                className={`w-full ml-4 overflow-hidden transition-all duration-300 ${
+                  currentExpandIndex === pIndex ? "max-h-[555px]" : "max-h-0"
+                }`}
               >
                 {option.subMenu.map((submenuInfo) => (
                   <li key={submenuInfo.id}>

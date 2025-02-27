@@ -2,12 +2,32 @@
 
 import { deleteCookie, setCookie } from "@/app/actions/cookies";
 
-export const setInfo = async (key: string, value: string) => {
-  await setCookie(key, value);
-  localStorage.setItem(key, value);
+type TOtherOptions = {
+  inLocalstorage?: boolean;
+  inCookie?: boolean;
 };
 
-export const removeInfo = async (key: string) => {
-  await deleteCookie(key);
-  localStorage.removeItem(key);
+export const setInfo = async (
+  key: string,
+  value: string,
+  { inCookie = true, inLocalstorage = false }: TOtherOptions = {}
+) => {
+  if (inCookie) {
+    await setCookie(key, value);
+  }
+  if (inLocalstorage) {
+    localStorage.setItem(key, value);
+  }
+};
+
+export const removeInfo = async (
+  key: string,
+  { inCookie = true, inLocalstorage = false }: TOtherOptions = {}
+) => {
+  if (inCookie) {
+    await deleteCookie(key);
+  }
+  if (inLocalstorage) {
+    localStorage.removeItem(key);
+  }
 };

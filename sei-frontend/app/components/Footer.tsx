@@ -66,7 +66,7 @@ export default function Footer() {
               </h4>
 
               <Link
-                href={`${process.env.NEXT_PUBLIC_BASE_CRM}/account?tab=informations`}
+                href={`${process.env.NEXT_PUBLIC_BASE_CRM}/auth/login`}
               >
                 <Button className="sm:mb-3">
                   <CiLogin size={20} />

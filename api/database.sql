@@ -1241,6 +1241,46 @@ CREATE TABLE appraisal_and_employee (
     UNIQUE(appraisal_id, from_employee_id, to_employee_id)
 );
 
+-- NEW DB 26 Feb 2025
+ALTER TABLE appraisal_and_employee ADD COLUMN approve_date DATE;
+
+DELETE FROM leave;
+
+CREATE TABLE leave_and_employee (
+    item_id SERIAL PRIMARY KEY,
+
+    leave_id BIGINT,
+    FOREIGN KEY (leave_id) REFERENCES leave(id) ON DELETE CASCADE,
+
+    from_employee_id INTEGER,
+    FOREIGN KEY (from_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+
+    to_employee_id INTEGER,
+    FOREIGN KEY (to_employee_id) REFERENCES employee(id) ON DELETE SET NULL,
+
+    status leave_status_enum NOT NULL DEFAULT 'pending',
+
+    action_date DATE,
+
+    UNIQUE(appraisal_id, from_employee_id, to_employee_id)
+);
+
+ALTER TABLE leave ADD COLUMN created_at DATE DEFAULT CURRENT_DATE;
+
+CREATE OR REPLACE FUNCTION get_financial_year_end()
+RETURNS DATE AS $$
+DECLARE
+  current_year INT := EXTRACT(YEAR FROM CURRENT_DATE);
+  financial_month INT := 3; -- March (end of financial year)
+BEGIN
+  IF EXTRACT(MONTH FROM CURRENT_DATE) >= 4 THEN
+    RETURN TO_DATE((current_year + 1) || '-' || financial_month || '-31', 'YYYY-MM-DD');
+  ELSE
+    RETURN TO_DATE(current_year || '-' || financial_month || '-31', 'YYYY-MM-DD');
+  END IF;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

@@ -43,7 +43,9 @@
 							<strong>SEI Educational Trust,</strong>
 						</p>
 						<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:18pt">
-							<strong><%= institute %></strong>
+							<strong>
+								<%= institute %>
+							</strong>
 						</p>
 						<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
 							<strong>QUALITY MANAGEMENT SYSTEM FORMS</strong>
@@ -64,7 +66,9 @@
 					<td
 						style="width:55.35pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
 						<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:11pt">
-							<strong><%= issue_number %></strong>
+							<strong>
+								<%= issue_number %>
+							</strong>
 						</p>
 					</td>
 				</tr>
@@ -78,7 +82,9 @@
 					<td
 						style="width:55.35pt; border-top-style:solid; border-top-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
 						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
-							<strong><%= issue_date %></strong>
+							<strong>
+								<%= issue_date %>
+							</strong>
 						</p>
 					</td>
 				</tr>
@@ -115,41 +121,56 @@
 				&#xa0;
 			</p>
 		</div>
-		<h1 style="margin-top:0pt; margin-bottom:0pt; page-break-after:avoid; line-height:normal; font-size:12pt">
-			<u><span style="font-family:Arial; font-weight:normal; ">Faculty Appraisal Report for the period
-					from</span></u><u><span
-					style="font-family:Arial; font-weight:normal; ">&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-				</span></u><u><span style="font-family:Arial; font-weight:normal; ">to</span></u><u><span
-					style="font-family:Arial; font-weight:normal; ">&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-				</span></u><u><span
-					style="font-family:Arial; ">&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-				</span></u>
-		</h1>
+		<div style="text-decoration: underline; display: flex; justify-content: space-between;">
+			<span>Appraisal Report for the period from</span>
+			<span>
+				<%= from_date %>
+			</span>
+			<span>to</span>
+			<span>
+				<%= to_date %>
+			</span>
+		</div>
 		<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; line-height:normal">
-			<strong>Part I (to be filled by faculty member)</strong>
+			<strong>Part I (to be filled by <%= employee_type %> member)</strong>
 		</p>
 		<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; line-height:normal">
 			<strong>&#xa0;</strong>
 		</p>
 		<ol type="1" style="margin:0pt; padding-left:0pt">
 			<li style="margin-left:14.29pt; line-height:normal; padding-left:3.71pt; font-size:12pt; font-weight:bold">
-				<span style="font-weight:normal">Name of Faculty </span><span
+				<span style="font-weight:normal">Name of <%= employee_type %> </span><span
 					style="width:25.97pt; font-weight:normal; display:inline-block">&#xa0;</span><span
 					style="width:36pt; font-weight:normal; display:inline-block">&#xa0;</span><span
 					style="width:36pt; font-weight:normal; display:inline-block">&#xa0;</span><span
-					style="width:36pt; font-weight:normal; display:inline-block">&#xa0;</span><span
-					style="font-weight:normal">: <%= employee_name %></span>
+					style="width:50pt; font-weight:normal; display:inline-block">&#xa0;</span><strong>: <%=
+						employee_name %></strong>
 			</li>
 		</ol>
 		<p style="margin-top:0pt; margin-left:18pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
 			&#xa0;
 		</p>
 		<ol start="2" type="1" style="margin:0pt; padding-left:0pt">
-			<li style="margin-left:14.11pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
-				Date of Birth<span
-					style="display:inline-block">&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;<%= dob %></span><span
-					style="width:36pt; display:inline-block">&#xa0;</span>:&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-				Age: <%= age %>
+			<li style="margin-left:14.29pt; line-height:normal; padding-left:3.71pt; font-size:12pt; font-weight:bold">
+				<span style="font-weight:normal">Date of Birth </span><span
+					style="width:25.97pt; font-weight:normal; display:inline-block">&#xa0;</span><span
+					style="width:36pt; font-weight:normal; display:inline-block">&#xa0;</span><span
+					style="width:36pt; font-weight:normal; display:inline-block">&#xa0;</span><span
+					style="width:50pt; font-weight:normal; display:inline-block">&#xa0;</span>
+				<strong>: <%= dob %></strong>
+			</li>
+		</ol>
+		<p style="margin-top:0pt; margin-left:18pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
+			&#xa0;
+		</p>
+		<ol start="3" type="1" style="margin:0pt; padding-left:0pt">
+			<li style="margin-left:14.29pt; line-height:normal; padding-left:3.71pt; font-size:12pt; font-weight:bold">
+				<span style="font-weight:normal">Age </span><span
+					style="width:25.97pt; font-weight:normal; display:inline-block">&#xa0;</span><span
+					style="width:36pt; font-weight:normal; display:inline-block">&#xa0;</span><span
+					style="width:36pt; font-weight:normal; display:inline-block">&#xa0;</span><span
+					style="width:95pt; font-weight:normal; display:inline-block">&#xa0;</span>
+				<strong>: <%= age %></strong>
 			</li>
 		</ol>
 		<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
@@ -161,7 +182,9 @@
 					style="width:36pt; display:inline-block">&#xa0;</span><span
 					style="width:36pt; display:inline-block">&#xa0;</span><span
 					style="width:36pt; display:inline-block">&#xa0;</span>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-				:<sapn> <%= discipline %></sapn>
+				: <strong>
+					<%= discipline %>
+				</strong>
 			</li>
 		</ol>
 		<p style="margin-top:0pt; margin-left:18pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
@@ -172,7 +195,9 @@
 				Date of joining <span style="width:33.79pt; display:inline-block">&#xa0;</span><span
 					style="width:36pt; display:inline-block">&#xa0;</span> <span
 					style="width:33.29pt; display:inline-block">&#xa0;</span>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-				: <%= joining_date %>
+				: <strong>
+					<%= joining_date %>
+				</strong>
 			</li>
 		</ol>
 		<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
@@ -180,7 +205,9 @@
 		</p>
 		<ol start="5" type="1" style="margin:0pt; padding-left:0pt">
 			<li style="margin-left:14.11pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
-				No. of days absence from duty during the year:
+				No. of days absence from duty during the year : <strong>
+					<%= total_absence %> Days
+				</strong>
 			</li>
 		</ol>
 		<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
@@ -213,9 +240,9 @@
 					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
 						&#xa0;
 					</p> -->
-				  <p style="font-size:12pt">
-					<%= duties %>
-				  </p>
+					<p style="font-size:12pt">
+						<%= duties %>
+					</p>
 				</td>
 			</tr>
 		</table>
@@ -232,62 +259,18 @@
 			style="width:491.25pt; margin-left:8.75pt; border:0.75pt solid #000000; border-collapse:collapse">
 			<tr>
 				<td
-					style="width:231.4pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					style="border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
 					<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
-						Target&#xa0; /objectives / goals
-					</p>
-				</td>
-				<td
-					style="width:237.5pt; border-left-style:solid; border-left-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
-						Achievements
+						Target&#xa0; /objectives / goals / achievements
 					</p>
 				</td>
 			</tr>
 			<tr>
 				<td
-					style="width:231.4pt; border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					style="width:231.4pt; border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top; min-height: 150px; height: 150px; padding: 10pt 10pt;">
 					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
 						&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
-					</p>
-				</td>
-				<td
-					style="width:237.5pt; border-top-style:solid; border-top-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
-					</p>
-					<p style="margin-top:0pt; margin-bottom:0pt; text-align:justify; font-size:12pt">
-						&#xa0;
+						<%= targets %>
 					</p>
 				</td>
 			</tr>
@@ -299,8 +282,7 @@
 		<ol start="8" type="1" style="margin:0pt; padding-left:0pt">
 			<li
 				style="margin-left:14.11pt; text-align:justify; line-height:normal; padding-left:12.89pt; font-size:12pt">
-				(a) Please state briefly the short-falls with reference to the targets / objectives referred to in
-				Col.2,
+				(a) Please state briefly the short-falls with reference to the targets / objectives,
 				specifying constraints, if any, in achieving the targets.
 			</li>
 		</ol>
@@ -313,14 +295,14 @@
 			contribution
 			thereto.
 		</p>
+
 		<p style="margin-top:0pt; margin-bottom:10pt; line-height:normal; font-size:12pt">
-			<span style="width:36pt; display:inline-block">&#xa0;</span><span
-				style="width:36pt; display:inline-block">&#xa0;</span><span
-				style="width:36pt; display:inline-block">&#xa0;</span><span
-				style="width:36pt; display:inline-block">&#xa0;</span><span
-				style="width:36pt; display:inline-block">&#xa0;</span><span
-				style="width:36pt; display:inline-block">&#xa0;</span>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-			Signature of the faculty
+
+		<div style="display: flex; flex-direction: column; width: 100%; align-items: flex-end;">
+			<strong>Somnath Gupta</strong>
+			<span>Signature of the <%= employee_type %></span>
+		</div>
+
 		</p>
 		<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; line-height:normal">
 			<strong>&#xa0;</strong>
@@ -335,9 +317,10 @@
 		<ol type="1" style="margin:0pt; padding-left:0pt">
 			<li
 				style="margin-left:14.11pt; text-align:justify; line-height:normal; padding-left:3.89pt; font-size:12pt">
-				Please state whether you agree with the self appraisal of the faculty reported upon as mentioned. If
-				not,
-				please furnish the factual details.
+				Please state whether you agree with the self appraisal of the <%= employee_type %> reported upon as
+					mentioned. If
+					not,
+					please furnish the factual details.
 			</li>
 		</ol>
 		<p
@@ -353,7 +336,13 @@
 					where 1 refers to the lowest and 10 to the highest grade). </span>
 			</li>
 		</ol>
-		<table cellspacing="0" cellpadding="0" style="width:491.25pt; margin-left:8.75pt; border-collapse:collapse">
+		<!-- <style>
+			.option-table tr:not(:first-child) td:last-child {
+				text-align: center;
+			}
+		</style> -->
+		<!-- <table class="option-table" cellspacing="0" cellpadding="0"
+			style="width:491.25pt; margin-left:8.75pt; border-collapse:collapse">
 			<tr>
 				<td
 					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
@@ -392,7 +381,7 @@
 				<td
 					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
 					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
-						&#xa0;
+						20
 					</p>
 				</td>
 			</tr>
@@ -414,7 +403,7 @@
 				<td
 					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
 					<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
-						&#xa0;
+						25
 					</p>
 				</td>
 			</tr>
@@ -863,23 +852,85 @@
 					</p>
 				</td>
 			</tr>
+		</table> -->
+
+
+		<table class="option-table" cellspacing="0" cellpadding="0"
+			style="width:491.25pt; margin-left:8.75pt; border-collapse:collapse">
+			<tr>
+				<td
+					style="width:20.7pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-left:54pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+						&#xa0;
+					</p>
+				</td>
+				<td
+					style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+						Items
+					</p>
+				</td>
+				<td
+					style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+					<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+						Grading assigned by Reporting Authority
+					</p>
+				</td>
+			</tr>
+
+			<% let rowNum=1; let prevGroup=1; %>
+
+				<% appraisal_options.forEach((element, index)=> { %>
+					<tr>
+						<td
+							style="width:20.7pt; padding: 10pt; text-align: center; border-style:solid; border-width:0.75pt; vertical-align:top">
+							<%= index + 1 %>
+						</td>
+						<td
+							style="width:322.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+							<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+								<!-- Accomplishment of planned work/work allotted as per subject allotted -->
+								<%= element.text %>
+							</p>
+						</td>
+						<td
+							style="width:115.2pt; border-style:solid; border-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
+							<p
+								style="margin-top:0pt; margin-bottom:0pt; text-align: center; padding-top: 12pt; font-size:12pt">
+								<%= option_values_obj[`employee-${element.id}`] || 0 %>
+							</p>
+						</td>
+					</tr>
+					<% }); %>
 		</table>
+
 		<p style="margin-top:0pt; margin-left:72pt; margin-bottom:0pt; line-height:normal; font-size:9pt">
 			&#xa0;
 		</p>
 		<ol start="3" type="1" style="margin:0pt; padding-left:0pt">
 			<li style="margin-left:14.11pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
-				State of Health<span style="width:35.04pt; display:inline-block">&#xa0;</span>:
+				State of Health<span style="width:35.04pt; display:inline-block">&#xa0;&#xa0;&#xa0;</span>: <%=
+					state_of_health || "N/A" %>
 			</li>
 			<li
 				style="margin-left:14.11pt; margin-bottom:10pt; line-height:normal; padding-left:3.89pt; font-size:12pt">
 				Integrity<span style="width:30.64pt; display:inline-block">&#xa0;</span><span
-					style="width:36pt; display:inline-block">&#xa0;</span>:
+					style="width:36pt; display:inline-block">&#xa0;&#xa0;&#xa0;</span>: <%= integrity || "N/A" %>
 			</li>
 		</ol>
-		<p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
-			Name of Reporting Officer: _________________________ Signature with Date: ______________
-		</p>
+		<!-- <p style="margin-top:0pt; margin-bottom:0pt; line-height:normal; font-size:12pt">
+			Name of Reporting Officer: <span style="text-decoration: underline;">
+				<%= hoi_name || "N/A" %>
+			</span> Signature with Date: ______________
+		</p> -->
+		<div style="display: flex; justify-content: space-between; align-items: center;">
+			<span>
+				Name of Reporting Officer : <%= hoi_name || "N/A" %>
+			</span>
+			<span>
+				Signature with Date: ______________
+			</span>
+		</div>
 		<p
 			style="margin-top:0pt; margin-left:31.5pt; margin-bottom:0pt; text-indent:-31.5pt; line-height:normal; font-size:12pt">
 			<strong><span
@@ -928,7 +979,7 @@
 					<td
 						style="width:158.6pt; border-top-style:solid; border-top-width:0.75pt; border-left-style:solid; border-left-width:0.75pt; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top">
 						<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
-							APPROVED BY : H O I
+							APPROVED BY : <%= hoi_name ? "H O I" : "" %>
 						</p>
 					</td>
 				</tr>
@@ -939,7 +990,14 @@
 		</div>
 	</div>
 	<div id="printOption" style="position:fixed;bottom:30px;width:100%">
-		<button class="check no-print"
+		<button id="printBtn" class="check no-print"
 			onclick="document.getElementById('printOption').style.visibility = 'hidden'; window.print(); return true;">Print</button>
 	</div>
+
+	<script>
+		const printBtn = document.getElementById("printBtn");
+		window.addEventListener("DOMContentLoaded", () => {
+			printBtn.click();
+		})
+	</script>
 </section>

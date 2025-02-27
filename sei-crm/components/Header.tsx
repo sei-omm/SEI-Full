@@ -27,7 +27,8 @@ export default function Header() {
               src={
                 userInfo?.profile_image && userInfo.profile_image !== "null"
                   ? userInfo.profile_image
-                  : "/employee-sample.jpg"
+                  // : "/employee-sample.jpg"
+                  : ""
               }
               alt="User icon"
               height={100}

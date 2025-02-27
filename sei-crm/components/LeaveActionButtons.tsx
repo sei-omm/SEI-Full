@@ -2,13 +2,15 @@
 
 import { MdClose, MdDone } from "react-icons/md";
 import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
-import { ILeave } from "@/types";
+import { IOtherLeave } from "@/types";
 import { useDoMutation } from "@/app/utils/useDoMutation";
-import { useRouter } from "next/navigation";
-import { AiOutlineDelete } from "react-icons/ai";
+import { queryClient } from "@/redux/MyProvider";
+import Link from "next/link";
+import { BASE_API } from "@/app/constant";
+import { IoPrintSharp } from "react-icons/io5";
 
 interface IProps {
-  leaveINFO: ILeave;
+  leaveINFO?: IOtherLeave;
 }
 
 interface IActionBtn {
@@ -39,7 +41,7 @@ function DoneBtn({ handleActionBtn }: IActionBtn) {
 
 export default function LeaveActionButtons({ leaveINFO }: IProps) {
   const { openDialog, closeDialog } = useLoadingDialog();
-  const route = useRouter();
+  // const route = useRouter();
 
   const { mutate } = useDoMutation(
     () => {},
@@ -58,7 +60,7 @@ export default function LeaveActionButtons({ leaveINFO }: IProps) {
         mutate({
           apiPath: "/hr/leave",
           method: "delete",
-          id: leaveINFO.id,
+          id: leaveINFO?.id,
           onSuccess() {
             closeDialog();
           },
@@ -67,13 +69,13 @@ export default function LeaveActionButtons({ leaveINFO }: IProps) {
     }
   );
 
-  const changeRoute = () => {
-    route.push(
-      `/dashboard/hr-module/leave-management?tab=request&status=${Math.floor(
-        Math.random() * 100
-      )}`
-    );
-  };
+  // const changeRoute = () => {
+  //   route.push(
+  //     `/dashboard/hr-module/leave-management?tab=request&status=${Math.floor(
+  //       Math.random() * 100
+  //     )}`
+  //   );
+  // };
 
   function handleActionBtn(
     status: "success" | "decline",
@@ -86,55 +88,64 @@ export default function LeaveActionButtons({ leaveINFO }: IProps) {
       formData: {
         leave_status: status,
         previous_status: previous_status,
-        employee_id: leaveINFO.employee_id,
-        leave_from: leaveINFO.leave_from,
-        leave_to: leaveINFO.leave_to,
-        leave_type: leaveINFO.leave_type,
+        employee_id: leaveINFO?.employee_id,
+        leave_from: leaveINFO?.leave_from,
+        leave_to: leaveINFO?.leave_to,
+        leave_type: leaveINFO?.leave_type,
+        leave_and_employee_row_id: leaveINFO?.row_id,
       },
-      id: leaveINFO.id,
+      id: leaveINFO?.id,
       onSuccess() {
         closeDialog();
-        changeRoute();
+        // changeRoute();
+        queryClient.invalidateQueries(["other-leaves"]);
       },
     });
   }
 
-  function handleDeleteBtn(leave_row_id: number) {
-    if (!confirm("Are you sure you want to remove this row")) return;
+  // function handleDeleteBtn(leave_row_id: number) {
+  //   if (!confirm("Are you sure you want to remove this row")) return;
 
-    openDialog();
-    mutate({
-      apiPath: "/hr/leave",
-      method: "delete",
-      id: leave_row_id,
-      onSuccess() {
-        closeDialog();
-        changeRoute();
-      },
-    });
-  }
+  //   openDialog();
+  //   mutate({
+  //     apiPath: "/hr/leave",
+  //     method: "delete",
+  //     id: leave_row_id,
+  //     onSuccess() {
+  //       closeDialog();
+  //       // changeRoute();
+  //       queryClient.invalidateQueries(["other-leaves"]);
+  //     },
+  //   });
+  // }
 
   return (
     <div className="flex items-center gap-3 *:cursor-pointer">
-      {leaveINFO.leave_status === "success" ? (
+      {leaveINFO?.leave_status === "success" ? (
         <>
           <DeclineBtn
             handleActionBtn={() => handleActionBtn("decline", "success")}
           />
-          <AiOutlineDelete
+          {/* <AiOutlineDelete
             size={18}
             onClick={() => handleDeleteBtn(leaveINFO.id)}
-          />
+          /> */}
+          <Link
+            target="__blank"
+            href={`${BASE_API}/hr/leave/receipt/${leaveINFO?.id}`}
+          >
+            <IoPrintSharp size={20} />
+          </Link>
         </>
-      ) : leaveINFO.leave_status === "decline" ? (
+      ) : leaveINFO?.leave_status === "decline" ? (
         <>
           <DoneBtn
             handleActionBtn={() => handleActionBtn("success", "decline")}
           />
-          <AiOutlineDelete
+          {/* <AiOutlineDelete
             size={18}
             onClick={() => handleDeleteBtn(leaveINFO.id)}
-          />
+          /> */}
         </>
       ) : (
         <>
@@ -144,10 +155,16 @@ export default function LeaveActionButtons({ leaveINFO }: IProps) {
           <DoneBtn
             handleActionBtn={() => handleActionBtn("success", "pending")}
           />
-          <AiOutlineDelete
+          <Link
+            target="__blank"
+            href={`${BASE_API}/hr/leave/receipt/${leaveINFO?.id}`}
+          >
+            <IoPrintSharp size={20} />
+          </Link>
+          {/* <AiOutlineDelete
             size={18}
-            onClick={() => handleDeleteBtn(leaveINFO.id)}
-          />
+            onClick={() => handleDeleteBtn(leaveINFO?.id || 0)}
+          /> */}
         </>
       )}
     </div>
