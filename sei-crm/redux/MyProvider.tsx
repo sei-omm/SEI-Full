@@ -7,6 +7,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ErrorBoundary } from "react-error-boundary";
 import "@/lib/_axiosInterceptor";
+
 interface IProps {
   children: React.ReactNode;
 }
@@ -27,10 +28,6 @@ export default function MyProvider({ children }: IProps) {
     <Provider store={store}>
       <ErrorBoundary
         fallback={<div>Something went wrong</div>}
-        // onError={(error) => {
-        //   console.log("__MY_ERROR");
-        //   console.log(error);
-        // }}
       >
         <QueryClientProvider client={queryClient}>
           {children}

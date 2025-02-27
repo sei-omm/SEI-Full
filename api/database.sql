@@ -1262,7 +1262,7 @@ CREATE TABLE leave_and_employee (
 
     action_date DATE,
 
-    UNIQUE(appraisal_id, from_employee_id, to_employee_id)
+    UNIQUE(leave_id, from_employee_id, to_employee_id)
 );
 
 ALTER TABLE leave ADD COLUMN created_at DATE DEFAULT CURRENT_DATE;

@@ -16,7 +16,7 @@ export default function UnAuthPage() {
         <p className="text-[#4b4231] space-y-3">
           Please Make Sure You Loged In With Your Valid Account
         </p>
-        <Link href={"/auth/login"}>
+        <Link key={Date.now()} href={"/auth/login"} replace>
           <Button className="!bg-[#e9b858] border !border-gray-400 !text-black !py-2 active:scale-90">
             Login
           </Button>

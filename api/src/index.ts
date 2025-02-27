@@ -24,6 +24,7 @@ import path from "path";
 import { pool } from "./config/db";
 import { holidayRoutes } from "./route/holiday.routes";
 import { tranningRoutes } from "./route/tranning.routes";
+import { isAuthenticated } from "./middleware/isAuthenticated";
 
 dotenv.config();
 const app = express();
@@ -38,7 +39,7 @@ app.use(cookieParser());
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
   : ["http://localhost:3000", "http://localhost:3001"]; // Default to localhost:3000
-  
+
 app.use(
   cors({
     origin: ALLOWED_ORIGINS, // Frontend URL
@@ -83,67 +84,8 @@ app.use("/api/v1/db", setupDbRoute);
 //global error handler
 app.use(globalErrorController);
 
-app.get("/some", async (req, res) => {
-  const { rows } = await pool.query(
-    `
-              WITH payment_list AS (
-                 SELECT
-                  *
-                 FROM payments p
-                 WHERE p.form_id = $1
-              )
-
-              SELECT
-              s.*,
-              '********' AS password,
-              ff.form_status,
-              ff.form_id,
-
-              json_agg(
-                  json_build_object(
-                      'enroll_id', ebc.enroll_id,
-                      'course_id', c.course_id,
-                      'course_require_documents', c.require_documents,
-                      'course_name', c.course_name,
-                      'batch_start_date', cb.start_date,
-                      'batch_end_date', cb.end_date,
-                      'batch_fee', cb.batch_fee,
-                      'batch_id', cb.batch_id,
-                      'enrollment_status', ebc.enrollment_status,
-                      'modified_by_info', (
-                          SELECT json_agg(
-                              json_build_object('batch_id', mb.batch_id, 'employee_name', e.name, 'created_at', mb.created_at)
-                          )
-                          FROM batch_modified_by AS mb
-
-                          INNER JOIN employee e
-                          ON e.id = mb.employee_id
-
-                          WHERE mb.batch_id = cb.batch_id
-                          -- ORDER BY DESC
-                      )
-                  ) ORDER BY ebc.enroll_id
-              ) AS enrolled_courses_info,
-              
-              json_agg(pl.*)
-
-
-          FROM fillup_forms AS ff
-          LEFT JOIN students AS s ON s.student_id = ff.student_id
-          LEFT JOIN enrolled_batches_courses AS ebc ON ebc.form_id = ff.form_id
-          LEFT JOIN courses AS c ON c.course_id = ebc.course_id
-          LEFT JOIN course_batches AS cb ON cb.batch_id = ebc.batch_id
-
-          LEFT JOIN payment_list pl
-
-          WHERE ff.form_id = $1
-
-          GROUP BY s.student_id, ff.form_status, ff.form_id;
-  `,
-    ["KOL/FORM/2025/47"]
-  );
-
-  res.status(200).json(new ApiResponse(200, "", rows));
+app.get("/api/v1/is-login", isAuthenticated, (req, res) => {
+  res.status(200).json(new ApiResponse(200, "true"));
 });
 
 //route error
