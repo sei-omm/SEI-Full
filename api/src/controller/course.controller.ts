@@ -1129,6 +1129,7 @@ type TFaculty = {
   profile_image: string;
   // already_exist: boolean;
   belong_position: number;
+  index_belong : number;
 };
 
 type TTimeTable = {
@@ -1535,10 +1536,11 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
       number,
       {
         belong_position: number;
+        parent_index : number
       }
     >();
 
-    outputs.forEach((output) => {
+    outputs.forEach((output, pIndex) => {
       const subjects = output.subjects.split(",");
 
       const time_table: TTimeTable = {
@@ -1549,8 +1551,8 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
         faculty: [],
       };
 
-      const tempFaculty: TFaculty[] = [];
       subjects.forEach((subject) => {
+        const tempFaculty: TFaculty[] = [];
         output.faculty_details.forEach((faculty) => {
           // check current employee teaching current subject or not
           if (faculty.subject.includes(subject)) {
@@ -1568,12 +1570,69 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
                 for_subject_name: subject,
                 profile_image: faculty.profile_image,
                 belong_position: belong_position,
+                index_belong : time_table.faculty.length
               });
 
               faculty_exist_position.set(faculty.faculty_id, {
                 belong_position: belong_position,
+                parent_index : pIndex
               });
             } else {
+              // if current faculty is already avilable in any faculty list first position -> current else will trigger
+              // than go to that faculty list and find is there any other faculty available or not in that list
+              // if available and that faculty is not already assigned to any faculty list's first position
+              // than assign that faculty to first position of that faculty list
+              // if not check others -> recursively if finally not found anyone than store current employee
+              // in tempFaculty array. and at the end of the faculty list
+
+              // const exist_faculty_basic_info = faculty_exist_position.get(faculty.faculty_id);
+
+              // if(exist_faculty_basic_info) {
+              //   const parentIndex = exist_faculty_basic_info.parent_index;
+
+              //   const checkFacultyAvailability = (facultyList : TFaculty[]) => {
+              //     const find_result = facultyList[0];
+              //     // console.log("START")
+              //     // console.log(find_result)
+                  
+              //     if(!find_result) return null;
+
+              //     if(find_result.belong_position > 0) {
+              //       return find_result;
+              //     }
+
+              //     return checkFacultyAvailability(facultyList.filter(item => item.faculty_id !== find_result.faculty_id))
+              //   }
+
+              //   // console.log("START")
+              //   // console.log(result[parentIndex].faculty)
+
+              //   const facultyNotTeachingNow = checkFacultyAvailability(
+              //     result[parentIndex].faculty.filter(item => item.faculty_id !== faculty.faculty_id)
+              //   );
+
+              //   if(facultyNotTeachingNow !== null) {
+
+              //     const tempFac = result[parentIndex].faculty[facultyNotTeachingNow.index_belong];
+              //     const woIsInFirst = result[parentIndex].faculty.filter(item => item.faculty_id === faculty.faculty_id)[0];
+
+              //     result[parentIndex].faculty[facultyNotTeachingNow.index_belong].belong_position = woIsInFirst.belong_position;
+              //     result[parentIndex].faculty[facultyNotTeachingNow.index_belong].index_belong = woIsInFirst.index_belong;
+
+              //     result[parentIndex].faculty[woIsInFirst.index_belong].belong_position = woIsInFirst.belong_position;
+              //     result[parentIndex].faculty[woIsInFirst.index_belong].index_belong = woIsInFirst.index_belong;
+
+              //     result[parentIndex].faculty[woIsInFirst.index_belong] = tempFac;
+              //     result[parentIndex].faculty[facultyNotTeachingNow.index_belong] = woIsInFirst;
+
+              //   }
+
+              // } else {
+              //   return;
+              // }
+
+            
+
               const belong_position = time_table.faculty.filter(
                 (item) => item.for_subject_name === subject
               ).length;
@@ -1583,6 +1642,7 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
                 for_subject_name: subject,
                 profile_image: "",
                 belong_position: belong_position,
+                index_belong : time_table.faculty.length
               });
               tempFaculty.push({
                 faculty_id: faculty.faculty_id,
@@ -1590,13 +1650,14 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
                 for_subject_name: subject,
                 profile_image: faculty.profile_image,
                 belong_position: belong_position + 1,
+                index_belong : time_table.faculty.length + 1
               });
             }
           }
         });
+        time_table.faculty.push(...tempFaculty);
       });
 
-      time_table.faculty.push(...tempFaculty);
 
       result.push(time_table);
     });

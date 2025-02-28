@@ -45,10 +45,8 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { transaction } from "../utils/transaction";
 import { tryCatch } from "../utils/tryCatch";
 import { filterToSql } from "../utils/filterToSql";
-import { apiPaginationSql } from "../utils/apiPaginationSql";
 import { parsePagination } from "../utils/parsePagination";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
-import { beautifyDate } from "../utils/beautifyDate";
 
 //inventory list
 export const addNewList = asyncErrorHandler(
@@ -1010,20 +1008,6 @@ export const getPlannedMaintenanceSystem = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { LIMIT, OFFSET } = parsePagination(req);
     const institute = req.query.institute;
-    // const { rows } = await pool.query(
-    //   `
-    //   SELECT
-    //   pm.*,
-    //   iii.item_name
-    //   FROM planned_maintenance_system AS pm
-
-    //   LEFT JOIN inventory_item_info AS iii
-    //   ON iii.item_id = pm.item_id
-
-    //   ORDER BY planned_maintenance_system_id DESC
-    //   LIMIT ${LIMIT} OFFSET ${OFFSET}
-    //   `
-    // );
 
     const { rows } = await pool.query(
       `
@@ -1044,7 +1028,7 @@ export const getPlannedMaintenanceSystem = asyncErrorHandler(
 
       ${institute ? "WHERE pm.institute = $1" : ""}
 
-      ORDER BY hd.created_at DESC
+      ORDER BY pm.planned_maintenance_system_id DESC
 
       LIMIT ${LIMIT} OFFSET ${OFFSET}
       `,
@@ -1262,14 +1246,51 @@ export const changeLastDoneDate = asyncErrorHandler(async (req, res) => {
   });
   if (error) throw new ErrorHandler(400, error.message);
 
-  await pool.query(
-    `
-      UPDATE pms_history SET last_done = $1, next_due = $2 WHERE pms_history_id = $3
-    `,
-    [value.last_done, value.next_due, value.pms_history_id]
-  );
+  const client = await pool.connect();
 
-  res.status(200).json(new ApiResponse(200, "Last Done Date Has Updated"));
+  try {
+
+    await client.query("BEGIN");
+
+    const { rows, rowCount } = await client.query(
+      `SELECT 
+        frequency, 
+        description, 
+        remark 
+      FROM pms_history WHERE planned_maintenance_system_id = $1
+      ORDER BY last_done DESC LIMIT 1
+      `, 
+      [value.pms_id])
+
+    if(rowCount === 0) throw new ErrorHandler(400, "No Planned Maintenance System Found");
+
+    await client.query(
+      `
+        INSERT INTO pms_history
+            (planned_maintenance_system_id, frequency, last_done, next_due, description, remark)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `,
+      [value.pms_id, rows[0].frequency, value.last_done, value.next_due, rows[0].description, rows[0].remark]
+    )
+
+    res.status(200).json(new ApiResponse(200, "Last Done Date Has Updated"));
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error : any) {
+    await client.query("ROLLBACK");
+    client.release();
+    throw new ErrorHandler(400, error.mesage);
+  }
+
+  
+
+  // await pool.query(
+  //   `
+  //     UPDATE pms_history SET last_done = $1, next_due = $2 WHERE pms_history_id = $3
+  //   `,
+  //   [value.last_done, value.next_due, value.pms_history_id]
+  // );
 });
 
 export const deletePmsItem = asyncErrorHandler(async (req, res) => {
@@ -1281,6 +1302,16 @@ export const deletePmsItem = asyncErrorHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Info Removed Successfully"));
 });
 
+export const deletePmsHistory = asyncErrorHandler(async (req, res) => {
+  const pms_history_id = req.params.pms_history_id;
+  await pool.query(
+    `DELETE FROM pms_history WHERE pms_history_id = $1`,
+    [pms_history_id]
+  );
+  res.status(200).json(new ApiResponse(200, "Info Removed Successfully"));
+});
+
+
 export const getPmsItemHistory = asyncErrorHandler(async (req, res) => {
   const { planned_maintenance_system_id } = req.params;
   if (!planned_maintenance_system_id)
@@ -1291,6 +1322,7 @@ export const getPmsItemHistory = asyncErrorHandler(async (req, res) => {
   const { rows } = await pool.query(
     `
     SELECT 
+      pms_history_id,
       last_done,
       next_due,
       remark

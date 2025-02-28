@@ -29,11 +29,11 @@ type TTable = {
 export default function PlannedMaintenanceSystem() {
   const [dateAndId, setDateAndId] = useState<{
     date: string;
-    idToUpdate: number;
+    pms_id: number;
     frequency: TPmsFrequency;
   }>({
     date: "",
-    idToUpdate: 0,
+    pms_id: 0,
     frequency: "Daily",
   });
   const [tableDatas, setTableDatas] = useState<TTable>({
@@ -84,12 +84,12 @@ export default function PlannedMaintenanceSystem() {
 
   const handleLastDoneDateChange = (
     date: string,
-    idToUpdate: number,
+    pms_id: number,
     frequency: TPmsFrequency
   ) => {
     setDateAndId({
       date,
-      idToUpdate,
+      pms_id,
       frequency,
     });
   };
@@ -108,7 +108,7 @@ export default function PlannedMaintenanceSystem() {
 
     openDialog();
     const { error } = await axiosQuery({
-      url: `${BASE_API}/inventory/planned-maintenance-system/${dateAndId.idToUpdate}`,
+      url: `${BASE_API}/inventory/planned-maintenance-system/${dateAndId.pms_id}`,
       method: "patch",
       data: {
         last_done: dateAndId.date,
@@ -126,7 +126,7 @@ export default function PlannedMaintenanceSystem() {
   };
 
   const handleDeleteItem = async (pmsItemId: number) => {
-    if (!confirm("Are you sure you want to delete ?")) return;
+    if (!confirm("Are you sure you want to delete this? Doing so will remove the entire PMS record.")) return;
 
     openDialog();
     const { error } = await axiosQuery({
@@ -139,7 +139,7 @@ export default function PlannedMaintenanceSystem() {
       return toast.error("Something went wrong while deleting");
     }
 
-    toast.success("Last Done Date Successfully Changed");
+    toast.success("Record Successfully Removed");
     refetch();
   };
 
@@ -234,8 +234,9 @@ export default function PlannedMaintenanceSystem() {
                                   onChange={(e) =>
                                     handleLastDoneDateChange(
                                       e.currentTarget.value,
-                                      data?.data[rowIndex]
-                                        ?.pms_history_id as any,
+                                      // data?.data[rowIndex]
+                                      //   ?.pms_history_id as any,
+                                      data?.data[rowIndex]?.planned_maintenance_system_id as any,
                                       data?.data[rowIndex]
                                         .frequency as TPmsFrequency
                                     )

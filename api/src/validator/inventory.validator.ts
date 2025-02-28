@@ -275,7 +275,8 @@ export const updatePlannedMaintenanceSystemValidator =
   });
 
 export const changeLastDoneDateValidator = Joi.object({
-  pms_history_id: Joi.number().required(),
+  // pms_history_id: Joi.number().required(),
+  pms_id : Joi.number().required(),
   last_done: Joi.string().required(),
   next_due: Joi.string().required(),
 });

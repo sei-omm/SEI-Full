@@ -21,6 +21,7 @@ import {
   deleteCategory,
   deleteConsumableItem,
   deleteMaintenceRecord,
+  deletePmsHistory,
   deletePmsItem,
   deleteVendorItem,
   getAllItemInfo,
@@ -102,8 +103,9 @@ inventoryRoute
     "/planned-maintenance-system/:planned_maintenance_system_id",
     updatePlannedMaintenanceSystem
   )
-  .patch("/planned-maintenance-system/:pms_history_id", changeLastDoneDate)
+  .patch("/planned-maintenance-system/:pms_id", changeLastDoneDate)
   .delete("/planned-maintenance-system/:pms_id", deletePmsItem)
+  .delete("/planned-maintenance-system/history/:pms_history_id", deletePmsHistory)
 
   .get("/durable", getDurableInfo)
   .get("/durable/filter-items", getDurableFiltersItemInfo)

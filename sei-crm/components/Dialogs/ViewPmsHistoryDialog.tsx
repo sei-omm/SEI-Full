@@ -9,8 +9,13 @@ import { ISuccess } from "@/types";
 import HandleSuspence from "../HandleSuspence";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { GrFormNext, GrFormPrevious } from "react-icons/gr";
+import { AiOutlineDelete } from "react-icons/ai";
+import { axiosQuery } from "@/utils/axiosQuery";
+import { toast } from "react-toastify";
+import Spinner from "../Spinner";
 
 type TPMShistory = {
+  pms_history_id: number;
   last_done: string;
   next_due: string;
   remark: string;
@@ -27,11 +32,11 @@ export default function ViewPmsHistoryDialog() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [tableDatas, setTableDatas] = useState<TTable>({
-    head: ["Last Done Date", "Next Due Date", "Remark"],
+    head: ["Last Done Date", "Next Due Date", "Remark", "Action"],
     body: [],
   });
 
-  const { data, error, isFetching } = useQuery<ISuccess<TPMShistory[]>>({
+  const { data, error, isFetching, refetch } = useQuery<ISuccess<TPMShistory[]>>({
     queryKey: ["get-pms-history", currentPage],
     queryFn: async () =>
       (
@@ -47,11 +52,41 @@ export default function ViewPmsHistoryDialog() {
           beautifyDate(item.last_done),
           beautifyDate(item.next_due),
           item.remark,
+          "actionBtn",
         ]),
       }));
     },
     refetchOnMount: true,
   });
+
+  const [deletingRowIndex, setDeletingRowIndex] = useState(-1);
+
+  const handlePmsHistoryDelete = async (
+    pmsHistoryId: number,
+    rowIndex: number
+  ) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this history ?"
+      )
+    )
+      return;
+
+    setDeletingRowIndex(rowIndex);
+    const { error } = await axiosQuery({
+      url: `${BASE_API}/inventory/planned-maintenance-system/history/${pmsHistoryId}`,
+      method: "delete",
+    });
+
+    // closeDialog();
+    setDeletingRowIndex(-1);
+    if (error) {
+      return toast.error("Something went wrong while deleting");
+    }
+
+    toast.success("Record Successfully Removed");
+    refetch();
+  };
 
   return (
     <DialogBody className="min-w-[60rem] max-h-[90vh] overflow-y-auto">
@@ -89,7 +124,26 @@ export default function ViewPmsHistoryDialog() {
                           className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
                           key={value}
                         >
-                          {value}
+                          {value === "actionBtn" ? (
+                            <>
+                              {deletingRowIndex === rowIndex ? (
+                                <Spinner size="15px"/>
+                              ) : (
+                                <AiOutlineDelete
+                                  onClick={() =>
+                                    handlePmsHistoryDelete(
+                                      data?.data[rowIndex].pms_history_id || 0,
+                                      rowIndex
+                                    )
+                                  }
+                                  size={16}
+                                  className="active:scale-90 cursor-pointer"
+                                />
+                              )}
+                            </>
+                          ) : (
+                            value
+                          )}
                         </td>
                       ))}
                     </tr>
