@@ -2,7 +2,6 @@
 
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
-import { getAuthToken } from "@/app/utils/getAuthToken";
 import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
 import { ISuccess } from "@/types";

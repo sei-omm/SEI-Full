@@ -1,5 +1,5 @@
 import { BASE_API } from "@/app/constant";
-import { getAuthToken } from "@/app/utils/getAuthToken";
+// import { getAuthToken } from "@/app/utils/getAuthToken";
 import { ISuccess } from "@/types";
 import axios from "axios";
 import Link from "next/link";
@@ -62,9 +62,9 @@ export default function Notification() {
       apiPath: "/notification/read",
       method: "delete",
       id: notificationRowId,
-      headers: {
-        ...getAuthToken(),
-      },
+      // headers: {
+      //   ...getAuthToken(),
+      // },
       onSuccess() {
         queryClient.invalidateQueries(["my-notification"]);
       },

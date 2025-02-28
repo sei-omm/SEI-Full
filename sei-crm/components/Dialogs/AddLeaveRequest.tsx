@@ -6,7 +6,7 @@ import Button from "../Button";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { useDispatch, useSelector } from "react-redux";
-import { getAuthToken } from "@/app/utils/getAuthToken";
+// import { getAuthToken } from "@/app/utils/getAuthToken";
 import { queryClient } from "@/redux/MyProvider";
 import DropDown from "../DropDown";
 import { TLeaveDetails } from "@/types";
@@ -27,10 +27,10 @@ export default function AddLeaveRequest() {
     mutate({
       apiPath: "/employee/leave",
       method: "post",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthToken(),
-      },
+      // headers: {
+      //   "Content-Type": "application/json",
+      //   ...getAuthToken(),
+      // },
       formData,
       onSuccess: () => {
         dispatch(setDialog({ type: "CLOSE", dialogId: "add-leave-request" }));

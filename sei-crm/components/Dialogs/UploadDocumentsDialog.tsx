@@ -10,7 +10,7 @@ import axios from "axios";
 import { BASE_API } from "@/app/constant";
 // import { IResponse } from "@/app/type";
 // import HandleLoading from "../HandleLoading";
-import { getAuthToken } from "@/app/utils/getAuthToken";
+// import { getAuthToken } from "@/app/utils/getAuthToken";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 // import { RootState } from "@/app/redux/store";
@@ -58,11 +58,11 @@ export default function UploadDocumentsDialog() {
         await axios.get(
           BASE_API +
             `/course/required-documents?course_ids=${extraValue.courseIds}&student_id=${extraValue.studentId}`,
-          {
-            headers: {
-              ...getAuthToken(),
-            },
-          }
+          // {
+          //   headers: {
+          //     ...getAuthToken(),
+          //   },
+          // }
         )
       ).data,
     onSuccess(data) {
@@ -99,10 +99,10 @@ export default function UploadDocumentsDialog() {
     const { error } = await axiosQuery<ISuccess, IError>({
       url: BASE_API + "/student/save-doc?student_id=" + extraValue.studentId,
       method: "put",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthToken(),
-      },
+      // headers: {
+      //   "Content-Type": "application/json",
+      //   ...getAuthToken(),
+      // },
       data: {
         doc_id: fileId,
         doc_uri: blob.url,

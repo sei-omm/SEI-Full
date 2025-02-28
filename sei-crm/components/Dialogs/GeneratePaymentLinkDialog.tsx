@@ -14,7 +14,7 @@ import { ISuccess } from "@/types";
 import HandleSuspence from "../HandleSuspence";
 import { RootState } from "@/redux/store";
 import { LuRefreshCcw } from "react-icons/lu";
-import { getAuthToken } from "@/app/utils/getAuthToken";
+// import { getAuthToken } from "@/app/utils/getAuthToken";
 import { useRouter } from "next/navigation";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 
@@ -48,11 +48,11 @@ export default function GeneratePaymentLinkDialog() {
           {
             payment_mode: extraValue?.payment_type, //put anything here
           },
-          {
-            headers: {
-              ...getAuthToken(),
-            },
-          }
+          // {
+          //   headers: {
+          //     ...getAuthToken(),
+          //   },
+          // }
         )
       ).data,
     onSuccess(data) {

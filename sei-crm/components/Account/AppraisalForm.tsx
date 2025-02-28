@@ -6,7 +6,7 @@ import Button from "../Button";
 import { appraisalOptions, BASE_API } from "@/app/constant";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getAuthToken } from "@/app/utils/getAuthToken";
+// import { getAuthToken } from "@/app/utils/getAuthToken";
 import { useQuery } from "react-query";
 import axios from "axios";
 import { ISuccess, TAppraisal } from "@/types";
@@ -89,10 +89,10 @@ export default function AppraisalForm({
       mutate({
         apiPath: "/employee/appraisal",
         method: "post",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthToken(),
-        },
+        // headers: {
+        //   "Content-Type": "application/json",
+        //   ...getAuthToken(),
+        // },
         formData: dataToStore,
         onSuccess() {
           route.push("/account?tab=appraisal");
@@ -108,10 +108,10 @@ export default function AppraisalForm({
     mutate({
       apiPath: "/employee/appraisal",
       method: "put",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthToken(),
-      },
+      // headers: {
+      //   "Content-Type": "application/json",
+      //   ...getAuthToken(),
+      // },
       id: parseInt(appraisalID || "0"),
       formData: dataToStore,
       onSuccess() {

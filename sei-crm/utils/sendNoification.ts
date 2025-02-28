@@ -1,5 +1,5 @@
 import { BASE_API } from "@/app/constant";
-import { getAuthToken } from "@/app/utils/getAuthToken";
+// import { getAuthToken } from "@/app/utils/getAuthToken";
 import axios from "axios";
 
 type TSendNotification = {
@@ -29,10 +29,10 @@ export const sendNoification = async ({
       employee_ids,
       employee_roles,
     },
-    {
-      headers: {
-        ...getAuthToken(),
-      },
-    }
+    // {
+    //   headers: {
+    //     ...getAuthToken(),
+    //   },
+    // }
   );
 };

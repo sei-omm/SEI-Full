@@ -20,7 +20,7 @@ import { BASE_API } from "@/app/constant";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
-import { getAuthToken } from "@/app/utils/getAuthToken";
+// import { getAuthToken } from "@/app/utils/getAuthToken";
 
 interface IProps {
   enroll_course_info: TEnrollCourses;
@@ -103,10 +103,10 @@ export default function AppliedCourseListItem({
 
     const { error, response } = await axiosQuery<IError, ISuccess>({
       url: `${BASE_API}/course/batch`,
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthToken(),
-      },
+      // headers: {
+      //   "Content-Type": "application/json",
+      //   ...getAuthToken(),
+      // },
       method: "patch",
       data: {
         old_batch_id: enroll_course_info.batch_id,
