@@ -1122,26 +1122,30 @@ type InfoType = {
   }[];
 };
 
+type TFaculty = {
+  for_subject_name: string;
+  faculty_id: number;
+  faculty_name: string;
+  profile_image: string;
+  // already_exist: boolean;
+  belong_position: number;
+};
+
 type TTimeTable = {
   course_id: number;
   course_name: string;
   course_code: string;
   subjects: string[];
-  faculty: {
-    for_subject_name: string;
-    faculty_id: number;
-    faculty_name: string;
-    profile_image: string;
-  }[];
+  faculty: TFaculty[];
 
-  subject_with_faculty: {
-    subject_name: string;
-    faculty: {
-      faculty_id: number;
-      faculty_name: string;
-      profile_image: string;
-    }[];
-  }[];
+  // subject_with_faculty: {
+  //   subject_name: string;
+  //   faculty: {
+  //     faculty_id: number;
+  //     faculty_name: string;
+  //     profile_image: string;
+  //   }[];
+  // }[];
 };
 
 function removeFormArray(arr: any[], index: number) {
@@ -1149,6 +1153,303 @@ function removeFormArray(arr: any[], index: number) {
   arr[index] = last_item;
   arr.pop();
 }
+
+// export const generateTimeTable = asyncErrorHandler(async (req, res) => {
+//   const { error, value } = VTimeTable.validate(req.query);
+//   if (error) throw new ErrorHandler(400, error.message);
+
+//   const cDate = new Date(value.date);
+//   if (cDate.getDay() === 0) {
+//     throw new ErrorHandler(
+//       405,
+//       `You can't prepare time table as it is "Sunday"`
+//     );
+//   }
+
+//   const client = await pool.connect();
+
+//   try {
+//     await client.query("BEGIN");
+
+//     const { rowCount, rows: holidayInfo } = await client.query(
+//       `SELECT holiday_name FROM holiday_management WHERE holiday_date = $1 AND institute = $2`,
+//       [value.date, value.institute]
+//     );
+
+//     if (rowCount !== 0)
+//       throw new ErrorHandler(
+//         405,
+//         `You can't prepare time table as it is Holiday "${holidayInfo[0].holiday_name}"`
+//       );
+
+//     const { rows: dreftData, rowCount: dreftCount } = await client.query(
+//       `SELECT * FROM time_table_draft WHERE date = $1`,
+//       [value.date]
+//     );
+//     if (dreftCount !== 0) {
+//       return res.status(200).json(
+//         new ApiResponse(200, "Time Table Info", {
+//           type: "draft",
+//           result: dreftData[0],
+//         })
+//       );
+//     }
+
+//     const { rows } = await client.query(
+//       `
+//             SELECT
+//               c.course_id,
+//               c.course_name,
+//               c.course_code,
+//               c.subjects,
+//               COALESCE(
+//                   (
+//                       SELECT json_agg(
+//                           jsonb_build_object(
+//                               'faculty_id', fwcs.faculty_id,
+//                               'subject', fwcs.subject,
+//                               'faculty_name', e.name,
+//                               'profile_image', e.profile_image,
+//                               'max_teaching_hrs_per_week', CASE WHEN e.max_teaching_hrs_per_week = '' THEN '0' ELSE e.max_teaching_hrs_per_week END,
+//                               'faculty_current_working_hours', e.faculty_current_working_hours,
+//                               'is_active', e.is_active
+//                           )
+//                       )
+//                       FROM faculty_with_course_subject fwcs
+//                       INNER JOIN employee e ON e.id = fwcs.faculty_id
+//                       WHERE fwcs.course_id = c.course_id AND e.is_active = true
+//                   ),
+//                   '[]'::json
+//               ) AS faculty_details
+//             FROM courses c
+//             INNER JOIN course_batches cb ON cb.course_id = c.course_id
+
+//             WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
+
+//             GROUP BY c.course_id
+//         `,
+//       [value.institute, value.date]
+//     );
+
+//     const outputs = rows as InfoType[];
+//     // return res.json(outputs)
+
+//     const result: TTimeTable[] = [];
+
+//     const already_assigned_faculty = new Map<
+//       number,
+//       { par_index: number; fac_position: number }
+//     >();
+
+//     const already_assign_at_first = new Map<number, { par_index: number; fac_position: number }>();
+
+//     //task :
+//     // 1-> assign at list one teacher to each course subject
+//     // 2 -> then assign others resurved faculty to the list if related to the course 0(n)3
+//     outputs.forEach((output, index) => {
+//       const course_subjects = output.subjects.split(",");
+
+//       const time_table: TTimeTable = {
+//         course_id: output.course_id,
+//         course_name: output.course_name,
+//         course_code: output.course_code,
+//         subjects: course_subjects,
+//         faculty: [],
+//         // subject_with_faculty: [],
+//       };
+
+//       // loop through every subject
+//       course_subjects.forEach((subject, subject_index) => {
+//         // loop through every faculty_details
+//         //  check is inside faculty assign subject current subject include of not
+
+//         // time_table.subject_with_faculty.push({
+//         //   subject_name: subject,
+//         //   faculty: [],
+//         // });
+
+//         const tempFaculty: TFaculty[] = [];
+
+//         for (let i = 0; i < output.faculty_details.length; i++) {
+//           const faculty = output.faculty_details[i];
+
+//           if (
+//             faculty.subject.includes(subject) &&
+//             parseInt(faculty.max_teaching_hrs_per_week) >=
+//               faculty.faculty_current_working_hours
+//           ) {
+
+//             const already_assign = already_assign_at_first.get(faculty.faculty_id);
+
+//             if(already_assign && already_assign.fac_position === 0) {
+//               tempFaculty.push({
+//                 for_subject_name: subject,
+//                 faculty_id: faculty.faculty_id,
+//                 faculty_name: faculty.faculty_name,
+//                 profile_image: faculty.profile_image,
+//                 already_exist : false
+//               })
+//             } else {
+//               already_assign_at_first.set(faculty.faculty_id, {
+//                 par_index : index,
+//                 fac_position : i
+//               })
+
+//               time_table.faculty.push({
+//                 for_subject_name: subject,
+//                 faculty_id: faculty.faculty_id,
+//                 faculty_name: faculty.faculty_name,
+//                 profile_image: faculty.profile_image,
+//                 already_exist : false
+//               });
+//             }
+
+//             // const already_assign_faculty_info = already_assigned_faculty.get(
+//             //   faculty.faculty_id
+//             // );
+
+//             // if (already_assign_faculty_info) {
+//             //   // if faculty already assigned to another course at secound position or more then secound
+//             //   //remove that faculty from that array
+//             //   // removeFormArray(
+//             //   //   result[already_assign_faculty_info.par_index].faculty,
+//             //   //   already_assign_faculty_info.fac_position
+//             //   // );
+
+//             //   // time_table.subject_with_faculty[subject_index].faculty.push({
+//             //   //   faculty_id: faculty.faculty_id,
+//             //   //   faculty_name: faculty.faculty_name,
+//             //   //   profile_image: faculty.profile_image,
+//             //   // });
+
+//             //   const tempFacultyDetails : TFaculty = {
+//             //     for_subject_name: subject,
+//             //     faculty_id: faculty.faculty_id,
+//             //     faculty_name: faculty.faculty_name,
+//             //     profile_image: faculty.profile_image,
+//             //     already_exist : true
+//             //   }
+
+//             //   if (already_assign_faculty_info.fac_position > 0) {
+//             //     // then assign to current faculty at first position
+//             //     time_table.faculty.push(tempFacultyDetails);
+//             //   } else {
+
+//             //     // then store faculty in temp array
+//             //     // and at end fo the faculty loop assign to current faculty
+
+//             //     /*
+//             //      but you have to check one more thing
+//             //      if current fac already assign in somewhere in first (0) position
+//             //      then check is thire any other facilty avilable or not
+//             //      if avilable than check other faculti already avilable to anywhere or not
+//             //      if avilable anywhere than do the same recursive thing with other avilable faculty
+//             //      if not avilable than assign other facilty to that course
+//             //      and assign current faculty to tempFacultyDetails
+//             //      */
+
+//             //      function checkFacultyAvailability(currentFacultyInfo : TFaculty, listWhereToSearch : TFaculty[]) {
+//             //       const otherFacultyInfo = listWhereToSearch.find(eItem => eItem.faculty_id !== currentFacultyInfo.faculty_id);
+
+//             //       if(otherFacultyInfo === undefined) return null;
+
+//             //       // if got someone expect current faculty, who teach that subject
+
+//             //       //check is that faculty is not already assign to another course first position or not
+//             //       const other = already_assigned_faculty.get(otherFacultyInfo.faculty_id);
+//             //       if(other && other.fac_position > 0) {
+//             //         return otherFacultyInfo;
+//             //       }
+
+//             //       return checkFacultyAvailability(otherFacultyInfo, listWhereToSearch.filter(item => item.faculty_id !== currentFacultyInfo.faculty_id));
+//             //      }
+
+//             //     //  console.log(result[already_assign_faculty_info.par_index].faculty)
+
+//             //      const otherFacultyInfo = checkFacultyAvailability(tempFacultyDetails, result[already_assign_faculty_info.par_index].faculty);
+//             //      if(otherFacultyInfo !== null) {
+//             //       // than assign the other faculty to the top position of that faculty list
+
+//             //       // now if i got a non used faculty , than assign that faculty to the top position of that faculty list
+//             //       // and assing current faculty after that faculty
+
+//             //       result[already_assign_faculty_info.par_index].faculty[0] = otherFacultyInfo;
+//             //       result[already_assign_faculty_info.par_index].faculty[1] = tempFacultyDetails;
+//             //      } else {
+//             //       // if not get any other faculty expect current faculty
+
+//             //     }
+//             //     tempFaculty.push(tempFacultyDetails);
+
+//             //   }
+//             // }
+
+//             // if (!already_assign_faculty_info) {
+//               // time_table.faculty.push({
+//               //   for_subject_name: subject,
+//               //   faculty_id: faculty.faculty_id,
+//               //   faculty_name: faculty.faculty_name,
+//               //   profile_image: faculty.profile_image,
+//               //   already_exist : false
+//               // });
+
+//             //   // time_table.subject_with_faculty[subject_index].faculty.push({
+//             //   //   faculty_id: faculty.faculty_id,
+//             //   //   faculty_name: faculty.faculty_name,
+//             //   //   profile_image: faculty.profile_image,
+//             //   // });
+
+//             //   // let fac_position = 0;
+//             //   // const forSubject = new Map<string, string>();
+//             //   // time_table.faculty.forEach((tFaculty) => {
+
+//             //   // })
+
+//             //   already_assigned_faculty.set(faculty.faculty_id, {
+//             //     par_index: index,
+//             //     fac_position: time_table.faculty.length - 1,
+//             //     // fac_position
+//             //   });
+//             // }
+//           }
+//         }
+
+//         if(time_table.faculty.length !== 0) {
+//           time_table.faculty.push(...tempFaculty);
+//         } else  {
+//           time_table.faculty.push({
+//             faculty_id : 0,
+//             faculty_name : "null",
+//             profile_image : "",
+//             already_exist : false,
+//             for_subject_name : ""
+//           })
+//           time_table.faculty.push(...tempFaculty)
+//         }
+//       });
+
+//       result.push(time_table);
+//     });
+
+// res.status(200).json(
+//   new ApiResponse(200, "Time Table Info", {
+//     type: "generated",
+//     result: result,
+//   })
+// );
+
+//     await client.query("COMMIT");
+//     client.release();
+//   } catch (error: any) {
+//     await client.query("ROLLBACK");
+//     client.release();
+//     if (error?.isOperational) {
+//       throw new ErrorHandler(error.statusCode, error.message);
+//     } else {
+//       throw new ErrorHandler(500, error.message);
+//     }
+//   }
+// });
 
 export const generateTimeTable = asyncErrorHandler(async (req, res) => {
   const { error, value } = VTimeTable.validate(req.query);
@@ -1228,106 +1529,74 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
     );
 
     const outputs = rows as InfoType[];
-    // return res.json(outputs)
 
     const result: TTimeTable[] = [];
-    const already_assigned_faculty = new Map<
+    const faculty_exist_position = new Map<
       number,
-      { par_index: number; fac_position: number }
+      {
+        belong_position: number;
+      }
     >();
 
-    //task :
-    // 1-> assign at list one teacher to each course subject
-    // 2 -> then assign others resurved faculty to the list if related to the course 0(n)3
-    outputs.forEach((output, index) => {
-      const course_subjects = output.subjects.split(",");
+    outputs.forEach((output) => {
+      const subjects = output.subjects.split(",");
 
       const time_table: TTimeTable = {
-        course_id: output.course_id,
         course_name: output.course_name,
         course_code: output.course_code,
-        subjects: course_subjects,
+        course_id: output.course_id,
+        subjects: subjects,
         faculty: [],
-        subject_with_faculty: [],
       };
 
-      // loop through every subject
-      course_subjects.forEach((subject, subject_index) => {
-        // loop through every faculty_details
-        //  check is inside faculty assign subject current subject include of not
-
-        time_table.subject_with_faculty.push({
-          subject_name: subject,
-          faculty: [],
-        });
-
-        for (let i = 0; i < output.faculty_details.length; i++) {
-          const faculty = output.faculty_details[i];
-
-          if (
-            faculty.subject.includes(subject) &&
-            parseInt(faculty.max_teaching_hrs_per_week) >=
-              faculty.faculty_current_working_hours
-          ) {
-            const already_assign_faculty_info = already_assigned_faculty.get(
+      const tempFaculty: TFaculty[] = [];
+      subjects.forEach((subject) => {
+        output.faculty_details.forEach((faculty) => {
+          // check current employee teaching current subject or not
+          if (faculty.subject.includes(subject)) {
+            const exist_faculty = faculty_exist_position.get(
               faculty.faculty_id
             );
 
-            if (
-              already_assign_faculty_info &&
-              already_assign_faculty_info.fac_position > 0
-            ) {
-              // if faculty already assigned to another course at secound position or more then secound
-              //remove that faculty from that array
-              removeFormArray(
-                result[already_assign_faculty_info.par_index].faculty,
-                already_assign_faculty_info.fac_position
-              );
-
-              time_table.subject_with_faculty[subject_index].faculty.push({
-                faculty_id: faculty.faculty_id,
-                faculty_name: faculty.faculty_name,
-                profile_image: faculty.profile_image,
-              });
-
-              // then assign to current course at first position
+            if (!exist_faculty || exist_faculty.belong_position > 0) {
+              const belong_position = time_table.faculty.filter(
+                (item) => item.for_subject_name === subject
+              ).length;
               time_table.faculty.push({
-                for_subject_name: subject,
                 faculty_id: faculty.faculty_id,
                 faculty_name: faculty.faculty_name,
+                for_subject_name: subject,
                 profile_image: faculty.profile_image,
+                belong_position: belong_position,
               });
-            }
 
-            if (!already_assign_faculty_info) {
+              faculty_exist_position.set(faculty.faculty_id, {
+                belong_position: belong_position,
+              });
+            } else {
+              const belong_position = time_table.faculty.filter(
+                (item) => item.for_subject_name === subject
+              ).length;
               time_table.faculty.push({
+                faculty_id: -1,
+                faculty_name: "Choose Faculty",
                 for_subject_name: subject,
+                profile_image: "",
+                belong_position: belong_position,
+              });
+              tempFaculty.push({
                 faculty_id: faculty.faculty_id,
                 faculty_name: faculty.faculty_name,
+                for_subject_name: subject,
                 profile_image: faculty.profile_image,
-              });
-
-              time_table.subject_with_faculty[subject_index].faculty.push({
-                faculty_id: faculty.faculty_id,
-                faculty_name: faculty.faculty_name,
-                profile_image: faculty.profile_image,
-              });
-
-              // let fac_position = 0;
-              // const forSubject = new Map<string, string>();
-              // time_table.faculty.forEach((tFaculty) => {
-
-              // })
-
-              already_assigned_faculty.set(faculty.faculty_id, {
-                par_index: index,
-                fac_position: time_table.faculty.length - 1,
-                // fac_position
+                belong_position: belong_position + 1,
               });
             }
           }
-        }
+        });
       });
+
+      time_table.faculty.push(...tempFaculty);
 
       result.push(time_table);
     });

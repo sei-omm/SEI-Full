@@ -21,10 +21,8 @@ import { inventoryRoute } from "./route/inventory.routes";
 import { notificationRoutes } from "./route/notification.routes";
 import { receiptRoutes } from "./route/receipt.routes";
 import path from "path";
-import { pool } from "./config/db";
 import { holidayRoutes } from "./route/holiday.routes";
 import { tranningRoutes } from "./route/tranning.routes";
-import { isAuthenticated } from "./middleware/isAuthenticated";
 
 dotenv.config();
 const app = express();
@@ -83,10 +81,6 @@ app.use("/api/v1/db", setupDbRoute);
 
 //global error handler
 app.use(globalErrorController);
-
-app.get("/api/v1/is-login", isAuthenticated, (req, res) => {
-  res.status(200).json(new ApiResponse(200, "true"));
-});
 
 //route error
 app.all("*", (req, res, next) => {

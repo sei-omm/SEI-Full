@@ -33,6 +33,7 @@ import {
 } from "../controller/leave.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { roles } from "../middleware/roles";
+import { ApiResponse } from "../utils/ApiResponse";
 
 export const employeeRoute = Router();
 
@@ -82,4 +83,8 @@ employeeRoute
   )
   .get("/is-hoi-exist", checkHoi)
 
+  .get("/is-login", isAuthenticated, (req, res) => {
+    res.status(200).json(new ApiResponse(200, "true"));
+  })
+  
   .get("/:id", isAuthenticated, getSingleEmployeeInfo);

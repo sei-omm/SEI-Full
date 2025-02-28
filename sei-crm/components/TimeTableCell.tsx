@@ -3,7 +3,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 
 interface IProps {
-  disabled : boolean;
+  disabled: boolean;
   serverData: TTimeTableData[] | undefined;
   value: string;
   rowIndex: number;
@@ -19,7 +19,7 @@ export default function TimeTableCell({
   colIndex,
   selectedSubjects,
   selectedFaculties,
-  disabled
+  disabled,
 }: IProps) {
   const [currentFaculty, setCurrentFaculty] = useState(
     serverData?.[rowIndex].faculty.find((f) => f.for_subject_name === value)
@@ -46,13 +46,14 @@ export default function TimeTableCell({
 
     if (value === "Choose Subject" || value === "Off Period") {
       setCurrentFaculty(undefined);
-      if(value === "Choose Subject") {
+      if (value === "Choose Subject") {
         delete selectedSubjects[`${rowIndex}${colIndex}`];
       }
       delete selectedFaculties[`${rowIndex}${colIndex}`];
     } else {
       setCurrentFaculty(subjectFaculties[0]);
-      selectedFaculties[`${rowIndex}${colIndex}`] = subjectFaculties[0]?.faculty_id;
+      selectedFaculties[`${rowIndex}${colIndex}`] =
+        subjectFaculties[0]?.faculty_id;
     }
   };
 
@@ -70,7 +71,7 @@ export default function TimeTableCell({
       </div>
       <div className="flex flex-col">
         <select
-          disabled = {disabled}
+          disabled={disabled}
           onChange={(e) => handleSubjectChange(e.currentTarget.value)}
           name="subject_name"
           defaultValue={value}
@@ -99,10 +100,13 @@ export default function TimeTableCell({
                 )
               );
             }}
-            defaultValue={currentFaculty?.faculty_id || "Not Selected"}
+            defaultValue={currentFaculty?.faculty_id || 0}
             className="px-2 py-1 outline-none cursor-pointer bg-transparent"
             disabled={currentFaculties.length === 0 || disabled}
           >
+            {/* <option value={0} selected = {currentFaculty?.faculty_id === 0}>
+              Choose Faculty
+            </option> */}
             {currentFaculties.map((eachFaculty) => (
               <option
                 key={eachFaculty.faculty_id}
