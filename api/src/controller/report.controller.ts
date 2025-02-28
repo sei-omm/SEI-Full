@@ -465,7 +465,7 @@ export const sendBirthdateWish = asyncErrorHandler(
     const { error, value } = studentBirthdateWishValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
-    sendEmail(value.student_email, "BIRTHDATE_WISH", {
+    await sendEmail(value.student_email, "BIRTHDATE_WISH", {
       student_name: value.student_name,
     });
 

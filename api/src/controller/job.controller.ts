@@ -87,7 +87,7 @@ export const postNewJob = asyncErrorHandler(
     );
 
     if (isInformVendor === "true" && req.body.vendors_email) {
-      sendEmail(req.body.vendors_email.split(","), "SEND_JOB_INFO_VENDOR", {
+      await sendEmail(req.body.vendors_email.split(","), "SEND_JOB_INFO_VENDOR", {
         job_title: req.body.job_title,
         campus: req.body.address,
         exprience: req.body.exprience,
@@ -122,7 +122,7 @@ export const updateJobPosting = asyncErrorHandler(
     );
 
     if (isInformVendor === "true" && req.body.vendors_email) {
-      sendEmail(req.body.vendors_email.split(","), "SEND_JOB_INFO_VENDOR", {
+      await sendEmail(req.body.vendors_email.split(","), "SEND_JOB_INFO_VENDOR", {
         job_title: req.body.job_title,
         campus: req.body.address,
         exprience: req.body.exprience,
