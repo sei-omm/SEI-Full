@@ -34,12 +34,7 @@ async function getAppraisal(searchParams: ReadonlyURLSearchParams) {
     await axios.get(
       `${BASE_API}/employee/appraisal?type=Admin&institute=${
         searchParams.get("institute") || "Kolkata"
-      }`,
-      {
-        headers: {
-          ...getAuthToken(),
-        },
-      }
+      }`
     )
   ).data;
 }
