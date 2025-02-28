@@ -8,10 +8,12 @@ import { generatePaymentLinkEmail } from "../config/generatePaymentLinkEmail";
 import { generateEmailTemplate } from "../config/generateEmailTemplate";
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.ommnews.in", // Your SMTP server
+  port: 465, // Use 465 for SSL or 587 for TLS
+  secure: true, // true for 465, false for other ports
   auth: {
-    user: "ommdigitalwebsite@gmail.com", // Your Gmail address
-    pass: "xdra wwqv bmwo mrta", // Your Gmail password or app-specific password
+    user: "info@ommnews.in", // Your email address
+    pass: "Admin@123%", // Your email account password
   },
 });
 
