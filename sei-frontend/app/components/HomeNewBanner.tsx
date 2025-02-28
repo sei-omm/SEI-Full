@@ -2,6 +2,7 @@ import React from "react";
 import NextSvg from "../svgicons/NextSvg";
 import Button from "./Button";
 import NoticeBoard from "./NoticeBoard";
+import Link from "next/link";
 
 export default function HomeNewBanner() {
   return (
@@ -23,26 +24,33 @@ export default function HomeNewBanner() {
               Mentoring the Mariners <br /> Shaping the future
             </h2>
             <h3 className="text-gray-300 max-w-[40rem] sm:max-w-full">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Odit
-              quis, expedita cumque consequatur mollitia laboriosam ullam dicta
-              nostrum saepe accusantium quaerat necessitatibus velit nobis
-              labore hic reiciendis earum autem laborum?
+              Once a SEIET SAILOR, always a leader at sea! ⚓🌊 Join the legacy
+              of excellence with SEI Educational Trust and set your course for a
+              successful maritime career
             </h3>
 
             <div className="pt-3 flex items-center flex-wrap gap-y-5 gap-x-5">
-              <Button className="!bg-[#E9B858] !rounded-none border-[#E9B858] !text-black !border-none">
-                <span className="font-semibold text-sm uppercase">
-                  Book Courses
-                </span>
+              <Link href={"/our-courses/kolkata"}>
+                <Button className="!bg-[#E9B858] !rounded-none border-[#E9B858] !text-black !border-none">
+                  <span className="font-semibold text-sm uppercase">
+                    Book Courses
+                  </span>
 
-                <NextSvg />
-              </Button>
+                  <NextSvg />
+                </Button>
+              </Link>
 
-              <Button className={`min-w-max px-8 !rounded-none !border-[#E9B858]`}>
-                <span className="font-semibold text-sm uppercase">Contact</span>
+              <Link href={"/contact-us"}>
+                <Button
+                  className={`min-w-max px-8 !rounded-none !border-[#E9B858]`}
+                >
+                  <span className="font-semibold text-sm uppercase">
+                    Contact
+                  </span>
 
-                <NextSvg />
-              </Button>
+                  <NextSvg />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

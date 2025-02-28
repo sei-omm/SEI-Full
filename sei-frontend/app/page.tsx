@@ -9,33 +9,32 @@ import Link from "next/link";
 import { GiRotaryPhone } from "react-icons/gi";
 import HomeNewBanner from "./components/HomeNewBanner";
 
-const what_we_provide = [
-  {
-    icon: "/icons/docuemnts.svg",
-    heading: "Assessment and Evaluation",
-    subheading:
-      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
-  },
-  {
-    icon: "/icons/graduation-cap.svg",
-    heading: "Learning and Instruction",
-    subheading:
-      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
-  },
-  {
-    icon: "/icons/research.svg",
-    heading: "Research and Exploration",
-    subheading:
-      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
-  },
-  {
-    icon: "/icons/teamwork.svg",
-    heading: "Collaboration and Interaction",
-    subheading:
-      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
-  },
-];
-
+// const what_we_provide = [
+//   {
+//     icon: "/icons/docuemnts.svg",
+//     heading: "Assessment and Evaluation",
+//     subheading:
+//       "We believe in nurturing talent through rigorous and fair assessment methods. Our evaluation system is designed to ensure that every student meets the highest standards of competency and professionalism",
+//   },
+//   {
+//     icon: "/icons/graduation-cap.svg",
+//     heading: "Learning and Instruction",
+//     subheading:
+//       "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
+//   },
+//   {
+//     icon: "/icons/research.svg",
+//     heading: "Research and Exploration",
+//     subheading:
+//       "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
+//   },
+//   {
+//     icon: "/icons/teamwork.svg",
+//     heading: "Collaboration and Interaction",
+//     subheading:
+//       "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
+//   },
+// ];
 
 const notices = [
   {
@@ -102,15 +101,14 @@ export default function Home() {
 
             <div className="basis-96 flex-grow">
               <p>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-                Aspernatur ea aperiam, eveniet expedita accusamus facere sequi
-                reprehenderit praesentium obcaecati dolorum provident doloremque
-                molestiae itaque consequatur deleniti,
+                At S.E.I Educational Trust, we pride ourselves on offering
+                unparalleled maritime education and training. Here’s what sets
+                us apart
               </p>
             </div>
           </div>
 
-          <ul className="flex flex-wrap justify-center gap-10">
+          {/* <ul className="flex flex-wrap justify-center gap-10">
             {what_we_provide.map((info) => (
               <li
                 key={info.heading}
@@ -123,6 +121,127 @@ export default function Home() {
                 <h3 className="text-gray-500">{info.subheading}</h3>
               </li>
             ))}
+          </ul> */}
+
+          <ul className="flex flex-col gap-10">
+            <li className="shadow-2xl border border-gray-100 p-6 space-y-2 rounded-2xl flex-grow">
+              <div className="size-12 p-3 bg-[#ffc75f96] rounded-full">
+                <Image
+                  src={"/icons/docuemnts.svg"}
+                  alt=""
+                  height={1200}
+                  width={1200}
+                />
+              </div>
+              <h2 className="font-semibold text-[1.3rem]">
+                Assessment and Evaluation
+              </h2>
+              <h3 className="text-gray-500">
+                We believe in nurturing talent through rigorous and fair
+                assessment methods. Our evaluation system is designed to ensure
+                that every student meets the highest standards of competency and
+                professionalism.
+                <div className="*:block *:pl-4 mt-4 *:before:content-['•'] *:before:text-2xl *:before:mt-4">
+                  <span>
+                    Continuous Monitoring: Regular assessments, both theoretical
+                    and practical, to track progress and identify areas for
+                    improvement.
+                  </span>
+                  <span>
+                    Simulator-Based Evaluations: Realistic simulations to test
+                    decision-making, problem-solving, and technical skills in a
+                    controlled environment.
+                  </span>
+                  <span>
+                    Industry-Aligned Standards: Our evaluation criteria are
+                    aligned with global maritime regulations and industry
+                    requirements, ensuring our graduates are job-ready.
+                  </span>
+                </div>
+              </h3>
+            </li>
+            <li className="shadow-2xl border border-gray-100 p-6 space-y-2 rounded-2xl flex-grow">
+              <div className="size-12 p-3 bg-[#ffc75f96] rounded-full">
+                <Image
+                  src={"/icons/research.svg"}
+                  alt=""
+                  height={1200}
+                  width={1200}
+                />
+              </div>
+              <h2 className="font-semibold text-[1.3rem]">
+                Research and Exploration
+              </h2>
+              <h3 className="text-gray-500">
+                Innovation is at the heart of maritime progress. At S.E.I
+                Educational Trust, we are committed to pushing the boundaries of
+                maritime knowledge and technology.
+                <div className="*:block *:pl-4 mt-4 *:before:content-['•'] *:before:text-2xl *:before:mt-4">
+                  <span>
+                    Cutting-Edge Research: Our research initiatives focus on
+                    emerging fields such as maritime safety systems.
+                  </span>
+                  <span>
+                    Entrepreneurship Development: Programs to encourage
+                    non-seafarers to explore opportunities in ship owning and
+                    maritime trade.
+                  </span>
+                  <span>
+                    Sustainability Focus: Research into eco-friendly practices
+                    and technologies to promote sustainable shipping.
+                  </span>
+                </div>
+              </h3>
+            </li>
+
+            <li className="shadow-2xl border border-gray-100 p-6 space-y-2 rounded-2xl flex-grow">
+              <div className="size-12 p-3 bg-[#ffc75f96] rounded-full">
+                <Image
+                  src={"/icons/graduation-cap.svg"}
+                  alt=""
+                  height={1200}
+                  width={1200}
+                />
+              </div>
+              <h2 className="font-semibold text-[1.3rem]">
+                Learning and Instruction
+              </h2>
+              <h3 className="text-gray-500">
+                Our pedagogy is designed to inspire, engage, and empower
+                students to excel in the maritime industry.
+                <div className="*:block *:pl-4 mt-4 *:before:content-['•'] *:before:text-2xl *:before:mt-4">
+                  <span>
+                    Interactive Learning: A blend of classroom lectures,
+                    hands-on training, and simulator-based learning to provide a
+                    holistic educational experience.
+                  </span>
+                  <span>
+                    Updated Curriculum: Our courses are continuously updated to
+                    reflect the latest advancements in maritime technology,
+                    regulations, and best practices.
+                  </span>
+                </div>
+              </h3>
+            </li>
+
+            <li className="shadow-2xl border border-gray-100 p-6 space-y-2 rounded-2xl flex-grow">
+              <div className="size-12 p-3 bg-[#ffc75f96] rounded-full">
+                <Image
+                  src={"/icons/research.svg"}
+                  alt=""
+                  height={1200}
+                  width={1200}
+                />
+              </div>
+              <h2 className="font-semibold text-[1.3rem]">
+                Collaboration and Interaction
+              </h2>
+              <h3 className="text-gray-500">
+                We believe that collaboration is key to success in the maritime
+                industry. Our students, faculty, and industry partners work
+                together to create a vibrant learning community.
+              </h3>
+            </li>
           </ul>
         </section>
 
@@ -151,24 +270,28 @@ export default function Home() {
             </h2>
             <p className="text-[#4b4231] space-y-3">
               <span className="inline-block">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex
-                omnis harum eveniet animi commodi rem! Ea quisquam, corporis
-                alias laudantium obcaecati sed molestiae porro sequi et repellat
-                saepe. Vitae, eum?
+                At S.E.I Educational Trust, we stand at the forefront of
+                maritime education and training, recognized as one of the
+                premier institutes in the field. Our commitment to excellence,
+                innovation, and industry relevance has earned us a reputation as
+                a trusted partner for aspiring seafarers and maritime
+                professionals worldwide.
               </span>
 
-              <span className="inline-block">
+              {/* <span className="inline-block">
                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex
                 omnis harum eveniet animi commodi rem! Ea quisquam, corporis
                 alias laudantium obcaecati sed molestiae porro sequi et repellat
                 saepe. Vitae, eum?
-              </span>
+              </span> */}
             </p>
 
-            <Button className="!bg-[#e9b858] !text-black hover:bg-[#e9b95871]">
-              <span>Contact Us Now</span>
-              <NextSvg />
-            </Button>
+            <Link href={"/contact-us"}>
+              <Button className="!bg-[#e9b858] !text-black hover:bg-[#e9b95871]">
+                <span>Contact Us Now</span>
+                <NextSvg />
+              </Button>
+            </Link>
           </div>
         </section>
 

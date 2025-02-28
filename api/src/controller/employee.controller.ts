@@ -638,6 +638,9 @@ export const loginEmployee = asyncErrorHandler(
       [value.login_email]
     );
 
+    console.log(rows);
+    console.log(rowCount)
+
     if (rowCount === 0) throw new ErrorHandler(404, "User doesn't found");
 
     if (!rows[0].is_active) throw new ErrorHandler(404, "Account Has Disabled");
