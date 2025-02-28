@@ -123,7 +123,7 @@ export const getEmployeeLeaveRequest = asyncErrorHandler(
 
 export const createEmployeeLeaveRequest = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { error } = createLeaveRequestValidator.validate({
+    const { error, value } = createLeaveRequestValidator.validate({
       ...req.body,
       employee_id: res.locals?.employee_id,
     });
@@ -141,6 +141,21 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
 
     try {
       await client.query("BEGIN");
+
+      // check is leave on the same date has already taken
+      const { rowCount : existLeaveCount } = await client.query(
+        `SELECT employee_id 
+         FROM leave 
+         WHERE employee_id = $1 
+         AND leave_from <= $3 
+         AND leave_to >= $2 
+         LIMIT 1
+        `,
+        [value.employee_id, value.leave_from, value.leave_to]
+      );
+
+      if(existLeaveCount && existLeaveCount > 0) throw new ErrorHandler(400, "You already have a leave taken during this period. Please choose different dates.");
+
 
       // check is employee have any leave avilable or not
       const { rowCount, rows } = await client.query(
@@ -176,7 +191,10 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
       // add extra filter if higher authority is HOD than don't need to check department as it will got to HOI
       let extra_filter = "";
       const extra_filter_values: string[] = [];
-      if (currentEmployeeInfo[0].authority !== "HOD") {
+      if (
+        currentEmployeeInfo[0].authority !== "HOD" &&
+        currentEmployeeInfo[0].authority !== "HOI"
+      ) {
         extra_filter = " AND ha.department_id = $3";
         extra_filter_values.push(currentEmployeeInfo[0].department_id);
       } else {
@@ -186,12 +204,13 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
         );
         const highAuthorityNameInner: string | undefined =
           AUTHORITY[currentEmployeeAuthorityIndex - 1];
-        highAuthorityName = highAuthorityNameInner;
+        let highAuthorityName = highAuthorityNameInner;
       }
 
       //find id form employee where authority is higher authority
-      const { rows: highAuthorityInfo } = await client.query(
-        `
+      const { rows: highAuthorityInfo, rowCount: highAuthRowCount } =
+        await client.query(
+          `
           SELECT
             id,
             name
@@ -201,12 +220,18 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
             AND ha.institute = $2
             ${extra_filter}
             `,
-        [
-          highAuthorityName,
-          currentEmployeeInfo[0].institute,
-          ...extra_filter_values,
-        ]
-      );
+          [
+            highAuthorityName,
+            currentEmployeeInfo[0].institute,
+            ...extra_filter_values,
+          ]
+        );
+
+      if (highAuthRowCount === 0)
+        throw new Error(
+          "There is no higher authority than " +
+            currentEmployeeInfo[0].authority
+        );
 
       const { rowCount: totalRowCreated, rows: leave } = await client.query(
         `
@@ -297,7 +322,9 @@ export const updateLeaveStatus = asyncErrorHandler(
 
         if (
           whoIsUpdatingInfo[0].department_name !== "HR Department" &&
-          (currentAuthority === "HOD" || currentAuthority === "HOI")
+          (currentAuthority === "HOD" ||
+            currentAuthority === "HOI" ||
+            currentAuthority === "SUPER ADMIN")
         ) {
           //send a notification to the employee, update leave_and_employee table status, send the requst to the hr
           await sendNotificationUtil({
@@ -428,7 +455,9 @@ export const updateLeaveStatus = asyncErrorHandler(
 
         if (
           whoIsUpdatingInfo[0].department_name !== "HR Department" &&
-          (currentAuthority === "HOD" || currentAuthority === "HOI")
+          (currentAuthority === "HOD" ||
+            currentAuthority === "HOI" ||
+            currentAuthority === "SUPER ADMIN")
         ) {
           //send a notification to the employee, update leave_and_employee table status, send the requst to the hr
           await sendNotificationUtil({
@@ -885,7 +914,7 @@ export const generateLeaveReceipt = asyncErrorHandler(async (req, res) => {
       [value.leave_id]
     );
 
-    const { rows : totalLeaveInfo } = await client.query(
+    const { rows: totalLeaveInfo } = await client.query(
       `
       SELECT 
         COUNT(employee_id) total_leave 
@@ -893,7 +922,7 @@ export const generateLeaveReceipt = asyncErrorHandler(async (req, res) => {
       WHERE employee_id = $1 AND date BETWEEN get_financial_year_start() AND get_financial_year_end() AND (status = 'Leave')
       `,
       [rows[0].employee_id]
-    )
+    );
 
     const totalDays = countDays(rows[0].leave_from, rows[0].leave_to);
 
@@ -902,7 +931,7 @@ export const generateLeaveReceipt = asyncErrorHandler(async (req, res) => {
       total_days: totalDays,
       leave_from: beautifyDate(rows[0].leave_from),
       leave_to: beautifyDate(rows[0].leave_to),
-      total_leave_days : totalLeaveInfo[0].total_leave
+      total_leave_days: totalLeaveInfo[0].total_leave,
     });
 
     await client.query("COMMIT");

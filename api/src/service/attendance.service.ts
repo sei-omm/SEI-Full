@@ -25,6 +25,13 @@ export const generateEmployeeAttendance = async (req: Request) => {
     "e"
   );
 
+  let newFilter = filterQuery;
+  if(newFilter === "") {
+    newFilter += "WHERE e.employee_role != 'Super Admin'"
+  } else {
+    newFilter += " AND e.employee_role != 'Super Admin'"
+  }
+
   const sql = `
       SELECT
         e.id AS employee_id,
@@ -52,7 +59,7 @@ export const generateEmployeeAttendance = async (req: Request) => {
     placeholderNum + 1
   }
   
-      ${filterQuery}
+      ${newFilter}
   
       GROUP BY e.id
   

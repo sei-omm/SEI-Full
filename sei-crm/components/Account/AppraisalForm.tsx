@@ -169,6 +169,14 @@ export default function AppraisalForm({
                     appraisal?.data.appraisal_of_info.joining_date || ""
                   )}
                 </span>
+                <span className="text-sm">
+                  <span className="font-semibold text-gray-600">Authority</span> :{" "}
+                  {appraisal?.data.appraisal_of_info.authority}
+                </span>
+                <span className="text-sm">
+                  <span className="font-semibold text-gray-600">Department</span> :{" "}
+                  {appraisal?.data.appraisal_of_info.department_name}
+                </span>
               </div>
             </div>
           </div>

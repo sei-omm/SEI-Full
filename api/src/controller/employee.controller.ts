@@ -34,8 +34,6 @@ import { parsePagination } from "../utils/parsePagination";
 import { generateEmployeeId } from "../utils/generateEmployeeId";
 import { calculateYearsDifference } from "../utils/calculateYearsDifference";
 import { AUTHORITY } from "../constant";
-import { sendNotification } from "./notification.controller";
-import { sendNotificationUtil } from "../utils/sendNotificationUtil";
 import { beautifyDate } from "../utils/beautifyDate";
 import { calculateAge } from "../utils/calculateAge";
 
@@ -94,6 +92,7 @@ export const getHrDashboardInfo = asyncErrorHandler(
 
     const institute = req.query.institute || null;
 
+
     const [response1, response2, response3] = await transaction([
       {
         sql: `
@@ -102,7 +101,9 @@ export const getHrDashboardInfo = asyncErrorHandler(
             COUNT(CASE WHEN e.is_active = 'true' THEN 0 END) AS active_employees
           FROM employee e
 
-          ${institute ? `WHERE institute = $1` : ""}
+          WHERE e.employee_role != 'Super Admin' ${
+            institute ? `AND e.institute = $1` : ""
+          }
             `,
         values: institute ? [institute] : [],
       },
@@ -119,8 +120,7 @@ export const getHrDashboardInfo = asyncErrorHandler(
             LEFT JOIN employee e
             ON e.id = lr.employee_id
 
-            WHERE e.institute = $1
-            
+            WHERE e.institute = $1 AND e.employee_role != 'Super Admin'
           `
               : ""
           }
@@ -138,11 +138,10 @@ export const getHrDashboardInfo = asyncErrorHandler(
               ? `
             LEFT JOIN employee e
             ON e.id = a.employee_id
-          `
-              : ""
+          ` : ""
           }
 
-          WHERE date = $1 ${institute ? "AND e.institute = $2" : ""}
+          WHERE date = $1 ${institute ? "AND e.institute = $2 AND e.employee_role != 'Super Admin'" : ""}
         `,
         values: institute ? [getDate(date), institute] : [getDate(date)],
       },
@@ -174,7 +173,7 @@ export const getHrDashboardInfo = asyncErrorHandler(
 
 export const getEmployee = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    // const employee_type = req.query.employee_type;
+    // const employee_type = req.query.employee_type
 
     const { OFFSET, LIMIT } = parsePagination(req);
 
@@ -182,6 +181,13 @@ export const getEmployee = asyncErrorHandler(
       req.query,
       "e"
     );
+
+    let newFilter = filterQuery;
+    if (newFilter === "") {
+      newFilter += "WHERE e.employee_role != 'Super Admin'";
+    } else {
+      newFilter += " AND e.employee_role != 'Super Admin'";
+    }
 
     let query = `
         SELECT 
@@ -205,7 +211,7 @@ export const getEmployee = asyncErrorHandler(
         LEFT JOIN 
             department d 
             ON e.department_id = d.id
-        ${filterQuery}
+        ${newFilter}
         ORDER BY 
             e.name
         OFFSET ${OFFSET}
@@ -328,19 +334,17 @@ export const addNewEmployee = asyncErrorHandler(
         doc_name = EXCLUDED.doc_name
     `;
 
-    // const cl = req.body.cl;
-    // const sl = req.body.sl;
-    // const el = req.body.el;
-    // const ml = req.body.ml;
-    // delete req.body.cl;
-    // delete req.body.sl;
-    // delete req.body.el;
-    // delete req.body.ml;
     const cl = 10;
     const sl = 10;
     const el = 0;
     const ml = 84;
-    const { columns, params, values } = objectToSqlInsert(req.body);
+
+    const new_login_password = await bcrypt.hash(req.body.login_password, 10);
+
+    const { columns, params, values } = objectToSqlInsert({
+      ...req.body,
+      login_password: new_login_password,
+    });
 
     const client = await pool.connect();
 
@@ -348,16 +352,22 @@ export const addNewEmployee = asyncErrorHandler(
       await client.query("BEGIN");
 
       //for checking any hoi already exist of not if exist throw error if not continue
-      const { rowCount, rows: hoiInfo } = await client.query(
-        `SELECT name FROM employee WHERE authority = 'HOI' AND institute = $1 AND is_active = true`,
-        [req.body.institute]
-      );
-
-      if ((rowCount || 0) > 0)
-        throw new ErrorHandler(
-          400,
-          `${hoiInfo[0].name} Exist AS HOI, Choose Diffrent Authority Option`
+      if (req.body.authority === "HOI") {
+        const { rowCount, rows: hoiInfo } = await client.query(
+          `
+          SELECT 
+            name 
+          FROM employee WHERE 
+          authority = 'HOI' AND institute = $1 AND is_active = true`,
+          [req.body.institute]
         );
+
+        if ((rowCount || 0) > 0)
+          throw new ErrorHandler(
+            400,
+            `${hoiInfo[0].name} Exist AS HOI, Choose Diffrent Authority Option`
+          );
+      }
 
       // insert info into employee table
       const { rows } = await client.query(
@@ -676,7 +686,8 @@ export const employeeLogout = asyncErrorHandler(async (req, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    domain: process.env.NODE_ENV === "production" ? process.env.DOMAIN : undefined,
+    domain:
+      process.env.NODE_ENV === "production" ? process.env.DOMAIN : undefined,
   });
   res.status(200).json(new ApiResponse(200, "Successfully Logout"));
 });
@@ -875,12 +886,14 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
     let extra_filter = "";
     const extra_filter_values: string[] = [];
     if (employee1Info[0].authority !== "HOD") {
-      extra_filter = " AND ha.department_id = $3";
-      extra_filter_values.push(employee1Info[0].department_id);
+      if(employee1Info[0].authority !== "HOI"){
+        extra_filter = " AND ha.department_id = $3";
+        extra_filter_values.push(employee1Info[0].department_id);
+      }
     }
 
     //find id form employee where authority is higher authority
-    const { rows: highAuthorityInfo } = await client.query(
+    const { rows: highAuthorityInfo, rowCount } = await client.query(
       `
       SELECT
         id,
@@ -893,6 +906,8 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
       `,
       [highAuthorityName, employee1Info[0].institute, ...extra_filter_values]
     );
+
+    if(rowCount === 0) throw new Error("There is no higher authority than " + employee1Info[0].authority)
 
     const { rows: appraisal } = await client.query(
       `INSERT INTO appraisal (employee_id, discipline, duties, targets, achievements, appraisal_options_employee) VALUES ($1, $2, $3, $4, $5, $6) RETURNING appraisal_id`,
@@ -1002,7 +1017,8 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
         a.employee_id AS appraisal_of_employee_id,
         e.name AS appraisal_of,
         e.profile_image,
-        e.email_address
+        e.email_address,
+        aae.appraisal_status
        FROM appraisal_and_employee aae
   
        LEFT JOIN appraisal AS a
@@ -1014,6 +1030,8 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
        ${value.institute ? "WHERE e.institute = $1" : ""}
 
        GROUP BY e.id, a.appraisal_id
+
+       ORDER BY a.appraisal_id DESC
       `,
       value.institute ? [value.institute] : []
     );
@@ -1027,7 +1045,8 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
       a.appraisal_id,
       a.created_at,
       a.employee_id AS appraisal_of_employee_id,
-      e.name AS appraisal_of
+      e.name AS appraisal_of,
+      aae.appraisal_status
      FROM appraisal_and_employee aae
 
      LEFT JOIN appraisal AS a
@@ -1037,6 +1056,8 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
      ON e.id = a.employee_id
 
      WHERE aae.to_employee_id = $1
+
+     ORDER BY a.appraisal_id DESC
     `,
     [value.employee_id]
   );
@@ -1099,11 +1120,16 @@ export const getSingleAppraisal = asyncErrorHandler(async (req, res) => {
           e.name,
           e.profile_image,
           e.dob,
-          e.joining_date
+          e.joining_date,
+          e.authority,
+          d.name as department_name
         FROM appraisal AS a
 
         LEFT JOIN employee AS e
         ON a.employee_id = e.id
+
+        LEFT JOIN department d
+        ON d.id = e.id
 
         WHERE a.appraisal_id = $1
       `,
@@ -1156,16 +1182,20 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
 
     // if high authority name is not found then consider this form will not go beyond
     if (highAuthorityName !== undefined) {
-      // add extra filter if higher authority is HOD than don't need to check department as it will got to HOI
+      // add extra filter if higher authority is HOD than don't need to check department as it will go to HOI
       let extra_filter = "";
+
       const extra_filter_values: string[] = [];
+
       if (employee1Info[0].authority !== "HOD") {
-        extra_filter = " AND ha.department_id = $3";
-        extra_filter_values.push(employee1Info[0].department_id);
+        if (employee1Info[0].authority !== "HOI") {
+          extra_filter = " AND ha.department_id = $3";
+          extra_filter_values.push(employee1Info[0].department_id);
+        }
       }
 
       //find id form employee where authority is higher authority name
-      const { rows: highAuthorityInfo } = await client.query(
+      const { rows: highAuthorityInfo, rowCount } = await client.query(
         `
       SELECT
         id,
@@ -1178,6 +1208,8 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
       `,
         [highAuthorityName, employee1Info[0].institute, ...extra_filter_values]
       );
+
+      if(rowCount === 0) throw new Error("There is no higher authority than " + employee1Info[0].authority)
 
       await client.query(
         `

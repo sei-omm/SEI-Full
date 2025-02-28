@@ -1585,51 +1585,51 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
               // if not check others -> recursively if finally not found anyone than store current employee
               // in tempFaculty array. and at the end of the faculty list
 
-              // const exist_faculty_basic_info = faculty_exist_position.get(faculty.faculty_id);
+              const exist_faculty_basic_info = faculty_exist_position.get(faculty.faculty_id);
 
-              // if(exist_faculty_basic_info) {
-              //   const parentIndex = exist_faculty_basic_info.parent_index;
+              if(exist_faculty_basic_info) {
+                const parentIndex = exist_faculty_basic_info.parent_index;
 
-              //   const checkFacultyAvailability = (facultyList : TFaculty[]) => {
-              //     const find_result = facultyList[0];
-              //     // console.log("START")
-              //     // console.log(find_result)
+                const checkFacultyAvailability = (facultyList : TFaculty[]) => {
+                  const find_result = facultyList[0];
+                  // console.log("START")
+                  // console.log(find_result)
                   
-              //     if(!find_result) return null;
+                  if(!find_result) return null;
 
-              //     if(find_result.belong_position > 0) {
-              //       return find_result;
-              //     }
+                  if(find_result.belong_position > 0) {
+                    return find_result;
+                  }
 
-              //     return checkFacultyAvailability(facultyList.filter(item => item.faculty_id !== find_result.faculty_id))
-              //   }
+                  return checkFacultyAvailability(facultyList.filter(item => item.faculty_id !== find_result.faculty_id))
+                }
 
-              //   // console.log("START")
-              //   // console.log(result[parentIndex].faculty)
+                console.log("START")
+                console.log(result[parentIndex].faculty)
 
-              //   const facultyNotTeachingNow = checkFacultyAvailability(
-              //     result[parentIndex].faculty.filter(item => item.faculty_id !== faculty.faculty_id)
-              //   );
+                const facultyNotTeachingNow = checkFacultyAvailability(
+                  result[parentIndex].faculty.filter(item => item.faculty_id !== faculty.faculty_id)
+                );
 
-              //   if(facultyNotTeachingNow !== null) {
+                if(facultyNotTeachingNow !== null) {
 
-              //     const tempFac = result[parentIndex].faculty[facultyNotTeachingNow.index_belong];
-              //     const woIsInFirst = result[parentIndex].faculty.filter(item => item.faculty_id === faculty.faculty_id)[0];
+                  const tempFac = result[parentIndex].faculty[facultyNotTeachingNow.index_belong];
+                  const woIsInFirst = result[parentIndex].faculty.filter(item => item.faculty_id === faculty.faculty_id)[0];
 
-              //     result[parentIndex].faculty[facultyNotTeachingNow.index_belong].belong_position = woIsInFirst.belong_position;
-              //     result[parentIndex].faculty[facultyNotTeachingNow.index_belong].index_belong = woIsInFirst.index_belong;
+                  result[parentIndex].faculty[facultyNotTeachingNow.index_belong].belong_position = woIsInFirst.belong_position;
+                  result[parentIndex].faculty[facultyNotTeachingNow.index_belong].index_belong = woIsInFirst.index_belong;
 
-              //     result[parentIndex].faculty[woIsInFirst.index_belong].belong_position = woIsInFirst.belong_position;
-              //     result[parentIndex].faculty[woIsInFirst.index_belong].index_belong = woIsInFirst.index_belong;
+                  result[parentIndex].faculty[woIsInFirst.index_belong].belong_position = facultyNotTeachingNow.belong_position;
+                  result[parentIndex].faculty[woIsInFirst.index_belong].index_belong = facultyNotTeachingNow.index_belong;
 
-              //     result[parentIndex].faculty[woIsInFirst.index_belong] = tempFac;
-              //     result[parentIndex].faculty[facultyNotTeachingNow.index_belong] = woIsInFirst;
+                  result[parentIndex].faculty[woIsInFirst.index_belong] = tempFac;
+                  result[parentIndex].faculty[facultyNotTeachingNow.index_belong] = woIsInFirst;
 
-              //   }
+                }
 
-              // } else {
-              //   return;
-              // }
+              } else {
+                return;
+              }
 
             
 

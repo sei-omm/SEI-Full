@@ -9,9 +9,6 @@ import {
 import { ErrorHandler } from "../utils/ErrorHandler";
 import XLSX from "xlsx";
 import { months } from "../constant";
-import { filterToSql } from "../utils/filterToSql";
-import { parsePagination } from "../utils/parsePagination";
-import { getDatesInBetween } from "../utils/getDatesInBetween";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import { generateEmployeeAttendance } from "../service/attendance.service";
 

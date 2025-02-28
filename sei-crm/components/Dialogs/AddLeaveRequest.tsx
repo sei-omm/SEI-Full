@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import DialogBody from "./DialogBody";
 import DateInput from "../DateInput";
 import TextArea from "../TextArea";
@@ -14,6 +14,7 @@ import { RootState } from "@/redux/store";
 
 export default function AddLeaveRequest() {
   const { extraValue } = useSelector((state: RootState) => state.dialogs);
+  const [batchStartDate, setBatchStartDate] = useState("");
   const extraData = extraValue as
     | {
         leave_details: TLeaveDetails[] | undefined;
@@ -43,8 +44,16 @@ export default function AddLeaveRequest() {
     <DialogBody>
       <form action={handleSubmit} className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <DateInput required name="leave_from" label="From *" />
-          <DateInput required name="leave_to" label="To *" />
+          <DateInput
+            min={new Date().toISOString().split("T")[0]}
+            onChange={(date) => {
+              setBatchStartDate(date);
+            }}
+            required
+            name="leave_from"
+            label="From *"
+          />
+          <DateInput min={batchStartDate} required name="leave_to" label="To *" />
         </div>
         <DropDown
           name="leave_type"

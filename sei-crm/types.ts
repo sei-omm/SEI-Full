@@ -641,6 +641,7 @@ export type TAppraisalList = {
 
   appraisal_of_employee_id?: number;
   appraisal_of?: string;
+  appraisal_status? : "Pending" | "Approved"
 };
 
 export type TAppraisal = {
@@ -663,6 +664,8 @@ export type TAppraisal = {
     profile_image: string;
     dob: string;
     joining_date: string;
+    authority : string;
+    department_name : string;
   };
 };
 

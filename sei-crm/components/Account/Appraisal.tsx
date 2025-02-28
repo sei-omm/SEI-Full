@@ -12,15 +12,14 @@ import HandleSuspence from "../HandleSuspence";
 import { BiEdit } from "react-icons/bi";
 import Link from "next/link";
 import { GrLinkNext } from "react-icons/gr";
+import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";
 
 interface IProps {
   type: "own" | "others";
 }
 
 async function fetchAppraisals(type: "own" | "others") {
-  return (
-    await axios.get(`${BASE_API}/employee/appraisal?type=${type}`)
-  ).data;
+  return (await axios.get(`${BASE_API}/employee/appraisal?type=${type}`)).data;
 }
 
 export default function Appraisal({ type }: IProps) {
@@ -72,12 +71,30 @@ export default function Appraisal({ type }: IProps) {
                   </span>
                 </h3>
                 {type === "others" ? (
-                  <div className="flex items-center gap-1 text-xs">
-                    <span className="font-semibold text-yellow-700">
-                      Appraisal Of :
-                    </span>
-                    <span>{appraisal.appraisal_of}</span>
-                  </div>
+                  <ul className="flex items-center gap-3 flex-wrap">
+                    <li className="flex items-center gap-1 text-xs">
+                      <span className="font-semibold text-black">
+                        Appraisal Of :
+                      </span>
+                      <span>{appraisal.appraisal_of}</span>
+                    </li>
+                    {appraisal.appraisal_status && (
+                      <li className="flex items-center gap-1 text-xs">
+                        {appraisal.appraisal_status === "Pending" ? (
+                          <span className="font-semibold text-yellow-700">
+                            Awaiting your response.
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-green-700 flex items-center gap-1">
+                            Approved by You.
+                            <IoCheckmarkDoneCircleSharp />
+                          </span>
+                        )}
+
+                        {/* <span>{appraisal.appraisal_of}</span> */}
+                      </li>
+                    )}
+                  </ul>
                 ) : (
                   <ul className="flex items-center gap-1 flex-wrap">
                     {appraisal.sended_to?.map((item, index) => (

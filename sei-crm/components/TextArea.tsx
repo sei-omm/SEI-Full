@@ -11,6 +11,8 @@ interface IProps
   referal?: LegacyRef<HTMLTextAreaElement>;
   defaultValue?: any;
   viewOnly?: boolean;
+  viewOnlyText?: string;
+  inputLayoutWrapperCss?: string;
 }
 
 export default function TextArea(props: IProps) {
@@ -21,15 +23,30 @@ export default function TextArea(props: IProps) {
           {props.label}
         </span>
       )}
-
-      <textarea
-        {...props}
-        ref={props.referal}
-        className={`outline-none border-2 border-gray-200 placeholder:text-gray-400 rounded-lg w-full text-sm px-4 py-3 ${
+      <div
+        className={`w-full flex items-center gap-[2px] border-2 border-gray-200 rounded-lg text-sm px-4 py-3 ${
           props.viewOnly ? "opacity-80 bg-slate-200" : "opacity-100"
-        } ${props.className}`}
-        disabled = {props.viewOnly}
-      ></textarea>
+        } ${props.inputLayoutWrapperCss}`}
+      >
+        <span className={props.viewOnly ? "block" : "hidden"}>
+          {props.viewOnlyText ?? props.defaultValue ?? props.value}
+        </span>
+        {props.viewOnly ? (
+          <input
+            className="hidden"
+            name={props.name}
+            value={props.viewOnlyText ?? props.defaultValue ?? props.value}
+          />
+        ) : (
+          <textarea
+            {...props}
+            ref={props.referal}
+            className={`outline-none w-full h-full${
+              props.viewOnly ? "opacity-80 bg-slate-200" : "opacity-100"
+            } ${props.className}`}
+          ></textarea>
+        )}
+      </div>
     </div>
   );
 }

@@ -30,4 +30,4 @@ export const TIME_PERIOD = [
   "Period 8",
 ];
 
-export const AUTHORITY = ["HOI", "HOD", "UDS", "LDS"];
+export const AUTHORITY = ["SUPER ADMIN", "HOI", "HOD", "UDS", "LDS"];
