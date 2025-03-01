@@ -907,7 +907,7 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
       [highAuthorityName, employee1Info[0].institute, ...extra_filter_values]
     );
 
-    if(rowCount === 0) throw new Error("There is no higher authority than " + employee1Info[0].authority)
+    if(rowCount === 0) throw new Error("No higher authority is defined for " + employee1Info[0].authority)
 
     const { rows: appraisal } = await client.query(
       `INSERT INTO appraisal (employee_id, discipline, duties, targets, achievements, appraisal_options_employee) VALUES ($1, $2, $3, $4, $5, $6) RETURNING appraisal_id`,
@@ -1209,7 +1209,7 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
         [highAuthorityName, employee1Info[0].institute, ...extra_filter_values]
       );
 
-      if(rowCount === 0) throw new Error("There is no higher authority than " + employee1Info[0].authority)
+      if(rowCount === 0) throw new Error("No higher authority is defined for " + employee1Info[0].authority)
 
       await client.query(
         `

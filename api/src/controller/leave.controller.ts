@@ -204,7 +204,7 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
         );
         const highAuthorityNameInner: string | undefined =
           AUTHORITY[currentEmployeeAuthorityIndex - 1];
-        let highAuthorityName = highAuthorityNameInner;
+        highAuthorityName = highAuthorityNameInner;
       }
 
       //find id form employee where authority is higher authority
@@ -229,7 +229,7 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
 
       if (highAuthRowCount === 0)
         throw new Error(
-          "There is no higher authority than " +
+          "No higher authority is defined for " +
             currentEmployeeInfo[0].authority
         );
 
