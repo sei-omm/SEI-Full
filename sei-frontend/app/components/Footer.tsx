@@ -3,12 +3,13 @@ import React from "react";
 
 import { GrFacebookOption } from "react-icons/gr";
 import { FaInstagram } from "react-icons/fa";
-import { FaLinkedinIn } from "react-icons/fa";
-import { FaYoutube } from "react-icons/fa";
+// import { FaLinkedinIn } from "react-icons/fa";
+// import { FaYoutube } from "react-icons/fa";
 import { CiLogin } from "react-icons/ci";
 
 import Link from "next/link";
 import Button from "./Button";
+import { IoLogoTwitter } from "react-icons/io5";
 
 export default function Footer() {
   return (
@@ -36,24 +37,59 @@ export default function Footer() {
             </div>
           </div>
           <p className="text-[14px] text-gray-400">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam
-            quidem eius corrupti illo magni vitae, qui nihil tempore quam nisi,
-            asperiores iste sunt modi adipisci obcaecati vero error, explicabo
-            quis.
+            At SEI Educational Trust, leadership begins at sea! ⚓🌊 Join a
+            legacy of excellence and chart your course toward a thriving
+            maritime career.
           </p>
 
-          <div className="flex items-center gap-x-4">
-            <div className="size-8 rounded-lg border flex-center p-1">
-              <GrFacebookOption />
+          <div className="space-y-6">
+            {/* <h2 className="text-xs text-gray-400">Kolkata</h2> */}
+            <div className="space-y-2">
+              <h2 className="text-xs text-gray-400">Kolkata</h2>
+              <div className="flex items-center gap-4">
+                <Link
+                  href={"https://www.facebook.com/seieducational.trust"}
+                  className="size-8 inline-block rounded-lg border flex-center p-1"
+                >
+                  <GrFacebookOption />
+                </Link>
+                <Link
+                  href={"https://twitter.com/kolseiedutrust"}
+                  className="size-8 inline-block rounded-lg border flex-center p-1"
+                >
+                  <IoLogoTwitter />
+                </Link>
+                <Link
+                  href={"https://www.instagram.com/seiedutrustkolkata/"}
+                  className="size-8 inline-block rounded-lg border flex-center p-1"
+                >
+                  <FaInstagram />
+                </Link>
+              </div>
             </div>
-            <div className="size-8 rounded-lg border flex-center p-1">
-              <FaInstagram />
-            </div>
-            <div className="size-8 rounded-lg border flex-center p-1">
-              <FaLinkedinIn />
-            </div>
-            <div className="size-8 rounded-lg border flex-center p-1">
-              <FaYoutube />
+            <div className="w-32 h-[1px] opacity-40 bg-slate-500"></div>
+            <div className="space-y-2">
+              <h2 className="text-xs text-gray-400">Faridabad</h2>
+              <div className="flex items-center gap-4">
+                <Link
+                  href={"https://www.facebook.com/share/17SvrnvhJz/"}
+                  className="size-8 inline-block rounded-lg border flex-center p-1"
+                >
+                  <GrFacebookOption />
+                </Link>
+                {/* <Link
+                href={"https://twitter.com/kolseiedutrust"}
+                className="size-8 inline-block rounded-lg border flex-center p-1"
+              >
+                <IoLogoTwitter />
+              </Link> */}
+                <Link
+                  href={"https://www.instagram.com/seiedutrustfaridabad/"}
+                  className="size-8 inline-block rounded-lg border flex-center p-1"
+                >
+                  <FaInstagram />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -65,9 +101,7 @@ export default function Footer() {
                 Our Centers & Contacts
               </h4>
 
-              <Link
-                href={`${process.env.NEXT_PUBLIC_BASE_CRM}/auth/login`}
-              >
+              <Link href={`${process.env.NEXT_PUBLIC_BASE_CRM}/auth/login`}>
                 <Button className="sm:mb-3">
                   <CiLogin size={20} />
                   <span>Employee Login</span>

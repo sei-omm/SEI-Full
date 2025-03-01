@@ -106,7 +106,9 @@ export default function CreateAdmission() {
             extraValue: {
               student_id: response.data.student_id,
               // batch_ids: courseInfo.map((item) => item.batch_id).join(","),
-              batch_ids: formData?.course_info?.map((item) => item.batch_id).join(","),
+              batch_ids: formData?.course_info
+                ?.map((item) => item.batch_id)
+                .join(","),
               payment_type,
               form_id: response.data.form_id,
             },
@@ -171,7 +173,6 @@ export default function CreateAdmission() {
           <ul className="space-y-5">
             {fields.map((fild, index) => (
               <ChooseCoursesListItem
-                // key={fild.id}
                 key={fild.id}
                 index={index}
                 clearErrors={clearErrors}

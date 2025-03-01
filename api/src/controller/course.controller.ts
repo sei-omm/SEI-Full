@@ -1127,9 +1127,6 @@ type TFaculty = {
   faculty_id: number;
   faculty_name: string;
   profile_image: string;
-  // already_exist: boolean;
-  belong_position: number;
-  index_belong : number;
 };
 
 type TTimeTable = {
@@ -1452,6 +1449,230 @@ function removeFormArray(arr: any[], index: number) {
 //   }
 // });
 
+// export const generateTimeTable = asyncErrorHandler(async (req, res) => {
+//   const { error, value } = VTimeTable.validate(req.query);
+//   if (error) throw new ErrorHandler(400, error.message);
+
+//   const cDate = new Date(value.date);
+//   if (cDate.getDay() === 0) {
+//     throw new ErrorHandler(
+//       405,
+//       `You can't prepare time table as it is "Sunday"`
+//     );
+//   }
+
+//   const client = await pool.connect();
+
+//   try {
+//     await client.query("BEGIN");
+
+//     const { rowCount, rows: holidayInfo } = await client.query(
+//       `SELECT holiday_name FROM holiday_management WHERE holiday_date = $1 AND institute = $2`,
+//       [value.date, value.institute]
+//     );
+
+//     if (rowCount !== 0)
+//       throw new ErrorHandler(
+//         405,
+//         `You can't prepare time table as it is Holiday "${holidayInfo[0].holiday_name}"`
+//       );
+
+//     const { rows: dreftData, rowCount: dreftCount } = await client.query(
+//       `SELECT * FROM time_table_draft WHERE date = $1`,
+//       [value.date]
+//     );
+//     if (dreftCount !== 0) {
+//       return res.status(200).json(
+//         new ApiResponse(200, "Time Table Info", {
+//           type: "draft",
+//           result: dreftData[0],
+//         })
+//       );
+//     }
+
+//     const { rows } = await client.query(
+//       `
+//             SELECT
+//               c.course_id,
+//               c.course_name,
+//               c.course_code,
+//               c.subjects,
+//               COALESCE(
+//                   (
+//                       SELECT json_agg(
+//                           jsonb_build_object(
+//                               'faculty_id', fwcs.faculty_id,
+//                               'subject', fwcs.subject,
+//                               'faculty_name', e.name,
+//                               'profile_image', e.profile_image,
+//                               'max_teaching_hrs_per_week', CASE WHEN e.max_teaching_hrs_per_week = '' THEN '0' ELSE e.max_teaching_hrs_per_week END,
+//                               'faculty_current_working_hours', e.faculty_current_working_hours,
+//                               'is_active', e.is_active
+//                           )
+//                       )
+//                       FROM faculty_with_course_subject fwcs
+//                       INNER JOIN employee e ON e.id = fwcs.faculty_id
+//                       WHERE fwcs.course_id = c.course_id AND e.is_active = true
+//                   ),
+//                   '[]'::json
+//               ) AS faculty_details
+//             FROM courses c
+//             INNER JOIN course_batches cb ON cb.course_id = c.course_id
+
+//             WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
+
+//             GROUP BY c.course_id
+//         `,
+//       [value.institute, value.date]
+//     );
+
+//     const outputs = rows as InfoType[];
+
+//     const result: TTimeTable[] = [];
+//     const faculty_exist_position = new Map<
+//       number,
+//       {
+//         belong_position: number;
+//         parent_index : number
+//       }
+//     >();
+
+//     outputs.forEach((output, pIndex) => {
+//       const subjects = output.subjects.split(",");
+
+//       const time_table: TTimeTable = {
+//         course_name: output.course_name,
+//         course_code: output.course_code,
+//         course_id: output.course_id,
+//         subjects: subjects,
+//         faculty: [],
+//       };
+
+//       subjects.forEach((subject) => {
+//         const tempFaculty: TFaculty[] = [];
+//         output.faculty_details.forEach((faculty) => {
+//           // check current employee teaching current subject or not
+//           if (faculty.subject.includes(subject)) {
+//             const exist_faculty = faculty_exist_position.get(
+//               faculty.faculty_id
+//             );
+
+//             if (!exist_faculty || exist_faculty.belong_position > 0) {
+//               const belong_position = time_table.faculty.filter(
+//                 (item) => item.for_subject_name === subject
+//               ).length;
+//               time_table.faculty.push({
+//                 faculty_id: faculty.faculty_id,
+//                 faculty_name: faculty.faculty_name,
+//                 for_subject_name: subject,
+//                 profile_image: faculty.profile_image,
+//                 belong_position: belong_position,
+//                 index_belong : time_table.faculty.length
+//               });
+
+//               faculty_exist_position.set(faculty.faculty_id, {
+//                 belong_position: belong_position,
+//                 parent_index : pIndex
+//               });
+//             } else {
+//               // if current faculty is already avilable in any faculty list first position -> current else will trigger
+//               // than go to that faculty list and find is there any other faculty available or not in that list
+//               // if available and that faculty is not already assigned to any faculty list's first position
+//               // than assign that faculty to first position of that faculty list
+//               // if not check others -> recursively if finally not found anyone than store current employee
+//               // in tempFaculty array. and at the end of the faculty list
+
+//               const exist_faculty_basic_info = faculty_exist_position.get(faculty.faculty_id);
+
+//               if(exist_faculty_basic_info) {
+//                 const parentIndex = exist_faculty_basic_info.parent_index;
+
+//                 const checkFacultyAvailability = (facultyList : TFaculty[]) => {
+//                   const find_result = facultyList[0];
+//                   // console.log("START")
+//                   // console.log(find_result)
+
+//                   if(!find_result) return null;
+
+//                   if(find_result.belong_position > 0) {
+//                     return find_result;
+//                   }
+
+//                   return checkFacultyAvailability(facultyList.filter(item => item.faculty_id !== find_result.faculty_id))
+//                 }
+
+//                 const facultyNotTeachingNow = checkFacultyAvailability(
+//                   result[parentIndex].faculty.filter(item => item.faculty_id !== faculty.faculty_id)
+//                 );
+
+//                 if(facultyNotTeachingNow !== null) {
+
+//                   const tempFac = result[parentIndex].faculty[facultyNotTeachingNow.index_belong];
+//                   const woIsInFirst = result[parentIndex].faculty.filter(item => item.faculty_id === faculty.faculty_id)[0];
+
+//                   result[parentIndex].faculty[facultyNotTeachingNow.index_belong].belong_position = woIsInFirst.belong_position;
+//                   result[parentIndex].faculty[facultyNotTeachingNow.index_belong].index_belong = woIsInFirst.index_belong;
+
+//                   result[parentIndex].faculty[woIsInFirst.index_belong].belong_position = facultyNotTeachingNow.belong_position;
+//                   result[parentIndex].faculty[woIsInFirst.index_belong].index_belong = facultyNotTeachingNow.index_belong;
+
+//                   result[parentIndex].faculty[woIsInFirst.index_belong] = tempFac;
+//                   result[parentIndex].faculty[facultyNotTeachingNow.index_belong] = woIsInFirst;
+
+//                 }
+
+//               } else {
+//                 return;
+//               }
+
+//               const belong_position = time_table.faculty.filter(
+//                 (item) => item.for_subject_name === subject
+//               ).length;
+//               time_table.faculty.push({
+//                 faculty_id: -1,
+//                 faculty_name: "Choose Faculty",
+//                 for_subject_name: subject,
+//                 profile_image: "",
+//                 belong_position: belong_position,
+//                 index_belong : time_table.faculty.length
+//               });
+//               tempFaculty.push({
+//                 faculty_id: faculty.faculty_id,
+//                 faculty_name: faculty.faculty_name,
+//                 for_subject_name: subject,
+//                 profile_image: faculty.profile_image,
+//                 belong_position: belong_position + 1,
+//                 index_belong : time_table.faculty.length + 1
+//               });
+//             }
+//           }
+//         });
+//         time_table.faculty.push(...tempFaculty);
+//       });
+
+//       result.push(time_table);
+//     });
+
+//     res.status(200).json(
+//       new ApiResponse(200, "Time Table Info", {
+//         type: "generated",
+//         result: result,
+//       })
+//     );
+
+//     await client.query("COMMIT");
+//     client.release();
+//   } catch (error: any) {
+//     await client.query("ROLLBACK");
+//     client.release();
+//     if (error?.isOperational) {
+//       throw new ErrorHandler(error.statusCode, error.message);
+//     } else {
+//       throw new ErrorHandler(500, error.message);
+//     }
+//   }
+// });
+
 export const generateTimeTable = asyncErrorHandler(async (req, res) => {
   const { error, value } = VTimeTable.validate(req.query);
   if (error) throw new ErrorHandler(400, error.message);
@@ -1531,12 +1752,13 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
 
     const outputs = rows as InfoType[];
 
-    const result: TTimeTable[] = [];
-    const faculty_exist_position = new Map<
+    const results: TTimeTable[] = [];
+    const map = new Map<
       number,
       {
-        belong_position: number;
-        parent_index : number
+        pIndex: number;
+        facPosition: number;
+        forSubject: string;
       }
     >();
 
@@ -1551,121 +1773,64 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
         faculty: [],
       };
 
+      //
       subjects.forEach((subject) => {
-        const tempFaculty: TFaculty[] = [];
-        output.faculty_details.forEach((faculty) => {
+        const current_fac_array: TFaculty[] = [];
+        const temp: TFaculty[] = [];
+
+        output.faculty_details.forEach((loopFac) => {
           // check current employee teaching current subject or not
-          if (faculty.subject.includes(subject)) {
-            const exist_faculty = faculty_exist_position.get(
-              faculty.faculty_id
-            );
-
-            if (!exist_faculty || exist_faculty.belong_position > 0) {
-              const belong_position = time_table.faculty.filter(
-                (item) => item.for_subject_name === subject
-              ).length;
-              time_table.faculty.push({
-                faculty_id: faculty.faculty_id,
-                faculty_name: faculty.faculty_name,
-                for_subject_name: subject,
-                profile_image: faculty.profile_image,
-                belong_position: belong_position,
-                index_belong : time_table.faculty.length
-              });
-
-              faculty_exist_position.set(faculty.faculty_id, {
-                belong_position: belong_position,
-                parent_index : pIndex
-              });
+          if (loopFac.subject.includes(subject)) {
+            const facInfoToStore = {
+              faculty_id: loopFac.faculty_id,
+              faculty_name: loopFac.faculty_name,
+              for_subject_name: subject,
+              profile_image: loopFac.profile_image,
+            };
+            const myCurrentPosition = time_table.faculty.filter(
+              (item) => item.for_subject_name === subject
+            ).length;
+            const mapInfo = map.get(loopFac.faculty_id);
+            if (
+              mapInfo &&
+              mapInfo.facPosition === 0 &&
+              myCurrentPosition === 0
+            ) {
+              temp.push(facInfoToStore);
             } else {
-              // if current faculty is already avilable in any faculty list first position -> current else will trigger
-              // than go to that faculty list and find is there any other faculty available or not in that list
-              // if available and that faculty is not already assigned to any faculty list's first position
-              // than assign that faculty to first position of that faculty list
-              // if not check others -> recursively if finally not found anyone than store current employee
-              // in tempFaculty array. and at the end of the faculty list
+              // time_table.faculty.push(facInfoToStore)
+              current_fac_array.push(facInfoToStore);
 
-              const exist_faculty_basic_info = faculty_exist_position.get(faculty.faculty_id);
-
-              if(exist_faculty_basic_info) {
-                const parentIndex = exist_faculty_basic_info.parent_index;
-
-                const checkFacultyAvailability = (facultyList : TFaculty[]) => {
-                  const find_result = facultyList[0];
-                  // console.log("START")
-                  // console.log(find_result)
-                  
-                  if(!find_result) return null;
-
-                  if(find_result.belong_position > 0) {
-                    return find_result;
-                  }
-
-                  return checkFacultyAvailability(facultyList.filter(item => item.faculty_id !== find_result.faculty_id))
-                }
-
-                console.log("START")
-                console.log(result[parentIndex].faculty)
-
-                const facultyNotTeachingNow = checkFacultyAvailability(
-                  result[parentIndex].faculty.filter(item => item.faculty_id !== faculty.faculty_id)
-                );
-
-                if(facultyNotTeachingNow !== null) {
-
-                  const tempFac = result[parentIndex].faculty[facultyNotTeachingNow.index_belong];
-                  const woIsInFirst = result[parentIndex].faculty.filter(item => item.faculty_id === faculty.faculty_id)[0];
-
-                  result[parentIndex].faculty[facultyNotTeachingNow.index_belong].belong_position = woIsInFirst.belong_position;
-                  result[parentIndex].faculty[facultyNotTeachingNow.index_belong].index_belong = woIsInFirst.index_belong;
-
-                  result[parentIndex].faculty[woIsInFirst.index_belong].belong_position = facultyNotTeachingNow.belong_position;
-                  result[parentIndex].faculty[woIsInFirst.index_belong].index_belong = facultyNotTeachingNow.index_belong;
-
-                  result[parentIndex].faculty[woIsInFirst.index_belong] = tempFac;
-                  result[parentIndex].faculty[facultyNotTeachingNow.index_belong] = woIsInFirst;
-
-                }
-
-              } else {
-                return;
-              }
-
-            
-
-              const belong_position = time_table.faculty.filter(
-                (item) => item.for_subject_name === subject
-              ).length;
-              time_table.faculty.push({
-                faculty_id: -1,
-                faculty_name: "Choose Faculty",
-                for_subject_name: subject,
-                profile_image: "",
-                belong_position: belong_position,
-                index_belong : time_table.faculty.length
-              });
-              tempFaculty.push({
-                faculty_id: faculty.faculty_id,
-                faculty_name: faculty.faculty_name,
-                for_subject_name: subject,
-                profile_image: faculty.profile_image,
-                belong_position: belong_position + 1,
-                index_belong : time_table.faculty.length + 1
+              map.set(loopFac.faculty_id, {
+                pIndex,
+                facPosition: myCurrentPosition,
+                forSubject: subject,
               });
             }
           }
         });
-        time_table.faculty.push(...tempFaculty);
+
+        if (current_fac_array.length === 0 && temp.length !== 0) {
+          current_fac_array.push({
+            faculty_id: -1,
+            faculty_name: "Choose Faculty",
+            for_subject_name: subject,
+            profile_image: "",
+          });
+        }
+
+        current_fac_array.push(...temp);
+
+        time_table.faculty.push(...current_fac_array);
       });
 
-
-      result.push(time_table);
+      results.push(time_table);
     });
 
     res.status(200).json(
       new ApiResponse(200, "Time Table Info", {
         type: "generated",
-        result: result,
+        result: results,
       })
     );
 

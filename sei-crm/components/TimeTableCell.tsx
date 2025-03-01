@@ -10,6 +10,12 @@ interface IProps {
   colIndex: number;
   selectedSubjects: any;
   selectedFaculties: any;
+  vertualTable: object;
+  setVertualTable: React.Dispatch<
+    React.SetStateAction<object>
+  >;
+  duplicateCell : any;
+  setDuplicateCell : React.Dispatch<any>
 }
 
 export default function TimeTableCell({
@@ -20,6 +26,10 @@ export default function TimeTableCell({
   selectedSubjects,
   selectedFaculties,
   disabled,
+  setVertualTable,
+  vertualTable,
+  duplicateCell,
+  setDuplicateCell
 }: IProps) {
   const [currentFaculty, setCurrentFaculty] = useState(
     serverData?.[rowIndex].faculty.find((f) => f.for_subject_name === value)
@@ -58,7 +68,7 @@ export default function TimeTableCell({
   };
 
   return (
-    <div className="w-full bg-[#D6CEFF] py-3 px-3 rounded-md relative overflow-hidden group/edit flex items-center">
+    <div className={`w-full ${duplicateCell[`${rowIndex}:${colIndex - 1}`] ? "bg-red-400" : "bg-[#D6CEFF]"} py-3 px-3 rounded-md relative overflow-hidden group/edit flex items-center`}>
       <div className="size-8 border border-white rounded-full overflow-hidden">
         <Image
           className="size-full object-cover"
@@ -91,22 +101,35 @@ export default function TimeTableCell({
           <select
             name="faculty_id"
             onChange={(e) => {
+              const cellNeedToUpdate : any = {};
+
+              Object.entries(vertualTable).forEach((value) => {
+                if(value[1] !== undefined && value[1].faculty_id !== -1 && value[1].faculty_id == e.currentTarget.value) {
+                  cellNeedToUpdate[value[0]] = value[1];
+                  cellNeedToUpdate[`${rowIndex}:${colIndex - 1}`] = value[1];
+                }
+              })
+
+              // setVertualTable(prev => ({...prev, ...cellNeedToUpdate}));
+              // setDuplicateCell((prev : any) => ({...prev, ...cellNeedToUpdate}));
+              setDuplicateCell(cellNeedToUpdate);
+
+              const currentFaculty = serverData?.[rowIndex].faculty.find(
+                (f) => f.faculty_id === parseInt(e.currentTarget.value)
+              );
+
+              setVertualTable(prev => ({...prev, [`${rowIndex}:${colIndex - 1}`] : currentFaculty}));
+
               selectedFaculties[`${rowIndex}${colIndex}`] = parseInt(
                 e.currentTarget.value
               );
-              setCurrentFaculty(
-                serverData?.[rowIndex].faculty.find(
-                  (f) => f.faculty_id === parseInt(e.currentTarget.value)
-                )
-              );
+              setCurrentFaculty(currentFaculty);
+            
             }}
             defaultValue={currentFaculty?.faculty_id || 0}
             className="px-2 py-1 outline-none cursor-pointer bg-transparent"
             disabled={currentFaculties.length === 0 || disabled}
           >
-            {/* <option value={0} selected = {currentFaculty?.faculty_id === 0}>
-              Choose Faculty
-            </option> */}
             {currentFaculties.map((eachFaculty) => (
               <option
                 key={eachFaculty.faculty_id}

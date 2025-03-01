@@ -2,39 +2,39 @@ import Image from "next/image";
 
 import NextSvg from "./svgicons/NextSvg";
 import Button from "./components/Button";
-import Ratings from "./components/Ratings";
+// import Ratings from "./components/Ratings";
 import { CiCalendarDate } from "react-icons/ci";
 import { BsPhoneVibrateFill } from "react-icons/bs";
 import Link from "next/link";
 import { GiRotaryPhone } from "react-icons/gi";
 import HomeNewBanner from "./components/HomeNewBanner";
 
-// const what_we_provide = [
-//   {
-//     icon: "/icons/docuemnts.svg",
-//     heading: "Assessment and Evaluation",
-//     subheading:
-//       "We believe in nurturing talent through rigorous and fair assessment methods. Our evaluation system is designed to ensure that every student meets the highest standards of competency and professionalism",
-//   },
-//   {
-//     icon: "/icons/graduation-cap.svg",
-//     heading: "Learning and Instruction",
-//     subheading:
-//       "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
-//   },
-//   {
-//     icon: "/icons/research.svg",
-//     heading: "Research and Exploration",
-//     subheading:
-//       "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
-//   },
-//   {
-//     icon: "/icons/teamwork.svg",
-//     heading: "Collaboration and Interaction",
-//     subheading:
-//       "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa accusamus fuga eaque ullam fugiat enim pariatur officia assumenda? Quo, vel a? Maiores unde perspiciatis magni ipsa expedita debitis. Adipisci, ipsa.",
-//   },
-// ];
+const what_we_provide = [
+  {
+    icon: "/icons/docuemnts.svg",
+    heading: "Assessment and Evaluation",
+    subheading:
+      "We believe in nurturing talent through rigorous and fair assessment methods to ensure students meet the highest standards of competency and professionalism. Our evaluation system includes continuous monitoring through regular theoretical and practical assessments, simulator-based evaluations to test decision-making and technical skills in a controlled environment, and industry-aligned standards that comply with global maritime regulations and industry requirements.",
+  },
+  {
+    icon: "/icons/graduation-cap.svg",
+    heading: "Learning and Instruction",
+    subheading:
+      "Our pedagogy is designed to inspire, engage, and empower students to excel in the maritime industry through a well-structured learning approach. We offer interactive learning that combines classroom lectures, hands-on training, and simulator-based education, an updated curriculum that reflects the latest advancements in maritime technology and regulations, and a focus on best practices to prepare students for real-world challenges.",
+  },
+  {
+    icon: "/icons/research.svg",
+    heading: "Research and Exploration",
+    subheading:
+      "Innovation is at the core of maritime progress, and we are committed to advancing knowledge and technology in the field. Our research initiatives focus on cutting-edge advancements in maritime safety systems, entrepreneurship development programs that encourage non-seafarers to explore opportunities in ship owning and maritime trade, and sustainability-focused research into eco-friendly practices and technologies for sustainable shipping.",
+  },
+  {
+    icon: "/icons/teamwork.svg",
+    heading: "Collaboration and Interaction",
+    subheading:
+      "We believe that success in the maritime industry is built on strong collaboration between students, faculty, and industry professionals. Our programs foster meaningful industry partnerships through joint projects and training, interactive sessions that bridge the gap between academics and practical applications, and networking opportunities that help students build valuable connections within the global maritime community.",
+  },
+];
 
 const notices = [
   {
@@ -108,7 +108,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* <ul className="flex flex-wrap justify-center gap-10">
+          <ul className="flex flex-wrap justify-center gap-10">
             {what_we_provide.map((info) => (
               <li
                 key={info.heading}
@@ -121,9 +121,9 @@ export default function Home() {
                 <h3 className="text-gray-500">{info.subheading}</h3>
               </li>
             ))}
-          </ul> */}
+          </ul>
 
-          <ul className="flex flex-col gap-10">
+          {/* <ul className="flex flex-col gap-10">
             <li className="shadow-2xl border border-gray-100 p-6 space-y-2 rounded-2xl flex-grow">
               <div className="size-12 p-3 bg-[#ffc75f96] rounded-full">
                 <Image
@@ -242,7 +242,7 @@ export default function Home() {
                 together to create a vibrant learning community.
               </h3>
             </li>
-          </ul>
+          </ul> */}
         </section>
 
         {/* About Us */}
@@ -320,7 +320,7 @@ export default function Home() {
         </section> */}
 
         {/* Ratings */}
-        <section className="py-10 sm:pt-0">
+        {/* <section className="py-10 sm:pt-0">
           <div className="flex flex-wrap gap-y-2">
             <div className="flex items-center basis-96 flex-grow">
               <h2 className="text-5xl font-semibold">
@@ -337,58 +337,8 @@ export default function Home() {
               </p>
             </div>
           </div>
-
-          {/* <ul className="grid grid-cols-3 gap-8 py-12">
-            {[1, 2, 3].map((review) => (
-              <li className="shadow-xl rounded-2xl border-gray-100 border px-8 py-7 space-y-3">
-                <div className="flex items-start gap-x-2">
-                  <Image
-                    className="size-10 rounded-full"
-                    src={"/images/studient-icon.jpg"}
-                    alt="Student Icon"
-                    height={512}
-                    width={512}
-                  />
-                  <div>
-                    <h2 className="font-semibold leading-none">
-                      Senator Victoria Davis
-                    </h2>
-                    <span className="text-sm leading-none">Student</span>
-                  </div>
-                </div>
-
-                <p className="text-sm tracking-wide">
-                  "Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                  Officiis laborum autem sed voluptates dolore libero, possimus
-                  vel quia nesciunt accusamus aliquid."
-                </p>
-
-                <div className="flex items-center gap-x-2 text-xs">
-                  <span>5.0</span>
-                  <div className="flex items-center gap-x-1 text-[#e9b858]">
-                    <IoIosStar />
-                    <IoIosStar />
-                    <IoIosStar />
-                    <IoIosStar />
-                    <IoIosStar />
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul> */}
-
           <Ratings />
-
-          {/* <div className="flex-center gap-x-3">
-            {[1, 2, 3].map((item, index) => (
-              <div
-                className={`size-2 ${
-                  index === 0 ? "bg-[#ffdf9e]" : "bg-[#e9b958d5]"
-                } border rounded-full `}
-              ></div>
-            ))}
-          </div> */}
-        </section>
+        </section> */}
 
         {/* Promo Banner Section */}
         <section className="pt-20 overflow-hidden sm:pt-0">
@@ -398,17 +348,19 @@ export default function Home() {
               <h3 className="text-3xl">Pursue your dream job?</h3>
 
               <p className="text-gray-500 mt-1">
-                Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                Reprehenderit cupiditate doloremque totam reiciendis magni
-                eligendi.
+                Are you ready to take flight and pursue your dream job? Step
+                forward with confidence, chase your passion, and turn your
+                ambitions into reality!
               </p>
-              <Button
-                varient="light"
-                className="!py-2 !min-w-36 mt-4 hover:!text-black"
-              >
-                <span>Contact us</span>
-                <NextSvg />
-              </Button>
+              <Link href={"/contact-us"}>
+                <Button
+                  varient="light"
+                  className="!py-2 !min-w-36 mt-4 hover:!text-black"
+                >
+                  <span>Contact us</span>
+                  <NextSvg />
+                </Button>
+              </Link>
             </div>
 
             <div className="flex items-end flex-col pr-14 sm:items-center sm:pr-0">
