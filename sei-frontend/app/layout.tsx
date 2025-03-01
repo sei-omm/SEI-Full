@@ -68,7 +68,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${futura.variable} ${inter.variable} font-futura antialiased w-full`}
+        className={`${futura.variable} ${inter.variable} font-futura antialiased w-full overflow-x-hidden`}
       >
         <React.Suspense fallback={<></>}>
           <MyProvider>

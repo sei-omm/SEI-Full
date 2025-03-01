@@ -8,6 +8,7 @@ import { BsPhoneVibrateFill } from "react-icons/bs";
 import Link from "next/link";
 import { GiRotaryPhone } from "react-icons/gi";
 import HomeNewBanner from "./components/HomeNewBanner";
+import AOSProvider from "./components/AOSProvider";
 
 const what_we_provide = [
   {
@@ -73,7 +74,8 @@ const notices = [
 
 export default function Home() {
   return (
-    <div>
+    <>
+      <AOSProvider />
       <div className="min-h-10 w-full bg-white flex items-center">
         <div className="bg-transparent main-layout flex items-center justify-between text-gray-500 flex-wrap sm:gap-y-2 sm:py-2">
           <div className="flex-center gap-2 font-semibold">
@@ -93,14 +95,14 @@ export default function Home() {
         <section className="space-y-10 py-10">
           <div className="flex flex-wrap gap-y-2 items-start">
             <div className="flex items-center basis-96 flex-grow">
-              <h2 className="text-5xl font-semibold">
+              <h2 data-aos="fade-up" className="text-5xl font-semibold">
                 Our <span className="text-[#e9b858]">Best Features</span> For
                 you
               </h2>
             </div>
 
             <div className="basis-96 flex-grow">
-              <p>
+              <p data-aos="fade-down">
                 At S.E.I Educational Trust, we pride ourselves on offering
                 unparalleled maritime education and training. Here’s what sets
                 us apart
@@ -109,9 +111,10 @@ export default function Home() {
           </div>
 
           <ul className="flex flex-wrap justify-center gap-10">
-            {what_we_provide.map((info) => (
+            {what_we_provide.map((info, index) => (
               <li
                 key={info.heading}
+                data-aos={index % 2 === 0 ? "fade-right" : "fade-left"}
                 className="shadow-2xl border border-gray-100 p-6 space-y-2 rounded-2xl basis-[26rem] max-w-[50rem] flex-grow"
               >
                 <div className="size-12 p-3 bg-[#ffc75f96] rounded-full">
@@ -248,7 +251,10 @@ export default function Home() {
         {/* About Us */}
         <section className="flex items-center flex-wrap gap-x-12 gap-y-5 py-10">
           <div className="overflow-hidden flex-center relative basis-[30rem] flex-grow">
-            <div className="w-full aspect-video overflow-hidden shadow-2xl relative rounded-3xl">
+            <div
+              data-aos="fade"
+              className="w-full aspect-video overflow-hidden shadow-2xl relative rounded-3xl"
+            >
               <Image
                 className="size-full"
                 src={"/images/About/img1.jpg"}
@@ -262,13 +268,13 @@ export default function Home() {
           </div>
 
           <div className="flex justify-center flex-col gap-y-5 basis-[30rem] flex-grow">
-            <h2 className="font-semibold text-5xl">
+            <h2 data-aos="fade-left" className="font-semibold text-5xl">
               We are one of the leading{" "}
               <span className="text-[#e9b858]">
                 Maritime Training Institutes
               </span>
             </h2>
-            <p className="text-[#4b4231] space-y-3">
+            <p data-aos="fade-up" className="text-[#4b4231] space-y-3">
               <span className="inline-block">
                 At S.E.I Educational Trust, we stand at the forefront of
                 maritime education and training, recognized as one of the
@@ -286,7 +292,11 @@ export default function Home() {
               </span> */}
             </p>
 
-            <Link href={"/contact-us"}>
+            <Link
+              data-aos="fade-up"
+              className="inline-block"
+              href={"/contact-us"}
+            >
               <Button className="!bg-[#e9b858] !text-black hover:bg-[#e9b95871]">
                 <span>Contact Us Now</span>
                 <NextSvg />
@@ -344,15 +354,19 @@ export default function Home() {
         <section className="pt-20 overflow-hidden sm:pt-0">
           <section className="bg-[#EAE7E4] w-full h-72 rounded-2xl p-14 grid grid-cols-2 sm:grid-cols-1 sm:h-auto sm:p-9 sm:pb-0">
             <div>
-              <h2 className="text-4xl font-semibold">Are you Ready to fly &</h2>
-              <h3 className="text-3xl">Pursue your dream job?</h3>
+              <h2 data-aos="fade-right" className="text-4xl font-semibold">
+                Are you Ready to fly &
+              </h2>
+              <h3 data-aos="fade-left" className="text-3xl">
+                Pursue your dream job?
+              </h3>
 
-              <p className="text-gray-500 mt-1">
+              <p data-aos="fade-up" className="text-gray-500 mt-1">
                 Are you ready to take flight and pursue your dream job? Step
                 forward with confidence, chase your passion, and turn your
                 ambitions into reality!
               </p>
-              <Link href={"/contact-us"}>
+              <Link data-aos="fade-up" href={"/contact-us"}>
                 <Button
                   varient="light"
                   className="!py-2 !min-w-36 mt-4 hover:!text-black"
@@ -365,8 +379,8 @@ export default function Home() {
 
             <div className="flex items-end flex-col pr-14 sm:items-center sm:pr-0">
               <Image
-                className="w-[24rem] -translate-y-36 object-contain sm:translate-y-0 sm:translate-x-5"
-                src={"/images/MarinMan.png"}
+                className="w-[18rem] object-contain transform-gpu -translate-y-36 sm:translate-y-0 sm:translate-x-5"
+                src={"/images/mascot1_new.png"}
                 alt=""
                 height={1200}
                 width={1200}
@@ -398,6 +412,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-    </div>
+    </>
   );
 }

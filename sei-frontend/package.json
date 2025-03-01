@@ -12,6 +12,7 @@
     "@reduxjs/toolkit": "^2.2.7",
     "@tailwindcss/typography": "^0.5.15",
     "@vercel/blob": "^0.26.0",
+    "aos": "^2.3.4",
     "axios": "^1.7.7",
     "doquery": "^1.0.8",
     "jsonwebtoken": "^9.0.2",
@@ -29,6 +30,7 @@
     "tailwind-scrollbar": "^3.1.0"
   },
   "devDependencies": {
+    "@types/aos": "^3.0.7",
     "@types/jsonwebtoken": "^9.0.8",
     "@types/node": "^20",
     "@types/pako": "^2.0.3",
