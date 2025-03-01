@@ -102,7 +102,12 @@ export default function Home() {
             </div>
 
             <div className="basis-96 flex-grow">
-              <p data-aos="fade-down">
+              <p data-aos="fade-down" className="sm:hidden">
+                At S.E.I Educational Trust, we pride ourselves on offering
+                unparalleled maritime education and training. Here’s what sets
+                us apart
+              </p>
+              <p data-aos="fade-up" className="hidden sm:block">
                 At S.E.I Educational Trust, we pride ourselves on offering
                 unparalleled maritime education and training. Here’s what sets
                 us apart

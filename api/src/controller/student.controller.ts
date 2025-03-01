@@ -278,7 +278,7 @@ export const loginStudent = asyncErrorHandler(
       WHERE s.mobile_number = $1
       GROUP BY s.student_id
       `,
-      [value.email]
+      [value.email] // this is mobile number i did't change the property name. but i will
     );
 
     if (rowCount === 0) throw new ErrorHandler(404, "Please register first");

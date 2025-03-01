@@ -20,10 +20,10 @@ export default function HomeNewBanner() {
       <div className="absolute inset-0 bg-[#000000b6]">
         <div className="size-full flex items-center main-layout pt-10">
           <div data-aos="fade" className="flex flex-col justify-center gap-y-3 border-l-8 pl-8 border-white rounded-2xl">
-            <h2 data-aos="fade-down" className="text-5xl font-[600] text-gray-100 space-y-2 leading-[3.3rem] sm:text-4xl">
+            <h2 data-aos="fade-down" className="text-5xl font-[600] text-gray-100 space-y-2 leading-[3.3rem] sm:text-3xl">
               Mentoring the Mariners <br /> Shaping the future
             </h2>
-            <h3 data-aos="fade-up" className="text-gray-300 max-w-[40rem] sm:max-w-full">
+            <h3 data-aos="fade-up" className="text-gray-300 max-w-[40rem] sm:max-w-full sm:text-[1rem]">
               Once a SEIET SAILOR, always a leader at sea! ⚓🌊 Join the legacy
               of excellence with SEI Educational Trust and set your course for a
               successful maritime career
