@@ -18,7 +18,7 @@ import {
   pmsReport,
   sendBirthdateWish,
 } from "../controller/report.controller";
-import { stramPhyLibBookReport, stramTimeTableReport, streamAdmissionExcelReport, streamAttendanceExcelReport, streamBatchExcelReport, streamCourseTrendExcelReport, streamDgsIndosExcelReport, streamEmployeeReport, streamInventoryReport, streamOccupancyExcelReport, streamPmsExcelReport, streamReceiptExcelReport, streamRefundExcelReport } from "../controller/stream.report";
+import { stramPhyLibBookIssueReport, stramPhyLibBookReport, stramTimeTableReport, streamAdmissionExcelReport, streamAttendanceExcelReport, streamBatchExcelReport, streamCourseTrendExcelReport, streamDgsIndosExcelReport, streamEmployeeReport, streamInventoryReport, streamNewInventoryReport, streamOccupancyExcelReport, streamPmsExcelReport, streamReceiptExcelReport, streamRefundExcelReport } from "../controller/stream.report";
 
 export const reportRouter = Router();
 reportRouter
@@ -41,6 +41,7 @@ reportRouter
   .get("/refund/excel", streamRefundExcelReport)
   .get("/inventory", inventoryReport)
   .get("/inventory/excel", streamInventoryReport)
+  .get("/inventory/export/excel", streamNewInventoryReport)
   .get("/time-table", generateTimeTableReport)
   .get("/time-table/excel", stramTimeTableReport)
   .get("/physical-library-book/excel", stramPhyLibBookReport)
@@ -48,3 +49,4 @@ reportRouter
   .get("/pms/excel", streamPmsExcelReport)
   .get("/employee/excel", streamEmployeeReport)
   .get("/attendance/excel", streamAttendanceExcelReport)
+  .get("/issue-book/excel", stramPhyLibBookIssueReport)

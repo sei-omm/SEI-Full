@@ -746,8 +746,7 @@ export const getPhysicalLibBooks = asyncErrorHandler(async (req, res) => {
 export const getBookIssueList = asyncErrorHandler(async (req, res) => {
   const { LIMIT, OFFSET } = parsePagination(req);
 
-  const { institute, from_date, to_date, search_by, search_keyword } =
-    req.query;
+  const { institute, from_date, to_date, search_by, search_keyword } = req.query;
 
   let filter = "WHERE";
   const filterValues: string[] = [];

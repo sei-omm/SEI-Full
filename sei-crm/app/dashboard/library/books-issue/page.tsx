@@ -6,6 +6,7 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import Button from "@/components/Button";
 import DateDurationFilter from "@/components/DateDurationFilter";
 import DropDown from "@/components/DropDown";
+import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
 import SearchInput from "@/components/SearchInput";
@@ -144,10 +145,17 @@ export default function BooksIssue() {
         Issue Book
       </Button>
 
+      <div className="flex items-center justify-end">
+        <GenarateExcelReportBtn
+          apiPath={`/report/issue-book/excel?${searchParams.toString()}`}
+          hidden={searchParams.size === 0}
+        />
+      </div>
+
       <DateDurationFilter>
         <DropDown
           name="search_by"
-          label="Search By *"
+          label="Filter By *"
           options={[
             {
               text: "Issue Date",

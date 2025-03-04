@@ -548,7 +548,7 @@ export const getEachEmployeLeaveDetails = asyncErrorHandler(
       LEFT JOIN employee e
       ON e.id = el.employee_id AND financial_year_date = get_financial_year_start()
 
-      WHERE e.institute = $1 AND e.is_active = true
+      WHERE e.institute = $1 AND e.is_active = true AND e.employee_role != 'Super Admin'
   `,
       [value.institute]
     );

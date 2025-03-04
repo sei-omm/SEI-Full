@@ -124,6 +124,15 @@ export default function MaintenceRecord() {
     <div className="space-y-5">
       <DateDurationFilter onCampusChange={(campus) => setCurrentCampus(campus)}>
         <DropDown
+          name="filter_by"
+          label="Filter By"
+          options={[
+            { text: "Maintenance Date", value: "maintenance_date" },
+            { text: "Completed Date", value: "completed_date" },
+          ]}
+          defaultValue={searchParams.get("filter_by") || "maintenance_date"}
+        />
+        <DropDown
           name="status"
           label="Choose Status"
           options={[

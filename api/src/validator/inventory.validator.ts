@@ -285,5 +285,6 @@ export const pmsReportV = Joi.object({
   institute: Joi.string().required().valid("Kolkata", "Faridabad"),
   from_date: Joi.string().required(),
   to_date : Joi.string().required(),
-  page : Joi.number().optional()
+  page : Joi.number().optional(),
+  filter_by : Joi.string().valid("last_done", "next_due").required()
 })

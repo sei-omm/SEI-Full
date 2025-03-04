@@ -125,6 +125,6 @@ export const returnBookToLibraryBulkV = Joi.array().items(
 );
 
 export const bookListReportV = Joi.object({
-  institute : Joi.string().required(),
-  book_name : Joi.string().optional()
-})
+  institute: Joi.string().required(),
+  book_name: Joi.string().optional(),
+});

@@ -753,10 +753,11 @@ export const getMaintenceRecords = asyncErrorHandler(
     }
 
     if (req.query.from_date && req.query.to_date) {
+      const filter_by = req.query.filter_by === "maintenance_date" ? "mr.maintence_date::DATE" : "mr.completed_date::DATE"
       if (filterQuery === "WHERE") {
-        filterQuery += ` mr.created_at BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
+        filterQuery += ` ${filter_by} BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
       } else {
-        filterQuery += ` AND mr.created_at BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
+        filterQuery +=` AND ${filter_by} BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
       }
       paramsNumber++;
       paramsNumber++;

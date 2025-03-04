@@ -89,7 +89,10 @@ inventoryRoute
   .put("/maintence-record", bulkUpdateMaintenceRecord)
 
   .get("/planned-maintenance-system", getPlannedMaintenanceSystem)
-  .get("/planned-maintenance-system/history/:planned_maintenance_system_id", getPmsItemHistory)
+  .get(
+    "/planned-maintenance-system/history/:planned_maintenance_system_id",
+    getPmsItemHistory
+  )
   .get(
     "/planned-maintenance-system/:planned_maintenance_system_id",
     getSinglePlannedMaintenanceSystem
@@ -105,7 +108,10 @@ inventoryRoute
   )
   .patch("/planned-maintenance-system/:pms_id", changeLastDoneDate)
   .delete("/planned-maintenance-system/:pms_id", deletePmsItem)
-  .delete("/planned-maintenance-system/history/:pms_history_id", deletePmsHistory)
+  .delete(
+    "/planned-maintenance-system/history/:pms_history_id",
+    deletePmsHistory
+  )
 
   .get("/durable", getDurableInfo)
   .get("/durable/filter-items", getDurableFiltersItemInfo)
@@ -132,5 +138,4 @@ inventoryRoute
   .post("/vendor", addNewVendorItem)
   .post("/vendor/multi", addMultipleVendorItem)
   .put("/vendor/:vendor_id", updateVendorItem)
-  .delete("/vendor/:vendor_id", deleteVendorItem)
-  
+  .delete("/vendor/:vendor_id", deleteVendorItem);

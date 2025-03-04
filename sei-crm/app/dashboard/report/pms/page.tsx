@@ -4,6 +4,7 @@ import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import DateDurationFilter from "@/components/DateDurationFilter";
+import DropDown from "@/components/DropDown";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
@@ -68,7 +69,23 @@ export default function PmsReport() {
 
   return (
     <div className="space-y-10">
-      <DateDurationFilter />
+      <DateDurationFilter>
+        <DropDown
+          name="filter_by"
+          label="Filter By"
+          options={[
+            {
+              text: "Last Done Date",
+              value: "last_done",
+            },
+            {
+              text: "Next Due Date",
+              value: "next_due",
+            },
+          ]}
+          defaultValue={searchParams.get("filter_by") || "last_done"}
+        />
+      </DateDurationFilter>
       <div className="flex items-center justify-end">
         <GenarateExcelReportBtn
           apiPath={`/report/pms/excel?${searchParams.toString()}`}

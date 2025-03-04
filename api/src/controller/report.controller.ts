@@ -1601,7 +1601,7 @@ export const pmsReport = asyncErrorHandler(async (req, res) => {
     INNER JOIN pms_history ph
     ON ph.planned_maintenance_system_id = pms.planned_maintenance_system_id
 
-    WHERE ph.last_done BETWEEN $1 AND $2 AND pms.institute = $3
+    WHERE ph.${value.filter_by} BETWEEN $1 AND $2 AND pms.institute = $3
 
     LIMIT ${LIMIT} OFFSET ${OFFSET}
     `,

@@ -24,8 +24,8 @@ type TInventoryItem = {
   each_stock_total_value: string; // Total value of added stocks (as a string)
   consumed_stock: string; // Number of stocks consumed (as a string)
   consumed_stock_remark: string;
-  opening_stock : number;
-  closing_stock : number;
+  opening_stock: number;
+  closing_stock: number;
 };
 
 export default function InventoryReport() {
@@ -95,7 +95,10 @@ export default function InventoryReport() {
 
   return (
     <div className="space-y-8">
-      <DateDurationFilter />
+      <DateDurationFilter
+        fromDateLable="From Purchase Date *"
+        toDateLable="To Purchase Date *"
+      />
 
       <div className="flex justify-end">
         <GenarateExcelReportBtn

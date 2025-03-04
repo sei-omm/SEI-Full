@@ -14,7 +14,7 @@ import {
 } from "../validator/report.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { beautifyDate } from "../utils/beautifyDate";
-import { TIME_PERIOD } from "../constant";
+import { inventoryCatList, inventorySubCatList, TIME_PERIOD } from "../constant";
 import { bookListReportV } from "../validator/library.validator";
 import { pmsReportV } from "../validator/inventory.validator";
 import { filterToSql } from "../utils/filterToSql";
@@ -25,18 +25,23 @@ export const streamMaintenceRecordExcelReport = asyncErrorHandler(
     //filters if any
     let filterQuery = "WHERE";
     const filterValues: string[] = [];
+    let paramsNumber = 1;
 
     if (req.query.institute) {
-      filterQuery += " mr.institute = $1";
+      filterQuery += ` mr.institute = $${paramsNumber}`;
       filterValues.push(req.query.institute as string);
+      paramsNumber++;
     }
 
     if (req.query.from_date && req.query.to_date) {
+      const filter_by = req.query.filter_by === "maintenance_date" ? "mr.maintence_date::DATE" : "mr.completed_date::DATE"
       if (filterQuery === "WHERE") {
-        filterQuery += " mr.created_at BETWEEN $1 AND $2";
+        filterQuery += ` ${filter_by} BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
       } else {
-        filterQuery += " AND mr.created_at BETWEEN $2 AND $3";
+        filterQuery +=` AND ${filter_by} BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
       }
+      paramsNumber++;
+      paramsNumber++;
 
       filterValues.push(req.query.from_date as string);
       filterValues.push(req.query.to_date as string);
@@ -2359,6 +2364,258 @@ export const stramPhyLibBookReport = asyncErrorHandler(async (req, res) => {
   });
 });
 
+export const stramPhyLibBookIssueReport = asyncErrorHandler(
+  async (req, res) => {
+    const { institute, from_date, to_date, search_by, search_keyword } =
+      req.query;
+
+    // Set response headers for streaming
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="Physical_Library_Book_Issue_Report.xlsx"'
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+      stream: res,
+      useStyles: true,
+    });
+    const worksheet = workbook.addWorksheet(
+      "Physical Library Book Issue Report"
+    );
+
+    worksheet.mergeCells("A1:H1");
+    worksheet.getCell("A1").value = `SEI Educational Trust, (${institute})`;
+    worksheet.getCell("A1").font = {
+      size: 20,
+      bold: true,
+      color: { argb: "000000" },
+    };
+    worksheet.getCell("A1").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFFF00" },
+    };
+    worksheet.getRow(1).height = 30;
+    worksheet.getCell("A1").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    worksheet.mergeCells("A2:H2");
+    worksheet.getCell("A2").value = `Book Issue Details`;
+    worksheet.getCell("A2").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    worksheet.addRow([
+      "S.No",
+      "ISSUED TO",
+      "INDOS NO.",
+      "COURSE NAME",
+      "BOOKS NAME",
+      "EDITION/VOL",
+      "ISSUE DATE",
+      "RECEIVED DATE",
+    ]);
+
+    // Row styling (header row)
+    worksheet.getRow(3).eachCell((cell) => {
+      cell.style = {
+        font: {
+          bold: true,
+          size: 12,
+          color: { argb: "000000" },
+        },
+        alignment: { horizontal: "center", vertical: "middle" },
+        fill: {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "F4A460" },
+        },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+
+    let filter = "WHERE";
+    const filterValues: string[] = [];
+    let placeholdernum = 1;
+
+    //these are for filtering -- START
+    if (institute) {
+      filter += ` plbi.institute = $${placeholdernum}`;
+      placeholdernum++;
+      filterValues.push(institute as string);
+    }
+
+    if (from_date && to_date) {
+      const search_by =
+        req.query.search_by === "received_date" ? "return_date" : "issue_date";
+
+      if (filter === "WHERE") {
+        filter += ` plbi.${search_by} BETWEEN $${placeholdernum}`;
+        placeholdernum++;
+        filter += ` AND $${placeholdernum}`;
+      } else {
+        filter += ` AND plbi.${search_by} BETWEEN $${placeholdernum}`;
+        placeholdernum++;
+        filter += ` AND $${placeholdernum}`;
+      }
+      placeholdernum++;
+      filterValues.push(from_date as string);
+      filterValues.push(to_date as string);
+    }
+    //these are for filtering -- END
+
+    //these are for searching -- START
+    if (
+      search_by &&
+      search_keyword &&
+      search_by === "indos_number" &&
+      institute
+    ) {
+      placeholdernum = 1;
+      filterValues.length = 0;
+      filter = `WHERE s.indos_number = $${placeholdernum} AND plbi.institute = $${
+        placeholdernum + 1
+      }`;
+      filterValues.push(search_keyword as string);
+      filterValues.push(institute as string);
+    }
+
+    if (
+      search_by &&
+      search_keyword &&
+      search_by === "course_name" &&
+      institute
+    ) {
+      placeholdernum = 1;
+      filterValues.length = 0;
+      filter = `WHERE c.course_name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${
+        placeholdernum + 1
+      }`;
+      filterValues.push(search_keyword as string);
+      filterValues.push(institute as string);
+    }
+
+    if (
+      search_by &&
+      search_keyword &&
+      search_by === "student_name" &&
+      institute
+    ) {
+      placeholdernum = 1;
+      filterValues.length = 0;
+      filter = `WHERE s.name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${
+        placeholdernum + 1
+      }`;
+      filterValues.push(search_keyword as string);
+      filterValues.push(institute as string);
+    }
+
+    if (
+      search_by &&
+      search_keyword &&
+      search_by === "faculty_name" &&
+      institute
+    ) {
+      placeholdernum = 1;
+      filterValues.length = 0;
+      filter = `WHERE e.name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${
+        placeholdernum + 1
+      }`;
+      filterValues.push(search_keyword as string);
+      filterValues.push(institute as string);
+    }
+
+    if (search_by && search_keyword && search_by === "book_name" && institute) {
+      placeholdernum = 1;
+      filterValues.length = 0;
+      filter = `WHERE plb.book_name ILIKE '%' || $${placeholdernum} || '%' AND plbi.institute = $${
+        placeholdernum + 1
+      }`;
+      filterValues.push(search_keyword as string);
+      filterValues.push(institute as string);
+    }
+    //these are for searching -- END
+
+    if (filter === "WHERE") filter = "";
+
+    const client = await pool.connect();
+    const query = new QueryStream(
+      `
+        SELECT
+         row_number() OVER () AS sr_no,
+          COALESCE(s.name, e.name) AS student_name,
+          s.indos_number,
+          c.course_name,
+          plb.book_name,
+          plb.edition,
+          plbi.issue_date,
+          plbi.return_date
+        FROM phy_lib_book_issue plbi
+
+        LEFT JOIN students s
+        ON s.student_id = plbi.student_id
+
+        LEFT JOIN courses c
+        ON c.course_id = plbi.course_id
+
+        LEFT JOIN employee e
+        ON e.id = plbi.employee_id
+
+        LEFT JOIN phy_lib_books plb
+        ON plb.phy_lib_book_id = plbi.phy_lib_book_id
+
+        ${filter}
+        `,
+      filterValues,
+      {
+        batchSize: 10,
+      }
+    );
+
+    const pgStream = client.query(query);
+
+    // Process PostgreSQL stream data and append to Excel sheet
+    pgStream.on("data", (data) => {
+      const excelRow = worksheet.addRow(Object.values(data));
+      // Style the data rows
+      excelRow.eachCell((cell) => {
+        cell.style = {
+          font: { size: 11 },
+          alignment: { horizontal: "center" },
+          border: {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+            bottom: { style: "thin" },
+          },
+        };
+      });
+    });
+
+    pgStream.on("end", () => {
+      workbook.commit();
+      client.release(); // Release the client when done
+    });
+
+    pgStream.on("error", (err) => {
+      console.log(err);
+      client.release();
+    });
+  }
+);
+
 export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
   const { error, value } = pmsReportV.validate(req.query);
   if (error) throw new ErrorHandler(400, error.message);
@@ -2445,7 +2702,7 @@ export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
     INNER JOIN pms_history ph
     ON ph.planned_maintenance_system_id = pms.planned_maintenance_system_id
 
-    WHERE ph.last_done BETWEEN $1 AND $2 AND pms.institute = $3
+    WHERE ph.${value.filter_by} BETWEEN $1 AND $2 AND pms.institute = $3
     `,
     [value.from_date, value.to_date, value.institute],
     {
@@ -2454,6 +2711,8 @@ export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
   );
 
   const pgStream = client.query(query);
+
+  worksheet.getColumn(3).width = 20
 
   // Process PostgreSQL stream data and append to Excel sheet
   pgStream.on("data", (data) => {
@@ -2466,6 +2725,7 @@ export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
       beautifyDate(data.next_due),
       data.remark,
     ]);
+
     // Style the data rows
     excelRow.eachCell((cell) => {
       cell.style = {
@@ -2478,6 +2738,8 @@ export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
           bottom: { style: "thin" },
         },
       };
+
+    
     });
   });
 
@@ -2828,3 +3090,179 @@ export const streamAttendanceExcelReport = asyncErrorHandler(
     });
   }
 );
+
+export const streamNewInventoryReport = asyncErrorHandler(async (req, res) => {
+
+  const { institute, category } = req.query;
+
+  // Set response headers for streaming
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="Inventory_Report.xlsx"'
+  );
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+    stream: res,
+    useStyles: true,
+  });
+  const worksheet = workbook.addWorksheet("Inventory Report");
+
+  worksheet.mergeCells("A1:R1");
+  worksheet.getCell("A1").value = `Inventory Report (${institute || "All"})`;
+  worksheet.getCell("A1").font = {
+    size: 20,
+    bold: true,
+    color: { argb: "000000" },
+  };
+  worksheet.getCell("A1").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFF00" },
+  };
+  worksheet.getRow(1).height = 30;
+  worksheet.getCell("A1").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+
+  worksheet.addRow([
+    "SR NUMBER",
+    "Category",
+    "Sub Category 1",
+    "Name of Item",
+    "Description",
+    "WHERE TO BE USED",
+    "Used By",
+    "Opening Stock",
+    "Minimum Quantity to maintain",
+    "Item Consumed",
+    "Closing Stock",
+    "Status",
+    "Last Purchased Date",
+    "Supplier",
+    "Cost per Unit (Current Cost)",
+    "Cost per Unit (Previous Cost)",
+    "Total Value",
+    "Remarks"
+  ]);
+
+  // Row styling (header row)
+  worksheet.getRow(2).eachCell((cell) => {
+    cell.style = {
+      font: {
+        bold: true,
+        size: 12,
+        color: { argb: "000000" },
+      },
+      alignment: { horizontal: "center", vertical: "middle" },
+      fill: {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F4A460" },
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+  });
+
+  let filter = "WHERE";
+  const filter_values : string[] = [];
+  let paramsNum = 1;
+
+  if(institute) {
+    filter += ` iii.institute = $${paramsNum}`;
+    filter_values.push(institute as string);
+    paramsNum++;
+  }
+
+  if(category) {
+    if(filter === "WHERE") {
+      filter += ` iii.category = $${paramsNum}`;
+    } else {
+      filter += ` AND iii.category = $${paramsNum}`;
+    }
+    filter_values.push(category as string)
+    paramsNum++;
+  }
+
+  if(filter === "WHERE") {
+    filter = "";
+  }
+
+  const client = await pool.connect();
+  const query = new QueryStream(
+    `
+    SELECT
+      row_number() OVER () AS sr_no,
+      iii.category,
+      iii.sub_category,
+      iii.item_name,
+      iii.description,
+      iii.where_to_use,
+      iii.used_by,
+      iii.opening_stock,
+      iii.minimum_quantity,
+      iii.item_consumed,
+      iii.closing_stock,
+      iii.current_status,
+      iii.current_purchase_date,
+      v.vendor_name,
+      iii.cost_per_unit_current,
+      iii.cost_per_unit_previous,
+      iii.total_value,
+      (SELECT remark FROM inventory_stock_info WHERE item_id = iii.item_id ORDER BY purchase_date DESC LIMIT 1)
+    FROM inventory_item_info iii
+
+    LEFT JOIN vendor v
+    ON v.vendor_id = iii.vendor_id
+
+    ${filter}
+
+    `,
+    filter_values,
+    {
+      batchSize: 10,
+    }
+  );
+
+  const pgStream = client.query(query);
+
+  // Process PostgreSQL stream data and append to Excel sheet
+  pgStream.on("data", (data) => {
+    const valueArr = Object.values(data);
+    valueArr[1] = inventoryCatList.find(item => item.category_id === data.category)?.category_name;
+    valueArr[2] = inventorySubCatList.find(item => item.sub_category_id === data.category)?.sub_category_name;
+    const excelRow = worksheet.addRow(valueArr);
+
+    // Style the data rows
+    excelRow.eachCell((cell) => {
+      cell.style = {
+        font: { size: 11 },
+        alignment: { horizontal: "center" },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+  });
+
+  pgStream.on("end", () => {
+    workbook.commit();
+    client.release(); // Release the client when done
+  });
+
+  pgStream.on("error", (err) => {
+    client.release();
+  });
+});

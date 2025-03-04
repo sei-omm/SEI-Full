@@ -20,6 +20,8 @@ interface IProps {
   onCampusChange?: (campus : string) => void;
 
   children?: React.ReactNode;
+  fromDateLable?:string;
+  toDateLable?:string;
 }
 
 export default function DateDurationFilter({
@@ -27,7 +29,9 @@ export default function DateDurationFilter({
   withStudentRank,
   withCourse,
   onCampusChange,
-  children
+  children,
+  toDateLable,
+  fromDateLable
 }: IProps) {
   const searchParams = useSearchParams();
   const route = useRouter();
@@ -168,14 +172,14 @@ export default function DateDurationFilter({
 
         <DateInput
           required
-          label="From Date *"
+          label={fromDateLable ?? "From Date *"}
           name="from_date"
           date={searchParams.get("from_date")}
         />
 
         <DateInput
           required
-          label="To Date *"
+          label={toDateLable ?? "To Date *"}
           name="to_date"
           date={searchParams.get("to_date")}
         />

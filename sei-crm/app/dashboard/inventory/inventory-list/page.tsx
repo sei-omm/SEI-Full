@@ -9,6 +9,7 @@ import { beautifyDate } from "@/app/utils/beautifyDate";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import Button from "@/components/Button";
 import DropDown from "@/components/DropDown";
+import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
 import SearchInput from "@/components/SearchInput";
@@ -183,47 +184,56 @@ export default function InventoryList() {
 
   return (
     <div className="space-y-10">
-      <form
-        action={handleFilterSumit}
-        className="flex gap-6 justify-end items-end"
-      >
-        <DropDown
-          name="institute"
-          label="Campus"
-          options={[
-            { text: "Choose Campus", value: "-1" },
-            {
-              text: "Kolkata",
-              value: "Kolkata",
-            },
-            { text: "Faridabad", value: "Faridabad" },
-          ]}
-          defaultValue={searchParamas.get("institute") || "-1"}
-        />
-        <DropDown
-          name="category"
-          label="Choose Category"
-          options={[
-            { text: "All Category", value: "-1" },
-            ...inventoryCatList.map((cat) => ({
-              text: cat.category_name,
-              value: cat.category_id,
-            })),
-          ]}
-          defaultValue={searchParamas.get("category") || "-1"}
-        />
-        {/* <DateInput
+      <div className="flex items-end justify-between">
+        <div className="pb-2">
+          <GenarateExcelReportBtn
+            apiPath={`/report/inventory/export/excel?${searchParamas.toString()}`}
+            hidden={searchParamas.get("search") !== null}
+            text="Export In Excel"
+          />
+        </div>
+        <form
+          action={handleFilterSumit}
+          className="flex gap-6 justify-end items-end"
+        >
+          <DropDown
+            name="institute"
+            label="Choose Campus"
+            options={[
+              { text: "All Campus", value: "-1" },
+              {
+                text: "Kolkata",
+                value: "Kolkata",
+              },
+              { text: "Faridabad", value: "Faridabad" },
+            ]}
+            defaultValue={searchParamas.get("institute") || "-1"}
+          />
+          <DropDown
+            name="category"
+            label="Choose Category"
+            options={[
+              { text: "All Category", value: "-1" },
+              ...inventoryCatList.map((cat) => ({
+                text: cat.category_name,
+                value: cat.category_id,
+              })),
+            ]}
+            defaultValue={searchParamas.get("category") || "-1"}
+          />
+          {/* <DateInput
           label="Choose Purchase Date"
           name="current_purchase_date"
           date={getDate(
             new Date(searchParamas.get("current_purchase_date") || "")
           )}
         /> */}
-        <Button className="flex-center gap-3 mb-2">
-          <CiSearch />
-          Search
-        </Button>
-      </form>
+          <Button className="flex-center gap-3 mb-2">
+            <CiSearch />
+            Search
+          </Button>
+        </form>
+      </div>
 
       <SearchInput
         placeHolder="Search by item name"
@@ -312,9 +322,12 @@ export default function InventoryList() {
                                       inventory_list.data?.data[rowIndex]
                                         .closing_stock,
 
-                                    minimum_stock : inventory_list.data?.data[rowIndex].minimum_quantity,
-                                    item_name : inventory_list.data?.data[rowIndex].item_name
-
+                                    minimum_stock:
+                                      inventory_list.data?.data[rowIndex]
+                                        .minimum_quantity,
+                                    item_name:
+                                      inventory_list.data?.data[rowIndex]
+                                        .item_name,
                                   },
                                 })
                               );
