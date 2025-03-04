@@ -92,7 +92,6 @@ export const getHrDashboardInfo = asyncErrorHandler(
 
     const institute = req.query.institute || null;
 
-
     const [response1, response2, response3] = await transaction([
       {
         sql: `
@@ -138,10 +137,15 @@ export const getHrDashboardInfo = asyncErrorHandler(
               ? `
             LEFT JOIN employee e
             ON e.id = a.employee_id
-          ` : ""
+          `
+              : ""
           }
 
-          WHERE date = $1 ${institute ? "AND e.institute = $2 AND e.employee_role != 'Super Admin'" : ""}
+          WHERE date = $1 ${
+            institute
+              ? "AND e.institute = $2 AND e.employee_role != 'Super Admin'"
+              : ""
+          }
         `,
         values: institute ? [getDate(date), institute] : [getDate(date)],
       },
@@ -668,6 +672,7 @@ export const loginEmployee = asyncErrorHandler(
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       domain:
         process.env.NODE_ENV === "production" ? process.env.DOMAIN : undefined,
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
     });
 
     res.status(200).json(
@@ -886,7 +891,7 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
     let extra_filter = "";
     const extra_filter_values: string[] = [];
     if (employee1Info[0].authority !== "HOD") {
-      if(employee1Info[0].authority !== "HOI"){
+      if (employee1Info[0].authority !== "HOI") {
         extra_filter = " AND ha.department_id = $3";
         extra_filter_values.push(employee1Info[0].department_id);
       }
@@ -907,7 +912,10 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
       [highAuthorityName, employee1Info[0].institute, ...extra_filter_values]
     );
 
-    if(rowCount === 0) throw new Error("No higher authority is defined for " + employee1Info[0].authority)
+    if (rowCount === 0)
+      throw new Error(
+        "No higher authority is defined for " + employee1Info[0].authority
+      );
 
     const { rows: appraisal } = await client.query(
       `INSERT INTO appraisal (employee_id, discipline, duties, targets, achievements, appraisal_options_employee) VALUES ($1, $2, $3, $4, $5, $6) RETURNING appraisal_id`,
@@ -1009,6 +1017,7 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
     (value.type === "Admin" || value.type === "Hr") &&
     (value.role === "Admin" || value.role === "Hr")
   ) {
+    // this is for admin panel
     const { rows } = await pool.query(
       `
        SELECT
@@ -1017,8 +1026,7 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
         a.employee_id AS appraisal_of_employee_id,
         e.name AS appraisal_of,
         e.profile_image,
-        e.email_address,
-        aae.appraisal_status
+        e.email_address
        FROM appraisal_and_employee aae
   
        LEFT JOIN appraisal AS a
@@ -1209,7 +1217,10 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
         [highAuthorityName, employee1Info[0].institute, ...extra_filter_values]
       );
 
-      if(rowCount === 0) throw new Error("No higher authority is defined for " + employee1Info[0].authority)
+      if (rowCount === 0)
+        throw new Error(
+          "No higher authority is defined for " + employee1Info[0].authority
+        );
 
       await client.query(
         `

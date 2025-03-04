@@ -93,7 +93,7 @@ export default function Informations({ employee_info }: IProps) {
                 value={employee_info?.additional_qualification}
               />
               <Info
-                title="Selling Experience"
+                title="Sailing Experience"
                 value={employee_info?.selling_experience}
               />
               <Info

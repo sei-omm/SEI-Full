@@ -210,7 +210,7 @@ export const generateForm = asyncErrorHandler(async (req, res) => {
   );
 
   if (actionType === "Generate") {
-    res.status(201).json(new ApiResponse(201, "Request Sended"));
+    res.status(201).json(new ApiResponse(201, "Request Sent"));
   } else {
     res.status(200).json(new ApiResponse(201, "Request Accepted"));
   }

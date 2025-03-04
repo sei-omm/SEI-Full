@@ -3,7 +3,7 @@
 import Button from "@/components/Button";
 import DateInput from "@/components/DateInput";
 import DropDown from "@/components/DropDown";
-import React, {  useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { stickyFirstCol } from "../utils/stickyFirstCol";
 import { useQuery } from "react-query";
 import {
@@ -13,7 +13,7 @@ import {
 } from "next/navigation";
 import axios from "axios";
 import { BASE_API, TIME_PERIOD } from "../constant";
-import { ISuccess, TTimeTableData } from "@/types";
+import { ISuccess, TTimeTableData, TVTableData } from "@/types";
 import HandleSuspence from "@/components/HandleSuspence";
 import TimeTableCell from "@/components/TimeTableCell";
 import BackBtn from "@/components/BackBtn";
@@ -65,20 +65,11 @@ export default function TimeTable() {
     undefined
   );
 
-  const selectedSubjects = useRef<any>({});
-  const selectedFaculties = useRef<any>({});
-  const [vertualTable, setVertualTable] = useState<object>({});
   const [duplicateCell, setDuplicateCell] = useState<any>({});
 
-  // console.log("__VERTUAL_TABLE")
-  // console.log(vertualTable)
-
-  // console.log("__DUPLICAT_CELL_")
-  // console.log(duplicateCell)
-
-  // useEffect(() => {
-
-  // }, [vertualTable]) // not greate all time triggring useEffect
+  const [vTable, setVTable] = useState<Map<string, TVTableData> | undefined>(
+    undefined
+  );
 
   const {
     data: sResponse,
@@ -90,57 +81,73 @@ export default function TimeTable() {
     onSuccess(data) {
       if (data.data.type === "generated") {
         const finalResult = data.data.result as TTimeTableData[];
+        const map = new Map<string, TVTableData>();
 
         setTableData((preState) => ({
           ...preState,
           body: finalResult.map((item, rowIndex) => [
             item.course_name,
-            // ...item.subjects.map((subject) => subject),
             ...[1, 2, 3, 4, 5, 6, 7, 8].map((_, colIndex) => {
               const cSubject = item.subjects[colIndex];
               const fFaculty = item.faculty.filter(
                 (item) => item.for_subject_name === cSubject
               )[0];
-              setVertualTable((prev) => ({
-                ...prev,
-                [`${rowIndex}:${colIndex}`]: fFaculty,
-              }));
-              // return cSubject || "Choose Subject"
+              map.set(`${rowIndex}:${colIndex}`, {
+                course_code: item.course_code,
+                course_name: item.course_name,
+                course_id: item.course_id,
+
+                faculties: item.faculty,
+                subjects: item.subjects,
+                selected_faculty_id: fFaculty?.faculty_id || -1,
+                selected_subject: cSubject,
+              });
               return cSubject || "Off Period";
             }),
           ]),
         }));
+
+        setVTable(map);
+
         setServerData(finalResult);
       } else {
         const finalResult = data.data.result as DraftResponse;
-        const parseData = JSON.parse(finalResult.info) as {
-          facultiDraf: any;
-          subjectDraf: any;
-          tableInfoDraf: TTimeTableData[];
-        };
+        const map = new Map<string, TVTableData>(
+          Object.entries(JSON.parse(finalResult.info))
+        );
+        const parseServerResult: TTimeTableData[] = [];
 
-        selectedSubjects.current = parseData.subjectDraf;
-        selectedFaculties.current = parseData.facultiDraf;
+        let currentCourseId = -1;
 
-        setTableData((preState) => ({
-          ...preState,
-          body: parseData.tableInfoDraf.map((item, rowIndex) => [
+        map.forEach((value) => {
+          if (currentCourseId !== value.course_id) {
+            currentCourseId = value.course_id;
+            parseServerResult.push({
+              course_code: value.course_code,
+              course_id: value.course_id,
+              course_name: value.course_name,
+              faculty: value.faculties,
+              subjects: value.subjects,
+            });
+          }
+        });
+
+        setTableData((prev) => ({
+          ...prev,
+          body: parseServerResult.map((item, rowIndex) => [
             item.course_name,
             ...[1, 2, 3, 4, 5, 6, 7, 8].map((_, colIndex) => {
-              const cSubject = parseData.subjectDraf[`${rowIndex}${colIndex + 1}`] || item.subjects[colIndex] || "Off Period";
-              const fFaculty = item.faculty.filter(
-                (item) => item.for_subject_name === cSubject
-              )[0];
-              setVertualTable((prev) => ({
-                ...prev,
-                [`${rowIndex}:${colIndex}`]: fFaculty,
-              }));
-              return cSubject;
+              return (
+                map.get(`${rowIndex}:${colIndex}`)?.selected_subject ||
+                item.subjects[colIndex] ||
+                "Off Period"
+              );
             }),
           ]),
         }));
 
-        setServerData(parseData.tableInfoDraf);
+        setVTable(map);
+        setServerData(parseServerResult);
       }
     },
     refetchOnMount: true,
@@ -230,6 +237,7 @@ export default function TimeTable() {
 
     formData.forEach((value, key) => {
       const valueString = value.toString();
+      console.log(key, " : ", value);
       if (key === "course_name") {
         if (loopIndex !== 0) {
           dataIWant.push(objToStore);
@@ -256,12 +264,13 @@ export default function TimeTable() {
       }
 
       if (key === "employee_name") {
-        objToStore.faculty[currentFacultyIndex].faculty_name = valueString;
+        objToStore.faculty[currentFacultyIndex].faculty_name =
+          valueString === "Choose Faculty" ? "" : valueString;
         currentFacultyIndex++;
       }
 
       if (key === "faculty_id") {
-        if (valueString !== "") {
+        if (valueString !== "" && valueString !== "Choose Faculty") {
           faculty_ids.push(parseInt(valueString));
         }
       }
@@ -288,16 +297,13 @@ export default function TimeTable() {
   };
 
   const handleDraftButton = () => {
+    // return console.log(vTable);
     saveToDraft({
       apiPath: "/course/time-table/draft",
       method: "post",
       formData: {
         date: searchParams.get("date"),
-        info: JSON.stringify({
-          tableInfoDraf: serverData,
-          subjectDraf: selectedSubjects.current,
-          facultiDraf: selectedFaculties.current,
-        }),
+        info: JSON.stringify(Object.fromEntries(vTable || new Map())),
         institute: searchParams.get("institute"),
       },
     });
@@ -398,12 +404,10 @@ export default function TimeTable() {
                           value={value}
                           rowIndex={rowIndex}
                           colIndex={columnIndex}
-                          selectedSubjects={selectedSubjects.current}
-                          selectedFaculties={selectedFaculties.current}
-                          vertualTable={vertualTable}
-                          setVertualTable={setVertualTable}
                           duplicateCell={duplicateCell}
                           setDuplicateCell={setDuplicateCell}
+                          setVTable={setVTable}
+                          vTable={vTable}
                         />
                       ) : (
                         <>

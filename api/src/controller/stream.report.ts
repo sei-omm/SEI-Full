@@ -2545,7 +2545,7 @@ export const streamEmployeeReport = asyncErrorHandler(async (req, res) => {
     "GRADE",
     "QUALIFICATION",
     "ADDITIONAL QUALIFICATION",
-    "SELLING EXPERIENCE",
+    "SAILING EXPERIENCE",
     "TEACHING EXPERIENCE",
     "CONTACT NUMBER",
     "EMAIL ADDRESS",

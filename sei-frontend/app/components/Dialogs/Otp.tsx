@@ -48,7 +48,7 @@ export default function Otp() {
           Verify <span className="text-[#e9b858]">Email ID</span>
         </h2>
         <p className="text-gray-600 text-sm">
-          Enter otp which we have sended to your register email
+          Enter otp which we have sent to your register email
         </p>
       </div>
       <form onSubmit={onFormSubmit} className="space-y-2 pt-2">

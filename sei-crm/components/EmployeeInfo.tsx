@@ -338,7 +338,7 @@ export default function EmployeeInfo({ employeeID }: IProps) {
                   className="size-full object-cover"
                   src={
                     selectedPofileIcon === ""
-                      ? (employeeInfo?.profile_image as string)
+                      ? employeeInfo?.profile_image || "/placeholder_image.jpg"
                       : selectedPofileIcon
                   }
                   alt="Logo"

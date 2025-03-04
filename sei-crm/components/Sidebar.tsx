@@ -98,7 +98,7 @@ const sidebarOptions = [
       {
         id: "1-10",
         icon: <MdAddTask />,
-        name: "Tranning Requirement",
+        name: "Training Requirement",
         slug: "/dashboard/hr-module/tranning-requirement",
       },
     ],
@@ -328,6 +328,20 @@ const sidebarOptions = [
     ],
   },
   // {
+  //   id: 10,
+  //   icon: null,
+  //   name: "Website Management",
+  //   slug: "#",
+  //   subMenu: [
+  //     {
+  //       id: "10-1",
+  //       icon: <CgWebsite />,
+  //       name: "Notice Board",
+  //       slug: "/dashboard/website-management/notice-board",
+  //     },
+  //   ],
+  // },
+  // {
   //   id: 6,
   //   icon: null,
   //   name: "Settings Management",
@@ -399,7 +413,9 @@ export default function Sidebar() {
         {sidebarOptions.map((option, pIndex) => (
           <li key={option.id}>
             <button
-              onClick={() => setCurrentExpandIndex((prev) => prev === pIndex ? -1 : pIndex)}
+              onClick={() =>
+                setCurrentExpandIndex((prev) => (prev === pIndex ? -1 : pIndex))
+              }
               className={`flex items-center justify-between w-full py-2 px-3 rounded-lg ${
                 option.subMenu ? "" : "hover:bg-[#E4E6E9]"
               } ${
@@ -419,7 +435,12 @@ export default function Sidebar() {
                 </span>
               </div>
 
-              <FaChevronDown size={13} className={`absolute right-0 top-2 ${currentExpandIndex === pIndex ? "rotate-180" : "rotate-0"} transition-all duration-500`} />
+              <FaChevronDown
+                size={13}
+                className={`absolute right-0 top-2 ${
+                  currentExpandIndex === pIndex ? "rotate-180" : "rotate-0"
+                } transition-all duration-500`}
+              />
             </button>
 
             {option.subMenu ? (

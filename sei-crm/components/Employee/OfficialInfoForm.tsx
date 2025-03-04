@@ -197,7 +197,7 @@ export default function OfficialInfoForm({
               />
               <Input
                 name="selling_experience"
-                label="Selling Experience"
+                label="Sailing Experience"
                 placeholder="1 Years"
                 defaultValue={employeeInfo?.selling_experience}
               />

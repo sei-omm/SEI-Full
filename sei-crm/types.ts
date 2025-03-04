@@ -1,6 +1,6 @@
 import { PutBlobResult } from "@vercel/blob";
 import { Dispatch, SetStateAction } from "react";
-import { z } from "zod";
+import { string, z } from "zod";
 import { studentFormSchema } from "./FormSchema";
 
 export interface ITabItems {
@@ -769,3 +769,15 @@ export interface Books {
 }
 
 export type TBookIssueTo = "Faculty" | "Student";
+
+export type TVTableData = {
+  course_id: number;
+  course_name: string;
+  course_code : string;
+
+  faculties : TFaculty[];
+  subjects : string[];
+  
+  selected_faculty_id : number,
+  selected_subject : string
+}

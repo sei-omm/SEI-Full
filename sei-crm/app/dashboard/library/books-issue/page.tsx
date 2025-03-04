@@ -64,7 +64,9 @@ export default function BooksIssue() {
 
   const [updateInfo, setUpdateInfo] = useState<TUpdateInfo[]>([]);
   const [searchBy, setSearchBy] = useState<TSearchBy>("indos_number");
-  const [campus, setCampus] = useState(searchParams.get("institute") || "Kolkata");
+  const [campus, setCampus] = useState(
+    searchParams.get("institute") || "Kolkata"
+  );
   const route = useRouter();
 
   const [issueBookTable, setIssueBookTable] = useState<TTable>({
@@ -142,7 +144,22 @@ export default function BooksIssue() {
         Issue Book
       </Button>
 
-      <DateDurationFilter />
+      <DateDurationFilter>
+        <DropDown
+          name="search_by"
+          label="Search By *"
+          options={[
+            {
+              text: "Issue Date",
+              value: "issue_date",
+            },
+            {
+              text: "Received Date",
+              value: "received_date",
+            },
+          ]}
+        />
+      </DateDurationFilter>
 
       <div className="flex items-center gap-2">
         <DropDown

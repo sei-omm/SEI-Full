@@ -20,7 +20,7 @@ export default function TimeTableReportCell({
       <div className="size-8 border border-white rounded-full overflow-hidden">
         <Image
           className="size-full object-cover"
-          src={parseData[rowIndex]?.faculty[colIndex - 1]?.profile_image || ""}
+          src={parseData[rowIndex]?.faculty[colIndex - 1]?.profile_image || "/placeholder_image.jpg"}
           alt="Faculty Image"
           height={32}
           width={32}

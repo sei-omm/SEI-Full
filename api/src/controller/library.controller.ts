@@ -761,12 +761,14 @@ export const getBookIssueList = asyncErrorHandler(async (req, res) => {
   }
 
   if (from_date && to_date) {
+    const search_by = req.query.search_by === "received_date" ? "return_date" : "issue_date";
+
     if (filter === "WHERE") {
-      filter += ` plbi.issue_date BETWEEN $${placeholdernum}`;
+      filter += ` plbi.${search_by} BETWEEN $${placeholdernum}`;
       placeholdernum++;
       filter += ` AND $${placeholdernum}`;
     } else {
-      filter += ` AND plbi.issue_date BETWEEN $${placeholdernum}`;
+      filter += ` AND plbi.${search_by} BETWEEN $${placeholdernum}`;
       placeholdernum++;
       filter += ` AND $${placeholdernum}`;
     }
