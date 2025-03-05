@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import Button from "../Button";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
@@ -9,7 +9,7 @@ import { ICourse, ISuccess } from "@/types";
 import HandleSuspence from "../HandleSuspence";
 import { getFileName } from "@/app/utils/getFileName";
 import { useDoMutation } from "@/app/utils/useDoMutation";
-import { AiOutlineDelete } from "react-icons/ai";
+import { AiOutlineDelete, AiOutlinePercentage } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 import DeleteCourseBtn from "./DeleteCourseBtn";
 import { IoMdArrowBack } from "react-icons/io";
@@ -44,8 +44,11 @@ const formSchema = z.object({
     .number({ message: "Input Must Be A Number" })
     .min(1, "Course Fee Is Required"),
   min_pay_percentage: z
-    .number({ message: "Input Must Be A Number" })
-    .min(1, "Add Min To Pay In Percentage"),
+    .number({
+      message: "Please enter a valid percentage value between 1 and 100.",
+    })
+    .min(1, "Please enter a valid percentage value between 1 and 100.")
+    .max(100, "Please enter a valid percentage value between 1 and 100."),
   total_seats: z
     .number({ message: "Input Must Be A Number" })
     .min(1, "Total Seats Is Required"),
@@ -77,6 +80,8 @@ export default function CourseForm({ slug }: IProps) {
     register,
     handleSubmit,
     formState: { errors },
+    getValues,
+    watch,
     setValue,
     clearErrors,
     setError,
@@ -276,12 +281,15 @@ export default function CourseForm({ slug }: IProps) {
             error={errors.course_fee?.message}
           />
           <InputNew
-            label="Minimum To Pay In Percentage *"
+            label={`Minimum To Pay In Percentage * (₹${
+              (watch("min_pay_percentage") / 100) * watch("course_fee")
+            })`}
             // type="number"
             placeholder="100"
             // defaultValue={
             //   isNewCourse ? 0 : course.data?.data.min_pay_percentage || 100
             // }
+            iconBeforeFild={<AiOutlinePercentage />}
             {...register("min_pay_percentage", { valueAsNumber: true })}
             error={errors.min_pay_percentage?.message}
           />

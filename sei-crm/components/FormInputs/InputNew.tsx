@@ -8,6 +8,7 @@ interface IProps extends InputTypes {
   referal?: LegacyRef<HTMLInputElement>;
   defaultValue?: any;
   moneyInput?: boolean;
+  iconBeforeFild?: React.ReactNode,
   viewOnly?: boolean;
   viewOnlyText?: string;
   inputLayoutWrapperCss?: string;
@@ -34,6 +35,7 @@ const InputNew = forwardRef<HTMLInputElement, IProps>(({ ...props }, ref) => {
       >
         {/* <span>₹</span> */}
         {props.moneyInput ? <span>₹</span> : null}
+        {props.iconBeforeFild ? <span>{props.iconBeforeFild}</span> : null}
 
         <span className={props.viewOnly ? "block" : "hidden"}>
           {props.viewOnlyText ?? props.defaultValue ?? props.value}
