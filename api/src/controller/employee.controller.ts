@@ -699,6 +699,9 @@ export const employeeLogout = asyncErrorHandler(async (req, res) => {
 
 export const getMarketingTeam = asyncErrorHandler(
   async (req: Request, res: Response) => {
+    const institute = req.query.institute;
+    if(!institute) throw new ErrorHandler(400, "Campus Is Needed");
+
     let query = `
         SELECT 
             e.id AS employee_id,
@@ -708,12 +711,12 @@ export const getMarketingTeam = asyncErrorHandler(
         LEFT JOIN 
             department d 
             ON e.department_id = d.id
-        WHERE is_active = true AND d.name = 'Sales & Marketing Department'
+        WHERE is_active = true AND d.name = 'Sales & Marketing Department' AND e.institute_id = $1
         ORDER BY 
             e.name;
     `;
 
-    const { rows } = await pool.query(query);
+    const { rows } = await pool.query(query, [institute]);
     res.status(200).json(new ApiResponse(200, "Marketing Team Data", rows));
   }
 );
