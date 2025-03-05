@@ -1,5 +1,6 @@
 import { getCookie } from "@/app/actions/cookies";
 import axios from "axios";
+import { redirect } from "next/navigation";
 
 axios.interceptors.request.use(async (config) => {
   config.withCredentials = true;
@@ -27,6 +28,8 @@ axios.interceptors.response.use(
         if (typeof window !== "undefined") {
           // Only run alert on the client-side
           alert("Unauthorized! redirecting to login...");
+        } else {
+          redirect("/auth/login");
         }
 
         // Abort all ongoing requests
@@ -38,6 +41,8 @@ axios.interceptors.response.use(
         // Redirect user to login page (optional)
         if (typeof window !== "undefined") {
           window.location.href = "/auth/login";
+        } else {
+          redirect("/auth/login");
         }
         break;
     }

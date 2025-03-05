@@ -4,6 +4,7 @@ import CourseListItem from "@/components/CourseListItem";
 import DropDown from "@/components/DropDown";
 import Pagination from "@/components/Pagination";
 import { ICourse, ISuccess } from "@/types";
+import axios from "axios";
 import Link from "next/link";
 import React from "react";
 import { IoIosAdd } from "react-icons/io";
@@ -20,16 +21,7 @@ export default async function page({ searchParams }: IProps) {
   urlSearchParams.set("institute", searchParams.institute || "Kolkata");
   urlSearchParams.set("page", searchParams.page || "1");
 
-  const response = await fetch(
-    `${BASE_API}/course/with-batches?${urlSearchParams.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3MzA0NTYwMTl9.NCC5Jo3AyoOlR6VP8WTZgnI2uyTBTq4EzO_1IaRF23Y`,
-      },
-      cache: "no-store",
-    }
-  );
-  const courses = (await response.json()) as ISuccess<ICourse[]>;
+  const { data : courses } = await axios.get<ISuccess<ICourse[]>>(`${BASE_API}/course/with-batches?${urlSearchParams.toString()}`);
 
   return (
     <div>

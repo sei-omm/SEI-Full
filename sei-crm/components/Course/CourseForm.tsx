@@ -80,7 +80,6 @@ export default function CourseForm({ slug }: IProps) {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
     watch,
     setValue,
     clearErrors,
