@@ -819,7 +819,7 @@ export const enrollToBatch = asyncErrorHandler(
     rows.forEach((item, index) => {
       tokenInfo.course_ids += index === 0 ? "" : "," + item.course_id;
       tokenInfo.total_price += parseFloat(item.total_price);
-      tokenInfo.minimum_to_pay += parseFloat(item.total_price);
+      tokenInfo.minimum_to_pay += parseFloat(item.minimum_to_pay);
     });
 
     //create new order and send back to client side
