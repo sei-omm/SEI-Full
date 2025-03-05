@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import Button from "../Button";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
