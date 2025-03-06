@@ -114,7 +114,7 @@ export default function CourseForm({ slug }: IProps) {
     ]
   >([
     {
-      queryKey: "get-marketing-team",
+      queryKey: ["get-marketing-team", watch("institute")],
       queryFn: async () =>
         (await axios.get(BASE_API + "/employee/marketing-team?institute=" + watch("institute") || "Kolkata")).data,
       refetchOnMount: true,
