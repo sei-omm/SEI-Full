@@ -76,7 +76,7 @@ export default function Informations({ employee_info }: IProps) {
             value={beautifyDate(employee_info?.joining_date || "")}
           />
           <Info title="Login Email" value={employee_info?.login_email} />
-          <Info title="Login Password" value={employee_info?.login_password} />
+          <Info title="Login Password" value={employee_info?.login_password} password/>
 
           {employee_info?.employee_type === "Faculty" ? (
             <>

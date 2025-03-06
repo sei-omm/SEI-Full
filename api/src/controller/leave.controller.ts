@@ -263,7 +263,6 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
     } catch (error: any) {
       await client.query("ROLLBACK");
       client.release();
-      console.log(error);
       throw new ErrorHandler(400, error.message);
     }
 

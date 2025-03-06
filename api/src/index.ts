@@ -23,6 +23,7 @@ import { receiptRoutes } from "./route/receipt.routes";
 import path from "path";
 import { holidayRoutes } from "./route/holiday.routes";
 import { tranningRoutes } from "./route/tranning.routes";
+import { encrypt } from "./utils/crypto";
 
 dotenv.config();
 const app = express();
@@ -81,6 +82,10 @@ app.use("/api/v1/db", setupDbRoute);
 
 //global error handler
 app.use(globalErrorController);
+
+app.get("/123", (req, res) => {
+  res.status(200).send(encrypt("123456"));
+});
 
 //route error
 app.all("*", (req, res, next) => {

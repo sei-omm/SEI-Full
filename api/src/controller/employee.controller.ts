@@ -18,7 +18,6 @@ import {
   updateEmployeeStatusValidator,
 } from "../validator/employee.validator";
 import { getDate } from "../utils/getDate";
-import bcrypt from "bcrypt";
 import { createToken } from "../utils/token";
 import {
   objectToSqlConverterUpdate,
@@ -36,6 +35,7 @@ import { calculateYearsDifference } from "../utils/calculateYearsDifference";
 import { AUTHORITY } from "../constant";
 import { beautifyDate } from "../utils/beautifyDate";
 import { calculateAge } from "../utils/calculateAge";
+import { encrypt, decrypt } from "../utils/crypto";
 
 const table_name = "employee";
 
@@ -238,8 +238,7 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
 
     const query = `
         SELECT 
-            e.*,
-            '********' AS login_password,                             
+            e.*,                        
             d.name AS department_name, 
             COALESCE(a.status, 'Pending') AS attendance_status,
             -- COALESCE(JSON_AGG(DISTINCT aae.*) FILTER (WHERE aae IS NOT NULL), '[]') AS assigned_assets
@@ -311,6 +310,7 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
     // rows[0].monthly_salary = (newSalary / 12).toFixed(2);
     // rows[0].gratuity = ((15 * (newSalary / 12) * workingTenure) / 26).toFixed(2);
     rows[0].working_tenure = workingTenure;
+    rows[0].login_password = decrypt(rows[0].login_password).decrypted;
     // rows[0].net_salary = newSalary;
 
     res.status(200).json(new ApiResponse(200, "Single Employee Info", rows));
@@ -343,11 +343,12 @@ export const addNewEmployee = asyncErrorHandler(
     const el = 0;
     const ml = 84;
 
-    const new_login_password = await bcrypt.hash(req.body.login_password, 10);
+    // const new_login_password = await bcrypt.hash(req.body.login_password, 10);
+    const encrypt_login_password = encrypt(req.body.login_password);
 
     const { columns, params, values } = objectToSqlInsert({
       ...req.body,
-      login_password: new_login_password,
+      login_password: encrypt_login_password,
     });
 
     const client = await pool.connect();
@@ -453,13 +454,15 @@ export const updateEmployee = asyncErrorHandler(
     const id = (req.params.id as string) || null;
     if (!id) throw new ErrorHandler(400, "Employee Id Is Required", "id");
 
-    let login_password = req.body.login_password;
-    if (login_password != "********") {
-      login_password = await bcrypt.hash(login_password, 10);
-      req.body.login_password = login_password;
-    } else {
-      delete req.body.login_password;
-    }
+    // let login_password = req.body.login_password;
+    // if (login_password != "********") {
+    //   login_password = await bcrypt.hash(login_password, 10);
+    //   req.body.login_password = login_password;
+    // } else {
+    //   delete req.body.login_password;
+    // }
+
+    req.body.login_password = encrypt(req.body.login_password);
 
     const employeeDocsInfo = JSON.parse(
       req.body.employee_docs_info
@@ -646,13 +649,17 @@ export const loginEmployee = asyncErrorHandler(
 
     if (!rows[0].is_active) throw new ErrorHandler(404, "Account Has Disabled");
 
-    const isMatch = await bcrypt.compare(
-      value.login_password,
-      rows[0].login_password
-    );
+    // const isMatch = await bcrypt.compare(
+    //   value.login_password,
+    //   rows[0].login_password
+    // );
 
-    if (!isMatch) {
-      throw new ErrorHandler(400, "Wrong username or password");
+
+    const { isError, decrypted } = decrypt(rows[0].login_password);
+    if(isError) throw new ErrorHandler(400, "Wrong password");
+
+    if (decrypted !== value.login_password) {
+      throw new ErrorHandler(400, "Wrong password");
     }
 
     const refreshToken = createToken(

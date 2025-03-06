@@ -2610,7 +2610,6 @@ export const stramPhyLibBookIssueReport = asyncErrorHandler(
     });
 
     pgStream.on("error", (err) => {
-      console.log(err);
       client.release();
     });
   }
@@ -2953,7 +2952,6 @@ export const streamEmployeeReport = asyncErrorHandler(async (req, res) => {
   });
 
   pgStream.on("error", (err) => {
-    console.log(err);
     client.release();
   });
 });
