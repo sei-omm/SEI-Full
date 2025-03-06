@@ -21,8 +21,7 @@ export default function LibraryFilters() {
   const route = useRouter();
 
   const [visibility, setVisibility] = useState<TLibraryVisibility>(
-    (urlSearchParams.get("visibility") as TLibraryVisibility) ||
-      "-1"
+    (urlSearchParams.get("visibility") as TLibraryVisibility) || "-1"
   );
 
   const {
@@ -41,24 +40,26 @@ export default function LibraryFilters() {
         await axios.get(
           visibility === "course-specific"
             ? `${BASE_API}/course/drop-down?institute=${institute}`
-            : visibility === "subject-specific" ? BASE_API + "/subject" : ""
+            : visibility === "subject-specific"
+            ? BASE_API + "/subject"
+            : ""
         )
       ).data,
-  
-    enabled : visibility === "course-specific" || visibility === "subject-specific"
-    });
+
+    enabled:
+      visibility === "course-specific" || visibility === "subject-specific",
+  });
 
   function handleFormSumbit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    if(formData.get("visibility") === "-1") {
-      formData.delete("visibility");
-    }
 
     const urlSearchParams = new URLSearchParams();
     formData.entries().forEach(([key, value]) => {
-      urlSearchParams.set(key, value.toString());
+      if (value !== "-1") {
+        urlSearchParams.set(key, value.toString());
+      }
     });
 
     route.push("/dashboard/library/item?" + urlSearchParams.toString());
@@ -101,14 +102,15 @@ export default function LibraryFilters() {
               key={"course_id"}
               label="Choose Course"
               name="course_id"
-              options={
-                course.data.map((course) => ({
+              options={[
+                { text: "All Courses", value: "-1" },
+                ...(course.data.map((course) => ({
                   text: course.course_name,
                   value: course.course_id.toString(),
-                })) || []
-              }
+                })) || []),
+              ]}
               defaultValue={
-                urlSearchParams.get("course_id") || course.data[0]?.course_id
+                urlSearchParams.get("course_id") || "-1"
               }
             />
           )}
@@ -124,14 +126,15 @@ export default function LibraryFilters() {
               key={"subject_id"}
               label="Choose Subject"
               name="subject_id"
-              options={
-                subject.data.map((course) => ({
+              options={[
+                { text: "All Subjects", value: "-1" },
+                ...(subject.data.map((course) => ({
                   text: course.subject_name,
                   value: course.subject_id,
-                })) || []
-              }
+                })) || []),
+              ]}
               defaultValue={
-                urlSearchParams.get("subject_id") || subject.data[0].subject_id
+                urlSearchParams.get("subject_id") || "-1"
               }
             />
           )}
@@ -164,7 +167,7 @@ export default function LibraryFilters() {
         date={urlSearchParams.get("date_to")}
       /> */}
       <div>
-        <Button className="mb-2">Search</Button>
+        <Button className="mb-2">Filter</Button>
       </div>
     </form>
   );
