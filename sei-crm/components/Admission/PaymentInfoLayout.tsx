@@ -17,14 +17,14 @@ interface IProps {
   paymentsInfo?: TPaymentInfo;
   form_id: string;
   student_id: number;
-  student_course_info : TEnrollCourses[] | undefined
+  student_course_info: TEnrollCourses[] | undefined;
 }
 
 export default function PaymentInfoLayout({
   paymentsInfo,
   form_id,
   student_id,
-  student_course_info
+  student_course_info,
 }: IProps) {
   const dispatch = useDispatch();
 
@@ -39,7 +39,7 @@ export default function PaymentInfoLayout({
           payment_type: btnType,
           total_paid: paymentsInfo?.total_paid,
           total_due: paymentsInfo?.total_due,
-          student_course_info : student_course_info
+          student_course_info: student_course_info,
         },
       })
     );
@@ -124,10 +124,10 @@ export default function PaymentInfoLayout({
           Total Fees : ₹{paymentsInfo?.total_fees}
         </span>
 
-        <span className="font-semibold">
+        {/* <span className="font-semibold">
           <MdAvTimer />
           Total Due Fees : ₹{paymentsInfo?.total_due_fees}
-        </span>
+        </span> */}
       </div>
 
       <div className="flex items-center gap-3">
@@ -191,7 +191,9 @@ export default function PaymentInfoLayout({
                         >
                           {
                             <span className="line-clamp-1 inline-flex gap-x-3">
-                              {value === "actionBtn" && paymentsInfo.payments[rowIndex].discount_amount <= 0 ? (
+                              {value === "actionBtn" &&
+                              paymentsInfo.payments[rowIndex].discount_amount <=
+                                0 ? (
                                 <div className="flex-center gap-4">
                                   <Link
                                     href={`${BASE_API}/receipt/payment?form_id=${form_id}&student_id=${student_id}&payment_id=${paymentsInfo.payments[rowIndex].payment_id}`}
@@ -214,8 +216,10 @@ export default function PaymentInfoLayout({
                                 beautifyDate(value as string)
                               ) : columnIndex === 2 ? (
                                 parseFloat(`${value}`)
+                              ) : value === "actionBtn" ? (
+                                ""
                               ) : (
-                                value === "actionBtn" ? "" : value
+                                value
                               )}
                             </span>
                           }

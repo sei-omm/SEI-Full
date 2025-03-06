@@ -47,6 +47,7 @@ export default function BatchReport() {
       "AMOUNT PAID",
       "DUE AMOUNT",
       "MISC PAID AMOUNT",
+      "DISCOUNT",
       "FORM STATUS",
       "INDOS NUMBER",
       "MOBILE NUMBER",
@@ -140,7 +141,7 @@ export default function BatchReport() {
                     {itemArray.map((value, colIndex) => (
                       <td
                         className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${
-                          colIndex === 6 && parseInt(value as string) > 0
+                          colIndex === 5 && parseInt(value as string) > 0
                             ? "text-red-600"
                             : ""
                         } ${stickyFirstCol(colIndex)}`}

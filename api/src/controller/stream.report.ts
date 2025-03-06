@@ -483,7 +483,7 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
   });
   const worksheet = workbook.addWorksheet("Course Batch Report");
 
-  worksheet.mergeCells("A1:P1");
+  worksheet.mergeCells("A1:Q1");
   worksheet.getCell("A1").value = `Course Batch Report (${value.institute})`;
   worksheet.getCell("A1").font = {
     size: 20,
@@ -506,7 +506,7 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
     `SELECT course_name FROM courses WHERE course_id = $1`,
     [value.course_id]
   );
-  worksheet.mergeCells("A2:P2");
+  worksheet.mergeCells("A2:Q2");
   worksheet.getCell("A2").value = `Course Name : ${rows[0].course_name}`;
   worksheet.getCell("A2").font = {
     size: 18,
@@ -533,6 +533,7 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
     "Due Amount",
     "Amount Paid",
     "Total Misc Payment",
+    "Discount",
     "Admission Form Status",
     "Indos Number",
     "Mobile Number",
@@ -620,9 +621,10 @@ export const streamBatchExcelReport = asyncErrorHandler(async (req, res) => {
           s.name,
           cb.start_date,
           cb.batch_fee,
-          (cb.batch_fee - SUM(p.paid_amount)) AS total_due,
+          (cb.batch_fee - (SUM(p.paid_amount) + SUM(p.discount_amount))) AS total_due,
           SUM(p.paid_amount) AS total_paid,
           SUM(p.misc_payment) AS total_misc_payment,
+          SUM(p.discount_amount) AS discount_amount,
           ff.form_status,
           s.indos_number,
           s.mobile_number,
@@ -1056,7 +1058,7 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
           cb.start_date AS created_at,
           c.course_name,
           cb.batch_fee AS course_batch_fee,
-          cb.batch_fee - SUM(p.paid_amount) as due_amount_for_course,
+          cb.batch_fee - (SUM(p.paid_amount) + SUM(p.discount_amount)) as due_amount_for_course,
           -- s.profile_image,
           s.name,
           c.course_type,

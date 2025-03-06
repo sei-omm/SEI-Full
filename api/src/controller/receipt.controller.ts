@@ -141,7 +141,8 @@ export const getPaymentReceipt = asyncErrorHandler(async (req, res) => {
         STRING_AGG(DISTINCT p.created_at::TEXT, ', ') as payment_date,
         STRING_AGG(DISTINCT p.receipt_no::TEXT, ', ') as receipt_no,
         STRING_AGG(DISTINCT p.payment_type, ', ') as payment_type,
-        SUM(p.misc_payment) AS misc_payment
+        SUM(p.misc_payment) AS misc_payment,
+        STRING_AGG(DISTINCT p.misc_remark, ', ') as misc_remark
       FROM payments p
 
       LEFT JOIN students s
@@ -209,6 +210,7 @@ export const getPaymentReceipt = asyncErrorHandler(async (req, res) => {
       payment_type: extraInfo[0].payment_type,
       admission_fee: extraInfo[0].admission_fee,
       misc_payment: extraInfo[0].misc_payment,
+      misc_remark : extraInfo[0].misc_remark,
       payment_remark: extraInfo[0].payment_remark,
 
       course_fee: course_fee.toFixed(2),

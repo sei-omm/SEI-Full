@@ -35,7 +35,7 @@ export default function SLogin() {
         dispatch(
           setDialog({ type: "CLOSE", dialogKey: "student-login-dialog" })
         );
-        route.push("/");
+        route.push(window.location.href);
         dispatch(setLoginStatus({ status: "login" }));
         dispatch(setDialog({ type: "OPEN", dialogKey: "select-our-center" }));
       },

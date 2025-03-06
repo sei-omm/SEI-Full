@@ -225,7 +225,7 @@
                 <div class="row">
                     <div class="col-xs-5">
                         <strong>
-                            <p>Admission Fee<br> (<%= payment_type %>)</p>
+                            <p>Admission Fee<br> (<%= payment_type === "Misc Payment" ? "" : payment_type %>)</p>
                         </strong>
                     </div>
 
@@ -382,7 +382,7 @@
                 <div class="row">
                     <div class="col-xs-5">
                         <strong>
-                            <p>Miscellaneous Charges<br> (NULL)</p>
+                            <p>Miscellaneous Charges<br> (<%= payment_type === "Misc Payment" ? payment_type : "" %>)</p>
                         </strong>
                     </div>
 
@@ -458,7 +458,7 @@
                         </strong>
                     </div>
                     <div class="col-xs-9" style="">
-                        <%= payment_remark %>
+                        <%= payment_type === "Misc Payment" ? misc_remark : payment_remark %>
                     </div>
 
                 </div>
@@ -481,7 +481,7 @@
                     </div>
                     <div class="col-xs-4">
                         <strong>
-                            <p>Misc Fee :- Rs 0 /-</p>
+                            <p>Misc Fee :- Rs <%= misc_payment %> /-</p>
                         </strong>
                     </div>
                     <div class="col-xs-4">
@@ -686,7 +686,8 @@
                 <div class="row">
                     <div class="col-xs-5">
                         <strong>
-                            <p>Admission Fee<br> (<%= payment_type %>)</p>
+                            <p>Admission Fee<br> (<%= payment_type === "Misc Payment" ? "" : payment_type %>) 
+                            </p>
                         </strong>
                     </div>
 
@@ -843,7 +844,7 @@
                 <div class="row">
                     <div class="col-xs-5">
                         <strong>
-                            <p>Miscellaneous Charges<br> (NULL)</p>
+                            <p>Miscellaneous Charges<br> (<%= payment_type === "Misc Payment" ? payment_type : "" %>)</p>
                         </strong>
                     </div>
 
@@ -919,7 +920,7 @@
                         </strong>
                     </div>
                     <div class="col-xs-9" style="">
-                        <%= payment_remark %>
+                        <%= payment_type === "Misc Payment" ? misc_remark : payment_remark %>
                     </div>
 
                 </div>
@@ -942,7 +943,7 @@
                     </div>
                     <div class="col-xs-4">
                         <strong>
-                            <p>Misc Fee :- Rs 0 /-</p>
+                            <p>Misc Fee :- Rs <%= misc_payment %> /-</p>
                         </strong>
                     </div>
                     <div class="col-xs-4">
