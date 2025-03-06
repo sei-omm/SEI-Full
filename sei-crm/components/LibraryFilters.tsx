@@ -5,7 +5,6 @@ import { useQuery } from "react-query";
 import { ISuccess, TCourseDropDown, TLibraryVisibility } from "@/types";
 import { BASE_API } from "@/app/constant";
 import axios from "axios";
-import DateInput from "./DateInput";
 import Button from "./Button";
 import HandleDataSuspense from "./HandleDataSuspense";
 
@@ -23,7 +22,7 @@ export default function LibraryFilters() {
 
   const [visibility, setVisibility] = useState<TLibraryVisibility>(
     (urlSearchParams.get("visibility") as TLibraryVisibility) ||
-      "subject-specific"
+      "-1"
   );
 
   const {
@@ -42,15 +41,20 @@ export default function LibraryFilters() {
         await axios.get(
           visibility === "course-specific"
             ? `${BASE_API}/course/drop-down?institute=${institute}`
-            : BASE_API + "/subject"
+            : visibility === "subject-specific" ? BASE_API + "/subject" : ""
         )
       ).data,
-  });
+  
+    enabled : visibility === "course-specific" || visibility === "subject-specific"
+    });
 
   function handleFormSumbit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
+    if(formData.get("visibility") === "-1") {
+      formData.delete("visibility");
+    }
 
     const urlSearchParams = new URLSearchParams();
     formData.entries().forEach(([key, value]) => {
@@ -80,10 +84,11 @@ export default function LibraryFilters() {
         onChange={(item) => setVisibility(item.value)}
         label="Visibility *"
         options={[
+          { text: "All", value: "-1" },
           { text: "Subject Specific", value: "subject-specific" },
           { text: "Course Specific", value: "course-specific" },
         ]}
-        defaultValue={urlSearchParams.get("visibility") || "subject-specific"}
+        defaultValue={urlSearchParams.get("visibility") || "-1"}
       />
       {visibility === "course-specific" ? (
         <HandleDataSuspense
@@ -108,7 +113,7 @@ export default function LibraryFilters() {
             />
           )}
         </HandleDataSuspense>
-      ) : (
+      ) : visibility === "subject-specific" ? (
         <HandleDataSuspense
           isLoading={isFetching}
           error={error}
@@ -131,7 +136,7 @@ export default function LibraryFilters() {
             />
           )}
         </HandleDataSuspense>
-      )}
+      ) : null}
 
       {/* <DropDown
         key={"library_file_type"}
@@ -146,7 +151,7 @@ export default function LibraryFilters() {
         ]}
         defaultValue={urlSearchParams.get("library_file_type")}
       /> */}
-      <DateInput
+      {/* <DateInput
         required
         label="Date From"
         name="date_from"
@@ -157,7 +162,7 @@ export default function LibraryFilters() {
         label="Date To"
         name="date_to"
         date={urlSearchParams.get("date_to")}
-      />
+      /> */}
       <div>
         <Button className="mb-2">Search</Button>
       </div>

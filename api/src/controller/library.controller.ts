@@ -25,6 +25,7 @@ import { tryCatch } from "../utils/tryCatch";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import { getLibraryStudentValidator } from "../validator/student.validator";
 import { parsePagination } from "../utils/parsePagination";
+import { filterToSql } from "../utils/filterToSql";
 
 export const streamBlobLibraryFileForStudnets = asyncErrorHandler(
   async (req: Request, res: Response) => {
@@ -282,27 +283,92 @@ export const getLibraryInfo = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { LIMIT, OFFSET } = parsePagination(req);
 
+    let filterQuery = "WHERE";
+    const filterValues : string[] = [];
+    let placeHolderNum = 1;
+
+    if(req.query.institute) {
+      filterQuery += ` l.institute = $${placeHolderNum}`;
+      filterValues.push(req.query.institute as string);
+      placeHolderNum++;
+    }
+
+    if(req.query.visibility) {
+      if(filterQuery === "WHERE") {
+        filterQuery += ` l.visibility = $${placeHolderNum}`;
+      } else {
+        filterQuery += ` AND l.visibility = $${placeHolderNum}`;
+      }
+      filterValues.push(req.query.visibility as string);
+      placeHolderNum++;
+    }
+
+    if(req.query.course_id) {
+      if(filterQuery === "WHERE") {
+        filterQuery += ` lwc.course_id = $${placeHolderNum}`;
+      } else {
+        filterQuery += ` AND lwc.course_id = $${placeHolderNum}`;
+      }
+
+      filterValues.push(req.query.course_id as string);
+      placeHolderNum++;
+    }
+
+    if(req.query.subject_id) {
+      if(filterQuery === "WHERE") {
+        filterQuery += ` lws.subject_id = $${placeHolderNum}`;
+      } else {
+        filterQuery += ` AND lws.subject_id = $${placeHolderNum}`;
+      }
+
+      filterValues.push(req.query.subject_id as string);
+      placeHolderNum++;
+    }
+
+    if(req.query.date_from && req.query.date_to) {
+      if(filterQuery === "WHERE") {
+        filterQuery += ` l.created_at BETWEEN $${placeHolderNum} AND $${placeHolderNum + 1}`;
+      } else {
+        filterQuery += ` AND l.created_at BETWEEN $${placeHolderNum} AND $${placeHolderNum + 1}`;
+      }
+
+      filterValues.push(req.query.date_from as string);
+      filterValues.push(req.query.date_to as string);
+      placeHolderNum++;
+      placeHolderNum++;
+    }
+
+    if(filterQuery === "WHERE") {
+      filterQuery = "";
+    }
+
     const { rows } = await pool.query(`
         SELECT
-        l.*
+        l.*,
+        STRING_AGG(
+          COALESCE(s.subject_name, c.course_name), ', '
+        ) AS course_or_subject_name
         FROM library AS l
 
         LEFT JOIN library_with_subject AS lws
         ON lws.library_id = l.library_id AND l.visibility = 'subject-specific'
 
-        -- LEFT JOIN subjects AS s
-        -- ON s.subject_id = lws.subject_id 
+        LEFT JOIN subjects AS s
+        ON s.subject_id = lws.subject_id 
 
         LEFT JOIN library_with_course AS lwc
         ON lwc.library_id = l.library_id AND l.visibility = 'course-specific'
 
-        -- LEFT JOIN courses AS c
-        -- ON c.course_id = lwc.course_id
+        LEFT JOIN courses AS c
+        ON c.course_id = lwc.course_id
+
+        ${filterQuery}
 
         GROUP BY l.library_id
 
         LIMIT ${LIMIT} OFFSET ${OFFSET}
-    `);
+    `, filterValues);
+
     res.status(200).json(new ApiResponse(200, "Done", rows));
   }
 );

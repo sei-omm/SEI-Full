@@ -3,6 +3,7 @@
 import { BASE_API } from "@/app/constant";
 import { getFileName } from "@/app/utils/getFileName";
 import { useDoMutation } from "@/app/utils/useDoMutation";
+import BackBtn from "@/components/BackBtn";
 import Button from "@/components/Button";
 import ChooseFileInput from "@/components/ChooseFileInput";
 import DropDown from "@/components/DropDown";
@@ -15,6 +16,7 @@ import {
   TLibraryVisibility,
 } from "@/types";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useQueries, UseQueryResult } from "react-query";
 import { toast } from "react-toastify";
@@ -32,6 +34,7 @@ interface IDropDownTags extends TCourseDropDown {
 
 export default function ManageLibraryForm({ params }: IProps) {
   const isNewItem = params.id === "add";
+  const route = useRouter();
 
   const [selectedFileType, setSelectedFileType] = useState("pdf");
   const [visibility, setVisibility] =
@@ -98,6 +101,9 @@ export default function ManageLibraryForm({ params }: IProps) {
           "Content-Type": "application/json",
         },
         formData: formData,
+        onSuccess() {
+          route.back();
+        },
       });
     } else {
       mutate({
@@ -108,6 +114,9 @@ export default function ManageLibraryForm({ params }: IProps) {
         },
         formData: formData,
         id: parseInt(`${params.id}`),
+        onSuccess() {
+          route.back();
+        },
       });
     }
   }
@@ -117,153 +126,170 @@ export default function ManageLibraryForm({ params }: IProps) {
     setVisibility(response[1].data?.data?.visibility || "subject-specific");
   }, [response[1].isFetching]);
 
+  const formRef = useRef<HTMLFormElement>(null);
+
   return (
-    <form
-      onSubmit={handleFormSubmit}
-      className="p-8 card-shdow rounded-2xl space-y-6"
-    >
-      <div className="flex flex-wrap *:flex-grow *:basis-96 gap-6">
-        <Input
-          key={"library_file_name"}
-          required
-          name="library_file_name"
-          label="Enter File Name *"
-          placeholder="Sample File Form SEI"
-          defaultValue={response[1].data?.data?.library_file_name}
-        />
-        <DropDown
-          onChange={(item) => {
-            uploadFileInfo.current = { status: "done", file_link: undefined };
-            setSelectedFileType(item.value);
-          }}
-          key={"library_file_type"}
-          label="File Type *"
-          name="library_file_type"
-          options={[
-            { text: "PDF File", value: "pdf" },
-            { text: "Doc File", value: "doc" },
-            { text: "Audio File", value: "audio" },
-            { text: "Image File", value: "image" },
-            { text: "Link", value: "link" },
-          ]}
-          defaultValue={selectedFileType}
-        />
-        <DropDown
-          key={"is_active"}
-          label="Is Active *"
-          name="is_active"
-          options={[
-            { text: "Active", value: "true" },
-            { text: "De-Active", value: "false" },
-          ]}
-          defaultValue={response[1].data?.data?.is_active ? "true" : "false"}
-        />
-        {selectedFileType === "link" ? (
+    <div className="p-8 card-shdow rounded-2xl space-y-6">
+      <form
+        key={Math.random()}
+        ref={formRef}
+        className="space-y-6"
+        onSubmit={handleFormSubmit}
+      >
+        <div className="flex flex-wrap *:flex-grow *:basis-96 gap-6">
           <Input
-            key={"library_resource_link_input"}
+            key={"library_file_name"}
             required
-            label="Enter Your Link *"
-            name="library_resource_link"
-            placeholder="https://yourfile.com/view"
-            defaultValue={response[1].data?.data?.library_resource_link}
+            name="library_file_name"
+            label="Enter File Name *"
+            placeholder="Sample File Form SEI"
+            defaultValue={response[1].data?.data?.library_file_name}
+          />
+          <DropDown
+            onChange={(item) => {
+              uploadFileInfo.current = { status: "done", file_link: undefined };
+              setSelectedFileType(item.value);
+            }}
+            key={"library_file_type"}
+            label="File Type *"
+            name="library_file_type"
+            options={[
+              { text: "PDF File", value: "pdf" },
+              { text: "Doc File", value: "doc" },
+              { text: "Audio File", value: "audio" },
+              { text: "Image File", value: "image" },
+              { text: "Link", value: "link" },
+            ]}
+            defaultValue={selectedFileType}
+          />
+          <DropDown
+            key={"is_active"}
+            label="Is Active *"
+            name="is_active"
+            options={[
+              { text: "Active", value: "true" },
+              { text: "De-Active", value: "false" },
+            ]}
+            defaultValue={response[1].data?.data?.is_active ? "true" : "false"}
+          />
+          {selectedFileType === "link" ? (
+            <Input
+              key={"library_resource_link_input"}
+              required
+              label="Enter Your Link *"
+              name="library_resource_link"
+              placeholder="https://yourfile.com/view"
+              defaultValue={response[1].data?.data?.library_resource_link}
+            />
+          ) : (
+            <ChooseFileInput
+              name="library_resource_link"
+              id="library_resource_link"
+              accept={
+                selectedFileType === "image"
+                  ? "image/*"
+                  : selectedFileType === "audio"
+                  ? "audio/*"
+                  : selectedFileType === "doc"
+                  ? "application/msword"
+                  : selectedFileType === "pdf"
+                  ? "application/pdf"
+                  : ""
+              }
+              disableUpload={false}
+              label="Upload Your File *"
+              fileName={
+                response[1].data?.data?.library_resource_link
+                  ? getFileName(response[1].data?.data?.library_resource_link)
+                  : "Choose Your File"
+              }
+              uploadFolderName="library-files"
+              onProcessing={() => {
+                uploadFileInfo.current = { status: "uploading" };
+              }}
+              onUploaded={(blob) => {
+                uploadFileInfo.current = {
+                  status: "done",
+                  file_link: blob.url,
+                };
+              }}
+              onError={() => (uploadFileInfo.current = { status: "done" })}
+              viewLink={response[1].data?.data?.library_resource_link}
+            />
+          )}
+          <DropDown
+            name="allow_download"
+            label="Allow Download *"
+            options={[
+              { text: "No", value: "false" },
+              { text: "Yes", value: "true" },
+            ]}
+            defaultValue={
+              response[1].data?.data?.allow_download ? "true" : "false"
+            }
+          />
+          <DropDown
+            name="visibility"
+            onChange={(item) => setVisibility(item.value)}
+            label="Visibility *"
+            options={[
+              { text: "Subject Specific", value: "subject-specific" },
+              { text: "Course Specific", value: "course-specific" },
+            ]}
+            defaultValue={response[1].data?.data?.visibility}
+          />
+          <DropDown
+            name="institute"
+            label="Campus *"
+            options={[
+              { text: "Kolkata", value: "Kolkata" },
+              { text: "Faridabad", value: "Faridabad" },
+            ]}
+            defaultValue={response[1].data?.data?.institute}
+          />
+        </div>
+        {visibility === "course-specific" ? (
+          <DropDownTag
+            key={"course_ids"}
+            name="course_ids"
+            label="Choose Courses"
+            options={
+              response[0].data?.data.map((item) => ({
+                text: item.course_name,
+                value: item.course_id,
+              })) || []
+            }
+            defaultValues={response[1].data?.data?.course_ids.map(
+              (item) => item
+            )}
           />
         ) : (
-          <ChooseFileInput
-            name="library_resource_link"
-            key={"library_resource_file_link_input"}
-            accept={
-              selectedFileType === "image"
-                ? "image/*"
-                : selectedFileType === "audio"
-                ? "audio/*"
-                : selectedFileType === "doc"
-                ? "application/msword"
-                : selectedFileType === "pdf"
-                ? "application/pdf"
-                : ""
+          <DropDownTag
+            key={"subject_ids"}
+            name="subject_ids"
+            label="Choose Subjects"
+            options={
+              response[0].data?.data.map((item) => ({
+                text: item.subject_name,
+                value: item.subject_id,
+              })) || []
             }
-            disableUpload={false}
-            id="library_resource_link"
-            label="Upload Your File *"
-            fileName={
-              response[1].data?.data?.library_resource_link
-                ? getFileName(response[1].data?.data?.library_resource_link)
-                : "Choose Your File"
-            }
-            uploadFolderName="library-files"
-            onProcessing={() => {
-              uploadFileInfo.current = { status: "uploading" };
-            }}
-            onUploaded={(blob) => {
-              uploadFileInfo.current = { status: "done", file_link: blob.url };
-            }}
-            onError={() => (uploadFileInfo.current = { status: "done" })}
-            viewLink={response[1].data?.data?.library_resource_link}
+            defaultValues={response[1].data?.data?.subject_ids.map(
+              (item) => item
+            )}
           />
         )}
-        <DropDown
-          name="allow_download"
-          label="Allow Download *"
-          options={[
-            { text: "No", value: "false" },
-            { text: "Yes", value: "true" },
-          ]}
-          defaultValue={
-            response[1].data?.data?.allow_download ? "true" : "false"
-          }
-        />
-        <DropDown
-          name="visibility"
-          onChange={(item) => setVisibility(item.value)}
-          label="Visibility *"
-          options={[
-            { text: "Subject Specific", value: "subject-specific" },
-            { text: "Course Specific", value: "course-specific" },
-          ]}
-          defaultValue={response[1].data?.data?.visibility}
-        />
-        <DropDown
-          name="institute"
-          label="Campus *"
-          options={[
-            { text: "Kolkata", value: "Kolkata" },
-            { text: "Faridabad", value: "Faridabad" },
-          ]}
-          defaultValue={response[1].data?.data?.institute}
-        />
+      </form>
+      <div className="flex items-center gap-4">
+        <BackBtn />
+        <Button
+          onClick={() => formRef.current?.requestSubmit()}
+          disabled={isMutating}
+          loading={isMutating}
+        >
+          Save Item To Library
+        </Button>
       </div>
-      {visibility === "course-specific" ? (
-        <DropDownTag
-          key={"course_ids"}
-          name="course_ids"
-          label="Choose Courses"
-          options={
-            response[0].data?.data.map((item) => ({
-              text: item.course_name,
-              value: item.course_id,
-            })) || []
-          }
-          defaultValues={response[1].data?.data?.course_ids.map((item) => item)}
-        />
-      ) : (
-        <DropDownTag
-          key={"subject_ids"}
-          name="subject_ids"
-          label="Choose Subjects"
-          options={
-            response[0].data?.data.map((item) => ({
-              text: item.subject_name,
-              value: item.subject_id,
-            })) || []
-          }
-          defaultValues={response[1].data?.data?.subject_ids.map(
-            (item) => item
-          )}
-        />
-      )}
-      <Button disabled={isMutating} loading={isMutating}>
-        Save Item To Library
-      </Button>
-    </form>
+    </div>
   );
 }

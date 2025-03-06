@@ -394,6 +394,8 @@ export type TLibrary = {
 
   created_at: string;
 
+  course_or_subject_name : string | null;
+
   subject_ids: number[];
   course_ids: number[];
 };

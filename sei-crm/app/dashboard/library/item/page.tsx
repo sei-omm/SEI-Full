@@ -36,12 +36,18 @@ const file_types_icons: any = {
 };
 
 export default function LibraryManagement() {
+  const urlSearchParams = useSearchParams();
+
   const [tableDatas, setTableDatas] = useState<TTable>({
-    heads: ["File Name", "Status", "Publish Date", "Action"],
+    heads: [
+      "File Name",
+      "Course / Subject",
+      "Status",
+      "Created At",
+      "Action",
+    ],
     body: [],
   });
-
-  const urlSearchParams = useSearchParams();
 
   const { mutate, isLoading: isMutating } = useDoMutation();
 
@@ -53,16 +59,27 @@ export default function LibraryManagement() {
   } = useQuery<ISuccess<TLibrary[]>, IError>({
     queryKey: ["get-filter-courses", urlSearchParams.toString()],
     queryFn: async () =>
-      (
-        await axios.get(
-          BASE_API + "/library/filter?" + urlSearchParams.toString()
-        )
-      ).data,
-    enabled: urlSearchParams.toString() !== "",
+      (await axios.get(BASE_API + "/library?" + urlSearchParams.toString()))
+        .data,
     onSuccess: (data) => {
       const newTableVal = { ...tableDatas };
+      if(`${
+        urlSearchParams.get("visibility") === "subject-specific"
+          ? "Subjects"
+          : urlSearchParams.get("visibility") === "course-specific"
+          ? "Course"
+          : "Course / Subject"
+      }`)
+      if(urlSearchParams.get("visibility") === "subject-specific") {
+        newTableVal.heads[1] = "Subjects"
+      } else if(urlSearchParams.get("visibility") === "course-specific") {
+         newTableVal.heads[1] = "Courses"
+      } else {
+        newTableVal.heads[1] = "Course / Subject"
+      }
       newTableVal.body = data.data.map((item) => [
         item.library_file_name,
+        item.course_or_subject_name || "N/A",
         item.is_active ? "Public" : "Private",
         beautifyDate(item.created_at),
         "actionBtn",
@@ -134,7 +151,7 @@ export default function LibraryManagement() {
                         className="text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52"
                         key={value}
                       >
-                        {columnIndex === 1 ? (
+                        {columnIndex === 2 ? (
                           <TagsBtn
                             type={value === "Public" ? "SUCCESS" : "FAILED"}
                           >
