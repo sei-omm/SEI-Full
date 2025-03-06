@@ -47,7 +47,7 @@ export const downloadHtmlToPdf = async (
 
     // Use html2pdf to generate the PDF
     html2pdf({}).from(element).set(opt).save();
-  } catch (error) {
+  } catch {
     alert("Some Error Happen");
   }
 };
