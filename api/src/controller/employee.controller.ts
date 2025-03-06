@@ -718,7 +718,7 @@ export const getMarketingTeam = asyncErrorHandler(
         LEFT JOIN 
             department d 
             ON e.department_id = d.id
-        WHERE is_active = true AND d.name = 'Sales & Marketing Department' AND e.institute_id = $1
+        WHERE is_active = true AND d.name = 'Sales & Marketing Department' AND e.institute = $1
         ORDER BY 
             e.name;
     `;

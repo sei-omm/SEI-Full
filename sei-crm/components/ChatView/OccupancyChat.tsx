@@ -71,7 +71,7 @@ export default function OccupancyChat({ data }: IProps) {
         labels: occupencyChatLabels, // Labels for the X-axis
         datasets: [
           {
-            label: "Fees Collection After Discount %", // Label for the dataset
+            label: "Fees Collection After Discount", // Label for the dataset
             data: feesChatData, // Data points
             backgroundColor: [
               //   "rgba(255, 99, 132, 0.2)",
