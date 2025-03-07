@@ -172,7 +172,7 @@ export const createAdmissionReport = asyncErrorHandler(
           cb.start_date AS created_at,
           c.course_name,
           cb.batch_fee AS course_batch_fee,
-          cb.batch_fee - (SUM(p.paid_amount) + SUM(p.discount_amount)) as due_amount_for_course,
+          GREATEST((cb.batch_fee - SUM(p.discount_amount)) - SUM(p.paid_amount), 0) as due_amount_for_course,
           c.course_type,
           s.email,
           s.mobile_number,
@@ -953,7 +953,7 @@ export const getBatchReport = asyncErrorHandler(
           cb.start_date,
           cb.batch_fee,
           SUM(p.paid_amount) AS total_paid,
-          (cb.batch_fee - (SUM(p.paid_amount) + SUM(p.discount_amount))) AS total_due,
+          GREATEST(((cb.batch_fee - SUM(p.discount_amount)) - SUM(p.paid_amount)), 0) AS total_due,
           SUM(p.misc_payment) AS total_misc_payment,
           SUM(p.discount_amount) AS discount_amount,
           ff.form_status,
@@ -981,10 +981,10 @@ export const getBatchReport = asyncErrorHandler(
       LEFT JOIN payments AS p
       ON p.batch_id = cb.batch_id AND p.student_id = s.student_id
 
-        WHERE cb.course_id = $1
-              AND cb.start_date = $2
-              AND c.institute = $3
-              AND c.course_type = $4
+      WHERE cb.course_id = $1
+          AND cb.start_date = $2
+          AND c.institute = $3
+          AND c.course_type = $4
                       
         GROUP BY s.name, ebc.form_id, cb.start_date, cb.batch_fee, ff.form_status, s.indos_number, s.mobile_number, s.email
         LIMIT ${LIMIT} OFFSET ${OFFSET};
@@ -1178,7 +1178,8 @@ export const getReceiptReport = asyncErrorHandler(
       `
       SELECT
       s.name,
-      cb.batch_fee - COALESCE(SUM(p.paid_amount) OVER (PARTITION BY cb.batch_id, s.student_id), 0) AS due_amount,
+      -- cb.batch_fee - COALESCE(SUM(p.paid_amount) OVER (PARTITION BY cb.batch_id, s.student_id), 0) AS due_amount,
+      GREATEST((cb.batch_fee - COALESCE(SUM(p.discount_amount) OVER (PARTITION BY cb.batch_id, s.student_id), 0)) - COALESCE(SUM(p.paid_amount) OVER (PARTITION BY cb.batch_id, s.student_id), 0), 0.00) AS due_amount,
       s.indos_number,
       s.mobile_number,
       s.email,
