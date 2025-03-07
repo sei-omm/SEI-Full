@@ -43,7 +43,6 @@ export default function StudentInputForm({
             label="Full Name"
             placeholder="Somnath Gupta *"
             error={errors.name?.message}
-            // defaultValue={student_info?.name}
           />
           <InputNew
             {...register("email")}

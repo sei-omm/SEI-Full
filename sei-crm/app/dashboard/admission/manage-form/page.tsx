@@ -51,6 +51,23 @@ export default function ManageStudentAdmissionForm() {
           month_year: new Date().toISOString().slice(0, 7),
         },
       ],
+      name : "",
+      email : "",
+      mobile_number : "",
+      indos_number : "",
+      permanent_address : "",
+      present_address : "",
+      cdc_num : "",
+      passport_num : "",
+      coc_number : "",
+      cert_of_completency : "",
+      blood_group : "",
+      next_of_kin_name : "",
+      relation_to_sel : "",
+      emergency_number : "",
+      number_of_the_cert : "",
+      issued_by_institute : "",
+      issued_by_institute_indos_number : ""
     },
   });
 
