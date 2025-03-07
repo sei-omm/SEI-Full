@@ -81,7 +81,16 @@ export default function ManageStudentAdmissionForm() {
     cacheTime: 0,
     refetchOnMount: true,
     onSuccess(data) {
-      reset(data.data.course_and_student_info as any);
+      if (data.data.course_and_student_info) {
+        const cleanedData = Object.fromEntries(
+          Object.entries(data.data.course_and_student_info).map(([key, value]) => [
+            key,
+            value ?? "",
+          ])
+        );
+    
+        reset(cleanedData); // Set cleaned data
+      }
     },
   });
 
