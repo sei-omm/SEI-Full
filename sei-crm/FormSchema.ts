@@ -25,24 +25,24 @@ export const studentFormSchema = z.object({
 
   present_address: z.string().min(1, "Present Address Is Required"),
   dob: z.string().min(1, "Date Of Birth Is Required"),
-  cdc_num: z.string().optional(),
-  passport_num: z.string().optional(),
-  coc_number: z.string().optional(),
-  cert_of_completency: z.string().optional(),
+  cdc_num: z.string().optional().nullable().default(""),
+  passport_num: z.string().optional().nullable().default(""),
+  coc_number: z.string().optional().nullable().default(""),
+  cert_of_completency: z.string().optional().nullable().default(""),
   institute: z.string().min(1, "Campus Is Required"),
   password: z.string().min(1, "Password Is Required"),
 
-  blood_group: z.string().optional(),
-  allergic_or_medication: z.string().optional(),
+  blood_group: z.string().optional().nullable().default(""),
+  allergic_or_medication: z.string().optional().nullable().default("No"),
   next_of_kin_name: z.string().min(1, "Next Of Kin Name Is Required"),
   relation_to_sel: z.string().min(1, "Relation to sel Is Required"),
   emergency_number: z
     .string()
     .min(1, "Telephone Contact Nos.in Emergency Is Required"),
 
-  number_of_the_cert: z.string().optional(),
-  issued_by_institute: z.string().optional(),
-  issued_by_institute_indos_number: z.string().optional(),
+  number_of_the_cert: z.string().optional().nullable().default(""),
+  issued_by_institute: z.string().optional().nullable().default(""),
+  issued_by_institute_indos_number: z.string().optional().nullable().default(""),
 
   course_info: z
     .array(

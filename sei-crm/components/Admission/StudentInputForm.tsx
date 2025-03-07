@@ -95,13 +95,13 @@ export default function StudentInputForm({
                 {...register("nationality")}
                 label="Nationality *"
                 options={[
+                  { text: "Indian", value: "Indian" },
                   { text: "Afghan", value: "Afghan" },
                   { text: "Albanian", value: "Albanian" },
                   { text: "Algerian", value: "Algerian" },
                   { text: "American", value: "American" },
                   { text: "Andorran", value: "Andorran" },
                   { text: "Bangladeshi", value: "Bangladeshi" },
-                  { text: "Indian", value: "Indian" },
                 ]}
                 onChange={(option) => {
                   setValue("nationality", option.value);
@@ -223,8 +223,8 @@ export default function StudentInputForm({
                 name="allergic_or_medication"
                 label="Whether allergic to any medication (Y/N)"
                 options={[
-                  { text: "Yes", value: "Yes" },
                   { text: "No", value: "No" },
+                  { text: "Yes", value: "Yes" },
                 ]}
                 onChange={(option) => {
                   setValue("allergic_or_medication", option.value);

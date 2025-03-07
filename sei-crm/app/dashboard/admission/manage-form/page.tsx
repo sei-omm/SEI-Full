@@ -51,6 +51,7 @@ export default function ManageStudentAdmissionForm() {
           month_year: new Date().toISOString().slice(0, 7),
         },
       ],
+      
       name : "",
       email : "",
       mobile_number : "",
