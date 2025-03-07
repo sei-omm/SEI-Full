@@ -10,13 +10,15 @@ interface IProps {
   className?: string;
   preventToClose?: boolean | undefined;
   preventToCloseOnSideClick?: boolean | undefined;
+  withoutDimBackground?:boolean;
 }
 
 export default function DialogBody({
   children,
   className,
   preventToClose = false,
-  preventToCloseOnSideClick = false
+  preventToCloseOnSideClick = false,
+  withoutDimBackground = false
 }: IProps) {
   const dispatch = useDispatch();
 
@@ -38,7 +40,7 @@ export default function DialogBody({
   return (
     <div
       onClick={() => closeDialog("side")}
-      className="size-full flex justify-center items-center"
+      className={`size-full flex justify-center items-center ${withoutDimBackground ? "" : "bg-[#00000063]"}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}

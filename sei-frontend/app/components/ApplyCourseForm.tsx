@@ -107,18 +107,25 @@ export default function ApplyCourseForm({ form_info }: IProps) {
         data: formData,
       });
 
+      setIsSavingForm(false);
+
       if (error) {
-        alert(error.message);
-        return toast.error(error.message);
+        if (error.statusCode === 401 || error.statusCode === 403) {
+          alert("Your session has expired please login again.");
+          dispatch(
+            setDialog({ dialogKey: "student-login-dialog", type: "OPEN" })
+          );
+        }
+        return;
       }
 
       localStorage.setItem(
         "student-form-info",
         JSON.stringify(Object.fromEntries(formData.entries()))
       );
+    } else {
+      setIsSavingForm(false);
     }
-
-    setIsSavingForm(false);
 
     dispatch(
       setDialog({

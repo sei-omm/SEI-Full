@@ -1205,7 +1205,7 @@ export const getReceiptReport = asyncErrorHandler(
       LEFT JOIN courses AS c
       ON c.course_id = p.course_id
       
-      WHERE c.institute = $1 AND DATE(p.created_at) BETWEEN $2 AND $3
+      WHERE c.institute = $1 AND p.payment_type != 'Discount' AND DATE(p.created_at) BETWEEN $2 AND $3
       GROUP BY 
       s.student_id,
       cb.batch_id,

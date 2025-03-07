@@ -43,7 +43,7 @@ export default function SLogin() {
   };
 
   return (
-    <DialogBody preventToCloseOnSideClick>
+    <DialogBody withoutDimBackground preventToCloseOnSideClick>
       <div className="space-y-1">
         <h2 className="font-bold text-gray-700 text-2xl">
           Student <span className="text-[#e9b858]">Login</span>
@@ -96,7 +96,7 @@ export default function SLogin() {
           dialogKey="student-register-dialog"
         >
           <span className="block text-center">
-            New Student <span className="text-blue-600">Register Here</span>
+            New Student <span className="text-red-600 font-semibold underline animate-pulse">Register Here</span>
           </span>
         </OpenDialogButton>
         <OpenDialogButton

@@ -415,10 +415,12 @@ export const verifyPayment = asyncErrorHandler(
       );
 
       // const paymentID = Date.now();
+      
       const paymentID = req.query.payment_id?.toString() || id;
       const receiptNoPrefix = `${
         value.institute === "Kolkata" ? "KOL" : "FDB"
       }/${date.getFullYear()}/`;
+
       batchIds?.forEach((bId, index) => {
         const currentBatchPriceInfo = batchPriceInDb.find(
           (item) => item.batch_id == bId

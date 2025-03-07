@@ -357,21 +357,36 @@ export default function Home() {
 
         {/* Promo Banner Section */}
         <section className="pt-20 overflow-hidden sm:pt-0">
-          <section className="bg-[#EAE7E4] w-full h-72 rounded-2xl p-14 grid grid-cols-2 sm:grid-cols-1 sm:h-auto sm:p-9 sm:pb-0">
-            <div>
-              <h2 data-aos="fade-right" className="text-4xl font-semibold">
+          <section className="bg-[#EAE7E4] w-full h-72 rounded-2xl p-14 grid grid-cols-3 sm:grid-cols-1 sm:h-auto sm:p-9 sm:pb-0">
+            <Image
+              className="w-[28rem] -translate-x-14 object-contain transform-gpu -translate-y-10 sm:translate-y-5 sm:order-3 sm:translate-x-0 sm:w-[30rem]"
+              src={"/images/mascot_female.png"}
+              alt="Mascot Male"
+              height={1280}
+              width={1280}
+            />
+
+            <div className="sm:order-2">
+              <h2
+                data-aos="fade-right"
+                className="text-4xl text-center font-semibold"
+              >
                 Are you Ready to fly &
               </h2>
-              <h3 data-aos="fade-left" className="text-3xl">
+              <h3 data-aos="fade-left" className="text-3xl text-center">
                 Pursue your dream job?
               </h3>
 
-              <p data-aos="fade-up" className="text-gray-500 mt-1">
+              <p data-aos="fade-up" className="text-gray-500 mt-1 text-center">
                 Are you ready to take flight and pursue your dream job? Step
                 forward with confidence, chase your passion, and turn your
                 ambitions into reality!
               </p>
-              <Link data-aos="fade-up" href={"/contact-us"}>
+              <Link
+                className="flex items-center justify-center"
+                data-aos="fade-up"
+                href={"/contact-us"}
+              >
                 <Button
                   varient="light"
                   className="!py-2 !min-w-36 mt-4 hover:!text-black"
@@ -382,15 +397,22 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="flex items-end flex-col pr-14 sm:items-center sm:pr-0">
+            {/* <div className="flex items-end flex-col pr-14 sm:items-center sm:pr-0 relative">
               <Image
-                className="w-[18rem] object-contain transform-gpu -translate-y-36 sm:translate-y-0 sm:translate-x-5"
-                src={"/images/mascot1_new.png"}
-                alt=""
-                height={1200}
-                width={1200}
+                className="w-[28rem] absolute translate-x-10 object-contain transform-gpu -translate-y-36 sm:translate-y-0 sm:translate-x-0 sm:w-[30rem]"
+                src={"/images/mascot_male.png"}
+                alt="Mascot Male"
+                height={1280}
+                width={1280}
               />
-            </div>
+            </div> */}
+            <Image
+              className="w-[28rem] translate-x-14 object-contain transform-gpu -translate-y-36 sm:translate-y-0 sm:order-1 sm:translate-x-0 sm:w-[30rem]"
+              src={"/images/mascot_male.png"}
+              alt="Mascot Male"
+              height={1280}
+              width={1280}
+            />
           </section>
         </section>
 

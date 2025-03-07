@@ -54,6 +54,7 @@ export default function SRegister() {
     <DialogBody
       className="min-w-[40rem] sm:min-w-full"
       preventToCloseOnSideClick
+      withoutDimBackground
     >
       <div className="space-y-1">
         <h2 className="font-bold text-gray-700 text-2xl">
@@ -123,7 +124,7 @@ export default function SRegister() {
       >
         <span className="block text-center mt-2">
           Registered Student
-          <span className="text-blue-600"> Login Here</span>
+          <span className="text-red-600 animate-pulse underline font-semibold"> Login Here</span>
         </span>
       </OpenDialogButton>
     </DialogBody>

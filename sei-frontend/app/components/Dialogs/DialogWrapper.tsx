@@ -33,7 +33,7 @@ export default function DialogWrapper() {
 
   return (
     <div
-      className={`h-screen w-screen fixed z-[999] bg-[#00000063] ${
+      className={`h-screen w-screen fixed z-[999] ${
         type === "OPEN" ? "block" : "hidden"
       }`}
     >
