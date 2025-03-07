@@ -13,7 +13,7 @@ import { IoLogoTwitter } from "react-icons/io5";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-foreground text-background mt-10 pt-9">
+    <footer className="w-full bg-[#384A5A] text-background mt-10 pt-9">
       <div className="main-layout grid grid-cols-3 gap-10 sm:grid-cols-1">
         <div className="space-y-5">
           <div className="flex items-start gap-x-3">
@@ -185,7 +185,9 @@ export default function Footer() {
         </Link>
       </div>
 
-      <div className="bg-black mt-4">
+   {/* bg-[#7c7c62a9]  */}
+   {/* bg-[#7c7c62a9] */}
+      <div className="bg-[#2c455a] mt-4">
         <div className="flex items-center flex-wrap gap-y-3 justify-between main-layout py-2 text-sm sm:justify-center">
           <span>© 2019 SEI Education Trust. All Rights Reserved.</span>
 

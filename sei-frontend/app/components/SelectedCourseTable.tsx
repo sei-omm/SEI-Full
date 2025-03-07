@@ -34,15 +34,16 @@ export default function SelectedCourseTable() {
   const pathname = usePathname();
 
   const [tableDatas, setTableDatas] = useState<TTable>({
-    head: ["Course Name", "Batch Date", "Price", "Action"],
+    head: ["SI No", "Course Name", "Batch Start Date", "Batch End Date", "Price", "Action"],
     body: [],
   });
 
   useEffect(() => {
     if (cartData) {
       setTableDatas({
-        head: ["Course Name", "Batch Date", "Price", "Action"],
-        body: cartData?.data.map((item) => [
+        head: ["SI No", "Course Name", "Batch Start Date", "Batch End Date", "Price", "Action"],
+        body: cartData?.data.map((item, index) => [
+          index + 1,
           item.course_name || "",
           item.start_date,
           item.end_date,
@@ -52,7 +53,7 @@ export default function SelectedCourseTable() {
       });
     } else {
       setTableDatas({
-        head: ["Course Name", "Batch Date", "Price", "Action"],
+        head: ["SI No", "Course Name", "Batch Start Date", "Batch End Date", "Price", "Action"],
         body: [],
       });
     }
@@ -104,7 +105,7 @@ export default function SelectedCourseTable() {
                     size={20}
                     className="cursor-pointer active:scale-90"
                   />
-                ) : columnIndex === 1 || columnIndex === 2 ? (
+                ) : columnIndex === 2 || columnIndex === 3 ? (
                   formateDate(value.toString())
                 ) : (
                   value

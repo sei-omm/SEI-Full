@@ -17,7 +17,6 @@ import axios from "axios";
 import { FaLongArrowAltDown } from "react-icons/fa";
 import { setDialog } from "../redux/slice/dialog.slice";
 import { axiosQuery } from "../utils/axiosQuery";
-import { toast } from "react-toastify";
 import { getAuthToken } from "../utils/getAuthToken";
 import { useSearchParams } from "next/navigation";
 import { queryClient } from "../redux/MyProvider";

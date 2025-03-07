@@ -6,7 +6,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/redux/store";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 import { BASE_API } from "@/app/constant";
-import { EnrollCourseType, IResponse, RazorpaySuccesshandlerTypes } from "@/app/type";
+import {
+  EnrollCourseType,
+  IResponse,
+  RazorpaySuccesshandlerTypes,
+} from "@/app/type";
 import { axiosQuery } from "@/app/utils/axiosQuery";
 import { useRazorpay } from "react-razorpay";
 import { toast } from "react-toastify";
@@ -16,10 +20,9 @@ import {
   setLocalLoginInfo,
 } from "@/app/utils/getLocalLoginInfo";
 
-
 export default function ProcessPaymentDialog() {
   const { extraValue } = useSelector((state: RootState) => state.dialog);
-  const [paymentModeIndex, setPaymentModeIndex] = useState(0);
+  const [paymentModeIndex, setPaymentModeIndex] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
   const { Razorpay } = useRazorpay();
@@ -154,16 +157,16 @@ export default function ProcessPaymentDialog() {
         <h2>Payment Mode : </h2>
 
         <RadioInput
-          onClick={() => setPaymentModeIndex(0)}
-          className="!text-sm"
-          label="Part Payment"
-          checked={paymentModeIndex === 0 ? true : false}
-        />
-        <RadioInput
           onClick={() => setPaymentModeIndex(1)}
           className="!text-sm"
           label="Full Payment"
           checked={paymentModeIndex === 1 ? true : false}
+        />
+        <RadioInput
+          onClick={() => setPaymentModeIndex(0)}
+          className="!text-sm"
+          label="Part Payment"
+          checked={paymentModeIndex === 0 ? true : false}
         />
       </div>
 
@@ -209,10 +212,13 @@ export default function ProcessPaymentDialog() {
             {paymentModeIndex === 0
               ? extraValue.minToPay
               : extraValue.totalPrice}
-          </span>{" "}
-          To Enroll
+          </span>
         </span>
       </Button>
+
+      <p className="text-center text-red-600">
+        Note : Please Pay by normal account only, don't pay from NRE account
+      </p>
     </DialogBody>
   );
 }
