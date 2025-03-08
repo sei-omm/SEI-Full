@@ -14,7 +14,6 @@ import { ISuccess } from "@/types";
 import HandleSuspence from "../HandleSuspence";
 import { RootState } from "@/redux/store";
 import { LuRefreshCcw } from "react-icons/lu";
-// import { getAuthToken } from "@/app/utils/getAuthToken";
 import { useRouter } from "next/navigation";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 
@@ -46,20 +45,15 @@ export default function GeneratePaymentLinkDialog() {
         await axios.post(
           `${BASE_API}/course/enroll?batch_ids=${extraValue?.batch_ids}&student_id=${extraValue?.student_id}`,
           {
-            payment_mode: extraValue?.payment_type, //put anything here
+            payment_mode: extraValue?.payment_type,
           },
-          // {
-          //   headers: {
-          //     ...getAuthToken(),
-          //   },
-          // }
         )
       ).data,
     onSuccess(data) {
       setPaymentLink(
         process.env.NEXT_PUBLIC_FRONTEND_BASE +
           "/payment/" +
-          data?.data.token_key
+          data?.data.token_key + "?verify_type=payment-link"
       );
     },
   });

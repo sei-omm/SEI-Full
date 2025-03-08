@@ -29,7 +29,7 @@ export default function PayDueAmountBtn({ batch_id, due_amount }: IProps) {
     res: RazorpaySuccesshandlerTypes
   ) => {
     const { response, error } = await axiosQuery<IResponse, IResponse>({
-      url: `${BASE_API}/payment/verify-due-online-payment?order_id=${res.razorpay_order_id}&batch_id=${batch_id}`,
+      url: `${BASE_API}/payment/verify-due-online-payment?order_id=${res.razorpay_order_id}&batch_id=${batch_id}&payment_id=${res.razorpay_payment_id}`,
       method: "get",
       headers: {
         "Content-Type": "application/json",

@@ -238,6 +238,7 @@ export interface ICourse extends ICourseWithSubject {
   max_batch: number;
   concern_marketing_executive_id: number;
   batches?: TBatches[];
+  category : string;
 }
 
 export type DropDownOptionType = {

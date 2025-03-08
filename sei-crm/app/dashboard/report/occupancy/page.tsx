@@ -138,6 +138,29 @@ export default function OccupancyReport() {
         />
       </div>
 
+      {/* Total Occupancy Info  */}
+      {/* <ul className="flex items-center justify-center gap-4 flex-wrap">
+        <li className="card-shdow flex items-center gap-4 p-3">
+          <BiCollection />
+          <span className="font-semibold">
+            Total Occupency : <span className="font-normal">30</span>
+          </span>
+        </li>
+        <li className="card-shdow flex items-center gap-4 p-3">
+          <BiCollection />
+          <span className="font-semibold">
+            Total Fee Collection : <span className="font-normal">30</span>
+          </span>
+        </li>
+        <li className="card-shdow flex items-center gap-4 p-3">
+          <BiCollection />
+          <span className="font-semibold">
+            Total Fee Collection After Discount :{" "}
+            <span className="font-normal">30</span>
+          </span>
+        </li>
+      </ul> */}
+
       <HandleSuspence
         isLoading={isFetching}
         error={error}
@@ -150,7 +173,9 @@ export default function OccupancyReport() {
                 <tr>
                   {tableDatas.heads.map((item, index) => (
                     <th
-                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${stickyFirstCol(index)}`}
+                      className={`text-left text-[14px] font-semibold pb-2 px-5 py-4 ${stickyFirstCol(
+                        index
+                      )}`}
                       key={item}
                     >
                       {item}
@@ -167,7 +192,9 @@ export default function OccupancyReport() {
                   >
                     {itemArray.map((value, colIndex) => (
                       <td
-                        className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${stickyFirstCol(colIndex)}`}
+                        className={`text-left text-[14px] py-3 px-5 space-x-3 relative max-w-52 ${stickyFirstCol(
+                          colIndex
+                        )}`}
                         key={value}
                       >
                         {value?.includes("@") ? (

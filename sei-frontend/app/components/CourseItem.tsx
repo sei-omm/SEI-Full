@@ -35,9 +35,14 @@ export default function CourseItem({
             </span>
           </div>
 
-          <h2 className="font-semibold text-gray-700 text-xl line-clamp-2 max-w-[80%] sm:max-w-full sm:w-full">
-            {course.course_name}
-          </h2>
+          <span>
+            <span className="float-left mr-2 mt-[2.3px]">
+              {course.course_showing_order})
+            </span>
+            <h2 className="font-semibold inline text-gray-700 text-xl line-clamp-2 max-w-[80%] sm:max-w-full sm:w-full">
+              {course.course_name}
+            </h2>
+          </span>
 
           <div className="mt-2 space-y-2">
             <h2 className="font-medium">Required Documents : </h2>

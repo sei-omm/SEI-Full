@@ -1285,6 +1285,22 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 
 UPDATE employee SET employee_role = 'Super Admin', authority = 'SUPER ADMIN' WHERE name = 'Management';
 INSERT INTO employee (name, joining_date, department_id, fin_number, indos_number, cdc_number, grade, qualification, additional_qualification, selling_experience, teaching_experience, contact_number, email_address, living_address, dob, gender, marital_status, bank_name, bank_account_no, account_holder_name, ifsc_code, profile_image, basic_salary, hra, other_allowances, provident_fund, professional_tax, esic, income_tax, is_active, login_email, login_password, max_teaching_hrs_per_week, institute, employee_role, employee_type, faculty_attendance_type, designation, gratuity, permanent_address, emergency_contact_number, contact_person_name, contact_person_relation, payscale_label, payscale_year, next_to_kin, relation_to_self, faculty_current_working_hours, authority) VALUES ('Management', '2025-02-28', '5', '0', '0', '0', NULL, NULL, NULL, NULL, NULL, '9382413005', 'testinggup@gmail.com', 'Sahapur, Asanpur, Purba Bardhaman', '2000-07-17', 'Male', 'Un-Married', 'SBI', '8.45785E+11', 'Somnath Gupta', '12345678945', 'https://wgli5hygbpaa0ifp.public.blob.vercel-storage.com/employee-profile/super_admin-BzvbRCgShn2AOfBmSZcODlwdF6hMSJ.jpg', '1400', '100', '0', '0', '0', '0', '0', 'TRUE', 'SEI28022501K', '$2b$10$p7qA5a.zRiJl5.kFmlnp3umyvC1QGiLeLLDDfqVsEZoOKAX0t3q3a', NULL, 'Kolkata', 'Super Admin', 'Office Staff', 'Regular', NULL, '0', 'Test Present Address', '8457845784', 'Testing Gupta', '', 'Payscale 2', '1925', '', '', '0', 'SUPER ADMIN');
+
+-- NEW DATABASE 07 Mar 2025
+ALTER TABLE courses
+ADD COLUMN category VARCHAR(255) DEFAULT '';
+
+DROP SEQUENCE IF EXISTS receipt_no_seq CASCADE;
+ALTER TABLE payments DROP COLUMN IF EXISTS receipt_no;
+
+CREATE SEQUENCE receipt_no_seq START 1;
+ALTER TABLE payments ADD COLUMN receipt_no TEXT;
+
+UPDATE payments SET receipt_no = 'KOL/2024/' || nextval('receipt_no_seq');
+
+ALTER TABLE students DROP CONSTRAINT unique_email;
+ALTER TABLE students ADD CONSTRAINT unique_mobile UNIQUE (mobile_number);
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

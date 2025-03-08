@@ -201,7 +201,7 @@ export const getCoursesWithBatch = asyncErrorHandler(async (req, res) => {
           ${validFields.length === 0 ? "c.*" : `c.${validFields.join(", c.")}`},
           COALESCE(
               json_agg(
-                  b.* ORDER BY b.start_date DESC
+                  b.* ORDER BY b.start_date ASC
               ) FILTER (WHERE b.batch_id IS NOT NULL AND b.start_date >= CURRENT_DATE), '[]'
           ) AS batches
       FROM 
@@ -235,7 +235,7 @@ export const getCourseWithBatchStudents = asyncErrorHandler(
             c.*,
             COALESCE(
                 json_agg(
-                    b.* ORDER BY b.start_date DESC
+                    b.* ORDER BY b.start_date ASC
                 ) FILTER (WHERE b.batch_id IS NOT NULL AND b.start_date >= CURRENT_DATE), '[]'
             ) AS batches
         FROM 
@@ -734,11 +734,14 @@ export const enrollToBatch = asyncErrorHandler(
     });
     if (error) throw new ErrorHandler(400, error.message);
 
-    const batchIds = req.query.batch_ids?.toString().split(","); //it should be an array of course ids
+    const batchIds = req.query.batch_ids?.toString().split(","); //it should be an array of batch ids
     delete req.body.batch_ids;
 
     const payment_type = req.body.payment_mode;
     delete req.body.payment_mode;
+
+    // why this because when form crm we need to create payment link for student at that time we will send student id in query else form portal it will come throung auth header
+    const studentID = res.locals.student_id || req.query.student_id;
 
     //get the amount of the course
     const paramsSql = batchIds?.map((_, index) => `$${index + 1}`);
@@ -789,14 +792,24 @@ export const enrollToBatch = asyncErrorHandler(
     const { rows, rowCount } = await pool.query(
       `
         SELECT
-          course_id,
-          start_date,
-          end_date,
-          SUM(batch_fee) AS total_price,
-          CAST(SUM(batch_fee * (min_pay_percentage / 100.0)) AS INT) AS minimum_to_pay
-        FROM course_batches WHERE batch_id IN (${paramsSql})
+            c.course_id,
+            cb.start_date,
+            cb.end_date,
+            CASE 
+                WHEN MIN(cb.batch_total_seats) <= MIN(cb.batch_reserved_seats) THEN true 
+                ELSE false 
+            END AS is_waiting_list,
+            SUM(cb.batch_fee) AS total_price,
+            CAST(SUM(cb.batch_fee * (cb.min_pay_percentage / 100.0)) AS INT) AS minimum_to_pay,
+            c.institute
+        FROM course_batches cb
 
-        GROUP BY course_id, start_date, end_date
+        LEFT JOIN courses AS c
+        ON c.course_id = cb.course_id
+
+        WHERE cb.batch_id IN (${paramsSql})
+        GROUP BY c.course_id, cb.start_date, cb.end_date;
+
         `,
       batchIds
     );
@@ -814,16 +827,20 @@ export const enrollToBatch = asyncErrorHandler(
       course_ids: "",
       total_price: 0,
       minimum_to_pay: 0,
+      is_in_waiting_list : "",
+      institutes : ""
     };
 
     rows.forEach((item, index) => {
-      tokenInfo.course_ids += index === 0 ? "" : "," + item.course_id;
+      tokenInfo.course_ids += index === 0 ? item.course_id : "," + item.course_id;
       tokenInfo.total_price += parseFloat(item.total_price);
       tokenInfo.minimum_to_pay += parseFloat(item.minimum_to_pay);
+      tokenInfo.is_in_waiting_list += index === 0 ? item.is_waiting_list : "," + item.is_waiting_list;
+      tokenInfo.institutes += index === 0 ? item.institute : "," + item.institute;
     });
 
     //create new order and send back to client side
-    const { id, amount } = await createOrder(
+    const { id } = await createOrder(
       payment_type === "Part-Payment"
         ? tokenInfo.minimum_to_pay * 100
         : tokenInfo.total_price * 100
@@ -833,7 +850,7 @@ export const enrollToBatch = asyncErrorHandler(
       {
         ...tokenInfo,
         batch_ids: req.query.batch_ids,
-        student_id: req.query.student_id, //it could undefined
+        student_id: studentID,
         payment_type,
         order_id: id,
       },
@@ -842,9 +859,9 @@ export const enrollToBatch = asyncErrorHandler(
 
     res.status(201).json(
       new ApiResponse(201, "Order id has created", {
-        order_id: id,
-        amount,
-        razorpay_key: process.env.RAZORPAY_KEY_ID,
+        // order_id: id,
+        // amount,
+        // razorpay_key: process.env.RAZORPAY_KEY_ID,
         token_key,
       })
     );
@@ -858,7 +875,8 @@ export const getMultipleBatchWithId = asyncErrorHandler(
     const { rows } = await pool.query(
       `SELECT 
         cb.*,
-        c.course_name
+        c.course_name,
+        c.course_showing_order
        FROM course_batches cb
         LEFT JOIN courses c
         ON c.course_id = cb.course_id
@@ -889,7 +907,8 @@ export const getCourseBatch = asyncErrorHandler(
           END AS visibility
       FROM course_batches 
       WHERE course_id = $1 
-      ORDER BY created_at DESC
+      -- ORDER BY created_at DESC
+      ORDER BY start_date ASC
       LIMIT ${LIMIT} OFFSET ${OFFSET}
     `,
       [req.params.course_id]

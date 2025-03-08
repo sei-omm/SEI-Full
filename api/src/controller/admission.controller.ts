@@ -182,6 +182,7 @@ export const createAdmission = asyncErrorHandler(async (req, res) => {
   const client = await pool.connect();
 
   const { error: tryError, data } = await tryCatch(async () => {
+
     await client.query("BEGIN");
 
     const newHashedPassword = await bcrypt.hash(value.password, 10);
@@ -193,9 +194,9 @@ export const createAdmission = asyncErrorHandler(async (req, res) => {
       (name, email, mobile_number, rank, indos_number, nationality, permanent_address, present_address, dob, cdc_num, passport_num, coc_number, cert_of_completency, blood_group, allergic_or_medication, next_of_kin_name, relation_to_sel, emergency_number, number_of_the_cert, issued_by_institute, issued_by_institute_indos_number, institute, password)
     VALUES
       ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
-    ON CONFLICT (email) 
+    ON CONFLICT (mobile_number) 
     DO UPDATE SET
-     email = EXCLUDED.email
+     mobile_number = EXCLUDED.mobile_number
      WHERE FALSE -- Prevents any actual updates
     RETURNING student_id
     `,
@@ -226,7 +227,7 @@ export const createAdmission = asyncErrorHandler(async (req, res) => {
       ]
     );
     if (rowCount === 0) {
-      throw new ErrorHandler(400, "Student Email Already Exist", "email");
+      throw new ErrorHandler(400, "Student Mobile Number Already Exist Please Try Another One", "mobile_number");
     }
 
     const student_id = studentInfo[0].student_id;
@@ -275,8 +276,8 @@ export const createAdmission = asyncErrorHandler(async (req, res) => {
   if (tryError) {
     await client.query("ROLLBACK");
     client.release();
-    if (tryError.message === "Student Email Already Exist") {
-      throw new ErrorHandler(400, tryError.message, "email");
+    if (tryError.message === "Student Mobile Number Already Exist Please Try Another One") {
+      throw new ErrorHandler(400, tryError.message, "mobile_number");
     }
 
     throw new ErrorHandler(500, "Internal Server Error");

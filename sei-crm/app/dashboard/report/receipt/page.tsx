@@ -2,9 +2,8 @@
 
 import { BASE_API } from "@/app/constant";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
-import Button from "@/components/Button";
 import DateDurationFilter from "@/components/DateDurationFilter";
-import DownloadFormUrl from "@/components/DownloadFormUrl";
+import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
 import { IError, ISuccess } from "@/types";
@@ -12,7 +11,6 @@ import axios, { AxiosError } from "axios";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { useState } from "react";
-import { LuFileSpreadsheet } from "react-icons/lu";
 import { useQuery } from "react-query";
 
 export default function ReceiptReport() {
@@ -33,12 +31,13 @@ export default function ReceiptReport() {
       "AMOUNT PAID",
       "PAYMENT ID",
       "PAYMENT REMARK",
+      "BANK TRANSACTION ID",
       "MISC PAID AMOUNT",
       "MISC REMARK",
       "RECEIPT NUMBER",
+      "RECEIPT DATE",
       "DISCOUNT AMOUNT",
       "DISCOUNT REMARK",
-      "BANK TRANSACTION ID"
     ],
     body: [],
   });
@@ -81,17 +80,10 @@ export default function ReceiptReport() {
     <div className="space-y-10">
       <DateDurationFilter />
       <div className="flex items-center justify-end">
-        <DownloadFormUrl
-          className={tableDatas.body.length !== 0 ? "block" : "hidden"}
-          urlToDownload={
-            BASE_API + `/report/receipt/excel?${searchParams.toString()}`
-          }
-        >
-          <Button type="button" className="!bg-[#34A853] flex-center gap-4">
-            <LuFileSpreadsheet size={20} />
-            Generate Excel Sheet
-          </Button>
-        </DownloadFormUrl>
+        <GenarateExcelReportBtn
+          apiPath={`/report/receipt/excel?${searchParams.toString()}`}
+          hidden = {report?.data.length === 0}
+        />
       </div>
 
       <HandleSuspence

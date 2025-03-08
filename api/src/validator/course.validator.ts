@@ -34,6 +34,7 @@ export const addNewCourseValidator = Joi.object({
     .required()
     .label("Concern Marketing Executive"),
   max_batch: Joi.number().required().label("Maximum Batch / Month"),
+  category : Joi.string().required(),
 });
 
 export const getSingleCourseValidator = Joi.object({
@@ -74,6 +75,7 @@ export const updateCourseValidator = Joi.object({
   course_showing_order: Joi.number().optional().min(1),
   concern_marketing_executive_id: Joi.number().required(),
   max_batch: Joi.number().required(),
+  category : Joi.string().required(),
 });
 
 export const fillUpCourseFormValidator = Joi.object({

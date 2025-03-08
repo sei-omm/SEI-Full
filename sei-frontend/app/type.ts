@@ -21,6 +21,7 @@ export type TCourseBatches = {
   end_date: string;
   visibility: string;
   min_pay_percentage: number;
+  course_showing_order: number;
 };
 
 export type CourseType = {
@@ -44,6 +45,7 @@ export type CourseType = {
   enrolled_batch_id: number;
   due_amount: number;
   batches: TCourseBatches[];
+  course_showing_order: number;
 };
 
 export type TMultipleCoursePrice = {
@@ -140,5 +142,15 @@ export type EnrollCourseType = {
   order_id: number;
   amount: number;
   razorpay_key: number;
-  tokenKey?: string;
+  // tokenKey?: string;
+  token_key: string;
 };
+
+export type TCourseCategory =
+  | "all"
+  | "competency-courses"
+  | "simulator-courses"
+  | "advanced-modular-courses"
+  | "basic-modular-courses"
+  | "refresher-courses"
+  | "packaged-courses";

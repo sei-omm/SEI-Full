@@ -36,6 +36,7 @@ const formSchema = z.object({
   course_name: z.string().min(1, "Course Name Is Required"),
   institute: z.string().min(1, "Institute Is Required"),
   course_type: z.string().min(1, "Course Type Is Required"),
+  category: z.string().min(1, "Choose Course Category"),
   require_documents: z.string().min(1, "Course Documents Is Required"),
   subjects: z.string().min(1, "Subject Is Required"),
   course_duration: z.string().min(1, "Course Duration Is Required"),
@@ -116,7 +117,13 @@ export default function CourseForm({ slug }: IProps) {
     {
       queryKey: ["get-marketing-team", watch("institute")],
       queryFn: async () =>
-        (await axios.get(BASE_API + "/employee/marketing-team?institute=" + watch("institute") || "Kolkata")).data,
+        (
+          await axios.get(
+            BASE_API +
+              "/employee/marketing-team?institute=" +
+              watch("institute") || "Kolkata"
+          )
+        ).data,
       refetchOnMount: true,
     },
     {
@@ -126,7 +133,15 @@ export default function CourseForm({ slug }: IProps) {
       enabled: !isNewCourse,
       onSettled(data: any) {
         const finalData = data as ISuccess<ICourse>;
-        reset(finalData.data);
+
+        const cleanedData = Object.fromEntries(
+          Object.entries(finalData.data).map(([key, value]) => [
+            key,
+            value ?? "",
+          ])
+        );
+
+        reset(cleanedData); // Set cleaned data
       },
     },
   ]);
@@ -227,6 +242,38 @@ export default function CourseForm({ slug }: IProps) {
                   clearErrors("course_type");
                 }}
                 error={errors.course_type?.message}
+                defaultValue={field.value}
+              />
+            )}
+          />
+
+          <Controller
+            name="category"
+            control={control}
+            render={({ field }) => (
+              <DropDownNew
+                {...register("category")}
+                key="category"
+                label="Category *"
+                options={[
+                  { text: "COMPETENCY COURSES", value: "competency-courses" },
+                  { text: "SIMULATOR COURSES", value: "simulator-courses" },
+                  {
+                    text: "ADVANCED MODULAR COURSES",
+                    value: "advanced-modular-courses",
+                  },
+                  {
+                    text: "BASIC MODULAR COURSES",
+                    value: "basic-modular-courses",
+                  },
+                  { text: "REFRESHER COURSES", value: "refresher-courses" },
+                  { text: "PACKAGED COURSES", value: "packaged-courses" },
+                ]}
+                onChange={(option) => {
+                  setValue("category", option.value);
+                  clearErrors("category");
+                }}
+                error={errors.category?.message}
                 defaultValue={field.value}
               />
             )}

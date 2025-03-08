@@ -14,6 +14,8 @@ interface IProps {
   razorpay_key: string;
   order_id: string;
   token: string;
+  verifyRoute : string;
+  verify_type : string;
 }
 
 export type RazorpaySuccesshandlerTypes = {
@@ -22,7 +24,7 @@ export type RazorpaySuccesshandlerTypes = {
   razorpay_payment_id: string;
 };
 
-export default function Pay({ amount, razorpay_key, order_id, token }: IProps) {
+export default function Pay({ amount, razorpay_key, order_id, token, verifyRoute, verify_type }: IProps) {
   const { Razorpay } = useRazorpay();
   const [isLoading, setIsLoading] = useState(true);
   const route = useRouter();
@@ -31,14 +33,15 @@ export default function Pay({ amount, razorpay_key, order_id, token }: IProps) {
     rezorpayInof: RazorpaySuccesshandlerTypes
   ) => {
     const { error, response } = await axiosQuery<IResponse, IResponse>({
-      url: `${BASE_API}/payment/verify-payment`,
+      url: `${BASE_API}${verifyRoute}`,
       method: "post",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       data: {
         token,
         payment_id: rezorpayInof.razorpay_payment_id,
+        verify_type
       },
     });
 

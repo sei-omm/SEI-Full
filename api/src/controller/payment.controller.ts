@@ -22,6 +22,11 @@ import { distributeAmountEfficiently } from "../utils/distributeAmountEfficientl
 import { parsePagination } from "../utils/parsePagination";
 import { verifyToken } from "../utils/token";
 import { sendEmail } from "../utils/sendEmail";
+import { TEnrollCourseData } from "../types";
+import {
+  verifyPayment,
+  verifyPaymentLinkPayment,
+} from "../service/payment.service";
 
 const date = new Date();
 
@@ -329,188 +334,27 @@ export const test = asyncErrorHandler(async (req: Request, res: Response) => {
 //   }
 // );
 
-export const verifyPayment = asyncErrorHandler(
-  async (req: Request, res: Response) => {
-    const { error, value } = verifyPaymentValidator.validate(req.query);
-    if (error) throw new ErrorHandler(400, error.message);
+export const verify = asyncErrorHandler(async (req: Request, res: Response) => {
+  const { error, value } = verifyPaymentValidator.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
 
-    //get order details form request
-    const orderId = value.order_id as string;
-    const batchIds = value.batch_ids.toString().split(",") as string[];
-    const courseIds = value.course_ids.toString().split(",") as string[];
-    const isInWaitingListArray = value.is_in_waiting_list
-      .toString()
-      .split(",") as string[];
-    // const institutes = value.institutes.toString().split(",") as string[]
-    const studentId = res.locals.student_id;
-
-    // verify the payment
-    const { amount, status, id } = await fetchAnOrderInfo(orderId);
-    const isPaymentSuccess = status === "paid";
-
-    if (!isPaymentSuccess)
-      throw new ErrorHandler(400, "Payment has not done yet");
-
-    //get the batch_ids payment info form db for security
-    const paramsSql = batchIds?.map((_, index) => `$${index + 1}`);
-    const { rows: batchPriceInDb, rowCount } = await pool.query(
-      `SELECT
-          course_id,
-          batch_id,
-          batch_fee AS total_price,
-          CAST(batch_fee * (min_pay_percentage / 100.0) AS INT) AS minimum_to_pay
-       FROM course_batches WHERE batch_id IN (${paramsSql})`,
-      batchIds
-    );
-
-    if (rowCount === 0) throw new ErrorHandler(400, "No Batch Avilable");
-
-    let totalPrice = 0;
-    let totalMinToPay = 0;
-    batchPriceInDb.forEach((item) => {
-      totalPrice += parseInt(item.total_price);
-      totalMinToPay += parseInt(item.minimum_to_pay);
-    });
-
-    const convartPaidAmount = parseInt(amount.toString()) / 100;
-
-    // now verify the user paid amount and calcluted price are same or not
-    if (convartPaidAmount != totalPrice && convartPaidAmount != totalMinToPay) {
-      throw new ErrorHandler(400, "Your paid amount are not same");
-    }
-
-    const paymentType =
-      convartPaidAmount === totalPrice ? "Full-Payment" : "Part-Payment";
-
-    /*
-      now after verification completed store some info to deffrent table in database
-      ** We need to store multiple batches info
-      1) fillup_forms //single row will created althoug if multiple course or batches enroll
-      2) enrolled_batches_courses //multiple row will created if multiple batches or course enroll
-      3) payments //multiple row will created if multiple batches or course enroll
-
-      and also than increse the batch_reserved_seats + 1;
-    */
-
-    const rows_of_enrolled_batches: string[] = [];
-    const payments_values: (string | number)[] = [];
-
-    const client = await pool.connect();
-    const { error: transactionError, data } = await tryCatch<
-      { batch_id: number; start_date: string }[]
-    >(async () => {
-      await client.query("BEGIN");
-
-      // store data to fillup_forms (single row will created althoug if multiple course or batches enroll)
-      const customFormIdPrefix = `${
-        value.institute === "Kolkata" ? "KOL" : "FDB"
-      }/FORM/${date.getFullYear()}/`;
-      const { rows } = await client.query(
-        `
-          INSERT INTO fillup_forms (form_id, student_id, form_status)
-          VALUES ($1 || nextval('fillup_form_seq_id')::TEXT, $2, $3)
-          RETURNING form_id
-        `,
-        [customFormIdPrefix, studentId, "Pending"]
-      );
-
-      // const paymentID = Date.now();
-      
-      const paymentID = req.query.payment_id?.toString() || id;
-      const receiptNoPrefix = `${
-        value.institute === "Kolkata" ? "KOL" : "FDB"
-      }/${date.getFullYear()}/`;
-
-      batchIds?.forEach((bId, index) => {
-        const currentBatchPriceInfo = batchPriceInDb.find(
-          (item) => item.batch_id == bId
-        );
-        if (!currentBatchPriceInfo)
-          throw new ErrorHandler(400, "Batch Mismatch");
-
-        rows_of_enrolled_batches.push(
-          courseIds[index],
-          bId,
-          studentId,
-          rows[0].form_id,
-          orderId,
-          isInWaitingListArray[index] == "true" ? "Pending" : "Pending" //old data was "Approve"
-        );
-
-        payments_values.push(
-          studentId,
-          paymentType === "Part-Payment"
-            ? currentBatchPriceInfo.minimum_to_pay
-            : currentBatchPriceInfo.total_price,
-          paymentID,
-          "Online Payment Form Website",
-          "Online",
-          orderId,
-          0,
-          "",
-          courseIds[index],
-          rows[0].form_id,
-          bId,
-          paymentType,
-          receiptNoPrefix
-        );
-      });
-
-      //store data to enrolled_batches_courses (multiple row will created if multiple batches or course enroll)
-      await client.query(
-        `INSERT INTO enrolled_batches_courses (course_id, batch_id, student_id, form_id, order_id, enrollment_status) 
-         VALUES ${sqlPlaceholderCreator(6, batchIds.length).placeholder}`,
-        rows_of_enrolled_batches
-      );
-
-      //store data to payments table multiple row will created if multiple batches or course enroll
-      // payments_values[9] = rows[0].form_id;
-      await client.query(
-        `
-        INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, form_id, batch_id, payment_type, receipt_no)
-        VALUES ${
-          sqlPlaceholderCreator(13, batchIds.length, {
-            placeHolderNumber: 13,
-            value: " || nextval('receipt_no_seq')::TEXT",
-          }).placeholder
-        }
-        `,
-        payments_values
-      );
-
-      //increse the total batch_reserved_seats as +1 for every batches user enrolled
-      const { rows: course_batch_info } = await client.query(
-        `
-        UPDATE course_batches
-        SET batch_reserved_seats = batch_reserved_seats + 1
-        WHERE batch_id IN (${batchIds?.map((_, index) => `$${index + 1}`)})
-        RETURNING batch_id, start_date
-        `,
-        batchIds
-      );
-
-      await client.query("COMMIT");
-      client.release();
-      return course_batch_info;
-    });
-
-    if (transactionError !== null) {
-      await client.query("ROLLBACK");
-      client.release();
-      throw transactionError;
-    }
-
-    res
-      .status(200)
-      .json(
-        new ApiResponse(201, "Payment & Course Enrollment Successful", data)
-      );
+  if (value.verify_type === "normal") {
+    await verifyPayment(value.token, value.payment_id);
+  } else if (value.verify_type === "due") {
+    //didnt add due to short time
+  } else {
+    await verifyPaymentLinkPayment(value.token, value.payment_id);
   }
-);
+
+  res.status(200).json(new ApiResponse(201, "Payment Successfully Completed"));
+});
 
 export const payDueAmount = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { error, value } = payDueAmountValidator.validate({...req.body, student_id : res.locals.student_id});
+    const { error, value } = payDueAmountValidator.validate({
+      ...req.body,
+      student_id: res.locals.student_id,
+    });
     if (error) throw new ErrorHandler(400, error.message);
 
     const { rows, rowCount } = await pool.query(
@@ -558,7 +402,7 @@ export const verifyOnlineDuePayment = asyncErrorHandler(
 
     // const { rows } = await pool.query(
     //   `
-    //   SELECT 
+    //   SELECT
     //   COALESCE(cb.batch_fee - SUM(p.paid_amount), 0.00) AS due_amount,
     //   c.institute,
     //   cb.course_id,
@@ -614,7 +458,7 @@ export const verifyOnlineDuePayment = asyncErrorHandler(
     const valuesToStore = [
       studentId,
       convartPaidAmount,
-      id,
+      value.payment_id || id,
       "Student Paid Due Amount",
       "Online",
       value.order_id,
@@ -872,7 +716,7 @@ export const initiateRefund = asyncErrorHandler(
           value.refund_id || "",
           value.mode,
           Date.now(),
-          value.bank_transaction_id
+          value.bank_transaction_id,
         ],
       },
 
@@ -1031,162 +875,11 @@ export const servePaymentPage = asyncErrorHandler(async (req, res) => {
   });
 });
 
-type PaymentDetails = {
-  course_ids: string; // Comma-separated string of course IDs
-  total_price: string; // Total price as a string
-  minimum_to_pay: number; // Minimum amount to pay as a number
-  batch_ids: string; // Comma-separated string of batch IDs
-  student_id: string; // Student ID as a string
-  payment_type: string; // Payment type as a string
-  order_id: string;
-};
-
-export const verifyPaymentForPaymentLink = asyncErrorHandler(
-  async (req, res) => {
-    const token = req.body.token;
-    const razorpay_payment_id = req.body.payment_id;
-
-    //verify token
-    const { error, data } = await verifyToken<PaymentDetails>(token);
-    if (error) throw new ErrorHandler(400, "Invalid Token");
-
-    if (!data) throw new ErrorHandler(400, "Failed To Verify Token");
-
-    //fetch payment info form razorpay with order id (get form token data)
-    const { amount, id, status } = await fetchAnOrderInfo(data.order_id);
-    if (status != "paid")
-      throw new ErrorHandler(400, "Payment has not been received yet");
-
-    const convartPaidAmount = parseInt(amount.toString()) / 100;
-
-    if (
-      convartPaidAmount !== parseInt(data.total_price) ||
-      convartPaidAmount !== data.minimum_to_pay
-    )
-      throw new ErrorHandler(
-        400,
-        "Payment Amount Mismatch. Contact us for help"
-      );
-
-    const batchIds = data.batch_ids.split(",");
-    const courseIds = data.course_ids.split(",");
-    const paymentType =
-      convartPaidAmount === parseInt(data.total_price)
-        ? "Full-Payment"
-        : data.payment_type;
-
-    const client = await pool.connect();
-
-    const { error: tryError } = await tryCatch(async () => {
-      const placeholders = batchIds.map((_, index) => `$${index + 1}`);
-      const { rows } = await client.query(
-        `
-        SELECT 
-          ebc.form_id,
-          cb.batch_fee,
-          CAST(cb.batch_fee * (cb.min_pay_percentage / 100.0) AS INT) AS minimum_to_pay,
-          s.institute as student_institute
-        FROM enrolled_batches_courses ebc
-
-        LEFT JOIN course_batches cb
-        ON cb.batch_id = ebc.batch_id
-
-        LEFT JOIN students s
-        ON s.student_id = $${batchIds.length + 1}
-
-        WHERE ebc.batch_id IN (${placeholders}) AND ebc.student_id = $${
-          batchIds.length + 1
-        }
-        `,
-        [...batchIds, data.student_id]
-      );
-
-      const payments_values: (string | number)[] = [];
-
-      const receiptNoPrefix = `${
-        rows[0].student_institute === "Kolkata" ? "KOL" : "FDB"
-      }/${date.getFullYear()}/`;
-
-      batchIds.forEach((bId, index) => {
-        payments_values.push(
-          data.student_id,
-          paymentType === "Part-Payment"
-            ? rows[index].minimum_to_pay
-            : rows[index].batch_fee,
-          razorpay_payment_id?.toString() || id,
-          "Paid With Payment Link",
-          "Online",
-          id,
-          0,
-          "", // misc remark
-          courseIds[index],
-          rows[index].form_id, //form id,
-          bId,
-          paymentType,
-          receiptNoPrefix
-        );
-      });
-
-      await client.query(
-        `
-        INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, form_id, batch_id, payment_type, receipt_no)
-        VALUES ${
-          sqlPlaceholderCreator(13, batchIds.length, {
-            placeHolderNumber: 13,
-            value: " || nextval('receipt_no_seq')::TEXT",
-          }).placeholder
-        }
-        `,
-        payments_values
-      );
-
-      //increse the total batch_reserved_seats as +1 for every batches user enrolled
-      const batchIdPlaceholders = batchIds?.map((_, index) => `$${index + 1}`);
-      await client.query(
-        `
-        UPDATE course_batches
-        SET batch_reserved_seats = batch_reserved_seats + 1
-        WHERE batch_id IN (${batchIdPlaceholders})
-              `,
-        batchIds
-      );
-
-      //update order id to enrolled_batches_courses table -> add order_id
-      await client.query(
-        `
-        UPDATE enrolled_batches_courses 
-        SET order_id = $${batchIds.length + 1}
-        WHERE batch_id IN (${batchIdPlaceholders}) AND student_id = $${
-          batchIds.length + 2
-        }
-        `,
-        [...batchIds, data.order_id, data.student_id]
-      );
-
-      await client.query("COMMIT");
-      client.release();
-    });
-
-    if (tryError) {
-      await client.query("ROLLBACK");
-      client.release();
-      throw new ErrorHandler(
-        500,
-        "During verification, we encountered an internal server error. Please contact us for assistance."
-      );
-    }
-
-    res
-      .status(200)
-      .json(new ApiResponse(200, "Payment Successfully Completed"));
-  }
-);
-
 export const sendPaymentLinkToEmail = asyncErrorHandler(async (req, res) => {
   const { error, value } = sendPaymentLinkValidator.validate(req.body);
   if (error) throw new ErrorHandler(400, error.message);
 
-  const { error: tokenError, data } = await verifyToken<PaymentDetails>(
+  const { error: tokenError, data } = await verifyToken<TEnrollCourseData>(
     value.token
   );
   if (tokenError || !data) throw new ErrorHandler(400, "Invalid Token");

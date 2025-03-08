@@ -7,6 +7,7 @@ import Input from "@/components/Input";
 import { EmployeeLoginInfoType, ISuccess } from "@/types";
 import { useRouter } from "next/navigation";
 import React from "react";
+import BackBtn from "@/components/BackBtn";
 
 export default function Login() {
   const { mutate, isLoading } = useDoMutation();
@@ -75,6 +76,12 @@ export default function Login() {
           Ask Your HR For Login Credentials
         </div>
       </form>
+      <div className="inline-block pt-3">
+        <BackBtn
+          btnText="Back To Website"
+          customRoute={process.env.NEXT_PUBLIC_FRONTEND_BASE}
+        />
+      </div>
     </main>
   );
 }

@@ -207,13 +207,21 @@ export const verifyOtp = asyncErrorHandler(
         [value.mobile_number, value.email]
       );
 
-      if(rowCount !== 0) {
-        rows.forEach(item => {
-          if(item.email === value.email) throw new ErrorHandler(400, "This email has already taken try another one");
-          if(item.mobile_number === value.mobile_number.toString()) throw new ErrorHandler(400, "This mobile number has already taken try another one");
-        })
+      if (rowCount !== 0) {
+        rows.forEach((item) => {
+          if (item.email === value.email)
+            throw new ErrorHandler(
+              400,
+              "This email has already taken try another one"
+            );
+          if (item.mobile_number === value.mobile_number.toString())
+            throw new ErrorHandler(
+              400,
+              "This mobile number has already taken try another one"
+            );
+        });
       }
-  
+
       // if (rowCount !== 0)
       //   throw new ErrorHandler(409, "Account Already Exist Please Login");
 
@@ -235,10 +243,10 @@ export const verifyOtp = asyncErrorHandler(
 
       await client.query("COMMIT");
       client.release();
-    } catch (error : any) {
+    } catch (error: any) {
       await client.query("ROLLBACK");
       client.release();
-      throw new ErrorHandler(400, error.message)
+      throw new ErrorHandler(400, error.message);
     }
   }
 );
@@ -300,6 +308,16 @@ export const loginStudent = asyncErrorHandler(
       },
       { expiresIn: "7d" }
     );
+
+    res.cookie("refreshToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      // sameSite: "lax", // "lax" works better for local development
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      domain:
+        process.env.NODE_ENV === "production" ? process.env.DOMAIN : undefined,
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+    });
 
     rows[0].password = "******";
 

@@ -9,7 +9,7 @@ import {
   insertPhysicalLibraryValidator,
   issueBookValidator,
   returnBookToLibraryBulkV,
-  returnBookToLibraryValidator,
+  // returnBookToLibraryValidator,
   updateLibraryItemValidator,
   updatePhysicalLibraryValidator,
   updateVisibilityValidator,
@@ -25,19 +25,24 @@ import { tryCatch } from "../utils/tryCatch";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import { getLibraryStudentValidator } from "../validator/student.validator";
 import { parsePagination } from "../utils/parsePagination";
-import { filterToSql } from "../utils/filterToSql";
+// import { filterToSql } from "../utils/filterToSql";
 
 export const streamBlobLibraryFileForStudnets = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const fileName = req.params.file_name;
     if (!fileName) throw new ErrorHandler(400, "file-name is required");
 
-    if (
-      process.env.HOST_URL?.includes(req.headers.referer || "") ||
-      req.headers.referer?.includes(process.env.HOST_URL || "")
-    ) {
+    // if (
+    //   process.env.HOST_URL?.includes(req.headers.referer || "") ||
+    //   req.headers.referer?.includes(process.env.HOST_URL || "")
+    // ) {
+    //   throw new ErrorHandler(400, "You are not able to access this resources");
+    // }
+
+    if(req.headers.origin !== process.env.FRONTEND_HOST) {
       throw new ErrorHandler(400, "You are not able to access this resources");
     }
+
 
     const libraryStorageHostURL =
       "https://wgli5hygbpaa0ifp.public.blob.vercel-storage.com/library-files";

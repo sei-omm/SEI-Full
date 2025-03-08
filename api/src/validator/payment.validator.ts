@@ -1,16 +1,19 @@
-import Joi from "joi";
+import Joi, { string } from "joi";
 
 export const verifyPaymentValidator = Joi.object({
-  order_id: Joi.string().required(),
-  batch_ids: Joi.string().required(),
-  course_ids: Joi.string().required(),
-  is_in_waiting_list: Joi.string().required(),
-  institute: Joi.string().required(),
+  // order_id: Joi.string().required(),
+  // batch_ids: Joi.string().required(),
+  // course_ids: Joi.string().required(),
+  // is_in_waiting_list: Joi.string().required(),
+  // institute: Joi.string().required(),
 
+  verify_type : Joi.string().valid("normal", "due", "payment-link").required(),
+  token : Joi.string().required(),
   payment_id: Joi.string().optional().allow(""),
 });
 
 export const verifyDueOnlinePaymentValidator = Joi.object({
+  payment_id: Joi.string().required(),
   order_id: Joi.string().required(),
   batch_id: Joi.number().required(),
 });

@@ -24,6 +24,7 @@ import path from "path";
 import { holidayRoutes } from "./route/holiday.routes";
 import { tranningRoutes } from "./route/tranning.routes";
 import { encrypt } from "./utils/crypto";
+import { fetchAnOrderInfo } from "./service/razorpay.service";
 
 dotenv.config();
 const app = express();
@@ -83,8 +84,9 @@ app.use("/api/v1/db", setupDbRoute);
 //global error handler
 app.use(globalErrorController);
 
-app.get("/123", (req, res) => {
-  res.status(200).send(encrypt("123456"));
+app.get("/123", async (req, res) => {
+  // res.status(200).send(encrypt("123456"));
+  res.json(await fetchAnOrderInfo("order_Q3V98gaDyqKeLD"));
 });
 
 //route error

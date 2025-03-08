@@ -54,9 +54,12 @@ export default function CourseListItem({ course, className }: IProps) {
         </div>
       </div>
 
-      <h2 className="font-semibold text-gray-700 text-xl line-clamp-2">
-        {course.course_name}
-      </h2>
+      <span>
+        <span className="float-left font-semibold mt-[2.1px] mr-1">{course.course_showing_order} : </span>
+        <span className="font-semibold text-gray-700 text-xl">
+          {course.course_name}
+        </span>
+      </span>
       {/* <details className="flex flex-wrap gap-x-3 mt-2">
         <summary className="text-sm text-gray-600">Document Required</summary>
         <p className="text-sm text-gray-600">

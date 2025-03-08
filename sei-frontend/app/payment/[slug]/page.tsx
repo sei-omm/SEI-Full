@@ -6,8 +6,11 @@ import { notFound } from "next/navigation";
 
 interface IProps {
   params: {
-    slug: string;
+    slug: string; // this will be token,
   };
+  searchParams : {
+    verify_type : string
+  }
 }
 
 type JwtVerifyReturnType<D, E> = {
@@ -23,6 +26,8 @@ type PaymentDetails = {
   student_id: string; // Student ID as a string
   payment_type: string; // Payment mode as a string
   order_id: string;
+  is_in_waiting_list : string;
+  institutes : string;
 };
 
 const verifyToken = <D, E = jwt.VerifyErrors | null>(token: string) => {
@@ -36,7 +41,7 @@ const verifyToken = <D, E = jwt.VerifyErrors | null>(token: string) => {
   });
 };
 
-export default async function PaymentPage({ params }: IProps) {
+export default async function PaymentPage({ params, searchParams }: IProps) {
   const { data, error } = await verifyToken<PaymentDetails>(params.slug);
   if (error) return notFound();
 
@@ -70,6 +75,8 @@ export default async function PaymentPage({ params }: IProps) {
         </div>
       </div>
       <Pay
+        verifyRoute={`/payment/verify`}
+        verify_type={searchParams.verify_type}
         amount={amount * 100}
         razorpay_key={process.env.RAZORPAY_KEY_ID || ""}
         order_id={data?.order_id || ""}

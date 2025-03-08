@@ -83,6 +83,7 @@ export default function CreateAdmission() {
     // const payment_mode = formData.payment_mode;
     const payment_type = formData.payment_type;
     const payment_mode = formData.payment_mode;
+
     delete (formData as any).payment_type;
     delete (formData as any).payment_mode;
     mutate({
@@ -93,6 +94,7 @@ export default function CreateAdmission() {
         const response = data as ISuccess<{
           form_id: string;
           student_id: number;
+          payment_link : string;
         }>;
         if (payment_mode === "Cash") {
           return route.replace(
@@ -110,7 +112,7 @@ export default function CreateAdmission() {
                 ?.map((item) => item.batch_id)
                 .join(","),
               payment_type,
-              form_id: response.data.form_id,
+              form_id: response.data.form_id
             },
           })
         );

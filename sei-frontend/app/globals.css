@@ -102,3 +102,9 @@ li {
   user-select: none; /* Prevent text selection */
   cursor: pointer; /* Change cursor to pointer */
 }
+
+@media print {
+  #pdf-container {
+    display: none;
+  }
+}

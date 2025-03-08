@@ -39,3 +39,15 @@ export type TEmployeeDocs = {
 };
 
 export type TRoles = "Admin" | "Employee" | "Student" | "Own" | "Faculty";
+
+export type TEnrollCourseData = {
+  course_ids: string; // Comma-separated string of course IDs
+  total_price: string; // Total price as a string
+  minimum_to_pay: number; // Minimum amount to pay as a number
+  batch_ids: string; // Comma-separated string of batch IDs
+  student_id: string; // Student ID as a string
+  payment_type: string; // Payment mode as a string
+  order_id: string;
+  is_in_waiting_list : string;
+  institutes : string;
+};

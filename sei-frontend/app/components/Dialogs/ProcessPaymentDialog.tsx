@@ -6,98 +6,24 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/redux/store";
 import { getAuthToken } from "@/app/utils/getAuthToken";
 import { BASE_API } from "@/app/constant";
-import {
-  EnrollCourseType,
-  IResponse,
-  RazorpaySuccesshandlerTypes,
-} from "@/app/type";
+import { EnrollCourseType, IResponse } from "@/app/type";
 import { axiosQuery } from "@/app/utils/axiosQuery";
-import { useRazorpay } from "react-razorpay";
 import { toast } from "react-toastify";
 import { setDialog } from "@/app/redux/slice/dialog.slice";
-import {
-  getLocalLoginInfo,
-  setLocalLoginInfo,
-} from "@/app/utils/getLocalLoginInfo";
+import { useRouter } from "next/navigation";
 
 export default function ProcessPaymentDialog() {
   const { extraValue } = useSelector((state: RootState) => state.dialog);
   const [paymentModeIndex, setPaymentModeIndex] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { Razorpay } = useRazorpay();
-
   const dispatch = useDispatch();
 
   const instituteName = useRef<string>("");
 
   const batchIdsInString = extraValue.batch_ids;
-  const courseIds = extraValue.course_ids;
-  const isInWaitingLists = extraValue.isInWaitingLists;
 
-  const handlePaymentSuccess = async (res: RazorpaySuccesshandlerTypes) => {
-    const { error, response } = await axiosQuery<
-      IResponse,
-      IResponse<{ batch_id: number; start_date: string }[]>
-    >({
-      url: `${BASE_API}/payment/verify?order_id=${res.razorpay_order_id}&batch_ids=${batchIdsInString}&course_ids=${courseIds}&institute=${instituteName.current}&is_in_waiting_list=${isInWaitingLists}`,
-      method: "get",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthToken(),
-      },
-    });
-
-    if (error !== null) {
-      return toast.error(error.message);
-    }
-
-    //after payment success store the enrolled courses to localstorage to avoid duplicate course_batch enrollment
-    const loginInfo = getLocalLoginInfo();
-    if (loginInfo !== null) {
-      const alreadyEnrolledCourses = loginInfo.enrolled_courses;
-      response?.data.forEach((item) => {
-        alreadyEnrolledCourses.push({
-          batch_id: item.batch_id,
-          start_date: item.start_date,
-        });
-      });
-
-      setLocalLoginInfo({
-        ...loginInfo,
-        enrolled_courses: alreadyEnrolledCourses,
-      });
-    }
-
-    dispatch(
-      setDialog({
-        type: "OPEN",
-        dialogKey: "upload-documents-dialog",
-        extraValue: { courseIds, preventToClose: true },
-      })
-    );
-
-    toast.success(response?.message);
-  };
-
-  const openRazorpayPaymentPopup = (options: EnrollCourseType | undefined) => {
-    const razorpay = new Razorpay({
-      key: `${options?.razorpay_key}`,
-      amount: options?.amount || 0,
-      currency: "INR",
-      name: "Paying",
-      order_id: `${options?.order_id}`,
-      handler: handlePaymentSuccess,
-      description: `Online Payment Form Website`,
-    });
-
-    razorpay.on("payment.failed", () => {
-      toast.error("Error While Proccess Your Payment");
-    });
-
-    razorpay.open();
-  };
-
+  const route = useRouter();
   const handlePayAndEnrollBtn = async () => {
     const userSelectedInstitute = localStorage.getItem(
       "user-selected-institute"
@@ -140,7 +66,9 @@ export default function ProcessPaymentDialog() {
       return toast.error(error.message);
     }
 
-    openRazorpayPaymentPopup(response?.data);
+    route.push(`/payment/${response?.data.token_key}?verify_type=normal`);
+    dispatch(setDialog({ dialogKey: "", type: "CLOSE" }));
+    // openRazorpayPaymentPopup(response?.data);
   };
 
   return (

@@ -42,8 +42,8 @@ export default function SelectedCourseTable() {
     if (cartData) {
       setTableDatas({
         head: ["SI No", "Course Name", "Batch Start Date", "Batch End Date", "Price", "Action"],
-        body: cartData?.data.map((item, index) => [
-          index + 1,
+        body: cartData?.data.map((item) => [
+          item.course_showing_order,
           item.course_name || "",
           item.start_date,
           item.end_date,
@@ -126,7 +126,7 @@ export default function SelectedCourseTable() {
         >
           <Button
             type="button"
-            className="mt-4 active:scale-90 !bg-white border !border-gray-500 !text-foreground"
+            className="mt-4 active:scale-90 !bg-red-600 animate-pulse !text-white border !border-gray-500 !text-foreground"
           >
             Add More Course
             <IoAddOutline />

@@ -1,4 +1,4 @@
-import { BASE_API } from "@/app/constant";
+import PdfViewer from "@/app/components/PdfViewer";
 import React from "react";
 
 interface IProps {
@@ -10,11 +10,12 @@ interface IProps {
 export default async function page({ params }: IProps) {
   return (
     <div className="min-h-screen">
-      <iframe
+      {/* <iframe
         className="w-full min-h-screen"
         src={`${BASE_API}/library/view-file/${params.file_name}`}
         allow="allow-same-origin; allow-scripts; allow-forms"
-      ></iframe>
+      ></iframe> */}
+      <PdfViewer fileName={params.file_name} />
     </div>
   );
 }

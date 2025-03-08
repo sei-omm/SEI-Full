@@ -9,15 +9,14 @@ import {
   test,
   updateRefundDetails,
   verifyOnlineDuePayment,
-  verifyPayment,
-  verifyPaymentForPaymentLink,
+  verify,
 } from "../controller/payment.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 
 export const paymentRouter = Router();
 paymentRouter
   .get("/test", test)
-  .get("/verify", isAuthenticated, verifyPayment)
+  .post("/verify", verify)
   .post("/paid-due-online", isAuthenticated, payDueAmount)
 
   .post("/refund", initiateRefund)
@@ -29,5 +28,4 @@ paymentRouter
   .post("/add", addPayment)
 
   // .get("/pay/:token", servePaymentPage)
-  .post("/verify-payment", verifyPaymentForPaymentLink) // verify payment of link generated link
   .post("/link-email", sendPaymentLinkToEmail)

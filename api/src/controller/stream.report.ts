@@ -14,7 +14,11 @@ import {
 } from "../validator/report.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { beautifyDate } from "../utils/beautifyDate";
-import { inventoryCatList, inventorySubCatList, TIME_PERIOD } from "../constant";
+import {
+  inventoryCatList,
+  inventorySubCatList,
+  TIME_PERIOD,
+} from "../constant";
 import { bookListReportV } from "../validator/library.validator";
 import { pmsReportV } from "../validator/inventory.validator";
 import { filterToSql } from "../utils/filterToSql";
@@ -34,11 +38,18 @@ export const streamMaintenceRecordExcelReport = asyncErrorHandler(
     }
 
     if (req.query.from_date && req.query.to_date) {
-      const filter_by = req.query.filter_by === "maintenance_date" ? "mr.maintence_date::DATE" : "mr.completed_date::DATE"
+      const filter_by =
+        req.query.filter_by === "maintenance_date"
+          ? "mr.maintence_date::DATE"
+          : "mr.completed_date::DATE";
       if (filterQuery === "WHERE") {
-        filterQuery += ` ${filter_by} BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
+        filterQuery += ` ${filter_by} BETWEEN $${paramsNumber} AND $${
+          paramsNumber + 1
+        }`;
       } else {
-        filterQuery +=` AND ${filter_by} BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
+        filterQuery += ` AND ${filter_by} BETWEEN $${paramsNumber} AND $${
+          paramsNumber + 1
+        }`;
       }
       paramsNumber++;
       paramsNumber++;
@@ -723,7 +734,7 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
   });
   const worksheet = workbook.addWorksheet("Receipt Report");
 
-  worksheet.mergeCells("A1:U1");
+  worksheet.mergeCells("A1:V1");
   worksheet.getCell(
     "A1"
   ).value = `Receipt Report (${value.institute}) ${value.from_date} -> ${value.to_date}`;
@@ -759,12 +770,13 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
     "Paid Amount",
     "Payment Id",
     "Payment Remark",
+    "Bank Transaction ID",
     "Misc Payment",
     "Misc Remark",
     "Receipt Number",
+    "Receipt date",
     "Discount Amount",
     "Discount Remark",
-    "Bank Transaction ID",
   ]);
 
   // Row styling (header row)
@@ -794,7 +806,6 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
   const query = new QueryStream(
     `
       SELECT
-
       row_number() OVER () AS sr_no,
       p.form_id,
       p.created_at,
@@ -811,12 +822,13 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
       p.paid_amount,
       p.payment_id,
       p.remark AS payment_remark,
+      p.bank_transaction_id,
       p.misc_payment,
       p.misc_remark,
       p.receipt_no,
+      TO_CHAR(p.created_at, 'DD Mon YYYY') as receipt_date,
       p.discount_amount,
-      p.discount_remark,
-      p.bank_transaction_id
+      p.discount_remark
       FROM payments AS p
 
       LEFT JOIN course_batches AS cb
@@ -856,19 +868,36 @@ export const streamReceiptExcelReport = asyncErrorHandler(async (req, res) => {
 
   const pgStream = client.query(query);
 
+  const map = new Map<string, boolean>();
+
   // Process PostgreSQL stream data and append to Excel sheet
   pgStream.on("data", (data) => {
     const excelRow = worksheet.addRow(Object.values(data));
     // Style the data rows
     excelRow.eachCell((cell, cellNumber) => {
       const values = Object.values(data);
+
+      let isBankTransationIdExist = false;
+      if (
+        cellNumber === 16 &&
+        data.bank_transaction_id !== null &&
+        data.bank_transaction_id !== undefined &&
+        data.bank_transaction_id !== ""
+      ) {
+        isBankTransationIdExist = map.has(data.bank_transaction_id);
+        if (!isBankTransationIdExist) {
+          map.set(data.bank_transaction_id, true);
+        }
+      }
       cell.style = {
         font: {
           size: 12,
-          bold: cellNumber === 5,
+          bold: cellNumber === 5 || isBankTransationIdExist,
           color: {
             argb:
-              cellNumber === 5 && parseInt(values[cellNumber - 1] as any) > 0
+              (cellNumber === 5 &&
+                parseInt(values[cellNumber - 1] as any) > 0) ||
+              isBankTransationIdExist
                 ? "DC2626"
                 : "000000",
           },
@@ -2713,7 +2742,7 @@ export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
 
   const pgStream = client.query(query);
 
-  worksheet.getColumn(3).width = 20
+  worksheet.getColumn(3).width = 20;
 
   // Process PostgreSQL stream data and append to Excel sheet
   pgStream.on("data", (data) => {
@@ -2739,8 +2768,6 @@ export const streamPmsExcelReport = asyncErrorHandler(async (req, res) => {
           bottom: { style: "thin" },
         },
       };
-
-    
     });
   });
 
@@ -3092,7 +3119,6 @@ export const streamAttendanceExcelReport = asyncErrorHandler(
 );
 
 export const streamNewInventoryReport = asyncErrorHandler(async (req, res) => {
-
   const { institute, category } = req.query;
 
   // Set response headers for streaming
@@ -3147,7 +3173,7 @@ export const streamNewInventoryReport = asyncErrorHandler(async (req, res) => {
     "Cost per Unit (Current Cost)",
     "Cost per Unit (Previous Cost)",
     "Total Value",
-    "Remarks"
+    "Remarks",
   ]);
 
   // Row styling (header row)
@@ -3174,26 +3200,26 @@ export const streamNewInventoryReport = asyncErrorHandler(async (req, res) => {
   });
 
   let filter = "WHERE";
-  const filter_values : string[] = [];
+  const filter_values: string[] = [];
   let paramsNum = 1;
 
-  if(institute) {
+  if (institute) {
     filter += ` iii.institute = $${paramsNum}`;
     filter_values.push(institute as string);
     paramsNum++;
   }
 
-  if(category) {
-    if(filter === "WHERE") {
+  if (category) {
+    if (filter === "WHERE") {
       filter += ` iii.category = $${paramsNum}`;
     } else {
       filter += ` AND iii.category = $${paramsNum}`;
     }
-    filter_values.push(category as string)
+    filter_values.push(category as string);
     paramsNum++;
   }
 
-  if(filter === "WHERE") {
+  if (filter === "WHERE") {
     filter = "";
   }
 
@@ -3238,8 +3264,12 @@ export const streamNewInventoryReport = asyncErrorHandler(async (req, res) => {
   // Process PostgreSQL stream data and append to Excel sheet
   pgStream.on("data", (data) => {
     const valueArr = Object.values(data);
-    valueArr[1] = inventoryCatList.find(item => item.category_id === data.category)?.category_name;
-    valueArr[2] = inventorySubCatList.find(item => item.sub_category_id === data.category)?.sub_category_name;
+    valueArr[1] = inventoryCatList.find(
+      (item) => item.category_id === data.category
+    )?.category_name;
+    valueArr[2] = inventorySubCatList.find(
+      (item) => item.sub_category_id === data.category
+    )?.sub_category_name;
     const excelRow = worksheet.addRow(valueArr);
 
     // Style the data rows

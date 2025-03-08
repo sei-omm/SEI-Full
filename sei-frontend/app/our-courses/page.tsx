@@ -1,6 +1,6 @@
 import React from "react";
 import CoursesPage from "../components/CoursesPage";
 
-export default function page() {
-  return <CoursesPage centerName="All" />;
+export default async function page() {
+  return <CoursesPage centerName="All" category="all" />;
 }
