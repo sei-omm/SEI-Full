@@ -20,16 +20,7 @@ const nextConfig = {
         permanent: true,
       },
     ];
-  },
-  webpack: (config) => {
-    config.externals = {
-      canvas: "commonjs canvas", // Ignore 'canvas' for server builds
-    };
-    config.resolve.fallback = {
-      canvas: false, // Prevent Webpack from bundling 'canvas'
-    };
-    return config;
-  },
+  }
 };
 
 export default nextConfig;
