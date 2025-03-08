@@ -4,7 +4,8 @@ import React from "react";
 import Button from "../components/Button";
 import NextSvg from "../svgicons/NextSvg";
 
-import { LuArrowDownRightFromCircle } from "react-icons/lu";
+// import { LuArrowDownRightFromCircle } from "react-icons/lu";
+import { MdOutlineRemoveRedEye } from "react-icons/md";
 import OurMission from "../svgicons/OurMission";
 import OurVision from "../svgicons/OurVision";
 import OurGoal from "../svgicons/OurGoal";
@@ -144,7 +145,7 @@ export default function page() {
                 <ul className="flex items-center flex-wrap gap-4 mt-4">
                   {[1, 2, 3, 4, 5, 6].map((item) => (
                     <li key={item} className="flex items-center gap-x-2">
-                      <LuArrowDownRightFromCircle className="-rotate-45" />
+                      <MdOutlineRemoveRedEye className="-rotate-45" />
                       <span>Expart Teachers</span>
                     </li>
                   ))}

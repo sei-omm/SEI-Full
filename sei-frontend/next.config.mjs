@@ -9,7 +9,7 @@ const nextConfig = {
       {
         protocol: "http",
         hostname: "**",
-      }
+      },
     ], // Add multiple domains as needed
   },
   async redirects() {
