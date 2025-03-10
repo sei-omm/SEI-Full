@@ -1,7 +1,5 @@
-"use client";
-
 import React from "react";
-import PdfViewer from "@/app/components/PdfViewer";
+import dynamic from "next/dynamic";
 
 interface IProps {
   params: {
@@ -9,7 +7,7 @@ interface IProps {
   };
 }
 
-// const PdfViewer = dynamic(() => import('@/app/components/PdfViewer'), { ssr: false });
+const PdfViewer = dynamic(() => import('@/app/components/PdfViewer'), { ssr: false });
 
 export default async function page({ params }: IProps) {
   return (
