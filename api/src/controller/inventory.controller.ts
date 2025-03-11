@@ -117,28 +117,54 @@ export const getAllItemInfo = asyncErrorHandler(
     const { LIMIT, OFFSET } = parsePagination(req);
     const { filterQuery, filterValues } = filterToSql(req.query, "iii");
 
+    // this data will updated every day with cron tasks with vercel
+    // check cron controller for more info
+
+    // const { rows } = await pool.query(
+    //   `
+    //   WITH update_opening_stock AS (
+    //     UPDATE inventory_item_info SET
+    //       opening_stock = closing_stock,
+    //       updated_date = CURRENT_DATE,
+    //       item_consumed = 0
+    //     WHERE updated_date != CURRENT_DATE
+    //     RETURNING opening_stock, item_id
+    //   )
+    //   SELECT
+    //     iii.*,
+    //     v.vendor_name,
+    //     COALESCE(u.opening_stock, iii.opening_stock) AS opening_stock
+    //   FROM inventory_item_info iii
+
+    //   LEFT JOIN vendor v
+    //   ON v.vendor_id = iii.vendor_id
+
+    //   LEFT JOIN update_opening_stock u 
+    //   ON u.item_id = iii.item_id
+
+    //   ${
+    //     search
+    //       ? `
+    //         WHERE iii.item_name ILIKE '%' || $1 || '%' 
+    //               OR iii.item_id::TEXT LIKE '%' || $1 || '%'
+    //   `
+    //       : filterQuery
+    //   }
+      
+    //   LIMIT ${LIMIT} OFFSET ${OFFSET}
+    //   `,
+    //   search ? [search] : filterValues
+    // );
+
     const { rows } = await pool.query(
       `
-      WITH update_opening_stock AS (
-        UPDATE inventory_item_info SET
-          opening_stock = closing_stock,
-          updated_date = CURRENT_DATE,
-          item_consumed = 0
-        WHERE updated_date != CURRENT_DATE
-        RETURNING opening_stock, item_id
-      )
       SELECT
         iii.*,
-        v.vendor_name,
-        COALESCE(u.opening_stock, iii.opening_stock) AS opening_stock
+        v.vendor_name
       FROM inventory_item_info iii
 
       LEFT JOIN vendor v
       ON v.vendor_id = iii.vendor_id
-
-      LEFT JOIN update_opening_stock u 
-      ON u.item_id = iii.item_id
-
       ${
         search
           ? `

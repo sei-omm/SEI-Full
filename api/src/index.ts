@@ -23,9 +23,8 @@ import { receiptRoutes } from "./route/receipt.routes";
 import path from "path";
 import { holidayRoutes } from "./route/holiday.routes";
 import { tranningRoutes } from "./route/tranning.routes";
-import { encrypt } from "./utils/crypto";
-import { fetchAnOrderInfo } from "./service/razorpay.service";
 import { sendNotificationUtil } from "./utils/sendNotificationUtil";
+import { cronRouter } from "./route/cron.routes";
 
 dotenv.config();
 const app = express();
@@ -80,6 +79,7 @@ app.use("/api/v1/notification", notificationRoutes);
 app.use("/api/v1/receipt", receiptRoutes);
 app.use("/api/v1/holiday", holidayRoutes);
 app.use("/api/v1/tranning", tranningRoutes);
+app.use("/api/v1/cron-job", cronRouter);
 app.use("/api/v1/db", setupDbRoute);
 
 //global error handler

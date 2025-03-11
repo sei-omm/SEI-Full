@@ -52,7 +52,6 @@ import {
   updateDurableInfo,
   updateItemInfo,
   updateItemStock,
-  updateMaintenceRecord,
   updateMaintenceRecordStatus,
   updatePlannedMaintenanceSystem,
   updateVendorItem,
