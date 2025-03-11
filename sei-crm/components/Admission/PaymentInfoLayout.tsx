@@ -197,7 +197,7 @@ export default function PaymentInfoLayout({
                                 <div className="flex-center gap-4">
                                   <Link
                                     href={`${BASE_API}/receipt/payment?form_id=${form_id}&student_id=${student_id}&payment_id=${paymentsInfo.payments[rowIndex].payment_id}`}
-                                    target="__blank"
+                                    target="_blank"
                                     title="Print Form"
                                   >
                                     <IoPrint title="Print Receipt" size={18} />

@@ -283,20 +283,21 @@ export const getPaymentReceipt = asyncErrorHandler(async (req, res) => {
     course_codes: "",
     payment_type: "",
 
-    admission_fee: 0.0,
-    misc_payment: 0.0,
+    admission_fee: 0.00,
+    misc_payment: 0.00,
 
     misc_remark: "",
     payment_remark: "",
 
-    course_fee: 0.0,
-    discount: 0.0,
+    course_fee: 0.00,
+    discount: 0.00,
 
-    total_paid_till_now: 0.0,
-    total_misc_payment: 0.0,
+    total_paid_till_now: 0.00,
+    total_course_fee_paid_till_now : 0.00,
+    total_misc_payment: 0.00,
 
-    due_amount: 0.0,
-    total: 0.0,
+    due_amount: 0.00,
+    total: 0.00,
   };
 
   let current_payment_id = -1;
@@ -314,8 +315,11 @@ export const getPaymentReceipt = asyncErrorHandler(async (req, res) => {
 
     objectToSend.total_misc_payment += parseFloat(row.misc_payment);
     objectToSend.discount += parseFloat(row.discount_amount);
+
     objectToSend.total_paid_till_now += parseFloat(row.paid_amount);
     objectToSend.total_paid_till_now += parseFloat(row.misc_payment);
+
+    objectToSend.total_course_fee_paid_till_now += parseFloat(row.paid_amount);
 
     if (row.payment_id === value.payment_id) {
       current_payment_id = row.payment_id;
@@ -333,11 +337,11 @@ export const getPaymentReceipt = asyncErrorHandler(async (req, res) => {
       objectToSend.payment_remark = row.remark;
       objectToSend.misc_remark = row.misc_remark;
 
-      objectToSend.total = parseFloat(row.paid_amount) + parseFloat(row.misc_payment);
+      objectToSend.total += parseFloat(row.paid_amount) + parseFloat(row.misc_payment);
     }
   }
 
-  const dueCalcluction = objectToSend.course_fee - objectToSend.discount - objectToSend.total_paid_till_now;
+  const dueCalcluction = objectToSend.course_fee - objectToSend.discount - objectToSend.total_course_fee_paid_till_now;
   if(dueCalcluction < 0) {
     objectToSend.due_amount = 0.00;
   } else {
