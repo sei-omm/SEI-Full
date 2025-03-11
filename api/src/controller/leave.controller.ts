@@ -775,51 +775,85 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
 
   try {
     await client.query("BEGIN");
+    // const { rows } = await client.query(
+    //   `
+    //     WITH current_month_days AS (
+    //       SELECT DATE_PART('day', (DATE_TRUNC('month', NOW() - INTERVAL '1 month') + INTERVAL '1 month - 1 day')) AS total_days
+    //     ),
+    //     current_month_holiday AS (
+    //       SELECT
+    //         COUNT(holiday_id) as total_holiday_this_month,
+    //         institute
+    //       FROM holiday_management
+    //       WHERE DATE_TRUNC('month', holiday_date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+    //       GROUP BY institute
+    //     )
+    //     SELECT
+    //       e.id AS employee_id,
+    //       cmd.total_days AS total_month_days, 
+    //       COUNT(a.id) AS total_not_present,
+    //       COALESCE(cmh.total_holiday_this_month, 0) AS total_holiday_this_month,
+    //       (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) AS total_present_days
+    //     FROM employee e
+    //     LEFT JOIN employee_leave el ON e.id = el.employee_id
+    //     LEFT JOIN attendance a 
+    //       ON a.employee_id = e.id 
+    //       AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+    //       COUNT(a.id) AS total_not_present,
+    //       COALESCE(cmh.total_holiday_this_month, 0) AS total_holiday_this_month,
+    //       (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) AS total_present_days
+    //     FROM employee e
+    //     LEFT JOIN employee_leave el ON e.id = el.employee_id
+    //     LEFT JOIN attendance a 
+    //       ON a.employee_id = e.id 
+    //       AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+    //     CROSS JOIN current_month_days cmd
+    //     LEFT JOIN current_month_holiday cmh 
+    //       ON cmh.institute = e.institute
+    //     WHERE e.joining_date <= CURRENT_DATE - INTERVAL '1 year'
+    //     LEFT JOIN current_month_holiday cmh 
+    //       ON cmh.institute = e.institute
+    //     WHERE e.joining_date <= CURRENT_DATE - INTERVAL '1 year'
+    //     GROUP BY e.id, cmd.total_days, cmh.total_holiday_this_month
+    //     HAVING (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24
+    //     HAVING (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24
+    //   `
+    // );
+
     const { rows } = await client.query(
       `
-        WITH current_month_days AS (
-          SELECT DATE_PART('day', (DATE_TRUNC('month', NOW() - INTERVAL '1 month') + INTERVAL '1 month - 1 day')) AS total_days
-        ),
-        current_month_holiday AS (
-          SELECT
-            COUNT(holiday_id) as total_holiday_this_month,
-            institute
-          FROM holiday_management
-          WHERE DATE_TRUNC('month', holiday_date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
-          GROUP BY institute
-        )
-        SELECT
-          e.id AS employee_id,
-          cmd.total_days AS total_month_days, 
-          COUNT(a.id) AS total_not_present,
-          COALESCE(cmh.total_holiday_this_month, 0) AS total_holiday_this_month,
-          (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) AS total_present_days
-        FROM employee e
-        LEFT JOIN employee_leave el ON e.id = el.employee_id
-        LEFT JOIN attendance a 
-          ON a.employee_id = e.id 
-          AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
-          COUNT(a.id) AS total_not_present,
-          COALESCE(cmh.total_holiday_this_month, 0) AS total_holiday_this_month,
-          (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) AS total_present_days
-        FROM employee e
-        LEFT JOIN employee_leave el ON e.id = el.employee_id
-        LEFT JOIN attendance a 
-          ON a.employee_id = e.id 
-          AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
-        CROSS JOIN current_month_days cmd
-        LEFT JOIN current_month_holiday cmh 
-          ON cmh.institute = e.institute
-        WHERE e.joining_date <= CURRENT_DATE - INTERVAL '1 year'
-        LEFT JOIN current_month_holiday cmh 
-          ON cmh.institute = e.institute
-        WHERE e.joining_date <= CURRENT_DATE - INTERVAL '1 year'
-        GROUP BY e.id, cmd.total_days, cmh.total_holiday_this_month
-        HAVING (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24
-        HAVING (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24
+              WITH current_month_days AS (
+                  SELECT DATE_PART('day', NOW() - INTERVAL '1 month' + INTERVAL '1 month - 1 day') AS total_days
+              ),
+              current_month_holiday AS (
+                  SELECT
+                      COUNT(holiday_id) AS total_holiday_this_month,
+                      institute
+                  FROM holiday_management
+                  WHERE DATE_TRUNC('month', holiday_date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+                  GROUP BY institute
+              )
+              SELECT
+                  e.id AS employee_id,
+                  cmd.total_days AS total_month_days, 
+                  COUNT(a.id) AS total_not_present,
+                  COALESCE(cmh.total_holiday_this_month, 0) AS total_holiday_this_month,
+                  (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) AS total_present_days
+              FROM employee e
+              LEFT JOIN employee_leave el 
+                  ON e.id = el.employee_id
+              LEFT JOIN attendance a 
+                  ON a.employee_id = e.id 
+                  AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+              CROSS JOIN current_month_days cmd
+              LEFT JOIN current_month_holiday cmh 
+                  ON cmh.institute = e.institute
+              WHERE e.joining_date <= CURRENT_DATE - INTERVAL '1 year'
+              GROUP BY e.id, cmd.total_days, cmh.total_holiday_this_month
+              HAVING (cmd.total_days - COUNT(a.id) - COALESCE(cmh.total_holiday_this_month, 0)) >= 24;
       `
-    );
-
+    )
+ 
     const employeeIds = rows.map((item) => item.employee_id).join(",");
 
     if (employeeIds.length > 0) {
@@ -841,6 +875,7 @@ export const addEarnLeaveToAllEmployee = asyncErrorHandler(async (req, res) => {
     await client.query("COMMIT");
     client.release();
   } catch (error: any) {
+    console.log(error)
     await client.query("ROLLBACK");
     client.release();
     throw new ErrorHandler(400, error?.message);
