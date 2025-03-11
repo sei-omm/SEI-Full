@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { LiaMoneyCheckSolid } from "react-icons/lia";
 import Button from "../Button";
 import { PiMoney } from "react-icons/pi";
@@ -12,6 +12,8 @@ import { TEnrollCourses, TPaymentInfo } from "@/types";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { MdAvTimer } from "react-icons/md";
 import { BASE_API } from "@/app/constant";
+import { useDoMutation } from "@/app/utils/useDoMutation";
+import Spinner from "../Spinner";
 
 interface IProps {
   paymentsInfo?: TPaymentInfo;
@@ -27,6 +29,7 @@ export default function PaymentInfoLayout({
   student_course_info,
 }: IProps) {
   const dispatch = useDispatch();
+  const [clickedPaymentId, setClickedPaymentId] = useState("");
 
   const handlePaymentDialogBtn = (
     btnType: "add-payment" | "add-misc-payment"
@@ -78,6 +81,24 @@ export default function PaymentInfoLayout({
       "Action",
     ],
     body: pInfo,
+  };
+
+  const { isLoading, mutate } = useDoMutation();
+  const handleSendReceiptEmail = (payment_id: string) => {
+    if (isLoading) return;
+
+    if (!confirm("Are you sure you want to send receipt to email")) return;
+
+    setClickedPaymentId(payment_id);
+    mutate({
+      apiPath: "/receipt/payment",
+      method: "post",
+      formData: {
+        payment_id: payment_id,
+        form_id,
+        student_id,
+      },
+    });
   };
 
   return (
@@ -202,9 +223,25 @@ export default function PaymentInfoLayout({
                                   >
                                     <IoPrint title="Print Receipt" size={18} />
                                   </Link>
-                                  <Link href={""} title="Send Receipt To Email">
-                                    <BiMailSend size={18} />
-                                  </Link>
+                                  {isLoading &&
+                                  clickedPaymentId ===
+                                    paymentsInfo.payments[rowIndex]
+                                      .payment_id ? (
+                                    <Spinner size="13px" />
+                                  ) : (
+                                    <div
+                                      onClick={() =>
+                                        handleSendReceiptEmail(
+                                          paymentsInfo.payments[rowIndex]
+                                            .payment_id
+                                        )
+                                      }
+                                      className="cursor-pointer"
+                                      title="Send Receipt To Email"
+                                    >
+                                      <BiMailSend size={18} />
+                                    </div>
+                                  )}
                                 </div>
                               ) : value === "Approved" ? (
                                 <TagsBtn type="SUCCESS">Approved</TagsBtn>

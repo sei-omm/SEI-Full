@@ -13,6 +13,7 @@ export type EmailType =
   | "BIRTHDATE_WISH"
   | "PAYMENT_LINK"
   | "SEND_JOB_INFO_VENDOR"
+  | "SEND_PAYMENT_RECEIPT"
 
 export type StudentLoginTokenDataType = {
   student_id?: number;

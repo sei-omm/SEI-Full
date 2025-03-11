@@ -26,7 +26,6 @@ async function fetchData(url: string) {
 }
 
 export default function ManageStudentAdmissionForm() {
-  const { mutate } = useDoMutation();
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
   const route = useRouter();
@@ -38,6 +37,7 @@ export default function ManageStudentAdmissionForm() {
     control,
     formState: { errors },
     setValue,
+    setError,
     clearErrors,
     reset,
   } = useForm<StudentForm>({
@@ -51,26 +51,38 @@ export default function ManageStudentAdmissionForm() {
           month_year: new Date().toISOString().slice(0, 7),
         },
       ],
-      
-      name : "",
-      email : "",
-      mobile_number : "",
-      indos_number : "",
-      permanent_address : "",
-      present_address : "",
-      cdc_num : "",
-      passport_num : "",
-      coc_number : "",
-      cert_of_completency : "",
-      blood_group : "",
-      next_of_kin_name : "",
-      relation_to_sel : "",
-      emergency_number : "",
-      number_of_the_cert : "",
-      issued_by_institute : "",
-      issued_by_institute_indos_number : ""
+
+      name: "",
+      email: "",
+      mobile_number: "",
+      indos_number: "",
+      permanent_address: "",
+      present_address: "",
+      cdc_num: "",
+      passport_num: "",
+      coc_number: "",
+      cert_of_completency: "",
+      blood_group: "",
+      next_of_kin_name: "",
+      relation_to_sel: "",
+      emergency_number: "",
+      number_of_the_cert: "",
+      issued_by_institute: "",
+      issued_by_institute_indos_number: "",
     },
   });
+
+  const { mutate } = useDoMutation(
+    () => {},
+    (error) => {
+      const errorKey = error.response?.data.key;
+      if (errorKey) {
+        setError(errorKey as any, { message: error.response?.data.message });
+      } else {
+        setError("root", { message: error.response?.data.message });
+      }
+    }
+  );
 
   const { data, isFetching, error } = useQuery<ISuccess<TOneAdmission>>({
     queryKey: "fetch-admission-details",
@@ -83,12 +95,11 @@ export default function ManageStudentAdmissionForm() {
     onSuccess(data) {
       if (data.data.course_and_student_info) {
         const cleanedData = Object.fromEntries(
-          Object.entries(data.data.course_and_student_info).map(([key, value]) => [
-            key,
-            value ?? "",
-          ])
+          Object.entries(data.data.course_and_student_info).map(
+            ([key, value]) => [key, value ?? ""]
+          )
         );
-    
+
         reset(cleanedData); // Set cleaned data
       }
     },

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Receipt - SEI Educational Trust</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 25px;
+            border: 2px solid #1a3e69;
+            border-radius: 8px;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #1a3e69;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .institution-info {
+            color: #1a3e69;
+            line-height: 1.4;
+        }
+
+        .receipt-details {
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f5f5f5;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #e8f1ff;
+        }
+
+        .remarks {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff9e6;
+            border-left: 4px solid #ffd700;
+        }
+
+        .signature {
+            margin-top: 30px;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <% if(institute==="Kolkata" ){ %>
+        <div class="header">
+            <h2 style="color: #1a3e69;">SEI EDUCATIONAL TRUST, KOLKATA</h2>
+            <div class="institution-info">
+                <p>Tobahmina Zara Road, Village - Gopalpur, Qo. Sarkarpool<br>
+                    P.S - Marechtala, Kolkata - 700141, India<br>
+                    MTI No.: 303014<br>
+                    Phone/Fax: +91-33-24019858 | Mobile: +91-4830782958<br>
+                    Email: seirust.edu@gmail.com | koll@seiedutrust.com<br>
+                    Website: seiedutrust.com</p>
+            </div>
+        </div>
+        <% } else { %>
+            <div class="header">
+                <h2 style="color: #1a3e69;">SEI EDUCATIONAL TRUST, FARIDABAD</h2>
+                <div class="institution-info">
+                    <p>Scf (s)- 13 Sector-11D Market, Faridabad-121006 MTI No.: 103011<br>
+                        Phone/Fax: +91-129-4002955, AOH: +91-9643512955<br>
+                        Email: seitrust.edu@gmail; fbd@seiedutrust.com<br>
+                        Website: seiedutrust.com</p>
+                </div>
+            </div>
+            <% } %>
+
+                <div class="receipt-details">
+                    <p><strong>Receipt No.:</strong>
+                        <%= receipt_no %>
+                    </p>
+                    <p><strong>Payment Date:</strong>
+                        <%= payment_date %>
+                    </p>
+                </div>
+
+                <div class="student-info">
+                    <h4 style="color: #1a3e69;">Student Details:</h4>
+                    <p><strong>Name:</strong>
+                        <%= student_name %><br>
+                            <strong>Contact:</strong>
+                            <%= mobile_number %><br>
+                                <strong>INDOS No:</strong>
+                                <%= indos_number %><br>
+                                    <strong>Email:</strong>
+                                    <%= email %>
+                    </p>
+                    <p><strong>Course:</strong>
+                        <%= course_codes %><br>
+                            <strong>Payment For:</strong>
+                            <%= batch_dates %>
+                    </p>
+                </div>
+
+                <table>
+                    <tr>
+                        <th>Particulars</th>
+                        <th>Amount (₹)</th>
+                    </tr>
+                    <tr>
+                        <td>Admission Fee (<%= payment_type %>)</td>
+                        <td>
+                            <%= admission_fee %>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Tuition Fee</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>Development Fee</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>Form Charge</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>Cost of Study Material</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>Meal/Food Charge</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>Miscellaneous Charges (<%= payment_type %>)</td>
+                        <td>
+                            <%= misc_payment %>
+                        </td>
+                    </tr>
+                    <tr class="total-row">
+                        <td>TOTAL</td>
+                        <td>
+                            <%= total %>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="fee-summary">
+                    <h4 style="color: #1a3e69;">Course Fee Summary:</h4>
+                    <p><strong>Course Fee:</strong> ₹<%= course_fee %><br>
+                        <strong>Disc Applied:</strong> ₹<%= discount %> <br>
+
+                        <strong>Total Paid Till Now:</strong> ₹<%= total_paid_till_now %><br>
+                        <strong>Misc Fee:</strong> ₹<%= total_misc_payment %> <br>
+                        <strong>Due Amount:</strong> ₹<%= due_amount %>
+                        
+                    </p>
+                </div>
+
+                <div class="remarks">
+                    <p><strong>Remarks:</strong><br>
+                        <%= payment_type==="Misc Payment" ? misc_remark : payment_remark %>
+                    </p>
+                </div>
+
+                <div class="signature">
+                    <!-- <p>Authorized Signatory<br>
+                        <em>(Stamp & Signature)</em><br> -->
+                        <strong>SEI EDUCATIONAL TRUST</strong>
+                    </p>
+                </div>
+</body>
+
+</html>

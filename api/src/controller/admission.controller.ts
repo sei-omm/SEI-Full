@@ -20,6 +20,8 @@ import { tryCatch } from "../utils/tryCatch";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import bcrypt from "bcrypt";
 
+import { DatabaseError } from "pg";
+
 const date = new Date();
 
 export const getAdmissions = asyncErrorHandler(
@@ -61,8 +63,6 @@ export const saveAdmissionInfo = asyncErrorHandler(
     const formId = value.form_id;
     delete value.form_id;
 
-    // const courseId = value.course_id;
-    // delete value.course_id;
     const studentId = value.student_id;
     delete value.student_id;
 
@@ -73,24 +73,35 @@ export const saveAdmissionInfo = asyncErrorHandler(
     } = objectToSqlConverterUpdate(value);
     sqlValues.push(studentId);
 
-    await transaction([
-      {
-        sql: `UPDATE fillup_forms SET form_status = $1 WHERE form_id = $2`,
-        values: [formStatus, formId],
-      },
-      {
-        sql: `UPDATE students SET ${keys} WHERE student_id = $${paramsNum}`,
-        values: sqlValues,
-      },
-      {
-        sql: `UPDATE enrolled_batches_courses SET enrollment_status = $1 WHERE form_id = $2`,
-        values: [formStatus, formId],
-      },
-    ]);
+    const client = await pool.connect();
 
-    res
-      .status(200)
-      .json(new ApiResponse(200, "Admission Info Successfully Updated"));
+    try {
+      await client.query("BEGIN");
+
+      await client.query(`UPDATE students SET ${keys} WHERE student_id = $${paramsNum}`, sqlValues);
+      
+      await client.query(`UPDATE fillup_forms SET form_status = $1 WHERE form_id = $2`, [formStatus, formId]);
+
+      await client.query(`UPDATE enrolled_batches_courses SET enrollment_status = $1 WHERE form_id = $2`, [formStatus, formId])
+
+      res.status(200).json(new ApiResponse(200, "Admission Info Successfully Updated"));
+
+      await client.query("COMMIT");
+      client.release();
+    } catch (error) {
+      await client.query("ROLLBACK");
+      client.release();
+
+      if (error instanceof DatabaseError) {
+        if(error.code === "23505") {
+          throw new ErrorHandler(400, "This mobile number is already registered. Please try another one.", "mobile_number");
+        } else {
+          throw new ErrorHandler(500, "Error updating student admission data");
+        }
+      } else {
+        throw new ErrorHandler(500, "Error updating student admission data");
+      }
+    }
   }
 );
 
@@ -182,7 +193,6 @@ export const createAdmission = asyncErrorHandler(async (req, res) => {
   const client = await pool.connect();
 
   const { error: tryError, data } = await tryCatch(async () => {
-
     await client.query("BEGIN");
 
     const newHashedPassword = await bcrypt.hash(value.password, 10);
@@ -227,7 +237,11 @@ export const createAdmission = asyncErrorHandler(async (req, res) => {
       ]
     );
     if (rowCount === 0) {
-      throw new ErrorHandler(400, "Student Mobile Number Already Exist Please Try Another One", "mobile_number");
+      throw new ErrorHandler(
+        400,
+        "Student Mobile Number Already Exist Please Try Another One",
+        "mobile_number"
+      );
     }
 
     const student_id = studentInfo[0].student_id;
@@ -276,7 +290,10 @@ export const createAdmission = asyncErrorHandler(async (req, res) => {
   if (tryError) {
     await client.query("ROLLBACK");
     client.release();
-    if (tryError.message === "Student Mobile Number Already Exist Please Try Another One") {
+    if (
+      tryError.message ===
+      "Student Mobile Number Already Exist Please Try Another One"
+    ) {
       throw new ErrorHandler(400, tryError.message, "mobile_number");
     }
 

@@ -1,11 +1,12 @@
 import { Router } from "express";
 import {
   getAdmissionFormReceipt,
-  getPaymentReceipt,
+  paymentReceipt,
 } from "../controller/receipt.controller";
 
 export const receiptRoutes = Router();
 
 receiptRoutes
-  .get("/payment", getPaymentReceipt)
+  .get("/payment", paymentReceipt)
+  .post("/payment", paymentReceipt)
   .get("/admission", getAdmissionFormReceipt);

@@ -70,6 +70,17 @@ export const sendEmail = async (
       subject: "Job Details From SEI", // Subject line
       html,
     };
+  } else if (type === "SEND_PAYMENT_RECEIPT") {
+    const html = await generateEmailTemplate(
+      templateData || {},
+      "payment_recipt.html"
+    );
+    mailOptions = {
+      from: `"Payment Receipt From SEI" <${sendForm}>`, // Sender address
+      to, // List of recipients
+      subject: "Payment Receipt From SEI", // Subject line
+      html,
+    };
   }
 
   return new Promise(
