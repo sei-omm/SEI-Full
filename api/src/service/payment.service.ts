@@ -6,13 +6,14 @@ import { verifyToken } from "../utils/token";
 import { tryCatch } from "../utils/tryCatch";
 import { fetchAnOrderInfo } from "./razorpay.service";
 
-const date = new Date();
 
 export const verifyPayment = async (token: string, payment_id?: string) => {
   const { data: jwtData, error: jwtError } =
     await verifyToken<TEnrollCourseData>(token);
   if (jwtError || !jwtData)
     throw new ErrorHandler(400, "Invalid Token Please Contact Us");
+
+  const date = new Date();
 
   //get order details form request
   const orderId = jwtData.order_id;
@@ -204,6 +205,8 @@ export const verifyPaymentLinkPayment = async (
   //verify token
   const { error, data } = await verifyToken<TEnrollCourseData>(token);
   if (error) throw new ErrorHandler(400, "Invalid Token");
+  
+  const date = new Date();
 
   if (!data) throw new ErrorHandler(400, "Failed To Verify Token");
 

@@ -15,7 +15,6 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { transaction } from "../utils/transaction";
 import { objectToSqlInsert } from "../utils/objectToSql";
 import { insertIntoSql } from "../utils/sql/insertIntoSql";
-import { v4 as uuidv4 } from "uuid";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import { tryCatch } from "../utils/tryCatch";
 import { distributeAmountEfficiently } from "../utils/distributeAmountEfficiently";
@@ -27,8 +26,6 @@ import {
   verifyPayment,
   verifyPaymentLinkPayment,
 } from "../service/payment.service";
-
-const date = new Date();
 
 // export const verifyPayment = asyncErrorHandler(
 //   async (req: Request, res: Response) => {
@@ -392,6 +389,8 @@ export const verifyOnlineDuePayment = asyncErrorHandler(
     );
     if (error) throw new ErrorHandler(400, error.message);
 
+    const date = new Date();
+
     const studentId = res.locals.student_id;
 
     const { amount, status, id } = await fetchAnOrderInfo(value.order_id);
@@ -523,6 +522,8 @@ export const addPayment = asyncErrorHandler(
       `,
       [value.form_id]
     );
+
+    const date = new Date();
 
     const valuesToStore: any[] = [];
     if (value.payment_type === "Misc Payment") {
@@ -901,6 +902,8 @@ export const sendPaymentLinkToEmail = asyncErrorHandler(async (req, res) => {
     `,
     [data.student_id]
   );
+
+  const date = new Date();
 
   await sendEmail(rows[0].student_email, "PAYMENT_LINK", {
     student_name: rows[0].student_name,

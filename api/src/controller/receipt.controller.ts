@@ -120,118 +120,233 @@ export const getPaymentReceipt = asyncErrorHandler(async (req, res) => {
   const { error, value } = paymentReciptValidator.validate(req.query);
   if (error) throw new ErrorHandler(400, error.message);
 
-  const client = await pool.connect();
+  // const client = await pool.connect();
 
-  try {
-    await client.query("BEGIN");
+  // try {
+  //   await client.query("BEGIN");
 
-    const { rows: extraInfo } = await client.query(
-      `
-      SELECT
-        s.name AS student_name,
-        s.indos_number,
-        s.email,
-        s.mobile_number,
-        STRING_AGG(TO_CHAR(cb.start_date, 'DD Mon YYYY')::TEXT, ', ') as batch_dates,
-        STRING_AGG(c.course_code, ', ') as course_codes,
-        STRING_AGG(DISTINCT c.institute, ', ') as institute,
-        SUM(p.paid_amount) as admission_fee,
-        STRING_AGG(DISTINCT p.remark, ', ') as payment_remark,
-        STRING_AGG(cb.batch_id::TEXT, ', ') as batch_ids,
-        STRING_AGG(DISTINCT p.created_at::TEXT, ', ') as payment_date,
-        STRING_AGG(DISTINCT p.receipt_no::TEXT, ', ') as receipt_no,
-        STRING_AGG(DISTINCT p.payment_type, ', ') as payment_type,
-        SUM(p.misc_payment) AS misc_payment,
-        STRING_AGG(DISTINCT p.misc_remark, ', ') as misc_remark
-      FROM payments p
+  // const { rows: extraInfo } = await client.query(
+  //   `
+  //   SELECT
+  //     s.name AS student_name,
+  //     s.indos_number,
+  //     s.email,
+  //     s.mobile_number,
+  //     STRING_AGG(TO_CHAR(cb.start_date, 'DD Mon YYYY')::TEXT, ', ') as batch_dates,
+  //     STRING_AGG(c.course_code, ', ') as course_codes,
+  //     STRING_AGG(DISTINCT c.institute, ', ') as institute,
+  //     SUM(p.paid_amount) as admission_fee,
+  //     STRING_AGG(DISTINCT p.remark, ', ') as payment_remark,
+  //     STRING_AGG(cb.batch_id::TEXT, ', ') as batch_ids,
+  //     STRING_AGG(DISTINCT p.created_at::TEXT, ', ') as payment_date,
+  //     STRING_AGG(DISTINCT p.receipt_no::TEXT, ', ') as receipt_no,
+  //     STRING_AGG(DISTINCT p.payment_type, ', ') as payment_type,
+  //     SUM(p.misc_payment) AS misc_payment,
+  //     STRING_AGG(DISTINCT p.misc_remark, ', ') as misc_remark
+  //   FROM payments p
 
-      LEFT JOIN students s
-      ON s.student_id = p.student_id
+  //   LEFT JOIN students s
+  //   ON s.student_id = p.student_id
 
-      LEFT JOIN course_batches cb
-      ON cb.batch_id = p.batch_id
+  //   LEFT JOIN course_batches cb
+  //   ON cb.batch_id = p.batch_id
 
-      LEFT JOIN courses c
-      ON c.course_id = cb.course_id
+  //   LEFT JOIN courses c
+  //   ON c.course_id = cb.course_id
 
-      WHERE p.form_id = $1 AND p.student_id = $2 AND p.payment_id = $3
+  //   WHERE p.form_id = $1 AND p.student_id = $2 AND p.payment_id = $3
 
-      GROUP BY s.name, s.indos_number, s.email, s.mobile_number
-      `,
-      [value.form_id, value.student_id, value.payment_id]
-    );
+  //   GROUP BY s.name, s.indos_number, s.email, s.mobile_number
+  //   `,
+  //   [value.form_id, value.student_id, value.payment_id]
+  // );
 
-    const { rows: totalFeesInfo } = await client.query(
-      `
-      SELECT
-        SUM(cb.batch_fee) as course_fee
-      FROM course_batches cb
+  //   const { rows: totalFeesInfo } = await client.query(
+  //     `
+  //     SELECT
+  //       SUM(cb.batch_fee) as course_fee
+  //     FROM course_batches cb
 
-      WHERE cb.batch_id IN (SELECT batch_id FROM enrolled_batches_courses WHERE form_id = $1)
-      `,
-      [value.form_id]
-    );
+  //     WHERE cb.batch_id IN (SELECT batch_id FROM enrolled_batches_courses WHERE form_id = $1)
+  //     `,
+  //     [value.form_id]
+  //   );
 
-    const onePaymentDate = extraInfo[0].payment_date.split(",")[0].trim();
+  //   const onePaymentDate = extraInfo[0].payment_date.split(",")[0].trim();
 
-    const { rows: totalPaidTillNowInfo } = await client.query(
-      `
-      SELECT 
-        SUM(paid_amount) as total_paid_till_now 
-      FROM payments WHERE form_id = $1 AND created_at <= $2::TIMESTAMP
-      `,
-      [value.form_id, onePaymentDate]
-    );
+  //   const { rows: totalPaidTillNowInfo } = await client.query(
+  //     `
+  //     SELECT
+  //       SUM(paid_amount) as total_paid_till_now
+  //     FROM payments WHERE form_id = $1 AND created_at <= $2::TIMESTAMP
+  //     `,
+  //     [value.form_id, onePaymentDate]
+  //   );
 
-    const { rows: discountInfo } = await client.query(
-      `
-      SELECT
-        SUM(p.discount_amount) AS total_discount
-      FROM payments p
-      WHERE p.form_id = $1 AND p.student_id = $2 AND p.created_at <= $3::TIMESTAMP
-      `,
-      [value.form_id, value.student_id, onePaymentDate]
-    );
+  //   const { rows: discountInfo } = await client.query(
+  //     `
+  //     SELECT
+  //       SUM(p.discount_amount) AS total_discount
+  //     FROM payments p
+  //     WHERE p.form_id = $1 AND p.student_id = $2 AND p.created_at <= $3::TIMESTAMP
+  //     `,
+  //     [value.form_id, value.student_id, onePaymentDate]
+  //   );
 
-    const course_fee =
-      totalFeesInfo[0].course_fee - discountInfo[0].total_discount;
-    const dueAmount = course_fee - totalPaidTillNowInfo[0].total_paid_till_now;
+  //   const course_fee = totalFeesInfo[0].course_fee - discountInfo[0].total_discount;
+  //   const dueAmount = course_fee - totalPaidTillNowInfo[0].total_paid_till_now;
 
-    res.render("payment_recipt", {
-      receipt_no: extraInfo[0].receipt_no,
-      payment_date: beautifyDate(onePaymentDate),
-      institute: extraInfo[0].institute,
-      student_name: extraInfo[0].student_name,
-      indos_number: extraInfo[0].indos_number,
-      mobile_number: extraInfo[0].mobile_number,
-      email: extraInfo[0].email,
-      batch_dates: extraInfo[0].batch_dates,
-      course_codes: extraInfo[0].course_codes,
-      payment_type: extraInfo[0].payment_type,
-      admission_fee: extraInfo[0].admission_fee,
-      misc_payment: extraInfo[0].misc_payment,
-      misc_remark : extraInfo[0].misc_remark,
-      payment_remark: extraInfo[0].payment_remark,
+  // res.render("payment_recipt", {
+  //   receipt_no: extraInfo[0].receipt_no,
+  //   payment_date: beautifyDate(onePaymentDate),
+  //   institute: extraInfo[0].institute,
+  //   student_name: extraInfo[0].student_name,
+  //   indos_number: extraInfo[0].indos_number,
+  //   mobile_number: extraInfo[0].mobile_number,
+  //   email: extraInfo[0].email,
+  //   batch_dates: extraInfo[0].batch_dates,
+  //   course_codes: extraInfo[0].course_codes,
+  //   payment_type: extraInfo[0].payment_type,
+  //   admission_fee: extraInfo[0].admission_fee,
+  //   misc_payment: extraInfo[0].misc_payment,
+  //   misc_remark : extraInfo[0].misc_remark,
+  //   payment_remark: extraInfo[0].payment_remark,
 
-      course_fee: course_fee.toFixed(2),
-      discount: parseFloat(discountInfo[0].total_discount).toFixed(2),
-      total_paid_till_now: parseFloat(
-        totalPaidTillNowInfo[0].total_paid_till_now
-      ).toFixed(2),
-      due_amount: dueAmount < 0 ? 0.0 : dueAmount.toFixed(2),
-      total: (
-        parseFloat(extraInfo[0].admission_fee) +
-        parseFloat(extraInfo[0].misc_payment)
-      ).toFixed(2),
-    });
+  //   course_fee: course_fee.toFixed(2),
+  //   discount: parseFloat(discountInfo[0].total_discount).toFixed(2),
+  //   total_paid_till_now: parseFloat(
+  //     totalPaidTillNowInfo[0].total_paid_till_now
+  //   ).toFixed(2),
+  //   due_amount: dueAmount < 0 ? 0.0 : dueAmount.toFixed(2),
+  //   total: (
+  //     parseFloat(extraInfo[0].admission_fee) +
+  //     parseFloat(extraInfo[0].misc_payment)
+  //   ).toFixed(2),
+  // });
 
-    await client.query("COMMIT");
-    client.release();
-  } catch (error: any) {
-    await client.query("ROLLBACK");
-    client.release();
-    throw new ErrorHandler(400, error.message);
+  //   await client.query("COMMIT");
+  //   client.release();
+  // } catch (error: any) {
+  //   await client.query("ROLLBACK");
+  //   client.release();
+  //   throw new ErrorHandler(400, error.message);
+  // }
+
+  const { rows } = await pool.query(
+    `
+    SELECT
+      s.name AS student_name,
+      s.indos_number,
+      s.email,
+      s.mobile_number,
+      cb.start_date,
+      c.course_code,
+      c.institute,
+      cb.batch_id,
+      cb.batch_fee,
+      p.paid_amount,
+      p.payment_id,
+      p.remark,
+      p.created_at as payment_date,
+      p.receipt_no as receipt_no,
+      p.payment_type,
+      p.misc_payment,
+      p.misc_remark,
+      p.discount_amount
+    FROM payments p
+
+    LEFT JOIN students s
+    ON s.student_id = p.student_id
+
+    LEFT JOIN course_batches cb
+    ON cb.batch_id = p.batch_id
+
+    LEFT JOIN courses c
+    ON c.course_id = cb.course_id
+
+    WHERE p.form_id = $1 AND p.student_id = $2
+
+    ORDER BY p.created_at ASC
+    `,
+    [value.form_id, value.student_id]
+  );
+
+  const objectToSend = {
+    receipt_no: "",
+    payment_date: "",
+    institute: "",
+    student_name: "",
+    indos_number: "",
+    mobile_number: "",
+    email: "",
+    batch_dates: "",
+    course_codes: "",
+    payment_type: "",
+
+    admission_fee: 0.0,
+    misc_payment: 0.0,
+
+    misc_remark: "",
+    payment_remark: "",
+
+    course_fee: 0.0,
+    discount: 0.0,
+
+    total_paid_till_now: 0.0,
+    total_misc_payment: 0.0,
+
+    due_amount: 0.0,
+    total: 0.0,
+  };
+
+  let current_payment_id = -1;
+  for (const row of rows) {
+
+    if(current_payment_id !== -1 && current_payment_id !== row.payment_id) {
+      break;
+    }
+
+    objectToSend.institute = row.institute;
+    objectToSend.student_name = row.student_name;
+    objectToSend.indos_number = row.indos_number;
+    objectToSend.mobile_number = row.mobile_number;
+    objectToSend.email = row.email;
+
+    objectToSend.total_misc_payment += parseFloat(row.misc_payment);
+    objectToSend.discount += parseFloat(row.discount_amount);
+    objectToSend.total_paid_till_now += parseFloat(row.paid_amount);
+    objectToSend.total_paid_till_now += parseFloat(row.misc_payment);
+
+    if (row.payment_id === value.payment_id) {
+      current_payment_id = row.payment_id;
+      objectToSend.receipt_no = row.receipt_no;
+      objectToSend.payment_date = beautifyDate(row.payment_date);
+
+      objectToSend.batch_dates += beautifyDate(row.start_date) + ", ";
+      objectToSend.course_codes += row.course_code + ", ";
+
+      objectToSend.payment_type = row.payment_type;
+      objectToSend.admission_fee += parseFloat(row.paid_amount);
+      objectToSend.misc_payment += parseFloat(row.misc_payment);
+      objectToSend.course_fee += row.batch_fee;
+
+      objectToSend.payment_remark = row.remark;
+      objectToSend.misc_remark = row.misc_remark;
+
+      objectToSend.total = parseFloat(row.paid_amount) + parseFloat(row.misc_payment);
+    }
   }
+
+  const dueCalcluction = objectToSend.course_fee - objectToSend.discount - objectToSend.total_paid_till_now;
+  if(dueCalcluction < 0) {
+    objectToSend.due_amount = 0.00;
+  } else {
+    objectToSend.due_amount = dueCalcluction
+  }
+
+  objectToSend.course_fee -= objectToSend.discount;
+
+  res.render("payment_recipt", objectToSend);
 });
 
 export const getAdmissionFormReceipt = asyncErrorHandler(async (req, res) => {
