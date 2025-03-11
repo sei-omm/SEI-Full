@@ -25,6 +25,7 @@ import { holidayRoutes } from "./route/holiday.routes";
 import { tranningRoutes } from "./route/tranning.routes";
 import { encrypt } from "./utils/crypto";
 import { fetchAnOrderInfo } from "./service/razorpay.service";
+import { sendNotificationUtil } from "./utils/sendNotificationUtil";
 
 dotenv.config();
 const app = express();
@@ -84,9 +85,19 @@ app.use("/api/v1/db", setupDbRoute);
 //global error handler
 app.use(globalErrorController);
 
-app.get("/123", async (req, res) => {
+app.get("/api/v1/cron-job", async (req, res) => {
   // res.status(200).send(encrypt("123456"));
-  res.json(await fetchAnOrderInfo("order_Q3V98gaDyqKeLD"));
+  // res.json(await fetchAnOrderInfo("order_Q3V98gaDyqKeLD"));
+
+
+  await sendNotificationUtil({
+    notification_title : "Test Auto Notification",
+    notification_description : "Testing Notification Description",
+    notification_type : "role_base",
+    employee_roles : ["Admin"]
+  })
+
+  res.send("DONE");
 });
 
 //route error

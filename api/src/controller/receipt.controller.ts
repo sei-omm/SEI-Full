@@ -143,7 +143,10 @@ export const paymentReceipt = asyncErrorHandler(async (req, res) => {
     res
       .status(200)
       .json(
-        new ApiResponse(200, "Payment receipt has been sent to the student's email.")
+        new ApiResponse(
+          200,
+          "Payment receipt has been sent to the student's email."
+        )
       );
   }
 });
