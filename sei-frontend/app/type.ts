@@ -154,3 +154,11 @@ export type TCourseCategory =
   | "basic-modular-courses"
   | "refresher-courses"
   | "packaged-courses";
+
+export type TNoticeBoard = {
+  notice_id: number;
+  heading: string;
+  description: string;
+  created_at: string;
+  visible: boolean;
+};

@@ -1301,6 +1301,15 @@ UPDATE payments SET receipt_no = 'KOL/2024/' || nextval('receipt_no_seq');
 ALTER TABLE students DROP CONSTRAINT unique_email;
 ALTER TABLE students ADD CONSTRAINT unique_mobile UNIQUE (mobile_number);
 
+-- NEW TABLE 11 Mar 2025
+CREATE TABLE notice (
+    notice_id SERIAL PRIMARY KEY,
+    heading VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    created_at DATE DEFAULT CURRENT_DATE,
+    visible BOOLEAN NOT NULL DEFAULT TRUE
+)
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

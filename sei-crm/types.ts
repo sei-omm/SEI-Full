@@ -784,3 +784,11 @@ export type TVTableData = {
   selected_faculty_id : number,
   selected_subject : string
 }
+
+export type TNoticeBoard = {
+  notice_id: number;
+  heading: string;
+  description: string;
+  created_at : string;
+  visible : boolean;
+}

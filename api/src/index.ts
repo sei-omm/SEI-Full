@@ -25,6 +25,7 @@ import { holidayRoutes } from "./route/holiday.routes";
 import { tranningRoutes } from "./route/tranning.routes";
 import { sendNotificationUtil } from "./utils/sendNotificationUtil";
 import { cronRouter } from "./route/cron.routes";
+import { websiteRoute } from "./route/website.routes";
 
 dotenv.config();
 const app = express();
@@ -80,6 +81,7 @@ app.use("/api/v1/receipt", receiptRoutes);
 app.use("/api/v1/holiday", holidayRoutes);
 app.use("/api/v1/tranning", tranningRoutes);
 app.use("/api/v1/cron-job", cronRouter);
+app.use("/api/v1/website", websiteRoute)
 app.use("/api/v1/db", setupDbRoute);
 
 //global error handler

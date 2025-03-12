@@ -33,6 +33,7 @@ import { GrHostMaintenance, GrVend } from "react-icons/gr";
 import { BsReverseLayoutTextSidebarReverse } from "react-icons/bs";
 import { LiaAddressBookSolid, LiaSwatchbookSolid } from "react-icons/lia";
 import { IoMdSpeedometer } from "react-icons/io";
+import { CgWebsite } from "react-icons/cg";
 
 const sidebarOptions = [
   {
@@ -327,20 +328,20 @@ const sidebarOptions = [
       },
     ],
   },
-  // {
-  //   id: 10,
-  //   icon: null,
-  //   name: "Website Management",
-  //   slug: "#",
-  //   subMenu: [
-  //     {
-  //       id: "10-1",
-  //       icon: <CgWebsite />,
-  //       name: "Notice Board",
-  //       slug: "/dashboard/website-management/notice-board",
-  //     },
-  //   ],
-  // },
+  {
+    id: 10,
+    icon: null,
+    name: "Website Management",
+    slug: "#",
+    subMenu: [
+      {
+        id: "10-1",
+        icon: <CgWebsite />,
+        name: "Notice Board",
+        slug: "/dashboard/website-management/notice-board",
+      },
+    ],
+  },
   // {
   //   id: 6,
   //   icon: null,

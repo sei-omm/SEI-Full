@@ -36,7 +36,7 @@ export const uploadDocsFromCRM = asyncErrorHandler(
             "image/png",
             "image/webp",
           ],
-          token: vercelBlobToken as string
+          token: vercelBlobToken as string,
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {},
@@ -72,7 +72,6 @@ export const uploadToComplianceRecord = asyncErrorHandler(
   }
 );
 
-
 export const uploadCandidateResume = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const vercelBlobToken = process.env.BLOB_READ_WRITE_TOKEN;
@@ -91,3 +90,20 @@ export const uploadCandidateResume = asyncErrorHandler(
     res.status(200).json(response); // Return the upload URL to the client
   }
 );
+
+export const uploadCkEditorFiles = asyncErrorHandler(async (req, res) => {
+  const vercelBlobToken = process.env.BLOB_READ_WRITE_TOKEN;
+  const response = await handleUpload({
+    body: req.body,
+    request: req,
+    onBeforeGenerateToken: async () => {
+      return {
+        allowedContentTypes: ["image/*"],
+        token: vercelBlobToken as string,
+      };
+    },
+    onUploadCompleted: async ({ blob, tokenPayload }) => {},
+  });
+
+  res.status(200).json(response); // Return the upload URL to the client
+});

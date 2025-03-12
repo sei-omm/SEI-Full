@@ -3,12 +3,14 @@ import Image from "next/image";
 import NextSvg from "./svgicons/NextSvg";
 import Button from "./components/Button";
 // import Ratings from "./components/Ratings";
-import { CiCalendarDate } from "react-icons/ci";
 import { BsPhoneVibrateFill } from "react-icons/bs";
 import Link from "next/link";
 import { GiRotaryPhone } from "react-icons/gi";
 import HomeNewBanner from "./components/HomeNewBanner";
 import AOSProvider from "./components/AOSProvider";
+import Notice from "./components/Notice";
+import { Suspense } from "react";
+import Loading from "./loading";
 
 const what_we_provide = [
   {
@@ -37,40 +39,40 @@ const what_we_provide = [
   },
 ];
 
-const notices = [
-  {
-    heading: "1 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
-    date: "14 July, 2024",
-    description:
-      "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
-  },
-  {
-    heading: "2 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
-    date: "14 July, 2024",
-    description:
-      "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
-  },
-  {
-    heading: "3 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
-    date: "14 July, 2024",
-    description:
-      "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
-  },
+// const notices = [
+//   {
+//     heading: "1 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
+//     date: "14 July, 2024",
+//     description:
+//       "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
+//   },
+//   {
+//     heading: "2 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
+//     date: "14 July, 2024",
+//     description:
+//       "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
+//   },
+//   {
+//     heading: "3 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
+//     date: "14 July, 2024",
+//     description:
+//       "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
+//   },
 
-  {
-    heading: "4 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
-    date: "14 July, 2024",
-    description:
-      "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
-  },
+//   {
+//     heading: "4 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
+//     date: "14 July, 2024",
+//     description:
+//       "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
+//   },
 
-  {
-    heading: "5 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
-    date: "14 July, 2024",
-    description:
-      "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
-  },
-];
+//   {
+//     heading: "5 SPECIAL PACKAGE FOR JULY & AUGUST-2024",
+//     date: "14 July, 2024",
+//     description:
+//       "SPECIAL PACKAGE FOR JULY & AUGUST-2024 HURRY UP ASM+SMS ONLY RS. 24,999/-",
+//   },
+// ];
 
 export default function Home() {
   return (
@@ -417,27 +419,9 @@ export default function Home() {
         </section>
 
         {/* Notice Board */}
-        <section className="py-10">
-          <div className="w-full shadow-xl border min-h-64 p-8 hidden sm:block">
-            <h2 className="text-5xl font-semibold border-b border-[#e9b858] pb-2">
-              Latest <span className="text-[#e9b858]">Notice</span>
-            </h2>
-
-            <ul className="space-y-3 mt-3 size-full">
-              {notices.map((notice, index) => (
-                <li key={index}>
-                  {/* Notice Heading */}
-                  <h2 className="font-[600] text-sm">{notice.heading}</h2>
-                  <p className="flex items-center gap-x-1 text-xs">
-                    <CiCalendarDate />
-                    {notice.date}
-                  </p>
-                  <p className="text-xs">{notice.description}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+        <Suspense fallback={<Loading />}>
+          <Notice />
+        </Suspense>
       </div>
     </>
   );
