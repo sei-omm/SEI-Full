@@ -8,6 +8,6 @@ interface IProps {
 
 export default function ManageBlog({ blog_id }: IProps) {
   const isNew = blog_id === "add";
-  
-  return <div>ManageBlog {blog_id}</div>;
+
+  return <div>ManageBlog {blog_id} {isNew}</div>;
 }
