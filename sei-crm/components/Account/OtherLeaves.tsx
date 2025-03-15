@@ -23,7 +23,7 @@ interface IOtherLeave extends ILeave {
 }
 
 async function getOthersList() {
-  return (await axios.get(`${BASE_API}/hr/leave/other`)).data;
+  return (await axios.get(`${BASE_API}/account/leave/other`)).data;
 }
 
 export default function OtherLeaves() {

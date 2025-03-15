@@ -23,28 +23,26 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response.status;
-    switch (status) {
-      case 401:
-        if (typeof window !== "undefined") {
-          // Only run alert on the client-side
-          alert("Unauthorized! redirecting to login...");
-        } else {
-          redirect("/auth/login");
-        }
 
-        // Abort all ongoing requests
-        abortController.abort();
+    // Abort all ongoing requests
+    abortController.abort();
 
-        // Create a new AbortController for future requests
-        abortController = new AbortController();
+    // Create a new AbortController for future requests
+    abortController = new AbortController();
 
-        // Redirect user to login page (optional)
-        if (typeof window !== "undefined") {
-          window.location.href = "/auth/login";
-        } else {
-          redirect("/auth/login");
-        }
-        break;
+    if (typeof window !== "undefined") {
+      if (status === 401) {
+        // Only run alert on the client-side
+        alert("Unauthorized! redirecting to login...");
+        window.location.href = "/auth/login";
+      } else if (status === 403) {
+        alert(
+          "You Are Not Authorized to Access This Module. Contact Your Admin to Get Access."
+        );
+        window.location.href = `/error?status=${status}`;
+      }
+    } else {
+      redirect(`/error?status=${status}`);
     }
     return Promise.reject(error);
   }

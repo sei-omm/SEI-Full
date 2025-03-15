@@ -7,11 +7,11 @@ import { MdDataUsage } from "react-icons/md";
 import { MdOutlineWorkHistory } from "react-icons/md";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { BASE_API } from "@/app/constant";
-import { notFound } from "next/navigation";
 import { ApplicationStatusType, IJobAppliedCandidate, ISuccess } from "@/types";
 import ApplicationStatusDropDown from "@/components/ApplicationStatusDropDown";
 import Pagination from "@/components/Pagination";
 import BackBtn from "@/components/BackBtn";
+import axios from "axios";
 
 interface IProps {
   params: {
@@ -22,15 +22,8 @@ interface IProps {
 
 export default async function page({ params, searchParams }: IProps) {
   const urlSearchParams = new URLSearchParams(searchParams);
-  const response = await fetch(
-    `${BASE_API}/hr/job/apply/${params.slug}?${urlSearchParams.toString()}`,
-    {
-      cache: "no-store",
-    }
-  );
-  if (!response.ok) return notFound();
 
-  const result = (await response.json()) as ISuccess<IJobAppliedCandidate[]>;
+  const result = (await axios.get<ISuccess<IJobAppliedCandidate[]>>(`${BASE_API}/hr/job/apply/${params.slug}?${urlSearchParams.toString()}`)).data
 
   return (
     <section className="w-full py-9">

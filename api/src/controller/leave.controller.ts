@@ -76,6 +76,8 @@ export const getOthersLeaveList = asyncErrorHandler(async (req, res) => {
      ON e.id = l.employee_id
 
      WHERE lae.to_employee_id = $1
+
+     ORDER BY l.id DESC
     `,
     [value.employee_id]
   );
@@ -163,7 +165,7 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
           SELECT ${leave_type} FROM employee_leave
           WHERE ${leave_type} > 0 AND employee_id = $1 AND financial_year_date >= get_financial_year_start() 
         `,
-        [res.locals?.employee_id]
+        [value.employee_id]
       );
 
       if (rowCount === 0)
@@ -183,7 +185,7 @@ export const createEmployeeLeaveRequest = asyncErrorHandler(
       // get some info about current employee
       const { rows: currentEmployeeInfo } = await client.query(
         `SELECT id, authority, department_id, institute FROM employee WHERE id = $1`,
-        [res.locals?.employee_id]
+        [value.employee_id]
       );
 
       let highAuthorityName = "HOD";
@@ -280,10 +282,6 @@ export const updateLeaveStatus = asyncErrorHandler(
 
     if (error) throw new ErrorHandler(400, error.message);
 
-    // let sql1 = "";
-    // let sql2 = "";
-    // let sql3 = "";
-
     const leave_type = req.body.leave_type;
 
     if (value.leave_status === "success") {
@@ -297,10 +295,17 @@ export const updateLeaveStatus = asyncErrorHandler(
       try {
         await client.query("BEGIN");
 
-        await client.query(
-          `UPDATE leave_and_employee SET status = 'success' WHERE item_id = $1`,
+        const { rows, rowCount } = await client.query(
+          `UPDATE leave_and_employee SET status = 'success' WHERE item_id = $1 RETURNING to_employee_id`,
           [value.leave_and_employee_row_id]
         );
+
+        if(!rowCount || rowCount === 0) throw new ErrorHandler(400, "No leave found");
+
+        if(rows[0].to_employee_id !== value?.who_is_updating_id) {
+          //if anyone want try to hack
+          throw new ErrorHandler(400, "You are not able to change the leave status of an employee who didn't send you this leave request.");
+        }
 
         const { rows: whoIsUpdatingInfo } = await client.query(
           `
@@ -430,10 +435,17 @@ export const updateLeaveStatus = asyncErrorHandler(
       try {
         await client.query("BEGIN");
 
-        await client.query(
-          `UPDATE leave_and_employee SET status = 'decline' WHERE item_id = $1`,
+        const { rowCount, rows} = await client.query(
+          `UPDATE leave_and_employee SET status = 'decline' WHERE item_id = $1 RETURNING to_employee_id`,
           [value.leave_and_employee_row_id]
         );
+
+        if(!rowCount || rowCount === 0) throw new ErrorHandler(400, "No leave found");
+
+        if(rows[0].to_employee_id !== value?.who_is_updating_id) {
+          //if anyone want try to hack
+          throw new ErrorHandler(400, "You are not able to change the leave status of an employee who didn't send you this leave request.");
+        }
 
         const { rows: whoIsUpdatingInfo } = await client.query(
           `

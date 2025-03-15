@@ -32,6 +32,9 @@ export default function SkillEnhancementForm() {
 
   const { isLoading, mutate } = useDoMutation();
 
+  const path = extraValue?.from_where === "Account" ? "/account" : "/tranning";
+
+
   const { error, isFetching, data } = useQuery<
     ISuccess<{ form_data: string | null; record_id: number }>
   >({
@@ -39,7 +42,8 @@ export default function SkillEnhancementForm() {
     queryFn: async () =>
       (
         await axios.get(
-          `${BASE_API}/tranning/one-form?employee_id=${extraValue?.employee_id}&tranning_name=Skill Enhancement`
+          `${BASE_API}${path}/one-form?record_id=${extraValue?.record_id}`
+          // `${BASE_API}${path}/one-form?employee_id=${extraValue?.employee_id}&tranning_name=Skill Enhancement`
         )
       ).data,
     enabled: extraValue?.btn_type !== "Generate",
@@ -80,7 +84,7 @@ export default function SkillEnhancementForm() {
     }
 
     mutate({
-      apiPath: "/tranning/complete",
+      apiPath: `${path}/complete`,
       method: "put",
       formData: {
         form_data: JSON.stringify(formObj),

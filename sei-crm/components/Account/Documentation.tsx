@@ -25,7 +25,7 @@ export default function Documentation({ employeeType }: IProps) {
       queryKey: "employee_documents",
       queryFn: async () =>
         (
-          await axios.get(`${BASE_API}/employee/null/document`)
+          await axios.get(`${BASE_API}/account/documents`)
         ).data,
       onSuccess: (data) => {
         const docsInfo =

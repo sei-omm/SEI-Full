@@ -26,8 +26,8 @@ import { BASE_API } from "@/app/constant";
 import LoadingLayout from "../LoadingLayout";
 import OtherLeaves from "../Account/OtherLeaves";
 
-const fetchEmployeeInfo = async (employeeID: string | null) => {
-  const response = await axios.get(BASE_API + "/employee/" + employeeID);
+const fetchEmployeeInfo = async () => {
+  const response = await axios.get(BASE_API + "/account");
   return response.data;
 };
 
@@ -35,7 +35,7 @@ export default function Account() {
   const { isPending, handleLogoutBtn } = useLogout();
   const { data, isFetching, error } = useQuery<ISuccess<IEmployee[]>>({
     queryKey: ["get-employee-info"],
-    queryFn: () => fetchEmployeeInfo(null),
+    queryFn: fetchEmployeeInfo,
     cacheTime: 0,
   });
 
@@ -67,7 +67,7 @@ export default function Account() {
           </div>
 
           <div className="absolute right-6 bottom-20 flex items-center gap-3">
-            {data?.data[0].access_to_crm ? (
+            {data?.data[0]?.access_to_crm === true ? (
               <Link href={"/dashboard"}>
                 <Button className="!bg-transparent !text-black !shadow-none !border flex items-center gap-2">
                   <span>Open Crm</span>
@@ -159,6 +159,11 @@ export default function Account() {
             <LeaveRequest />
           </Suspense>
         )}
+        {searchParams.get("tab") === "other-leave" && (
+          <Suspense fallback={<LoadingLayout />}>
+            <OtherLeaves />
+          </Suspense>
+        )}
         {searchParams.get("tab") === "appraisal" && (
           <Suspense fallback={<LoadingLayout />}>
             <Appraisal type="own" />
@@ -177,11 +182,6 @@ export default function Account() {
         {searchParams.get("tab") === "tranning" && (
           <Suspense fallback={<LoadingLayout />}>
             <TranningList />
-          </Suspense>
-        )}
-        {searchParams.get("tab") === "other-leave" && (
-          <Suspense fallback={<LoadingLayout />}>
-            <OtherLeaves />
           </Suspense>
         )}
       </div>

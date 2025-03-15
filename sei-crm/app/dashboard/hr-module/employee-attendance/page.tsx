@@ -5,9 +5,7 @@ import { BASE_API } from "@/app/constant";
 import { IError, ISuccess } from "@/types";
 import AttendanceActionBtn from "@/components/AttendanceActionBtn";
 import SelectDate from "@/components/SelectDate";
-import DownloadFormUrl from "@/components/DownloadFormUrl";
 import Button from "@/components/Button";
-import { LuFileSpreadsheet } from "react-icons/lu";
 import Pagination from "@/components/Pagination";
 import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
@@ -18,6 +16,7 @@ import { axiosQuery } from "@/utils/axiosQuery";
 import { toast } from "react-toastify";
 import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
+import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 
 type TableTypes = {
   heads: string[];
@@ -78,7 +77,7 @@ export default async function EmployeeAttendance() {
       </div>
 
       <div className="flex items-center justify-end">
-        <DownloadFormUrl
+        {/* <DownloadFormUrl
           urlToDownload={
             BASE_API + "/hr/attendance/export-sheet?" + searchParams.toString()
           }
@@ -87,7 +86,8 @@ export default async function EmployeeAttendance() {
             <LuFileSpreadsheet size={20} />
             Generate Excel Sheet
           </Button>
-        </DownloadFormUrl>
+        </DownloadFormUrl> */}
+        <GenarateExcelReportBtn apiPath={`/hr/attendance/export-sheet?${searchParams.toString()}`}/>
       </div>
 
       {/* table info */}

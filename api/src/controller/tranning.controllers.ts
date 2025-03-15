@@ -221,8 +221,8 @@ export const getSingleTranningFormData = asyncErrorHandler(async (req, res) => {
   if (error) throw new ErrorHandler(400, error.message);
 
   const { rows } = await pool.query(
-    `SELECT form_data, record_id FROM tranning_requirement WHERE employee_id = $1 AND tranning_name = $2`,
-    [value.employee_id, value.tranning_name]
+    `SELECT form_data, record_id FROM tranning_requirement WHERE record_id = $1`,
+    [value.record_id]
   );
 
   res.status(200).json(new ApiResponse(200, "Form Data", rows[0]));
@@ -250,7 +250,6 @@ export const getTranningListEmployee = asyncErrorHandler(async (req, res) => {
     WHERE employee_id = $1 AND employee_visibility = true
 
     ORDER BY tr.record_id DESC
-    
     `,
     [value.employee_id]
   );
@@ -259,19 +258,37 @@ export const getTranningListEmployee = asyncErrorHandler(async (req, res) => {
 });
 
 export const completeTranning = asyncErrorHandler(async (req, res) => {
+  // if req.baseUrl.include(/account) than i can detact that user want to accept the tranning form from his
+  // account i need to check here is he really accept his form or not if not through error
+
   const { error, value } = VCompleteTranning.validate({
     ...req.params,
     ...req.body,
+    employee_id: res.locals.employee_id,
   });
   if (error) throw new ErrorHandler(400, error.message);
 
-  await pool.query(
-    `UPDATE tranning_requirement 
-      SET completed_at = CURRENT_TIMESTAMP,
-          form_data = $1
-     WHERE record_id = $2`,
-    [value.form_data, value.record_id]
-  );
+  if (req.baseUrl.includes("/account")) {
+    const { rowCount } = await pool.query(
+      `UPDATE tranning_requirement 
+        SET completed_at = CURRENT_TIMESTAMP,
+            form_data = $1
+       WHERE record_id = $2 AND employee_id = $3
+       RETURNING employee_id`,
+      [value.form_data, value.record_id, value.employee_id]
+    );
+
+    if (!rowCount || rowCount === 0)
+      throw new ErrorHandler(400, "You can accept only your own form.");
+  } else {
+    await pool.query(
+      `UPDATE tranning_requirement 
+        SET completed_at = CURRENT_TIMESTAMP,
+            form_data = $1
+       WHERE record_id = $2`,
+      [value.form_data, value.record_id]
+    );
+  }
 
   res.status(200).json(new ApiResponse(200, "Successfully Completed"));
 });
@@ -282,16 +299,16 @@ export const getTranningHistoryList = asyncErrorHandler(async (req, res) => {
   const institute = req.query.institute;
 
   let filter = "WHERE";
-  const filterValues : string[] = [];
+  const filterValues: string[] = [];
   let placeholderNum = 1;
 
-  if(institute) {
+  if (institute) {
     filter += ` e.institute = $${placeholderNum}`;
     filterValues.push(institute as string);
     placeholderNum++;
   }
 
-  if(filter === "WHERE") filter = "";
+  if (filter === "WHERE") filter = "";
 
   const { rows } = await pool.query(
     `

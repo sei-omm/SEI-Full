@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import asyncErrorHandler from "./asyncErrorHandler";
 import { ErrorHandler } from "../utils/ErrorHandler";
-import { verifyToken } from "../utils/token";
+import {  verifyToken } from "../utils/token";
 import { TTokenDataType } from "../types";
 import { getAuthToken } from "../utils/getAuthToken";
 
@@ -24,6 +24,10 @@ export const isAuthenticated = asyncErrorHandler(
     }
     if (data?.role) {
       res.locals.role = data.role;
+    }
+
+    if (data?.member_id) {
+      res.locals.member_id = data.member_id;
     }
 
     next();

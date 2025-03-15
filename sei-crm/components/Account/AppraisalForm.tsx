@@ -20,8 +20,7 @@ import { IoMdCloseCircle } from "react-icons/io";
 import { useIsAuthenticated } from "@/app/hooks/useIsAuthenticated";
 
 async function getSingleAppraisal(appraisalId: number) {
-  return (await axios.get(`${BASE_API}/employee/appraisal/${appraisalId}`))
-    .data;
+  return (await axios.get(`${BASE_API}/account/appraisal/${appraisalId}`)).data;
 }
 
 interface IProps {
@@ -61,6 +60,7 @@ export default function AppraisalForm({
       }
     },
     refetchOnMount: true,
+    enabled : !isNew
   });
 
   function handleFormAction(formData: FormData) {
@@ -87,7 +87,7 @@ export default function AppraisalForm({
       delete dataToStore["integrity"];
 
       mutate({
-        apiPath: "/employee/appraisal",
+        apiPath: "/account/appraisal",
         method: "post",
         // headers: {
         //   "Content-Type": "application/json",
@@ -106,7 +106,7 @@ export default function AppraisalForm({
       JSON.stringify(optionToObjEmployee);
 
     mutate({
-      apiPath: "/employee/appraisal",
+      apiPath: "/account/appraisal",
       method: "put",
       // headers: {
       //   "Content-Type": "application/json",
@@ -121,7 +121,7 @@ export default function AppraisalForm({
   }
 
   return (
-    <>
+    <React.Fragment key={isNew ? "true" : "false"}>
       {appraisal ? (
         <InfoLayout className={`space-y-3 ${wrapperClassName}`}>
           <h2 className="text-sm font-semibold text-yellow-700 text-center">
@@ -398,6 +398,6 @@ export default function AppraisalForm({
           </div>
         </form>
       </InfoLayout>
-    </>
+    </React.Fragment>
   );
 }

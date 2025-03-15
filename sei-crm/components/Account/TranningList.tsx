@@ -27,7 +27,7 @@ export default function TranningList() {
   const { data, error, isFetching } = useQuery<ISuccess<TTranningInfo[]>>({
     queryKey: ["get-tranning-info"],
     queryFn: async () =>
-      (await axios.get(`${BASE_API}/tranning/employee`)).data,
+      (await axios.get(`${BASE_API}/account/tranning`)).data,
     refetchOnMount: true,
   });
 
@@ -73,6 +73,8 @@ export default function TranningList() {
                               employee_id: info.employee_id,
                               btn_type: "Accepte",
                               employee_type: info.employee_type,
+                              from_where : "Account",
+                              record_id : info.record_id,
                             },
                           })
                         );

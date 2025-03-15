@@ -33,10 +33,11 @@ export const VGenerateForm = Joi.object({
 // });
 
 export const VGetSingleFormData = Joi.object({
-  employee_id: Joi.number().required(),
-  tranning_name: Joi.string()
-    .valid("Induction Training", "Skill Enhancement", "Training Requirement")
-    .required(),
+  // employee_id: Joi.number().required(),
+  // tranning_name: Joi.string()
+  //   .valid("Induction Training", "Skill Enhancement", "Training Requirement")
+  //   .required(),
+  record_id: Joi.number().required(),
 });
 
 export const VGetTranningListEmployee = Joi.object({
@@ -45,6 +46,6 @@ export const VGetTranningListEmployee = Joi.object({
 
 export const VCompleteTranning = Joi.object({
   record_id: Joi.number().required(),
-  form_data : Joi.string().required()
+  form_data: Joi.string().required(),
+  employee_id: Joi.number().required(),
 });
-

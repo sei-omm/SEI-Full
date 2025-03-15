@@ -36,7 +36,6 @@ import {
   updateEmployeeAttendance,
 } from "../controller/attendance.controller";
 import { getHrDashboardInfo } from "../controller/employee.controller";
-import { roles } from "../middleware/roles";
 import {
   addPayscale,
   deletePayscale,
@@ -44,55 +43,121 @@ import {
   updatePayscale,
 } from "../controller/payscale.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
+import { checkPermission } from "../middleware/checkPermission";
 
 export const hrRouter = Router();
 
 hrRouter
-  .get(
-    "/dashboard",
-    roles({
-      roles: ["Admin"],
-    }),
-    getHrDashboardInfo
-  )
+  .get("/dashboard", isAuthenticated, checkPermission, getHrDashboardInfo)
 
   .get("/department", getAllDepartments)
   .get("/department/:department_id", getSingleDepartment)
-  .post("/department", addNewDepartment)
-  .put("/department/:department_id", updateDepartment)
-  .delete("/department/:department_id", deleteDepartment)
+
+  .post("/department", isAuthenticated, checkPermission, addNewDepartment)
+  .put(
+    "/department/:department_id",
+    isAuthenticated,
+    checkPermission,
+    updateDepartment
+  )
+  .delete(
+    "/department/:department_id",
+    isAuthenticated,
+    checkPermission,
+    deleteDepartment
+  )
 
   .get("/payscale", getPayscale)
-  .post("/payscale", addPayscale)
-  .put("/payscale/:payscale_id", updatePayscale) // not using
-  .delete("/payscale/:item_id", deletePayscale)
+  .post("/payscale", isAuthenticated, checkPermission, addPayscale)
+  .put(
+    "/payscale/:payscale_id",
+    isAuthenticated,
+    checkPermission,
+    updatePayscale
+  ) // not using
+  .delete(
+    "/payscale/:item_id",
+    isAuthenticated,
+    checkPermission,
+    deletePayscale
+  )
 
-  .get("/leave", isAuthenticated, getRequestedLeaveLists)
-  .get("/leave/other", isAuthenticated, getOthersLeaveList)
-  .get("/leave/employees", getEachEmployeLeaveDetails)
-  .get("/leave/receipt/:leave_id", generateLeaveReceipt)
+  .get("/leave", isAuthenticated, checkPermission, getRequestedLeaveLists)
+  // .get("/leave/other", isAuthenticated, checkPermission, getOthersLeaveList)
+  .get(
+    "/leave/employees",
+    isAuthenticated,
+    checkPermission,
+    getEachEmployeLeaveDetails
+  )
+  .get(
+    "/leave/receipt/:leave_id",
+    isAuthenticated,
+    checkPermission,
+    generateLeaveReceipt
+  )
   // .post("/leave", createLeaveRequest) //this will done by employee
-  .patch("/leave/:id", isAuthenticated, updateLeaveStatus)
-  .delete("/leave/:id", removeLeaveRequestRow)
-  .post("/leave/add-earn-leave", addEarnLeaveToAllEmployee) // triggre this api form github action every month
-  .post("/leave/add-yearly-leave", addLeaveValuesYearly) // triggre this api form github action every month
+  // .patch("/leave/:id", isAuthenticated, checkPermission, updateLeaveStatus)
+  // .delete("/leave/:id", isAuthenticated, checkPermission, removeLeaveRequestRow)
+  .post(
+    "/leave/add-earn-leave",
+    isAuthenticated,
+    checkPermission,
+    addEarnLeaveToAllEmployee
+  ) // triggre this api form github action every month
+  .post(
+    "/leave/add-yearly-leave",
+    isAuthenticated,
+    checkPermission,
+    addLeaveValuesYearly
+  ) // triggre this api form github action every month
 
-  .get("/job", getAllJobs)
-  .get("/job/:id", getAJob)
-  .post("/job", postNewJob)
-  .put("/job/:id", updateJobPosting)
-  .delete("/job/:id", removeJobPosting)
+  .get("/job", isAuthenticated, checkPermission, getAllJobs)
+  .get("/job/:id", isAuthenticated, checkPermission, getAJob)
+  .post("/job", isAuthenticated, checkPermission, postNewJob)
+  .put("/job/:id", isAuthenticated, checkPermission, updateJobPosting)
+  .delete("/job/:id", isAuthenticated, checkPermission, removeJobPosting)
+  .get(
+    "/job/apply/:job_id",
+    isAuthenticated,
+    checkPermission,
+    getCandidateJobApplication
+  )
+  .patch(
+    "/job/apply/:application_list_id",
+    isAuthenticated,
+    checkPermission,
+    updateCandidateApplicationStatus
+  )
 
-  .get("/job/apply/:job_id", getCandidateJobApplication)
-  .patch("/job/apply/:application_list_id", updateCandidateApplicationStatus)
   .get("/job/apply/track/:application_id", trackJobApplication)
   .post("/job/apply", applyJobAsCandidate)
 
   //for attendance system
-  .get("/attendance", getAllEmployeeAllAttendances)
-  .get("/attendance/export-sheet", generateAttendanceSheet)
-  .post("/attendance", addNewEmployeeAttendance)
-  .patch("/attendance", updateEmployeeAttendance)
+  .get(
+    "/attendance",
+    isAuthenticated,
+    checkPermission,
+    getAllEmployeeAllAttendances
+  )
+  .get(
+    "/attendance/export-sheet",
+    isAuthenticated,
+    checkPermission,
+    generateAttendanceSheet
+  )
+  .post(
+    "/attendance",
+    isAuthenticated,
+    checkPermission,
+    addNewEmployeeAttendance
+  )
+  .patch(
+    "/attendance",
+    isAuthenticated,
+    checkPermission,
+    updateEmployeeAttendance
+  )
 
   .get("/designation", getAllDesignation)
   .post("/designation", addDesignation);

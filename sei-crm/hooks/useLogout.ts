@@ -24,6 +24,10 @@ export const useLogout = () => {
           inCookie: false,
           inLocalstorage: true,
         });
+        await removeInfo("permissions", {
+          inCookie: false,
+          inLocalstorage: true,
+        });
         // await removeInfo("refreshToken");
         dispatch(setDialog({ type: "CLOSE", dialogId: "progress-dialog" }));
         route.push("/auth/login");

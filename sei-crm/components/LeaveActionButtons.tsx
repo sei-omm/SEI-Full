@@ -58,7 +58,7 @@ export default function LeaveActionButtons({ leaveINFO }: IProps) {
 
         openDialog();
         mutate({
-          apiPath: "/hr/leave",
+          apiPath: "/account/leave",
           method: "delete",
           id: leaveINFO?.id,
           onSuccess() {
@@ -83,7 +83,7 @@ export default function LeaveActionButtons({ leaveINFO }: IProps) {
   ) {
     openDialog();
     mutate({
-      apiPath: "/hr/leave",
+      apiPath: "/account/leave",
       method: "patch",
       formData: {
         leave_status: status,
@@ -131,8 +131,8 @@ export default function LeaveActionButtons({ leaveINFO }: IProps) {
             onClick={() => handleDeleteBtn(leaveINFO.id)}
           /> */}
           <Link
-            target="__blank"
-            href={`${BASE_API}/hr/leave/receipt/${leaveINFO?.id}`}
+            target="_blank"
+            href={`${BASE_API}/account/leave/receipt/${leaveINFO?.id}`}
           >
             <IoPrintSharp size={20} />
           </Link>
@@ -156,7 +156,7 @@ export default function LeaveActionButtons({ leaveINFO }: IProps) {
             handleActionBtn={() => handleActionBtn("success", "pending")}
           />
           <Link
-            target="__blank"
+            target="_blank"
             href={`${BASE_API}/hr/leave/receipt/${leaveINFO?.id}`}
           >
             <IoPrintSharp size={20} />

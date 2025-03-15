@@ -19,7 +19,7 @@ interface IProps {
 }
 
 async function fetchAppraisals(type: "own" | "others") {
-  return (await axios.get(`${BASE_API}/employee/appraisal?type=${type}`)).data;
+  return (await axios.get(`${BASE_API}/account/appraisal?type=${type}`)).data;
 }
 
 export default function Appraisal({ type }: IProps) {

@@ -40,6 +40,10 @@ export default function Login() {
             inCookie: false,
           }
         );
+        await setInfo("permissions", data.data.permissions, {
+          inCookie: false,
+          inLocalstorage: true,
+        });
         route.push("/account?tab=informations");
       },
     });

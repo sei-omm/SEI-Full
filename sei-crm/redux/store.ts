@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import dialogsSlice from "./slices/dialogs.slice";
+import sideBarSlice from "./slices/sidebar.slice";
 
 export const store = configureStore({
   reducer: {
-    dialogs : dialogsSlice
+    dialogs: dialogsSlice,
+    sidebar: sideBarSlice,
   },
 });
 

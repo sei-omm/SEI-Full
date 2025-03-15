@@ -32,6 +32,9 @@ export default function TrainingRequirement() {
   const staffOrFaculty =
     extraValue?.employee_type === "Faculty" ? "Faculty" : "Staff";
 
+    const path = extraValue?.from_where === "Account" ? "/account" : "/tranning";
+
+
   const dispatch = useDispatch();
   const [serilizeData, setSerilizeData] = useState<TrainingRecord | null>(null);
 
@@ -42,7 +45,8 @@ export default function TrainingRequirement() {
     queryFn: async () =>
       (
         await axios.get(
-          `${BASE_API}/tranning/one-form?employee_id=${extraValue?.employee_id}&tranning_name=Training Requirement`
+          `${BASE_API}${path}/one-form?record_id=${extraValue?.record_id}`
+          // `${BASE_API}${path}/one-form?employee_id=${extraValue?.employee_id}&tranning_name=Training Requirement`
         )
       ).data,
     enabled: extraValue?.btn_type !== "Generate",
@@ -84,7 +88,7 @@ export default function TrainingRequirement() {
     }
 
     mutate({
-      apiPath: "/tranning/complete",
+      apiPath: `${path}/complete`,
       method: "put",
       formData: {
         form_data: JSON.stringify(formObj),

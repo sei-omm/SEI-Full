@@ -1,6 +1,6 @@
 import { PutBlobResult } from "@vercel/blob";
 import { Dispatch, SetStateAction } from "react";
-import { string, z } from "zod";
+import { z } from "zod";
 import { studentFormSchema } from "./FormSchema";
 
 export interface ITabItems {
@@ -168,7 +168,7 @@ export interface IEmployee {
 
   leave_details: TEmployeeLeave[];
 
-  access_to_crm: boolean;
+  access_to_crm?: boolean;
 }
 
 export type ILeaveStatus = "pending" | "success" | "decline";
@@ -238,7 +238,7 @@ export interface ICourse extends ICourseWithSubject {
   max_batch: number;
   concern_marketing_executive_id: number;
   batches?: TBatches[];
-  category : string;
+  category: string;
 }
 
 export type DropDownOptionType = {
@@ -251,6 +251,7 @@ export type EmployeeLoginInfoType = {
   profile_image: string;
   name: string;
   employee_id: number;
+  permissions : string;
 };
 
 export type TStudentPayment = {
@@ -274,8 +275,8 @@ export type TPaymentInfo = {
   total_due: number;
   total_misc_payment: number;
   total_discount: number;
-  total_fees : number;
-  total_due_fees : number;
+  total_fees: number;
+  total_due_fees: number;
   payments: TStudentPayment[];
 };
 
@@ -395,7 +396,7 @@ export type TLibrary = {
 
   created_at: string;
 
-  course_or_subject_name : string | null;
+  course_or_subject_name: string | null;
 
   subject_ids: number[];
   course_ids: number[];
@@ -626,8 +627,8 @@ export type TRefundReport = {
   created_at: string; // ISO date string
   executive_name: string;
   refund_id: string;
-  form_id : string;
-  bank_transaction_id : string;
+  form_id: string;
+  bank_transaction_id: string;
 };
 
 export type TDesignation = {
@@ -644,7 +645,7 @@ export type TAppraisalList = {
 
   appraisal_of_employee_id?: number;
   appraisal_of?: string;
-  appraisal_status? : "Pending" | "Approved"
+  appraisal_status?: "Pending" | "Approved";
 };
 
 export type TAppraisal = {
@@ -667,8 +668,8 @@ export type TAppraisal = {
     profile_image: string;
     dob: string;
     joining_date: string;
-    authority : string;
-    department_name : string;
+    authority: string;
+    department_name: string;
   };
 };
 
@@ -710,7 +711,7 @@ export type TRefundDetails = {
   created_at: string; // ISO date string
   status: string; // Add other statuses if applicable
   form_id: string;
-  bank_transaction_id : string;
+  bank_transaction_id: string;
 };
 
 export type StudentForm = z.infer<typeof studentFormSchema>;
@@ -776,19 +777,48 @@ export type TBookIssueTo = "Faculty" | "Student";
 export type TVTableData = {
   course_id: number;
   course_name: string;
-  course_code : string;
+  course_code: string;
 
-  faculties : TFaculty[];
-  subjects : string[];
-  
-  selected_faculty_id : number,
-  selected_subject : string
-}
+  faculties: TFaculty[];
+  subjects: string[];
+
+  selected_faculty_id: number;
+  selected_subject: string;
+};
 
 export type TNoticeBoard = {
   notice_id: number;
   heading: string;
   description: string;
-  created_at : string;
-  visible : boolean;
+  created_at: string;
+  visible: boolean;
+};
+
+export type TMembers = {
+  name: string;
+  employee_login_id: string;
+  profile_image: string | null;
+  employee_role: string | null;
+  member_id: number;
+  employee_id : number;
+  permissions: number;
+};
+
+export type TSingleMember = {
+  member_row_id : number;
+  employee_id : number;
+  permissions : string;
 }
+
+export type TSideBar = {
+  id: string;
+  icon: null | string;
+  name: string;
+  slug: string;
+  subMenu?: {
+    id: string;
+    icon: string;
+    name: string;
+    slug: string;
+  }[];
+};

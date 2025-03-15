@@ -31,6 +31,7 @@ export const VEachEmployeLeaveDetails = Joi.object({
 export const getOthersLeaveListV = Joi.object({
   employee_id : Joi.number().required()
 })
+
 export const getLeaveReciptV = Joi.object({
   leave_id : Joi.number().required()
 });

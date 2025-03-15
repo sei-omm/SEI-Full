@@ -7,12 +7,13 @@ import { CiEdit } from "react-icons/ci";
 import { IoIosPeople } from "react-icons/io";
 import Link from "next/link";
 import { BASE_API } from "@/app/constant";
-import { notFound } from "next/navigation";
 import { IJob, ISuccess } from "@/types";
 import { IoLocationOutline } from "react-icons/io5";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import { MdOutlineWorkHistory } from "react-icons/md";
 import Pagination from "@/components/Pagination";
+import axios from "axios";
+import { redirect } from "next/navigation";
 
 // interface IProps {
 //   searchParams: any;
@@ -21,13 +22,19 @@ import Pagination from "@/components/Pagination";
 export default async function page() {
   // const urlSearchParams = new URLSearchParams(searchParams);
   const API_TO_HIT = BASE_API + "/hr/job";
-  const response = await fetch(API_TO_HIT, { cache: "no-cache" });
 
-  if (!response.ok) {
-    return notFound();
+  let result : ISuccess<IJob[]> = {
+    data: [],
+    message : "",
+    statusCode : 200,
+    success : true
+  };
+
+  try {
+    result = await (await axios.get<ISuccess<IJob[]>>(API_TO_HIT)).data
+  } catch {
+    redirect(`/error?status=${400}`)
   }
-
-  const result = (await response.json()) as ISuccess<IJob[]>;
 
   return (
     <section>

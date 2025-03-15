@@ -10,7 +10,7 @@ import {
   searchFile,
 } from "../controller/storage.controller";
 
-export const storageRouter = Router();
+export const storageRouter = Router(); // i protact this route globally inside index.ts file
 
 storageRouter
   .get("/", getFilesAndFolders)

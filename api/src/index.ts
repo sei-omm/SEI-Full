@@ -23,9 +23,12 @@ import { receiptRoutes } from "./route/receipt.routes";
 import path from "path";
 import { holidayRoutes } from "./route/holiday.routes";
 import { tranningRoutes } from "./route/tranning.routes";
-import { sendNotificationUtil } from "./utils/sendNotificationUtil";
 import { cronRouter } from "./route/cron.routes";
 import { websiteRoute } from "./route/website.routes";
+import { settingRoute } from "./route/setting.routes";
+import { isAuthenticated } from "./middleware/isAuthenticated";
+import { checkPermission } from "./middleware/checkPermission";
+import { accountRoute } from "./route/account.routes";
 
 dotenv.config();
 const app = express();
@@ -74,33 +77,20 @@ app.use("/api/v1/report", reportRouter);
 app.use("/api/v1/upload", uploadRoute);
 app.use("/api/v1/library", libraryRouter);
 app.use("/api/v1/subject", subjectRoute);
-app.use("/api/v1/storage", storageRouter);
+app.use("/api/v1/storage", isAuthenticated, checkPermission, storageRouter);
 app.use("/api/v1/inventory", inventoryRoute);
 app.use("/api/v1/notification", notificationRoutes);
 app.use("/api/v1/receipt", receiptRoutes);
-app.use("/api/v1/holiday", holidayRoutes);
-app.use("/api/v1/tranning", tranningRoutes);
+app.use("/api/v1/holiday", isAuthenticated, checkPermission, holidayRoutes);
+app.use("/api/v1/tranning", isAuthenticated, checkPermission, tranningRoutes);
 app.use("/api/v1/cron-job", cronRouter);
-app.use("/api/v1/website", websiteRoute)
+app.use("/api/v1/website", websiteRoute);
+app.use("/api/v1/setting", isAuthenticated, checkPermission, settingRoute);
 app.use("/api/v1/db", setupDbRoute);
+app.use("/api/v1/account", accountRoute);
 
 //global error handler
 app.use(globalErrorController);
-
-app.get("/api/v1/cron-job", async (req, res) => {
-  // res.status(200).send(encrypt("123456"));
-  // res.json(await fetchAnOrderInfo("order_Q3V98gaDyqKeLD"));
-
-
-  await sendNotificationUtil({
-    notification_title : "Test Auto Notification",
-    notification_description : "Testing Notification Description",
-    notification_type : "role_base",
-    employee_roles : ["Admin"]
-  })
-
-  res.send("DONE");
-});
 
 //route error
 app.all("*", (req, res, next) => {

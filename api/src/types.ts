@@ -31,6 +31,7 @@ export interface TTokenDataType
   role: string;
   name: string;
   institute: string;
+  member_id : number;
 }
 
 export type TEmployeeDocs = {

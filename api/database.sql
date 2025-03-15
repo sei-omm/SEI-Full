@@ -1310,6 +1310,21 @@ CREATE TABLE notice (
     visible BOOLEAN NOT NULL DEFAULT TRUE
 )
 
+-- NEW TABLE 12 Mar 2025
+
+CREATE TABLE members (
+    member_row_id SERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL,
+    FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE,
+
+    permissions TEXT NOT NULL,
+
+    UNIQUE (employee_id)
+)
+
+INSERT INTO members (employee_id, permissions) VALUES (27, '{"1":true,"2":true,"3":true,"4":true,"5":true,"6":true,"7":true,"8":true,"9":true,"10":true,"1-1":true,"1-2":true,"1-3":true,"1-4":true,"1-5":true,"1-6":true,"1-7":true,"1-8":true,"1-9":true,"1-10":true,"7-1":true,"7-2":true,"7-3":true,"8-3":true,"3-1":true,"3-2":true,"9-1":true,"2-1":true,"2-2":true,"4-1":true,"4-2":true,"4-3":true,"4-4":true,"5-1":true,"5-2":true,"5-3":true,"5-4":true,"5-5":true,"5-6":true,"5-7":true,"5-8":true,"5-9":true,"5-11":true,"5-10":true,"10-1":true,"6-1":true}');
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

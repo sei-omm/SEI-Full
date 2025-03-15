@@ -236,6 +236,8 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
       null;
     if (!employee_id) throw new ErrorHandler(400, "Employee Id Is Required");
 
+    const isReqFormAccount = res.locals?.employee_id !== undefined;
+
     const query = `
         SELECT 
             e.*,                        
@@ -252,7 +254,18 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
               json_agg(el.*) 
             FROM employee_leave el WHERE el.employee_id = e.id AND el.financial_year_date >= get_financial_year_start()
           ) AS leave_details,
-           (CASE WHEN e.employee_role = 'Admin' THEN true ELSE false END) AS access_to_crm
+          ${
+            isReqFormAccount
+              ? `
+              (
+                CASE
+                  WHEN e.employee_role = 'Super Admin' OR (SELECT member_row_id FROM members WHERE employee_id = e.id LIMIT 1) IS NOT NULL THEN true
+                  ELSE false
+                END
+            ) AS access_to_crm
+            `
+              : ""
+          }
         FROM 
             employee e
         LEFT JOIN 
@@ -269,7 +282,9 @@ export const getSingleEmployeeInfo = asyncErrorHandler(
         LEFT JOIN faculty_with_course_subject AS fwcs
         ON fwcs.faculty_id = e.id
 
-        WHERE e.id = $2
+        WHERE e.id = $2 ${
+          isReqFormAccount ? "" : "AND e.employee_role != 'Super Admin'"
+        }
 
         GROUP BY e.id, d.name, a.status
         ORDER BY 
@@ -641,7 +656,25 @@ export const loginEmployee = asyncErrorHandler(
     if (error) throw new ErrorHandler(400, error.message);
 
     const { rowCount, rows } = await pool.query(
-      `SELECT login_email, id, institute, login_password, employee_role, name, profile_image, is_active FROM ${table_name} WHERE login_email = $1`,
+      `
+        SELECT 
+          e.login_email, 
+          e.id, 
+          e.institute, 
+          e.login_password, 
+          e.employee_role, 
+          e.name, 
+          e.profile_image, 
+          e.is_active,
+          m.permissions,
+          m.member_row_id
+        FROM ${table_name} e
+
+        LEFT JOIN members m
+        ON e.id = m.employee_id
+
+        WHERE login_email = $1
+        `,
       [value.login_email]
     );
 
@@ -654,9 +687,8 @@ export const loginEmployee = asyncErrorHandler(
     //   rows[0].login_password
     // );
 
-
     const { isError, decrypted } = decrypt(rows[0].login_password);
-    if(isError) throw new ErrorHandler(400, "Wrong password");
+    if (isError) throw new ErrorHandler(400, "Wrong password");
 
     if (decrypted !== value.login_password) {
       throw new ErrorHandler(400, "Wrong password");
@@ -668,11 +700,13 @@ export const loginEmployee = asyncErrorHandler(
         login_email: rows[0].login_email,
         role: rows[0].employee_role,
         institute: rows[0].institute,
+        member_id: rows[0].member_row_id,
       },
       { expiresIn: "7d" }
     );
 
     res.cookie("refreshToken", refreshToken, {
+      path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       // sameSite: "lax", // "lax" works better for local development
@@ -682,32 +716,80 @@ export const loginEmployee = asyncErrorHandler(
       maxAge: 1000 * 60 * 60 * 24, // 1 day
     });
 
+    const permissionToken = createToken(
+      {
+        permissions: rows[0].permissions,
+      },
+      { expiresIn: "15m" }
+    );
+
+    res.cookie("permissionToken", permissionToken, {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      // sameSite: "lax", // "lax" works better for local development
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      domain:
+        process.env.NODE_ENV === "production" ? process.env.DOMAIN : undefined,
+      maxAge: 1000 * 60 * 15, // 15 minits
+    });
+
     res.status(200).json(
       new ApiResponse(200, "Login Successfully Completed", {
         token: refreshToken,
         profile_image: rows[0].profile_image,
         name: rows[0].name,
         employee_id: rows[0].id,
+        permissions: rows[0].permissions,
       })
     );
   }
 );
 
 export const employeeLogout = asyncErrorHandler(async (req, res) => {
-  res.clearCookie("refreshToken", {
+  res.clearCookie("refreshToken");
+  res.clearCookie("permissionToken");
+  res.status(200).json(new ApiResponse(200, "Successfully Logout"));
+});
+
+export const isLogin = asyncErrorHandler(async (req, res) => {
+  const { rowCount, rows } = await pool.query(
+    `SELECT permissions FROM members WHERE employee_id = $1`,
+    [res.locals?.employee_id]
+  );
+
+  if (!rowCount || rowCount === 0) {
+    res.clearCookie("permissionToken");
+    res.status(400).json(new ApiResponse(400, "", "{}"));
+    return;
+  }
+
+  const permissionToken = createToken(
+    {
+      permissions: rows[0].permissions,
+    },
+    { expiresIn: "15m" }
+  );
+
+  // not working properly
+  res.clearCookie("permissionToken");
+  res.cookie("permissionToken", permissionToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    // sameSite: "lax", // "lax" works better for local development
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     domain:
       process.env.NODE_ENV === "production" ? process.env.DOMAIN : undefined,
+    maxAge: 1000 * 60 * 15, // 15 minits
   });
-  res.status(200).json(new ApiResponse(200, "Successfully Logout"));
+
+  res.status(200).json(new ApiResponse(400, "", rows[0].permissions));
 });
 
 export const getMarketingTeam = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const institute = req.query.institute;
-    if(!institute) throw new ErrorHandler(400, "Campus Is Needed");
+    if (!institute) throw new ErrorHandler(400, "Campus Is Needed");
 
     let query = `
         SELECT 
@@ -870,6 +952,7 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
     ...req.body,
     employee_id: res.locals.employee_id,
   });
+
   if (error) throw new ErrorHandler(400, error.message);
 
   const client = await pool.connect();
@@ -1337,7 +1420,7 @@ export const searchEmployeeName = asyncErrorHandler(async (req, res) => {
         name, 
         id, 
         employee_type 
-     FROM employee WHERE name ILIKE '%' || $1 || '%' AND institute = $2
+     FROM employee WHERE name ILIKE '%' || $1 || '%' AND institute = $2 AND employee_role != 'Super Admin'
      LIMIT ${LIMIT} OFFSET ${OFFSET}
      `,
     [req.query.q, institute]

@@ -37,6 +37,7 @@ import TrainingRequirement from "./Tranning/TrainingRequirement";
 import ViewRequirementDetailsDialog from "./Tranning/ViewRequirementDetailsDialog";
 import ViewPmsHistoryDialog from "./ViewPmsHistoryDialog";
 import IssueBookToStudent from "./IssueBookToStudent";
+import AssignPermissionDialog from "./AssignPermissionDialog";
 
 type DivType = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -186,14 +187,19 @@ const dialogs = [
   },
 
   {
-    id : "view-pms-history",
-    component : <ViewPmsHistoryDialog />
+    id: "view-pms-history",
+    component: <ViewPmsHistoryDialog />,
   },
 
   {
-    id : "issue-book-to-student",
-    component : <IssueBookToStudent />
-  }
+    id: "issue-book-to-student",
+    component: <IssueBookToStudent />,
+  },
+
+  {
+    id: "assign-permission",
+    component: <AssignPermissionDialog />,
+  },
 ];
 
 export default function DialogWrapper(props: DivType) {

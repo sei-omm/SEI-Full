@@ -26,7 +26,7 @@ export default function AddLeaveRequest() {
 
   function handleSubmit(formData: FormData) {
     mutate({
-      apiPath: "/employee/leave",
+      apiPath: "/account/leave",
       method: "post",
       // headers: {
       //   "Content-Type": "application/json",

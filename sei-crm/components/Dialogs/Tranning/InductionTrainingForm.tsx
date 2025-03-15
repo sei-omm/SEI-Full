@@ -31,6 +31,8 @@ export default function InductionTrainingForm() {
   const staffOrFaculty =
     extraValue?.employee_type === "Faculty" ? "Faculty" : "Staff";
 
+  const path = extraValue?.from_where === "Account" ? "/account" : "/tranning";
+
   const tableDatas = {
     head: [
       "Details of training",
@@ -69,7 +71,8 @@ export default function InductionTrainingForm() {
     queryFn: async () =>
       (
         await axios.get(
-          `${BASE_API}/tranning/one-form?employee_id=${extraValue?.employee_id}&tranning_name=Induction Training`
+          // `${BASE_API}${path}/one-form?employee_id=${extraValue?.employee_id}&tranning_name=Induction Training`
+          `${BASE_API}${path}/one-form?record_id=${extraValue?.record_id}`
         )
       ).data,
     enabled: extraValue?.btn_type !== "Generate",
@@ -124,7 +127,7 @@ export default function InductionTrainingForm() {
     }
 
     mutate({
-      apiPath: "/tranning/complete",
+      apiPath: `${path}/complete`,
       method: "put",
       formData: {
         form_data: JSON.stringify(formDataArray),

@@ -26,7 +26,7 @@ export default function LeaveRequest() {
   >({
     queryKey: ["employee-leave-request"],
     queryFn: async () =>
-      (await axios.get(`${BASE_API}/employee/leave`)).data,
+      (await axios.get(`${BASE_API}/account/leave`)).data,
     refetchOnMount: true,
     onSuccess(data) {
       const leaveArray = [

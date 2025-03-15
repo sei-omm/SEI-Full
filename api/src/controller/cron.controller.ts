@@ -6,9 +6,6 @@ export const updateInventoryInfoDaily = asyncErrorHandler(async (req, res) => {
   const CRON_SECRET = process.env.CRON_SECRET || "";
 
   const authToken = req.headers["x-cron-auth"] || req.query.token; // Get token from headers
-  console.log("CRON JOBS TOKEN")
-  console.log(req.query.token);
-  console.log(req.headers["x-cron-auth"]);
 
   if (!authToken || authToken !== CRON_SECRET) {
     throw new ErrorHandler(403, "Unauthorized request");

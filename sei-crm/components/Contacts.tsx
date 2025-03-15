@@ -9,6 +9,7 @@ import TagsBtn from "./TagsBtn";
 import EmployeeTypeFilter from "./Employee/EmployeeTypeFilter";
 import Pagination from "./Pagination";
 import GenarateExcelReportBtn from "./GenarateExcelReportBtn";
+import axios from "axios";
 
 const tableDatas = {
   heads: ["Name", "Type", "Department", "Status", "Action"],
@@ -24,11 +25,8 @@ interface IProps {
 
 export default async function Contacts({ searchParams }: IProps) {
   const urlSearchParams = new URLSearchParams(searchParams);
-  const response = await fetch(
-    `${BASE_API}/employee?${urlSearchParams.toString()}`,
-    { cache: "no-store" }
-  );
-  const result = (await response.json()) as ISuccess<IHREmployee[]>;
+
+  const result = (await axios.get<ISuccess<IHREmployee[]>>(`${BASE_API}/employee?${urlSearchParams.toString()}`)).data
 
   tableDatas.body = result?.data?.map((employee) => [
     employee.name,

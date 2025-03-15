@@ -4,10 +4,10 @@ import {
   assignAssets,
   assignFacultyCourseSubject,
   checkHoi,
-  createAppraisal,
+  // createAppraisal,
   deleteAssignAssets,
   employeeLogout,
-  generateAllEmployeeExcelSheet,
+  // generateAllEmployeeExcelSheet,
   generateAppraisal,
   getAppraisalList,
   getAssignedAssets,
@@ -17,23 +17,21 @@ import {
   getMarketingTeam,
   getSingleAppraisal,
   getSingleEmployeeInfo,
+  isLogin,
   loginEmployee,
   removeEmployee,
   removeFacultyCourseSubject,
   searchEmployeeName,
-  updateAppraisalReport,
+  // updateAppraisalReport,
   updateAssetReturnDate,
   updateEmployee,
   updateEmployeeActiveStatus,
 } from "../controller/employee.controller";
-import { upload } from "../middleware/multer";
 import {
-  createEmployeeLeaveRequest,
   getEmployeeLeaveRequest,
 } from "../controller/leave.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
-import { roles } from "../middleware/roles";
-import { ApiResponse } from "../utils/ApiResponse";
+import { checkPermission } from "../middleware/checkPermission";
 
 export const employeeRoute = Router();
 
@@ -49,27 +47,26 @@ export const employeeRoute = Router();
 // ];
 
 employeeRoute
-  .get("/", getEmployee)
-  .get("/export-sheet", generateAllEmployeeExcelSheet)
+  .get("/", isAuthenticated, checkPermission, getEmployee)
+  // .get("/export-sheet", generateAllEmployeeExcelSheet)
   .get("/marketing-team", getMarketingTeam)
-  .get("/leave", isAuthenticated, getEmployeeLeaveRequest)
+  .get("/leave", isAuthenticated, checkPermission, getEmployeeLeaveRequest)
   .get("/search", searchEmployeeName)
 
-  .get("/appraisal", isAuthenticated, getAppraisalList)
-  .get("/appraisal/print/:appraisal_id", generateAppraisal)
-  .get("/appraisal/:appraisal_id", getSingleAppraisal)
-  .post("/appraisal", isAuthenticated, createAppraisal)
-  .put("/appraisal/:appraisal_id", isAuthenticated, updateAppraisalReport)
+  .get("/appraisal", isAuthenticated, checkPermission, getAppraisalList)
+  .get("/appraisal/print/:appraisal_id", isAuthenticated, checkPermission, generateAppraisal)
+  .get("/appraisal/:appraisal_id", isAuthenticated, checkPermission, getSingleAppraisal)
+  // .post("/appraisal", isAuthenticated, checkPermission, createAppraisal)
+  // .put("/appraisal/:appraisal_id", isAuthenticated, checkPermission, updateAppraisalReport)
 
-  .get("/assets/:employee_id", getAssignedAssets)
-  .post("/assets", assignAssets)
-  .delete("/assets/:assets_id", deleteAssignAssets)
-  .patch("/assets/:assets_id", updateAssetReturnDate)
+  .get("/assets/:employee_id", isAuthenticated, checkPermission, getAssignedAssets)
+  .post("/assets", isAuthenticated, checkPermission, assignAssets)
+  .delete("/assets/:assets_id", isAuthenticated, checkPermission, deleteAssignAssets)
+  .patch("/assets/:assets_id", isAuthenticated, checkPermission, updateAssetReturnDate)
 
-  .get("/:employee_id/document", isAuthenticated, getEmployeeDocuments)
+  .get("/:employee_id/document", isAuthenticated, checkPermission, getEmployeeDocuments)
 
-  .post("/", addNewEmployee)
-  .post("/leave", isAuthenticated, createEmployeeLeaveRequest)
+  .post("/", isAuthenticated, checkPermission, addNewEmployee)
   .put("/:id", updateEmployee)
   .patch("/:id", updateEmployeeActiveStatus)
   .delete("/:id", removeEmployee)
@@ -82,9 +79,6 @@ employeeRoute
     removeFacultyCourseSubject
   )
   .get("/is-hoi-exist", checkHoi)
-
-  .get("/is-login", isAuthenticated, (req, res) => {
-    res.status(200).json(new ApiResponse(200, "true"));
-  })
+  .get("/is-login", isAuthenticated, isLogin)
   
-  .get("/:id", isAuthenticated, getSingleEmployeeInfo);
+  .get("/:id", isAuthenticated, checkPermission, getSingleEmployeeInfo);
