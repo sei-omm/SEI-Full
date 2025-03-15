@@ -88,6 +88,9 @@ export const PERMISSION_PATH_MAP: Record<string, string | string[]> = {
   "/tranning/complete": "1-10",
   "/tranning/render-form": "1-10",
 
+  "/course" : "2-1",
+  "/course/batch" : "2-1",
+
   "/setting" : "6-1",
   "/setting/member" : "6-1",
   "/setting/member/role" : "6-1"

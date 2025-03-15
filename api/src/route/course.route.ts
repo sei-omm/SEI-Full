@@ -28,6 +28,7 @@ import {
   removeFromDraft,
 } from "../controller/course.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
+import { checkPermission } from "../middleware/checkPermission";
 
 export const courseRouter = Router();
 
@@ -44,19 +45,22 @@ courseRouter
   .get("/get-multi-course-price", getMultiCoursesPrices)
   .get("/get-multi-batch-price", getMultiBatchPrices)
   .get("/drop-down", getCoursesForDropDown)
-  .post("/", addNewCourse)
-  .put("/:course_id", updateCourseInfo)
-  .delete("/:course_id", deleteCourse)
+  
+  .post("/", isAuthenticated, checkPermission, addNewCourse)
+  .put("/:course_id", isAuthenticated, checkPermission, updateCourseInfo)
+  .delete("/:course_id", isAuthenticated, checkPermission, deleteCourse)
   // .post("/enroll/:course_id", isAuthenticated, enrolCourse)
   // .post("/enroll", isAuthenticated, enrolCourse)
   .post("/enroll", isAuthenticated, enrollToBatch)
   // .post("/fill-form/:course_id", fillUpCourseForm) //can done only buy student and admin
   .get("/get-batch", getMultipleBatchWithId)
   .get("/batch/:course_id", getCourseBatch)
-  .post("/batch", insertNewCourseBatch)
-  .put("/batch/:batch_id", updateCourseBatchInfo)
-  .delete("/batch/:batch_id", deleteCourseBatch)
-  .patch("/batch", isAuthenticated, changeBatchManually) //chnage batch manually -> only access by marketing team
+  
+  .post("/batch", isAuthenticated, checkPermission, insertNewCourseBatch)
+  .put("/batch/:batch_id", isAuthenticated, checkPermission, updateCourseBatchInfo)
+  .delete("/batch/:batch_id", isAuthenticated, checkPermission, deleteCourseBatch)
+  .patch("/batch", isAuthenticated, checkPermission, changeBatchManually) //chnage batch manually -> only access by marketing team
+
 
   .get("/time-table", generateTimeTable)
   .post("/time-table", saveTimeTable)
