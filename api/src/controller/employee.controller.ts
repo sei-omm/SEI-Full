@@ -1420,7 +1420,7 @@ export const searchEmployeeName = asyncErrorHandler(async (req, res) => {
         name, 
         id, 
         employee_type 
-     FROM employee WHERE name ILIKE '%' || $1 || '%' AND institute = $2 AND employee_role != 'Super Admin'
+     FROM employee WHERE name ILIKE '%' || $1 || '%' AND institute = $2 AND is_active = true AND employee_role != 'Super Admin'
      LIMIT ${LIMIT} OFFSET ${OFFSET}
      `,
     [req.query.q, institute]

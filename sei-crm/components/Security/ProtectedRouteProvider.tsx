@@ -307,7 +307,7 @@ export const sidebarOptions: TSideBar[] = [
       {
         id: "6-1",
         icon: "RiSettings3Line",
-        name: "Settings",
+        name: "Permission Management",
         slug: "/dashboard/settings/permission-management",
       },
     ],

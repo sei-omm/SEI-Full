@@ -95,6 +95,14 @@ export const getMembers = asyncErrorHandler(async (req, res) => {
 
   const { filterQuery, filterValues } = filterToSql(req.query, "e");
 
+  let customFilter = "";
+
+  if(filterQuery === "") {
+    customFilter = "WHERE e.employee_role != 'Super Admin'";
+  } else {
+    customFilter = filterQuery + " AND e.employee_role != 'Super Admin'";
+  }
+
   const { rows } = await pool.query(
     `
     SELECT 
@@ -109,7 +117,7 @@ export const getMembers = asyncErrorHandler(async (req, res) => {
     LEFT JOIN employee e
     ON e.id = m.employee_id
 
-    ${filterQuery}
+    ${customFilter}
 
     ORDER BY m.member_row_id DESC
 
