@@ -2,10 +2,17 @@ import { pool } from "../config/db";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ErrorHandler } from "../utils/ErrorHandler";
+import {
+  objectToSqlConverterUpdate,
+  objectToSqlInsert,
+} from "../utils/objectToSql";
 import { parsePagination } from "../utils/parsePagination";
 import {
   VAddNewNotice,
   VDeleteSingleNotice,
+  VPostNewBlog,
+  VSingleBlog,
+  VUpdateSingleBlog,
   VUpdateSingleNotice,
 } from "../validator/website.validator";
 
@@ -81,4 +88,85 @@ export const getAllNotice = asyncErrorHandler(async (req, res) => {
   );
 
   res.status(200).json(new ApiResponse(200, "All Notice", rows));
+});
+
+// blogs
+
+export const getBlogsList = asyncErrorHandler(async (req, res) => {
+  const { LIMIT, OFFSET } = parsePagination(req);
+
+  const { rows } = await pool.query(
+    `
+      SELECT 
+        blog_id, 
+        heading, 
+        meta_description, 
+        meta_keywords, 
+        created_at 
+      FROM blogs
+      ORDER BY blog_id DESC
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
+      `
+  );
+
+  res.status(200).json(new ApiResponse(200, "Blogs List", rows));
+});
+
+export const getSingleBlog = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VSingleBlog.validate(req.params);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { rowCount, rows } = await pool.query(
+    `SELECT * FROM blogs WHERE blog_id = $1`,
+    [value.blog_id]
+  );
+  if (!rowCount || rowCount === 0)
+    throw new ErrorHandler(400, "No blog found with this id");
+
+  res.status(200).json(new ApiResponse(200, "Single Blog Info", rows[0]));
+});
+
+export const postNewBlog = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VPostNewBlog.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { params, values, columns } = objectToSqlInsert(value);
+
+  await pool.query(
+    `
+      INSERT INTO blogs ${columns} VALUES ${params}
+    `,
+    values
+  );
+
+  res.status(201).json(new ApiResponse(201, "New Blog Added"));
+});
+
+export const updateSingleBlog = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VUpdateSingleBlog.validate({
+    ...req.body,
+    ...req.params,
+  });
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { keys, values, paramsNum } = objectToSqlConverterUpdate(req.body);
+  values.push(value.blog_id);
+
+  await pool.query(
+    `
+      UPDATE blogs SET ${keys} WHERE blog_id = $${paramsNum}
+    `,
+    values
+  );
+
+  res.status(200).json(new ApiResponse(200, "Blog Updated"));
+});
+
+export const deleteBlog = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VSingleBlog.validate(req.params);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await pool.query(`DELETE FROM blogs WHERE blog_id = $1`, [value.blog_id]);
+
+  res.status(200).json(new ApiResponse(200, "Blog Remove"));
 });

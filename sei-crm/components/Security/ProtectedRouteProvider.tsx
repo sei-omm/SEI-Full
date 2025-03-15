@@ -1,11 +1,12 @@
 "use client";
 
-import { redirect, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TSideBar } from "@/types";
 import { useDispatch } from "react-redux";
 import { setSideBar } from "@/redux/slices/sidebar.slice";
 import LoadingLayout from "../LoadingLayout";
+import Page403 from "../Pages/403";
 
 interface IProps {
   children: React.ReactNode;
@@ -290,6 +291,12 @@ export const sidebarOptions: TSideBar[] = [
     name: "Website Management",
     slug: "#",
     subMenu: [
+      // {
+      //   id: "10-2",
+      //   icon: "RiBloggerLine",
+      //   name: "Blogs",
+      //   slug: "/dashboard/website-management/blogs",
+      // },
       {
         id: "10-1",
         icon: "CgWebsite",
@@ -359,7 +366,14 @@ export default function ProtectedRouteProvider({ children }: IProps) {
         pathname !== "/auth/login" &&
         pathname !== "/error" &&
         pathname !== "/dashboard/hr-module/performance-management/view" &&
-        !pathname.includes("/dashboard/hr-module/manage-employee/")
+        !pathname.includes("/dashboard/hr-module/manage-employee/") &&
+        !pathname.includes("/dashboard/website-management/blogs/") &&
+        !pathname.includes("/dashboard/inventory/inventory-list/") &&
+        !pathname.includes("/dashboard/hr-module/job-posting/") &&
+        !pathname.includes("/dashboard/course/manage-course/") &&
+        !pathname.includes("/dashboard/admission/manage-form/") &&
+        !pathname.includes("/dashboard/library/item/") && 
+        !pathname.includes("/dashboard/website-management/notice-board/")
       ) {
         setProcess("failed");
       } else {
@@ -374,7 +388,7 @@ export default function ProtectedRouteProvider({ children }: IProps) {
   if (process === "loading") return <LoadingLayout />;
 
   if (process === "failed") {
-    return redirect("/error?status=403");
+    return <Page403 />
   }
 
   return <>{children}</>;

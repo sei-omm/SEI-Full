@@ -28,7 +28,7 @@ import { GoDiscussionOutdated, GoStack } from "react-icons/go";
 import { TbCategory2, TbReportSearch } from "react-icons/tb";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { FaPeopleRoof } from "react-icons/fa6";
-import { RiRefundLine, RiSettings3Line } from "react-icons/ri";
+import { RiBloggerLine, RiRefundLine, RiSettings3Line } from "react-icons/ri";
 import {
   MdAddTask,
   MdOutlineAddBox,
@@ -63,6 +63,7 @@ const iconMap: Record<string, JSX.Element> = {
   TbReportSearch: <TbReportSearch />,
   CgWebsite: <CgWebsite />,
   RiSettings3Line: <RiSettings3Line />,
+  RiBloggerLine : <RiBloggerLine />
 };
 
 export default function Sidebar() {
