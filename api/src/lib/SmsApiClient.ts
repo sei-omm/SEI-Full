@@ -8,7 +8,7 @@ export class SmsApiClient {
     this.userId = process.env.USER_ID || "";
     this.password = process.env.PASSWORD || "";
     this.entityId = process.env.ENTITY_ID || "";
-    this.baseApi = process.env.BASE_URL || "";
+    this.baseApi = process.env.SMS_BASE_URL || "";
   }
 
   async sendSingleSms(
