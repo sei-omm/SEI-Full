@@ -975,7 +975,7 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
 
     // check what is the name of current employee higher authority name ex : if HOD than HOI is higher
     const currentEmployeeAuthorityIndex = AUTHORITY.findIndex(
-      (item) => item === employee1Info[0].authority
+      (eAuthority) => eAuthority.includes(employee1Info[0].authority)
     );
     const highAuthorityName: string | undefined =
       AUTHORITY[currentEmployeeAuthorityIndex - 1];
@@ -1276,7 +1276,7 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
 
     // check what is the name of current employee higher authority name ex : if HOD than HOI is higher
     const currentEmployeeAuthorityIndex = AUTHORITY.findIndex(
-      (item) => item === employee1Info[0].authority
+      (eAuthority) => eAuthority.includes(employee1Info[0].authority)
     );
     const highAuthorityName: string | undefined =
       AUTHORITY[currentEmployeeAuthorityIndex - 1];

@@ -30,7 +30,7 @@ export const TIME_PERIOD = [
   "Period 8",
 ];
 
-export const AUTHORITY = ["SUPER ADMIN", "HOI", "HOD", "UDS", "LDS"];
+export const AUTHORITY = ["SUPER ADMIN", "HOI", "HOD", "UDS / LDS"];
 
 export const inventoryCatList = [
   { category_id: 1, category_name: "Consumable" },
