@@ -8,7 +8,7 @@ type ParamsType = {
   apiPath: string;
   method: "post" | "put" | "delete" | "patch";
   id?: number;
-  formData?: FormData;
+  formData?: FormData | object;
   headers?: object;
   onSuccess?: (data: IResponse<any>) => void;
 };

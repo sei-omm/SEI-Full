@@ -3,158 +3,63 @@
 import Button from "@/components/Button";
 import DateInput from "@/components/DateInput";
 import DropDown from "@/components/DropDown";
-import React, { useRef, useState } from "react";
-import { stickyFirstCol } from "../utils/stickyFirstCol";
-import { useQuery } from "react-query";
+import HandleSuspence from "@/components/HandleSuspence";
 import {
   ReadonlyURLSearchParams,
   useRouter,
   useSearchParams,
 } from "next/navigation";
+import { useRef, useState } from "react";
+import { stickyFirstCol } from "../utils/stickyFirstCol";
+import { useQuery } from "react-query";
 import axios from "axios";
 import { BASE_API, TIME_PERIOD } from "../constant";
-import { ISuccess, TTimeTableData, TVTableData } from "@/types";
-import HandleSuspence from "@/components/HandleSuspence";
-import TimeTableCell from "@/components/TimeTableCell";
+import { ISuccess, TFacultyInfo, TVirtualTable } from "@/types";
 import BackBtn from "@/components/BackBtn";
+import CellTimeTable from "@/components/Course/CellTimeTable";
 import { useDoMutation } from "../utils/useDoMutation";
 import { AiOutlineDelete } from "react-icons/ai";
+
+const fetchTimeTableInfo = async (searchParams: ReadonlyURLSearchParams) => {
+  return (
+    await axios.get(
+      `${BASE_API}/course/time-table/v2?${searchParams.toString()}`
+    )
+  ).data;
+};
+
+type TTimeTable = {
+  course_id: number;
+  course_name: string;
+  course_code: string;
+  sub_fac: {
+    subject_name: string;
+    faculty: TFacultyInfo[];
+  }[];
+};
 
 type TTable = {
   heads: string[];
   body: string[][];
 };
 
-type DraftResponse = {
-  draft_id: number;
-  info: string;
-  date: string;
-};
-
-type TServerResponse = {
-  type: "generated" | "draft";
-  result: TTimeTableData[] | DraftResponse;
-};
-
-// const times = [
-//   "09:30 am - 10:30 am",
-//   "10:30 am - 11:30 am",
-//   "11:45 am - 12:45 pm",
-//   "01:15 pm - 02:15 pm",
-//   "02:15 pm - 03:15 pm",
-//   "03:30 pm - 04:30 pm",
-//   "04:30 pm - 05:30 pm",
-//   "05:30 pm - 06:30 pm",
-// ];
-
-async function generateTimeTable(searchParams: ReadonlyURLSearchParams) {
-  return (
-    await axios.get(`${BASE_API}/course/time-table?${searchParams.toString()}`)
-  ).data;
-}
-
 export default function TimeTable() {
   const searchParams = useSearchParams();
   const route = useRouter();
+
+  const filterFormRef = useRef<HTMLFormElement>(null);
+
+  const virtual_table = useRef<TVirtualTable | null>(null);
+
+  const [duplicateCell, setDuplicateCell] = useState<Record<
+    string,
+    boolean
+  > | null>(null);
+
   const [tableDatas, setTableData] = useState<TTable>({
     heads: ["Course Name", ...TIME_PERIOD],
     body: [],
   });
-
-  const [serverData, setServerData] = useState<TTimeTableData[] | undefined>(
-    undefined
-  );
-
-  const [duplicateCell, setDuplicateCell] = useState<any>({});
-
-  const [vTable, setVTable] = useState<Map<string, TVTableData> | undefined>(
-    undefined
-  );
-
-  const {
-    data: sResponse,
-    isFetching,
-    error,
-  } = useQuery<ISuccess<TServerResponse>>({
-    queryKey: ["generate-time-table", searchParams.toString()],
-    queryFn: () => generateTimeTable(searchParams),
-    onSuccess(data) {
-      if (data.data.type === "generated") {
-        const finalResult = data.data.result as TTimeTableData[];
-        const map = new Map<string, TVTableData>();
-
-        setTableData((preState) => ({
-          ...preState,
-          body: finalResult.map((item, rowIndex) => [
-            item.course_name,
-            ...[1, 2, 3, 4, 5, 6, 7, 8].map((_, colIndex) => {
-              const cSubject = item.subjects[colIndex];
-              const fFaculty = item.faculty.filter(
-                (item) => item.for_subject_name === cSubject
-              )[0];
-              map.set(`${rowIndex}:${colIndex}`, {
-                course_code: item.course_code,
-                course_name: item.course_name,
-                course_id: item.course_id,
-
-                faculties: item.faculty,
-                subjects: item.subjects,
-                selected_faculty_id: fFaculty?.faculty_id || -1,
-                selected_subject: cSubject,
-              });
-              return cSubject || "Off Period";
-            }),
-          ]),
-        }));
-
-        setVTable(map);
-
-        setServerData(finalResult);
-      } else {
-        const finalResult = data.data.result as DraftResponse;
-        const map = new Map<string, TVTableData>(
-          Object.entries(JSON.parse(finalResult.info))
-        );
-        const parseServerResult: TTimeTableData[] = [];
-
-        let currentCourseId = -1;
-
-        map.forEach((value) => {
-          if (currentCourseId !== value.course_id) {
-            currentCourseId = value.course_id;
-            parseServerResult.push({
-              course_code: value.course_code,
-              course_id: value.course_id,
-              course_name: value.course_name,
-              faculty: value.faculties,
-              subjects: value.subjects,
-            });
-          }
-        });
-
-        setTableData((prev) => ({
-          ...prev,
-          body: parseServerResult.map((item, rowIndex) => [
-            item.course_name,
-            ...[1, 2, 3, 4, 5, 6, 7, 8].map((_, colIndex) => {
-              return (
-                map.get(`${rowIndex}:${colIndex}`)?.selected_subject ||
-                item.subjects[colIndex] ||
-                "Off Period"
-              );
-            }),
-          ]),
-        }));
-
-        setVTable(map);
-        setServerData(parseServerResult);
-      }
-    },
-    refetchOnMount: true,
-    enabled: searchParams.size !== 0,
-  });
-
-  const formRef = useRef<HTMLFormElement>(null);
 
   const handleTimeTableGeneratorBtn = (formData: FormData) => {
     route.push(
@@ -164,162 +69,99 @@ export default function TimeTable() {
     );
   };
 
-  const { isLoading, mutate } = useDoMutation();
+  const { data, error, isFetching } = useQuery<
+    ISuccess<{
+      time_table_info: TTimeTable[];
+      virtual_table: null | string;
+      draft_id: number;
+    }>
+  >({
+    queryKey: ["time-table-2", searchParams.toString()],
+    queryFn: () => fetchTimeTableInfo(searchParams),
+    enabled: searchParams.size !== 0,
+    onSuccess(data) {
+      const parsedVirtualTable = JSON.parse(
+        data.data.virtual_table || "{}"
+      ) as TVirtualTable;
+
+      if (data.data.draft_id !== -1) {
+        //if draft avilable than add draft as virtual table data
+        virtual_table.current = parsedVirtualTable;
+      }
+
+      setTableData((prev) => ({
+        ...prev,
+        body: data.data.time_table_info.map((item, rowIndex) => [
+          item.course_name,
+          ...[1, 2, 3, 4, 5, 6, 7, 8].map((_, colIndex) => {
+            if (data.data.draft_id === -1) {
+              //if no draft avilable than add the generated data to vertual table
+              virtual_table.current = {
+                ...virtual_table.current,
+                [`${rowIndex}:${colIndex}`]: {
+                  fac: item.sub_fac[colIndex]?.faculty[0] || null,
+                  subject: item.sub_fac[colIndex]?.subject_name || "Off Period",
+                  course_name: item.course_name,
+                },
+              };
+            }
+
+            return item.sub_fac[colIndex]?.subject_name || "Off Period";
+          }),
+        ]),
+      }));
+    },
+  });
+
   const { isLoading: isSavingDraft, mutate: saveToDraft } = useDoMutation();
 
-  const handleFullForm = (formData: FormData) => {
-    // const datasToStore: any[] = [];
-    // let currentCourseId = -1;
-
-    // let trackIndex = 0;
-    // let obj: any = {};
-    // let getTimeIndex = 0;
-
-    // formData.forEach((value, key) => {
-    // if (key === "course_id") {
-    //   currentCourseId = parseInt(value.toString());
-    //   // getTimeIndex = 0;
-    //   return;
-    // }
-
-    //   if (trackIndex >= 1) {
-    //     trackIndex = 0;
-    //     obj["date"] = searchParams.get("date");
-    //     obj["institute"] = searchParams.get("institute");
-    //     obj["course_id"] = currentCourseId;
-    //     obj[key] = value === "Not Selected" ? null : value;
-    //     // obj["time"] = times[getTimeIndex];
-    //     datasToStore.push(obj);
-    //     obj = {};
-    //     return;
-    //   }
-
-    //   obj["institute"] = searchParams.get("institute");
-    //   obj["date"] = searchParams.get("date");
-    //   obj["course_id"] = currentCourseId;
-    //   obj[key] = value;
-
-    //   trackIndex++;
-    //   // getTimeIndex++;
-    // });
-    // mutate({
-    //   apiPath: "/course/time-table",
-    //   method: "post",
-    //   formData: datasToStore,
-    // });
-
-    if (!confirm("Once Saved You can't edit it latter. Are you sure?")) return;
-
-    const userInput = prompt(`Type "Yes" If You Want To Save It In Database`);
-    if (userInput !== "Yes") return;
-
-    type TCobj = {
-      course_name: string;
-      subjects: string[];
-      faculty: {
-        profile_image: string;
-        faculty_name: string;
-      }[];
-    };
-
-    const dataIWant: TCobj[] = [];
-
-    let objToStore: TCobj = {
-      course_name: "",
-      subjects: [],
-      faculty: [],
-    };
-
-    let currentFacultyIndex = 0;
-    let loopIndex = 0;
-
-    const faculty_ids: number[] = [];
-
-    formData.forEach((value, key) => {
-      const valueString = value.toString();
-      console.log(key, " : ", value);
-      if (key === "course_name") {
-        if (loopIndex !== 0) {
-          dataIWant.push(objToStore);
-          objToStore = {
-            course_name: "",
-            subjects: [],
-            faculty: [],
-          };
-          currentFacultyIndex = 0;
-        }
-        objToStore.course_name = valueString;
-        return;
-      }
-
-      if (key === "subject_name") {
-        objToStore.subjects.push(valueString);
-      }
-
-      if (key === "faculty_profile_image") {
-        objToStore.faculty.push({
-          faculty_name: "",
-          profile_image: valueString,
-        });
-      }
-
-      if (key === "employee_name") {
-        objToStore.faculty[currentFacultyIndex].faculty_name =
-          valueString === "Choose Faculty" ? "" : valueString;
-        currentFacultyIndex++;
-      }
-
-      if (key === "faculty_id") {
-        if (valueString !== "" && valueString !== "Choose Faculty") {
-          faculty_ids.push(parseInt(valueString));
-        }
-      }
-      loopIndex++;
-    });
-
-    dataIWant.push(objToStore);
-    objToStore = {
-      course_name: "",
-      subjects: [],
-      faculty: [],
-    };
-
-    mutate({
-      apiPath: "/course/time-table",
-      method: "post",
-      formData: {
-        date: searchParams.get("date"),
-        institute: searchParams.get("institute"),
-        faculty_ids: faculty_ids,
-        time_table_data: JSON.stringify(dataIWant),
-      },
-    });
-  };
-
-  const handleDraftButton = () => {
-    // return console.log(vTable);
+  const handleSaveDraft = () => {
     saveToDraft({
       apiPath: "/course/time-table/draft",
       method: "post",
       formData: {
         date: searchParams.get("date"),
-        info: JSON.stringify(Object.fromEntries(vTable || new Map())),
+        virtual_table: JSON.stringify(virtual_table.current),
         institute: searchParams.get("institute"),
       },
     });
   };
 
-  const { isLoading: isRemovingFromDraft, mutate: removeDraft } =
-    useDoMutation();
-  const filterFormRef = useRef<HTMLFormElement>(null);
-  const handleRemoveFromDraft = () => {
+  const { isLoading: isRemovingDraft, mutate: removeDraft } = useDoMutation();
+
+  const handleDeleteDraft = () => {
     if (!confirm("Are you sure you want to remove and regenerate ?")) return;
     removeDraft({
       apiPath: "/course/time-table/draft",
       method: "delete",
-      id: (sResponse?.data.result as any).draft_id,
+      id: data?.data.draft_id,
       onSuccess() {
-        route.refresh();
+        window.location.reload();
+      },
+    });
+  };
+
+  const { isLoading: isSavingToDb, mutate: saveToDb } = useDoMutation();
+
+  const handleSaveToDb = () => {
+    if (!confirm("Once Saved You can't edit it latter. Are you sure?")) return;
+
+    const userInput = prompt(`Type "Yes" If You Want To Save It In Database`);
+    if (userInput !== "Yes") return;
+    
+    saveToDb({
+      apiPath: "/course/time-table",
+      method: "post",
+      formData: {
+        date: searchParams.get("date"),
+        institute: searchParams.get("institute"),
+        time_table_data: JSON.stringify(virtual_table.current),
+        total_rows : data?.data.time_table_info.length,
+        faculty_ids: Object.entries(virtual_table.current || {})
+          .filter(
+            (item) => item[1].fac !== null && item[1].fac?.faculty_id !== -1
+          )
+          .map((item) => item[1].fac?.faculty_id),
       },
     });
   };
@@ -364,14 +206,10 @@ export default function TimeTable() {
       <HandleSuspence
         isLoading={isFetching}
         error={error}
-        dataLength={serverData?.length}
+        dataLength={data?.data?.time_table_info.length}
         noDataMsg="Not Able To Generate Any Time Table"
       >
-        <form
-          ref={formRef}
-          action={handleFullForm}
-          className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black card-shdow rounded-xl"
-        >
+        <section className="w-full overflow-x-auto scrollbar-thin scrollbar-track-black card-shdow rounded-xl">
           <table className="min-w-max w-full table-auto">
             <thead className="uppercase w-full border-b border-gray-100">
               <tr>
@@ -398,24 +236,29 @@ export default function TimeTable() {
                       key={`${rowIndex}${columnIndex}`}
                     >
                       {columnIndex !== 0 ? (
-                        <TimeTableCell
-                          disabled={isSavingDraft}
-                          serverData={serverData}
+                        <CellTimeTable
+                          key={`CELL${columnIndex}${rowIndex}`}
+                          col={columnIndex - 1}
+                          row={rowIndex}
                           value={value}
-                          rowIndex={rowIndex}
-                          colIndex={columnIndex}
-                          duplicateCell={duplicateCell}
+                          facultyInfo={
+                            data?.data.time_table_info[rowIndex]?.sub_fac?.[
+                              columnIndex - 1
+                            ]?.faculty || []
+                          }
+                          subjectInfo={
+                            data?.data.time_table_info[rowIndex].sub_fac.map(
+                              (item) => item.subject_name
+                            ) || []
+                          }
+                          time_table_data={data?.data.time_table_info}
                           setDuplicateCell={setDuplicateCell}
-                          setVTable={setVTable}
-                          vTable={vTable}
+                          duplicateCell={duplicateCell}
+                          virtual_table={virtual_table.current}
+                          from_draft={data?.data.draft_id !== -1}
                         />
                       ) : (
                         <>
-                          <input
-                            hidden
-                            name="course_name"
-                            value={serverData?.[rowIndex].course_name}
-                          />
                           <span>{value}</span>
                         </>
                       )}
@@ -425,37 +268,35 @@ export default function TimeTable() {
               ))}
             </tbody>
           </table>
-        </form>
+        </section>
       </HandleSuspence>
 
       <div className="w-full flex items-center justify-between pb-10">
         <BackBtn btnText="Back To Dashboard" customRoute="/dashboard" />
         {searchParams.size === 0 ? null : (
           <div className="flex items-center gap-3">
-            {sResponse?.data.type === "draft" && (
+            {data?.data.draft_id !== -1 && (
               <Button
+                loading={isRemovingDraft}
+                disabled={isSavingDraft || isRemovingDraft || isSavingToDb}
                 className="bg-red-500 flex items-center gap-2"
-                disabled={isLoading || isSavingDraft || isRemovingFromDraft}
-                loading={isRemovingFromDraft}
-                onClick={handleRemoveFromDraft}
+                onClick={handleDeleteDraft}
               >
                 <AiOutlineDelete />
                 Remove Draft & Regenerate
               </Button>
             )}
             <Button
-              disabled={isLoading || isSavingDraft || isRemovingFromDraft}
+              disabled={isSavingDraft || isRemovingDraft || isSavingToDb}
               loading={isSavingDraft}
-              onClick={handleDraftButton}
+              onClick={handleSaveDraft}
             >
               Save As Draft
             </Button>
             <Button
-              loading={isLoading}
-              disabled={isLoading || isSavingDraft || isRemovingFromDraft}
-              onClick={() => {
-                formRef.current?.requestSubmit();
-              }}
+              onClick={handleSaveToDb}
+              loading={isRemovingDraft}
+              disabled={isSavingDraft || isSavingToDb || isRemovingDraft}
             >
               Save To Database
             </Button>

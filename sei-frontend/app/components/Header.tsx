@@ -60,35 +60,35 @@ export default function Header() {
   );
 
   const [nav_items, setNavItems] = useState([
-  {
-    name: "Home",
-    slug: "/",
-  },
-  {
-    name: "About Us",
-    slug: "/about-us",
-  },
-  {
-    name: "Centers",
-    slug: "/our-centers",
-  },
-  {
-    name: "Courses",
-    slug: "/our-courses/kolkata",
-  },
-  {
-    name: "Career",
-    slug: "/career",
-  },
-  {
-    name: "Contact Us",
-    slug: "/contact-us",
-  },
-  {
-    name: "Blogs",
-    slug: "/blogs",
-  },
-])
+    {
+      name: "Home",
+      slug: "/",
+    },
+    {
+      name: "About Us",
+      slug: "/about-us",
+    },
+    {
+      name: "Centers",
+      slug: "/our-centers",
+    },
+    {
+      name: "Courses",
+      slug: "/our-courses/kolkata",
+    },
+    {
+      name: "Career",
+      slug: "/career",
+    },
+    {
+      name: "Contact Us",
+      slug: "/contact-us",
+    },
+    {
+      name: "Blogs",
+      slug: "/blogs",
+    },
+  ]);
 
   const { logout, isLogouting } = useDoLogout();
 
@@ -114,12 +114,12 @@ export default function Header() {
   }, [accountBtnClicked]);
 
   useEffect(() => {
-     const userSelectedCampus = localStorage.getItem("user-selected-institute");
-     if(userSelectedCampus !== null) {
-        const preState = [...nav_items];
-        preState[3].slug = `/our-courses/${userSelectedCampus.toLowerCase()}`;
-        setNavItems(preState);
-     }
+    const userSelectedCampus = localStorage.getItem("user-selected-institute");
+    if (userSelectedCampus !== null) {
+      const preState = [...nav_items];
+      preState[3].slug = `/our-courses/${userSelectedCampus.toLowerCase()}`;
+      setNavItems(preState);
+    }
   }, []);
 
   return (
@@ -224,7 +224,14 @@ export default function Header() {
                   </div>
                 </div>
               ) : (
-                <OpenDialogButton type="OPEN" dialogKey="student-login-dialog">
+                <OpenDialogButton
+                  type="OPEN"
+                  dialogKey="student-login-dialog"
+                  // dialogKey="otp"
+                  extraValue={{
+                    mobile_number: "+919382413005",
+                  }}
+                >
                   <div>
                     <Button
                       onClick={() => setMobileNevVisibility(false)}

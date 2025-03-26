@@ -29,6 +29,8 @@ import { settingRoute } from "./route/setting.routes";
 import { isAuthenticated } from "./middleware/isAuthenticated";
 import { checkPermission } from "./middleware/checkPermission";
 import { accountRoute } from "./route/account.routes";
+import { sendOtp } from "./utils/SendSms";
+import asyncErrorHandler from "./middleware/asyncErrorHandler";
 
 dotenv.config();
 const app = express();
@@ -50,6 +52,11 @@ app.use(
     credentials: true, // Required for cookies
   })
 );
+
+app.get("/otp", asyncErrorHandler(async (req, res) => {
+  await sendOtp("+919382413005")
+  res.send("Send")
+}))
 
 // app.use(
 //   cors({

@@ -23,6 +23,8 @@ import { bookListReportV } from "../validator/library.validator";
 import { pmsReportV } from "../validator/inventory.validator";
 import { filterToSql } from "../utils/filterToSql";
 import { generateEmployeeAttendance } from "../service/attendance.service";
+import { TVirtualTable } from "../types";
+import axios from "axios";
 
 export const streamMaintenceRecordExcelReport = asyncErrorHandler(
   async (req, res) => {
@@ -2200,46 +2202,66 @@ export const stramTimeTableReport = asyncErrorHandler(async (req, res) => {
   pgStream.on("data", (data) => {
     const excelRow = worksheet.addRow([beautifyDate(data.date)]);
 
-    const parseTimeTable = JSON.parse(
-      data.time_table_data
-    ) as TTimeTableParseData[];
+    const parseTimeTable = JSON.parse(data.time_table_data) as TVirtualTable;
 
     worksheet.mergeCells(`A${excelRow.number}:I${excelRow.number}`);
 
-    parseTimeTable.forEach((item) => {
-      const combineSubAndFac: string[] = [];
-      item.subjects.forEach((subject, subIndex) => {
-        combineSubAndFac.push(
-          `${subject}\n${item.faculty[subIndex].faculty_name}`
+    const array = new Array(data.total_rows).fill(1);
+
+    array.forEach((_, rowIndex) => {
+      const colSubjects: string[] = [];
+      const colFac: string[] = [];
+
+      // Loop through columns
+      [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach((colIndex) => {
+        const parsedDataInfo = parseTimeTable[`${rowIndex}:${colIndex}`];
+        colSubjects.push(
+          parsedDataInfo?.subject === "Off Period"
+            ? ""
+            : parsedDataInfo?.subject
         );
+        colFac.push(parsedDataInfo?.fac?.faculty_name || "");
       });
 
-      const innerRow = worksheet.addRow([
-        item.course_name,
-        ...combineSubAndFac,
+      // Add Course Name + Subjects Row
+      const courseRow = worksheet.addRow([
+        parseTimeTable[`${rowIndex}:0`]?.course_name || "",
+        ...colSubjects,
       ]);
 
-      innerRow.height = combineSubAndFac.length * 10;
-
-      innerRow.eachCell((cell, colNumber) => {
+      courseRow.eachCell((cell) => {
         cell.style = {
-          font: { size: 11, bold: colNumber === 1 },
-          alignment: {
-            horizontal: "center",
-            vertical: "middle",
-            wrapText: true,
+          font: { bold: true },
+          fill: {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "d6ceff" },
           },
+          alignment: { horizontal: "center" },
           border: {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            right: { style: "thin" },
-            bottom: { style: "thin" },
-          },
+            top: { style: "thin" },          },
         };
       });
+
+      // Add Faculty Names Row
+      const facRow = worksheet.addRow(["", ...colFac]);
+      facRow.eachCell((cell) => {
+        cell.style = {
+          alignment: { horizontal: "center" },
+        };
+      });
+
+      // Merge the first column (A) for course name
+      const firstColumn = `A${courseRow.number}:A${facRow.number}`;
+      worksheet.mergeCells(firstColumn);
+
+      // Set alignment for the merged cell
+      worksheet.getCell(`A${courseRow.number}`).alignment = {
+        vertical: "middle",
+        horizontal: "center",
+      };
     });
 
-    // Style the data rows
     excelRow.eachCell((cell) => {
       cell.style = {
         font: { size: 18, bold: true },

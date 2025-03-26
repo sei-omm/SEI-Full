@@ -22,8 +22,8 @@ import { pool } from "../config/db";
 import { ApiResponse } from "../utils/ApiResponse";
 import { createToken, verifyToken } from "../utils/token";
 import { sendEmail } from "../utils/sendEmail";
-import { sendOtp } from "../utils/sendOtp";
 import { parsePagination } from "../utils/parsePagination";
+import { sendOtp } from "../utils/SendSms";
 
 const table_name = "students";
 
@@ -139,91 +139,53 @@ export const registerStudent = asyncErrorHandler(
     const { error, value } = studentRegisterValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
+    value.mobile_number = value.mobile_number?.replace("+91", "");
+
     const { rowCount } = await pool.query(
-      `SELECT email FROM ${table_name} WHERE email = $1`,
-      [value.email]
+      `SELECT mobile_number FROM ${table_name} WHERE mobile_number = $1`,
+      [value.mobile_number]
     );
 
     if (rowCount !== 0)
       throw new ErrorHandler(409, "Account Already Exist Please Login");
 
-    await sendOtp(value.email);
+    await sendOtp("+91" + value.mobile_number);
 
     res
       .status(200)
       .json(
-        new ApiResponse(200, "Otp Has Sended To This Email : " + value.email)
+        new ApiResponse(200, "Otp Has Sent To This Mobile Number : +91"  + value.mobile_number)
       );
   }
 );
-
-// export const verifyOtp = asyncErrorHandler(
-//   async (req: Request, res: Response) => {
-//     const { error, value } = verifyOtpValidator.validate(req.body);
-//     if (error) throw new ErrorHandler(400, error.message);
-
-//     try {
-//       const { rows, rowCount } = await pool.query(
-//         `SELECT * FROM otps WHERE email = $1`,
-//         [value.email]
-//       );
-//       if (rowCount === 0) throw new ErrorHandler(400, "Send OTP First");
-
-//       if (rows[0].otp != value.otp) throw new ErrorHandler(400, "Wrong OTP");
-
-//       const hashedPassword = await bcrypt.hash(value.password, 10);
-//       value.password = hashedPassword;
-
-//       delete value.otp;
-
-//       const { columns, params, values } = objectToSqlInsert(value);
-
-//       await pool.query(
-//         `INSERT INTO ${table_name} ${columns} VALUES ${params}`,
-//         values
-//       );
-
-//       res
-//         .status(201)
-//         .json(new ApiResponse(201, "Registration Successfully Completed"));
-//     } catch (error) {
-//       throw new ErrorHandler(400, "error");
-//     }
-//   }
-// );
 
 export const verifyOtp = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { error, value } = verifyOtpValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
+    value.mobile_number = value.mobile_number?.replace("+91", "");
+
     const client = await pool.connect();
 
     try {
       await client.query("BEGIN");
 
-      const { rowCount, rows } = await client.query(
-        `SELECT mobile_number, email FROM ${table_name} WHERE mobile_number = $1 OR email = $2`,
-        [value.mobile_number, value.email]
+      const { rows, rowCount } = await client.query(
+        `SELECT 
+          *,
+          CASE 
+            WHEN NOW() - created_at > INTERVAL '5 minutes' THEN true
+            ELSE false
+          END AS has_expired
+         FROM otps WHERE mobile_number = $1`,
+        [value.mobile_number]
       );
+      if (rowCount === 0) throw new ErrorHandler(400, "Send OTP First");
 
-      if (rowCount !== 0) {
-        rows.forEach((item) => {
-          if (item.email === value.email)
-            throw new ErrorHandler(
-              400,
-              "This email has already taken try another one"
-            );
-          if (item.mobile_number === value.mobile_number.toString())
-            throw new ErrorHandler(
-              400,
-              "This mobile number has already taken try another one"
-            );
-        });
-      }
+      if (rows[0].otp != value.otp) throw new ErrorHandler(400, "Wrong OTP");
 
-      // if (rowCount !== 0)
-      //   throw new ErrorHandler(409, "Account Already Exist Please Login");
+      if(rows[0].has_expired === true) throw new ErrorHandler(400, "Otp Has Expired");
 
       const hashedPassword = await bcrypt.hash(value.password, 10);
       value.password = hashedPassword;
@@ -243,7 +205,8 @@ export const verifyOtp = asyncErrorHandler(
 
       await client.query("COMMIT");
       client.release();
-    } catch (error: any) {
+
+    } catch (error : any) {
       await client.query("ROLLBACK");
       client.release();
       throw new ErrorHandler(400, error.message);
@@ -256,9 +219,11 @@ export const resendOtp = asyncErrorHandler(
     const { error, value } = resendOtpValidator.validate(req.body);
     if (error) throw new ErrorHandler(400, error.message);
 
-    await sendOtp(value.email);
+    value.mobile_number = value.mobile_number?.replace("+91", "");
 
-    res.status(200).json(new ApiResponse(200, "Otp Resended"));
+    await sendOtp("+91" + value.mobile_number);
+
+    res.status(200).json(new ApiResponse(200, "OTP resent successfully."));
   }
 );
 

@@ -3,7 +3,7 @@ import Joi from "joi";
 export const studentRegisterValidator = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().required(),
-  mobile_number: Joi.number().required(),
+  mobile_number: Joi.string().required(),
   dob: Joi.string().required(),
   indos_number: Joi.string().max(30).optional().allow(""),
   password: Joi.string().required().max(12).messages({
@@ -36,7 +36,7 @@ export const setNewPasswordValidator = Joi.object({
 });
 
 export const resendOtpValidator = Joi.object({
-  email: Joi.string().required(),
+  mobile_number: Joi.string().required(),
 });
 
 export const fillUpFormValidator = Joi.object({

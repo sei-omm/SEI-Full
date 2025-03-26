@@ -9,8 +9,6 @@
 }
 
 .main-container {
-  --ckeditor5-preview-height: 350px;
-  --ckeditor5-editor-height: 290px;
   /* width: fit-content;
 	margin-left: auto;
 	margin-right: auto; */
@@ -24,7 +22,7 @@
 
 .editor-container__editor-wrapper {
   display: flex;
-  width: fit-content;
+  /* width: fit-content; */
 }
 
 .editor-container_document-editor {
@@ -58,35 +56,46 @@
 }
 
 .editor-container_document-editor .editor-container__editor-wrapper {
-  max-height: var(--ckeditor5-preview-height);
-  min-height: var(--ckeditor5-preview-height);
-  overflow-y: scroll;
+  /* max-height: var(--ckeditor5-preview-height); */
+  /* min-height: var(--ckeditor5-preview-height); */
+  /* overflow-y: scroll; */
   background: var(--ck-color-base-foreground);
+  height: var(--ckeditor5-preview-height);
+  width: 100%;
 }
 
 .editor-container_document-editor .editor-container__editor {
-  margin-top: 28px;
-  margin-bottom: 28px;
-  height: 100%;
+  /* margin-top: 28px;
+  margin-bottom: 28px; */
+  min-height: 100%;
+  width: 100%;
+  overflow-y: auto;
 }
 
-.editor-container_document-editor
+/* .editor-container_document-editor
   .editor-container__editor
   .ck.ck-editor__editable {
   box-sizing: border-box;
-  min-width: calc(210mm + 2px);
-  max-width: calc(210mm + 2px);
-  /* min-height: 297mm; */
-  min-height: var(--ckeditor5-editor-height);
-  height: fit-content;
-  padding: 20mm 12mm;
+  min-width: 100%;
+  height: calc(var(--ckeditor5-preview-height) - 60px);
+  padding: 0px 18px;
   border: 1px hsl(0, 0%, 82.7%) solid;
   background: hsl(0, 0%, 100%);
   box-shadow: 0 2px 3px hsla(0, 0%, 0%, 0.078);
   flex: 1 1 auto;
   margin-left: 72px;
   margin-right: 72px;
-}
+} */
+/* min-width: calc(210mm + 2px); */
+
+.editor-container_document-editor
+  .editor-container__editor
+  .ck.ck-editor__editable {
+    padding: 18px 35px;
+    flex-grow: 1;
+    min-height: var(--ckeditor5-preview-height);
+    width: 100%;
+  }
 
 .ck-content h3.category {
   font-family: "Oswald";

@@ -189,10 +189,11 @@ export const VSaveTimeTable = Joi.object({
   time_table_data: Joi.string().required(),
   institute: Joi.string().required(),
   faculty_ids: Joi.array().items(Joi.number()),
+  total_rows : Joi.number().required()
 });
 
 export const VDraftTimeTable = Joi.object({
   date: Joi.string().required(),
-  info: Joi.string().required(),
-  institute : Joi.string().required()
+  institute : Joi.string().required(),
+  virtual_table : Joi.string().required()
 });

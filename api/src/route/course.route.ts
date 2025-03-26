@@ -26,6 +26,7 @@ import {
   saveTimeTable,
   draftTimeTable,
   removeFromDraft,
+  generateTimeTable2
 } from "../controller/course.controller";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { checkPermission } from "../middleware/checkPermission";
@@ -63,6 +64,7 @@ courseRouter
 
 
   .get("/time-table", generateTimeTable)
+  .get("/time-table/v2", generateTimeTable2)
   .post("/time-table", saveTimeTable)
   .post("/time-table/draft", draftTimeTable)
   .delete("/time-table/draft/:draft_id", removeFromDraft)

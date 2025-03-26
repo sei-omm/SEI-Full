@@ -827,16 +827,19 @@ export const enrollToBatch = asyncErrorHandler(
       course_ids: "",
       total_price: 0,
       minimum_to_pay: 0,
-      is_in_waiting_list : "",
-      institutes : ""
+      is_in_waiting_list: "",
+      institutes: "",
     };
 
     rows.forEach((item, index) => {
-      tokenInfo.course_ids += index === 0 ? item.course_id : "," + item.course_id;
+      tokenInfo.course_ids +=
+        index === 0 ? item.course_id : "," + item.course_id;
       tokenInfo.total_price += parseFloat(item.total_price);
       tokenInfo.minimum_to_pay += parseFloat(item.minimum_to_pay);
-      tokenInfo.is_in_waiting_list += index === 0 ? item.is_waiting_list : "," + item.is_waiting_list;
-      tokenInfo.institutes += index === 0 ? item.institute : "," + item.institute;
+      tokenInfo.is_in_waiting_list +=
+        index === 0 ? item.is_waiting_list : "," + item.is_waiting_list;
+      tokenInfo.institutes +=
+        index === 0 ? item.institute : "," + item.institute;
     });
 
     //create new order and send back to client side
@@ -1165,532 +1168,214 @@ type TTimeTable = {
   // }[];
 };
 
-function removeFormArray(arr: any[], index: number) {
-  const last_item = arr[arr.length - 1];
-  arr[index] = last_item;
-  arr.pop();
-}
-
-// export const generateTimeTable = asyncErrorHandler(async (req, res) => {
-//   const { error, value } = VTimeTable.validate(req.query);
-//   if (error) throw new ErrorHandler(400, error.message);
-
-//   const cDate = new Date(value.date);
-//   if (cDate.getDay() === 0) {
-//     throw new ErrorHandler(
-//       405,
-//       `You can't prepare time table as it is "Sunday"`
-//     );
-//   }
-
-//   const client = await pool.connect();
-
-//   try {
-//     await client.query("BEGIN");
-
-//     const { rowCount, rows: holidayInfo } = await client.query(
-//       `SELECT holiday_name FROM holiday_management WHERE holiday_date = $1 AND institute = $2`,
-//       [value.date, value.institute]
-//     );
-
-//     if (rowCount !== 0)
-//       throw new ErrorHandler(
-//         405,
-//         `You can't prepare time table as it is Holiday "${holidayInfo[0].holiday_name}"`
-//       );
-
-//     const { rows: dreftData, rowCount: dreftCount } = await client.query(
-//       `SELECT * FROM time_table_draft WHERE date = $1`,
-//       [value.date]
-//     );
-//     if (dreftCount !== 0) {
-//       return res.status(200).json(
-//         new ApiResponse(200, "Time Table Info", {
-//           type: "draft",
-//           result: dreftData[0],
-//         })
-//       );
-//     }
-
-//     const { rows } = await client.query(
-//       `
-//             SELECT
-//               c.course_id,
-//               c.course_name,
-//               c.course_code,
-//               c.subjects,
-//               COALESCE(
-//                   (
-//                       SELECT json_agg(
-//                           jsonb_build_object(
-//                               'faculty_id', fwcs.faculty_id,
-//                               'subject', fwcs.subject,
-//                               'faculty_name', e.name,
-//                               'profile_image', e.profile_image,
-//                               'max_teaching_hrs_per_week', CASE WHEN e.max_teaching_hrs_per_week = '' THEN '0' ELSE e.max_teaching_hrs_per_week END,
-//                               'faculty_current_working_hours', e.faculty_current_working_hours,
-//                               'is_active', e.is_active
-//                           )
-//                       )
-//                       FROM faculty_with_course_subject fwcs
-//                       INNER JOIN employee e ON e.id = fwcs.faculty_id
-//                       WHERE fwcs.course_id = c.course_id AND e.is_active = true
-//                   ),
-//                   '[]'::json
-//               ) AS faculty_details
-//             FROM courses c
-//             INNER JOIN course_batches cb ON cb.course_id = c.course_id
-
-//             WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
-
-//             GROUP BY c.course_id
-//         `,
-//       [value.institute, value.date]
-//     );
-
-//     const outputs = rows as InfoType[];
-//     // return res.json(outputs)
-
-//     const result: TTimeTable[] = [];
-
-//     const already_assigned_faculty = new Map<
-//       number,
-//       { par_index: number; fac_position: number }
-//     >();
-
-//     const already_assign_at_first = new Map<number, { par_index: number; fac_position: number }>();
-
-//     //task :
-//     // 1-> assign at list one teacher to each course subject
-//     // 2 -> then assign others resurved faculty to the list if related to the course 0(n)3
-//     outputs.forEach((output, index) => {
-//       const course_subjects = output.subjects.split(",");
-
-//       const time_table: TTimeTable = {
-//         course_id: output.course_id,
-//         course_name: output.course_name,
-//         course_code: output.course_code,
-//         subjects: course_subjects,
-//         faculty: [],
-//         // subject_with_faculty: [],
-//       };
-
-//       // loop through every subject
-//       course_subjects.forEach((subject, subject_index) => {
-//         // loop through every faculty_details
-//         //  check is inside faculty assign subject current subject include of not
-
-//         // time_table.subject_with_faculty.push({
-//         //   subject_name: subject,
-//         //   faculty: [],
-//         // });
-
-//         const tempFaculty: TFaculty[] = [];
-
-//         for (let i = 0; i < output.faculty_details.length; i++) {
-//           const faculty = output.faculty_details[i];
-
-//           if (
-//             faculty.subject.includes(subject) &&
-//             parseInt(faculty.max_teaching_hrs_per_week) >=
-//               faculty.faculty_current_working_hours
-//           ) {
-
-//             const already_assign = already_assign_at_first.get(faculty.faculty_id);
-
-//             if(already_assign && already_assign.fac_position === 0) {
-//               tempFaculty.push({
-//                 for_subject_name: subject,
-//                 faculty_id: faculty.faculty_id,
-//                 faculty_name: faculty.faculty_name,
-//                 profile_image: faculty.profile_image,
-//                 already_exist : false
-//               })
-//             } else {
-//               already_assign_at_first.set(faculty.faculty_id, {
-//                 par_index : index,
-//                 fac_position : i
-//               })
-
-//               time_table.faculty.push({
-//                 for_subject_name: subject,
-//                 faculty_id: faculty.faculty_id,
-//                 faculty_name: faculty.faculty_name,
-//                 profile_image: faculty.profile_image,
-//                 already_exist : false
-//               });
-//             }
-
-//             // const already_assign_faculty_info = already_assigned_faculty.get(
-//             //   faculty.faculty_id
-//             // );
-
-//             // if (already_assign_faculty_info) {
-//             //   // if faculty already assigned to another course at secound position or more then secound
-//             //   //remove that faculty from that array
-//             //   // removeFormArray(
-//             //   //   result[already_assign_faculty_info.par_index].faculty,
-//             //   //   already_assign_faculty_info.fac_position
-//             //   // );
-
-//             //   // time_table.subject_with_faculty[subject_index].faculty.push({
-//             //   //   faculty_id: faculty.faculty_id,
-//             //   //   faculty_name: faculty.faculty_name,
-//             //   //   profile_image: faculty.profile_image,
-//             //   // });
-
-//             //   const tempFacultyDetails : TFaculty = {
-//             //     for_subject_name: subject,
-//             //     faculty_id: faculty.faculty_id,
-//             //     faculty_name: faculty.faculty_name,
-//             //     profile_image: faculty.profile_image,
-//             //     already_exist : true
-//             //   }
-
-//             //   if (already_assign_faculty_info.fac_position > 0) {
-//             //     // then assign to current faculty at first position
-//             //     time_table.faculty.push(tempFacultyDetails);
-//             //   } else {
-
-//             //     // then store faculty in temp array
-//             //     // and at end fo the faculty loop assign to current faculty
-
-//             //     /*
-//             //      but you have to check one more thing
-//             //      if current fac already assign in somewhere in first (0) position
-//             //      then check is thire any other facilty avilable or not
-//             //      if avilable than check other faculti already avilable to anywhere or not
-//             //      if avilable anywhere than do the same recursive thing with other avilable faculty
-//             //      if not avilable than assign other facilty to that course
-//             //      and assign current faculty to tempFacultyDetails
-//             //      */
-
-//             //      function checkFacultyAvailability(currentFacultyInfo : TFaculty, listWhereToSearch : TFaculty[]) {
-//             //       const otherFacultyInfo = listWhereToSearch.find(eItem => eItem.faculty_id !== currentFacultyInfo.faculty_id);
-
-//             //       if(otherFacultyInfo === undefined) return null;
-
-//             //       // if got someone expect current faculty, who teach that subject
-
-//             //       //check is that faculty is not already assign to another course first position or not
-//             //       const other = already_assigned_faculty.get(otherFacultyInfo.faculty_id);
-//             //       if(other && other.fac_position > 0) {
-//             //         return otherFacultyInfo;
-//             //       }
-
-//             //       return checkFacultyAvailability(otherFacultyInfo, listWhereToSearch.filter(item => item.faculty_id !== currentFacultyInfo.faculty_id));
-//             //      }
-
-//             //     //  console.log(result[already_assign_faculty_info.par_index].faculty)
-
-//             //      const otherFacultyInfo = checkFacultyAvailability(tempFacultyDetails, result[already_assign_faculty_info.par_index].faculty);
-//             //      if(otherFacultyInfo !== null) {
-//             //       // than assign the other faculty to the top position of that faculty list
-
-//             //       // now if i got a non used faculty , than assign that faculty to the top position of that faculty list
-//             //       // and assing current faculty after that faculty
-
-//             //       result[already_assign_faculty_info.par_index].faculty[0] = otherFacultyInfo;
-//             //       result[already_assign_faculty_info.par_index].faculty[1] = tempFacultyDetails;
-//             //      } else {
-//             //       // if not get any other faculty expect current faculty
-
-//             //     }
-//             //     tempFaculty.push(tempFacultyDetails);
-
-//             //   }
-//             // }
-
-//             // if (!already_assign_faculty_info) {
-//               // time_table.faculty.push({
-//               //   for_subject_name: subject,
-//               //   faculty_id: faculty.faculty_id,
-//               //   faculty_name: faculty.faculty_name,
-//               //   profile_image: faculty.profile_image,
-//               //   already_exist : false
-//               // });
-
-//             //   // time_table.subject_with_faculty[subject_index].faculty.push({
-//             //   //   faculty_id: faculty.faculty_id,
-//             //   //   faculty_name: faculty.faculty_name,
-//             //   //   profile_image: faculty.profile_image,
-//             //   // });
-
-//             //   // let fac_position = 0;
-//             //   // const forSubject = new Map<string, string>();
-//             //   // time_table.faculty.forEach((tFaculty) => {
-
-//             //   // })
-
-//             //   already_assigned_faculty.set(faculty.faculty_id, {
-//             //     par_index: index,
-//             //     fac_position: time_table.faculty.length - 1,
-//             //     // fac_position
-//             //   });
-//             // }
-//           }
-//         }
-
-//         if(time_table.faculty.length !== 0) {
-//           time_table.faculty.push(...tempFaculty);
-//         } else  {
-//           time_table.faculty.push({
-//             faculty_id : 0,
-//             faculty_name : "null",
-//             profile_image : "",
-//             already_exist : false,
-//             for_subject_name : ""
-//           })
-//           time_table.faculty.push(...tempFaculty)
-//         }
-//       });
-
-//       result.push(time_table);
-//     });
-
-// res.status(200).json(
-//   new ApiResponse(200, "Time Table Info", {
-//     type: "generated",
-//     result: result,
-//   })
-// );
-
-//     await client.query("COMMIT");
-//     client.release();
-//   } catch (error: any) {
-//     await client.query("ROLLBACK");
-//     client.release();
-//     if (error?.isOperational) {
-//       throw new ErrorHandler(error.statusCode, error.message);
-//     } else {
-//       throw new ErrorHandler(500, error.message);
-//     }
-//   }
-// });
-
-// export const generateTimeTable = asyncErrorHandler(async (req, res) => {
-//   const { error, value } = VTimeTable.validate(req.query);
-//   if (error) throw new ErrorHandler(400, error.message);
-
-//   const cDate = new Date(value.date);
-//   if (cDate.getDay() === 0) {
-//     throw new ErrorHandler(
-//       405,
-//       `You can't prepare time table as it is "Sunday"`
-//     );
-//   }
-
-//   const client = await pool.connect();
-
-//   try {
-//     await client.query("BEGIN");
-
-//     const { rowCount, rows: holidayInfo } = await client.query(
-//       `SELECT holiday_name FROM holiday_management WHERE holiday_date = $1 AND institute = $2`,
-//       [value.date, value.institute]
-//     );
-
-//     if (rowCount !== 0)
-//       throw new ErrorHandler(
-//         405,
-//         `You can't prepare time table as it is Holiday "${holidayInfo[0].holiday_name}"`
-//       );
-
-//     const { rows: dreftData, rowCount: dreftCount } = await client.query(
-//       `SELECT * FROM time_table_draft WHERE date = $1`,
-//       [value.date]
-//     );
-//     if (dreftCount !== 0) {
-//       return res.status(200).json(
-//         new ApiResponse(200, "Time Table Info", {
-//           type: "draft",
-//           result: dreftData[0],
-//         })
-//       );
-//     }
-
-//     const { rows } = await client.query(
-//       `
-//             SELECT
-//               c.course_id,
-//               c.course_name,
-//               c.course_code,
-//               c.subjects,
-//               COALESCE(
-//                   (
-//                       SELECT json_agg(
-//                           jsonb_build_object(
-//                               'faculty_id', fwcs.faculty_id,
-//                               'subject', fwcs.subject,
-//                               'faculty_name', e.name,
-//                               'profile_image', e.profile_image,
-//                               'max_teaching_hrs_per_week', CASE WHEN e.max_teaching_hrs_per_week = '' THEN '0' ELSE e.max_teaching_hrs_per_week END,
-//                               'faculty_current_working_hours', e.faculty_current_working_hours,
-//                               'is_active', e.is_active
-//                           )
-//                       )
-//                       FROM faculty_with_course_subject fwcs
-//                       INNER JOIN employee e ON e.id = fwcs.faculty_id
-//                       WHERE fwcs.course_id = c.course_id AND e.is_active = true
-//                   ),
-//                   '[]'::json
-//               ) AS faculty_details
-//             FROM courses c
-//             INNER JOIN course_batches cb ON cb.course_id = c.course_id
-
-//             WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
-
-//             GROUP BY c.course_id
-//         `,
-//       [value.institute, value.date]
-//     );
-
-//     const outputs = rows as InfoType[];
-
-//     const result: TTimeTable[] = [];
-//     const faculty_exist_position = new Map<
-//       number,
-//       {
-//         belong_position: number;
-//         parent_index : number
-//       }
-//     >();
-
-//     outputs.forEach((output, pIndex) => {
-//       const subjects = output.subjects.split(",");
-
-//       const time_table: TTimeTable = {
-//         course_name: output.course_name,
-//         course_code: output.course_code,
-//         course_id: output.course_id,
-//         subjects: subjects,
-//         faculty: [],
-//       };
-
-//       subjects.forEach((subject) => {
-//         const tempFaculty: TFaculty[] = [];
-//         output.faculty_details.forEach((faculty) => {
-//           // check current employee teaching current subject or not
-//           if (faculty.subject.includes(subject)) {
-//             const exist_faculty = faculty_exist_position.get(
-//               faculty.faculty_id
-//             );
-
-//             if (!exist_faculty || exist_faculty.belong_position > 0) {
-//               const belong_position = time_table.faculty.filter(
-//                 (item) => item.for_subject_name === subject
-//               ).length;
-//               time_table.faculty.push({
-//                 faculty_id: faculty.faculty_id,
-//                 faculty_name: faculty.faculty_name,
-//                 for_subject_name: subject,
-//                 profile_image: faculty.profile_image,
-//                 belong_position: belong_position,
-//                 index_belong : time_table.faculty.length
-//               });
-
-//               faculty_exist_position.set(faculty.faculty_id, {
-//                 belong_position: belong_position,
-//                 parent_index : pIndex
-//               });
-//             } else {
-//               // if current faculty is already avilable in any faculty list first position -> current else will trigger
-//               // than go to that faculty list and find is there any other faculty available or not in that list
-//               // if available and that faculty is not already assigned to any faculty list's first position
-//               // than assign that faculty to first position of that faculty list
-//               // if not check others -> recursively if finally not found anyone than store current employee
-//               // in tempFaculty array. and at the end of the faculty list
-
-//               const exist_faculty_basic_info = faculty_exist_position.get(faculty.faculty_id);
-
-//               if(exist_faculty_basic_info) {
-//                 const parentIndex = exist_faculty_basic_info.parent_index;
-
-//                 const checkFacultyAvailability = (facultyList : TFaculty[]) => {
-//                   const find_result = facultyList[0];
-//                   // console.log("START")
-//                   // console.log(find_result)
-
-//                   if(!find_result) return null;
-
-//                   if(find_result.belong_position > 0) {
-//                     return find_result;
-//                   }
-
-//                   return checkFacultyAvailability(facultyList.filter(item => item.faculty_id !== find_result.faculty_id))
-//                 }
-
-//                 const facultyNotTeachingNow = checkFacultyAvailability(
-//                   result[parentIndex].faculty.filter(item => item.faculty_id !== faculty.faculty_id)
-//                 );
-
-//                 if(facultyNotTeachingNow !== null) {
-
-//                   const tempFac = result[parentIndex].faculty[facultyNotTeachingNow.index_belong];
-//                   const woIsInFirst = result[parentIndex].faculty.filter(item => item.faculty_id === faculty.faculty_id)[0];
-
-//                   result[parentIndex].faculty[facultyNotTeachingNow.index_belong].belong_position = woIsInFirst.belong_position;
-//                   result[parentIndex].faculty[facultyNotTeachingNow.index_belong].index_belong = woIsInFirst.index_belong;
-
-//                   result[parentIndex].faculty[woIsInFirst.index_belong].belong_position = facultyNotTeachingNow.belong_position;
-//                   result[parentIndex].faculty[woIsInFirst.index_belong].index_belong = facultyNotTeachingNow.index_belong;
-
-//                   result[parentIndex].faculty[woIsInFirst.index_belong] = tempFac;
-//                   result[parentIndex].faculty[facultyNotTeachingNow.index_belong] = woIsInFirst;
-
-//                 }
-
-//               } else {
-//                 return;
-//               }
-
-//               const belong_position = time_table.faculty.filter(
-//                 (item) => item.for_subject_name === subject
-//               ).length;
-//               time_table.faculty.push({
-//                 faculty_id: -1,
-//                 faculty_name: "Choose Faculty",
-//                 for_subject_name: subject,
-//                 profile_image: "",
-//                 belong_position: belong_position,
-//                 index_belong : time_table.faculty.length
-//               });
-//               tempFaculty.push({
-//                 faculty_id: faculty.faculty_id,
-//                 faculty_name: faculty.faculty_name,
-//                 for_subject_name: subject,
-//                 profile_image: faculty.profile_image,
-//                 belong_position: belong_position + 1,
-//                 index_belong : time_table.faculty.length + 1
-//               });
-//             }
-//           }
-//         });
-//         time_table.faculty.push(...tempFaculty);
-//       });
-
-//       result.push(time_table);
-//     });
-
-//     res.status(200).json(
-//       new ApiResponse(200, "Time Table Info", {
-//         type: "generated",
-//         result: result,
-//       })
-//     );
-
-//     await client.query("COMMIT");
-//     client.release();
-//   } catch (error: any) {
-//     await client.query("ROLLBACK");
-//     client.release();
-//     if (error?.isOperational) {
-//       throw new ErrorHandler(error.statusCode, error.message);
-//     } else {
-//       throw new ErrorHandler(500, error.message);
-//     }
-//   }
-// });
+type TFacultyInfo = {
+  faculty_id: number;
+  faculty_name: string;
+  profile_image: string;
+};
+
+type TOutput1 = {
+  course_id: number;
+  course_name: string;
+  course_code: string;
+  sub_fac: {
+    subject_name: string;
+    faculty: TFacultyInfo[];
+  }[];
+};
+
+export const generateTimeTable2 = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VTimeTable.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const cDate = new Date(value.date);
+  if (cDate.getDay() === 0) {
+    throw new ErrorHandler(
+      405,
+      `You can't prepare time table as it is "Sunday"`
+    );
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const { rowCount, rows: holidayInfo } = await client.query(
+      `SELECT holiday_name FROM holiday_management WHERE holiday_date = $1 AND institute = $2`,
+      [value.date, value.institute]
+    );
+
+    if (rowCount !== 0)
+      throw new ErrorHandler(
+        405,
+        `You can't prepare time table as it is Holiday "${holidayInfo[0].holiday_name}"`
+      );
+
+    const { rows: dreftData, rowCount: dreftCount } = await client.query(
+      `SELECT * FROM time_table_draft WHERE date = $1`,
+      [value.date]
+    );
+    const { rows } = await client.query(
+      `
+            SELECT
+              c.course_id,
+              c.course_name,
+              c.course_code,
+              c.subjects,
+              COALESCE(
+                  (
+                      SELECT json_agg(
+                          jsonb_build_object(
+                              'faculty_id', fwcs.faculty_id,
+                              'subject', fwcs.subject,
+                              'faculty_name', e.name,
+                              'profile_image', e.profile_image,
+                              'max_teaching_hrs_per_week', CASE WHEN e.max_teaching_hrs_per_week = '' THEN '0' ELSE e.max_teaching_hrs_per_week END,
+                              'faculty_current_working_hours', e.faculty_current_working_hours,
+                              'is_active', e.is_active
+                          )
+                      )
+                      FROM faculty_with_course_subject fwcs
+                      INNER JOIN employee e ON e.id = fwcs.faculty_id
+                      WHERE fwcs.course_id = c.course_id AND e.is_active = true
+                  ),
+                  '[]'::json
+              ) AS faculty_details
+            FROM courses c
+            INNER JOIN course_batches cb ON cb.course_id = c.course_id
+              
+            WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
+    
+            GROUP BY c.course_id
+        `,
+      [value.institute, value.date]
+    );
+
+    const databasedata = rows as InfoType[];
+
+    const outputs: TOutput1[] = [];
+
+    const existFacAndPositions = new Map<number, number[]>();
+
+    databasedata.forEach((data) => {
+      const subjects = data.subjects.split(",");
+
+      const tempData: TOutput1 = {
+        course_id: data.course_id,
+        course_code: data.course_code,
+        course_name: data.course_name,
+        sub_fac: [],
+      };
+
+      subjects.forEach((cSubject) => {
+        tempData.sub_fac.push({
+          subject_name: cSubject,
+          faculty: data.faculty_details
+            .filter((fac) => fac.subject.includes(cSubject))
+            .map((item) => {
+              // const tempExist = existFacAndPositions.get(item.faculty_id);
+              // if (!tempExist) {
+              //   existFacAndPositions.set(item.faculty_id, [index]);
+              // } else {
+              //   existFacAndPositions.set(item.faculty_id, [
+              //     ...tempExist,
+              //     index,
+              //   ]);
+              // }
+
+              return {
+                faculty_id: item.faculty_id,
+                faculty_name: item.faculty_name,
+                profile_image: item.profile_image,
+              };
+            }),
+        });
+      });
+
+      outputs.push(tempData);
+    });
+
+    function doSwap (facPosition : number, i : number, c_fac_array : TFacultyInfo[]) {
+      // do the swap
+      const tempFacInfo = c_fac_array[i];
+      c_fac_array[i] = c_fac_array[facPosition];
+      c_fac_array[facPosition] = tempFacInfo;
+      existFacAndPositions.set(c_fac_array[i].faculty_id, [i]);
+    }
+
+    const checkAndSetFacPosition = (
+      c_fac_id: number,
+      facPosition: number,
+      c_fac_array: TFacultyInfo[]
+    ) => {
+      const facInfo = existFacAndPositions.get(c_fac_id);
+
+      if (!facInfo) {
+        existFacAndPositions.set(c_fac_id, [facPosition]);
+        return;
+      }
+
+      if (facPosition === 0 && facInfo.includes(0)) {
+        //if i got someone who alreay exist at first position and current facPosition is also 0 than need to take action
+        // what ? -> check that fac_array if i get any other fac who don't exist 0 th position swap him with current one
+        let gotSomeone = false;
+
+        for (let i = 0; i < c_fac_array.length; i++) {
+          if (c_fac_array[i].faculty_id === c_fac_id) continue;
+
+          const facInfo2 = existFacAndPositions.get(c_fac_array[i].faculty_id);
+          if (!facInfo2) {
+            doSwap(facPosition, i, c_fac_array);
+            gotSomeone = true;
+            existFacAndPositions.set(c_fac_array[i].faculty_id, [facPosition])
+            break;
+          } else if (!facInfo2.includes(0)){
+            doSwap(facPosition, i, c_fac_array);
+            gotSomeone = true;
+            existFacAndPositions.set(c_fac_array[i].faculty_id, [...facInfo2, facPosition])
+            break;
+          }
+        }
+        if (gotSomeone === false) {
+          // if i didn't got someone who is not present at 0th position that at the first add -1 as fac id
+          c_fac_array.unshift({
+            faculty_id: -1,
+            faculty_name: "Choose Faculty",
+            profile_image: "",
+          });
+        }
+      }
+    };
+
+    outputs.forEach((output) => {
+      output.sub_fac.forEach((item) => {
+        item.faculty.forEach((fac, facIndex) => {
+          checkAndSetFacPosition(fac.faculty_id, facIndex, item.faculty);
+        });
+      });
+    });
+
+    res.status(200).json(
+      new ApiResponse(200, "Time Table Info", {
+        time_table_info: outputs,
+        virtual_table: dreftCount === 0 ? null : dreftData[0].virtual_table,
+        draft_id: dreftCount === 0 ? -1 : dreftData[0].draft_id,
+      })
+    );
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    client.release();
+    if (error?.isOperational) {
+      throw new ErrorHandler(error.statusCode, error.message);
+    } else {
+      throw new ErrorHandler(500, error.message);
+    }
+  }
+});
 
 export const generateTimeTable = asyncErrorHandler(async (req, res) => {
   const { error, value } = VTimeTable.validate(req.query);
@@ -1866,60 +1551,6 @@ export const generateTimeTable = asyncErrorHandler(async (req, res) => {
   }
 });
 
-// export const saveTimeTable = asyncErrorHandler(async (req, res) => {
-//   const { error, value } = VSaveTimeTable.validate(req.body);
-//   if (error) throw new ErrorHandler(400, error.message);
-
-//   const client = await pool.connect();
-
-//   try {
-//     await client.query("BEGIN");
-
-//     const { rowCount } = await client.query(
-//       `SELECT date FROM time_table WHERE date = $1`,
-//       [value[0].date]
-//     );
-
-//     if (rowCount && rowCount > 0)
-//       throw new ErrorHandler(400, "Time Table Has Already Saved");
-
-//     //increase each employee current_working_hours + 1
-//     await client.query(
-//       `
-//         UPDATE employee SET
-//           faculty_current_working_hours = faculty_current_working_hours + 1
-//         WHERE id IN (${value.map((_, index) => `$${index + 1}`).join(", ")})
-//       `,
-//       value.flatMap((item) => [item.employee_id])
-//     );
-
-//     await client.query(
-//       `
-//       INSERT INTO
-//         time_table (date, course_id, employee_id, for_subject_name, institute)
-//       VALUES
-//          ${sqlPlaceholderCreator(5, value.length).placeholder}
-//       `,
-//       value.flatMap((item) => [
-//         item.date,
-//         item.course_id,
-//         item.employee_id,
-//         item.for_subject_name,
-//         item.institute,
-//       ])
-//     );
-
-//     await client.query("COMMIT");
-//     client.release();
-//   } catch (error: any) {
-//     await client.query("ROLLBACK");
-//     client.release();
-//     throw new ErrorHandler(400, error.message);
-//   }
-
-//   res.status(200).json(new ApiResponse(200, "Time table saved successfully"));
-// });
-
 export const saveTimeTable = asyncErrorHandler(async (req, res) => {
   const { error, value } = VSaveTimeTable.validate(req.body);
   if (error) throw new ErrorHandler(400, error.message);
@@ -1957,11 +1588,11 @@ export const saveTimeTable = asyncErrorHandler(async (req, res) => {
     await client.query(
       `
       INSERT INTO 
-        time_table (date, time_table_data, institute)
+        time_table (date, time_table_data, total_rows, institute)
       VALUES
-         ($1, $2, $3)
+         ($1, $2, $3, $4)
       `,
-      [value.date, value.time_table_data, value.institute]
+      [value.date, value.time_table_data, value.total_rows, value.institute]
     );
 
     await client.query("COMMIT");
@@ -1981,11 +1612,11 @@ export const draftTimeTable = asyncErrorHandler(async (req, res) => {
 
   await pool.query(
     `
-    INSERT INTO time_table_draft (date, info, institute)
+    INSERT INTO time_table_draft (date, institute, virtual_table)
     VALUES ($1, $2, $3)
-    ON CONFLICT (date, institute) DO UPDATE SET info = $2
+    ON CONFLICT (date, institute) DO UPDATE SET virtual_table = $3
     `,
-    [value.date, value.info, value.institute]
+    [value.date, value.institute, value.virtual_table]
   );
 
   res

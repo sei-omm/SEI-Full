@@ -1340,7 +1340,42 @@ CREATE TABLE blogs (
     created_at DATE DEFAULT CURRENT_DATE,
 
     visible BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+DROP TABLE otps;
+
+CREATE TABLE otps (
+    mobile_number VARCHAR(15) NOT NULL,
+    otp VARCHAR(5) NOT NULL,
+    UNIQUE (mobile_number),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX mobile_number ON otps (mobile_number);
+
+
+-- NEW TABLE 24 MAR 2024
+
+DROP TABLE time_table_draft;
+
+CREATE TABLE time_table_draft (
+    draft_id SERIAL PRIMARY KEY,
+    date DATE NOT NULL,
+    institute VARCHAR(255),
+    virtual_table TEXT NOT NULL,
+    UNIQUE (date, institute)
 )
+
+DROP TABLE time_table;
+
+CREATE TABLE time_table (
+    date DATE,
+
+    time_table_data TEXT,
+    total_rows INTEGER NOT NULL,
+    
+    institute VARCHAR(100)
+);
+
 
 -- fro clering all table of db
 -- DO $$ 

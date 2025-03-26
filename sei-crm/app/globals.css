@@ -5,6 +5,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  --ckeditor5-preview-height: 350px;
+  --ckeditor5-editor-height: 100%;
 }
 
 /* @media (prefers-color-scheme: dark) {

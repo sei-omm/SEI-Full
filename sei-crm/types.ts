@@ -251,7 +251,7 @@ export type EmployeeLoginInfoType = {
   profile_image: string;
   name: string;
   employee_id: number;
-  permissions : string;
+  permissions: string;
 };
 
 export type TStudentPayment = {
@@ -757,6 +757,16 @@ export type TTimeTableParseData = {
   }[];
 };
 
+export type TTimeTableParseData2 = {
+  course_name: string;
+  subjects: string;
+  fac : {
+    faculty_id : number;
+    faculty_name : string;
+    profile_image : string;
+  } | null
+};
+
 export type TMultiUpdateMantence = {
   record_id: number;
   completed_date: string | null;
@@ -800,15 +810,15 @@ export type TMembers = {
   profile_image: string | null;
   employee_role: string | null;
   member_id: number;
-  employee_id : number;
+  employee_id: number;
   permissions: number;
 };
 
 export type TSingleMember = {
-  member_row_id : number;
-  employee_id : number;
-  permissions : string;
-}
+  member_row_id: number;
+  employee_id: number;
+  permissions: string;
+};
 
 export type TSideBar = {
   id: string;
@@ -822,3 +832,23 @@ export type TSideBar = {
     slug: string;
   }[];
 };
+
+export type TFacultyInfo = {
+  faculty_id: number;
+  faculty_name: string;
+  profile_image: string;
+};
+
+export type TRowCol = {
+  row_col: string;
+  fac: TFacultyInfo | null;
+  subject: string;
+};
+export type TVirtualTable = Record<
+  string,
+  {
+    fac: TFacultyInfo | null;
+    subject: string;
+    course_name : string;
+  }
+>;
