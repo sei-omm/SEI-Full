@@ -4,12 +4,14 @@ import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import Button from "@/components/Button";
+import Campus from "@/components/Campus";
 import DateDurationFilter from "@/components/DateDurationFilter";
 import DropDown from "@/components/DropDown";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
 import SearchInput from "@/components/SearchInput";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { ISuccess } from "@/types";
 import axios from "axios";
@@ -65,9 +67,7 @@ export default function BooksIssue() {
 
   const [updateInfo, setUpdateInfo] = useState<TUpdateInfo[]>([]);
   const [searchBy, setSearchBy] = useState<TSearchBy>("indos_number");
-  const [campus, setCampus] = useState(
-    searchParams.get("institute") || "Kolkata"
-  );
+  const { campus, setCampus } = usePurifyCampus(searchParams);
   const route = useRouter();
 
   const [issueBookTable, setIssueBookTable] = useState<TTable>({
@@ -170,7 +170,7 @@ export default function BooksIssue() {
       </DateDurationFilter>
 
       <div className="flex items-center gap-2">
-        <DropDown
+        {/* <DropDown
           name="institute"
           label=""
           options={[
@@ -179,7 +179,8 @@ export default function BooksIssue() {
           ]}
           defaultValue={searchParams.get("institute") || campus}
           onChange={(option) => setCampus(option.value)}
-        />
+        /> */}
+        <Campus onChange={(option) => setCampus(option.value)} label=""/>
         <DropDown
           label=""
           options={[

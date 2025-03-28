@@ -1,23 +1,9 @@
 "use client";
 
-import { OptionsType } from "@/types";
+import { IDropDown, OptionsType } from "@/types";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaAngleDown } from "react-icons/fa6";
-
-interface IProps {
-  wrapperCss?: string;
-  className?: string;
-  label: string;
-  options: OptionsType[];
-  defaultValue?: any;
-  name?: string;
-  onChange?: (item: OptionsType) => void;
-  changeSearchParamsOnChange?: boolean;
-  viewOnly?: boolean;
-  valueRef?: React.RefObject<HTMLInputElement>;
-  dialog?: boolean;
-}
 
 export default function DropDown({
   wrapperCss,
@@ -30,7 +16,7 @@ export default function DropDown({
   changeSearchParamsOnChange,
   viewOnly,
   valueRef,
-}: IProps) {
+}: IDropDown) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -48,12 +34,12 @@ export default function DropDown({
 
   useEffect(() => {
     if (defaultValue !== undefined) {
-      const findTextFromValue = options.find(
+      const findTextFromValue = options?.find(
         (item) => item.value == defaultValue
       );
       setSelectedItem(findTextFromValue || null);
     } else {
-      setSelectedItem(options[0]);
+      setSelectedItem(options?.[0] || null);
     }
   }, [defaultValue]);
 

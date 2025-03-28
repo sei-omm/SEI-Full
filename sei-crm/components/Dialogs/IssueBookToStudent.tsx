@@ -14,8 +14,9 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import { useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setDialog } from "@/redux/slices/dialogs.slice";
-import DropDown from "../DropDown";
 import { queryClient } from "@/redux/MyProvider";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
+import Campus from "../Campus";
 
 async function searchStudent(
   issue_to_name: string,
@@ -46,8 +47,9 @@ interface SearchStudent {
 }
 
 type TCourseBookInfo = {
-  book_id: number; course_id: number 
-}
+  book_id: number;
+  course_id: number;
+};
 
 export default function IssueBookToStudent() {
   const searchParams = useSearchParams();
@@ -59,14 +61,14 @@ export default function IssueBookToStudent() {
   const [issueToSuggestion, setIssueToSuggestion] = useState<SearchStudent[]>(
     []
   );
-  const [campus, setCampus] = useState(
-    searchParams.get("institute") || "Kolkata"
-  );
+  const { campus, setCampus } = usePurifyCampus(searchParams);
 
   const [selectedIssueToInfo, setSelectedIssueToInfo] =
     useState<SearchStudent | null>(null);
 
-  const [assignBookAndCourse, setAssignBookAndCourse] = useState<TCourseBookInfo[]>([]);
+  const [assignBookAndCourse, setAssignBookAndCourse] = useState<
+    TCourseBookInfo[]
+  >([]);
 
   const [issueDate, setIssueDate] = useState("");
 
@@ -98,10 +100,12 @@ export default function IssueBookToStudent() {
       ids.employee_id = selectedIssueToInfo?.id;
     }
 
-    const noBookIndex = assignBookAndCourse.findIndex(item => item.book_id <= 0);
-    
-    let finalCourseAndBookInfo : TCourseBookInfo[] = [];
-    if(noBookIndex !== -1) {
+    const noBookIndex = assignBookAndCourse.findIndex(
+      (item) => item.book_id <= 0
+    );
+
+    let finalCourseAndBookInfo: TCourseBookInfo[] = [];
+    if (noBookIndex !== -1) {
       const preState = [...assignBookAndCourse];
       preState.splice(noBookIndex, 1);
       finalCourseAndBookInfo = preState;
@@ -169,18 +173,11 @@ export default function IssueBookToStudent() {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <DropDown
+        <Campus
           onChange={(option) => {
             setIssueToSuggestion([]);
             setCampus(option.value);
           }}
-          name="institute"
-          label="Campus *"
-          options={[
-            { text: "Kolkata", value: "Kolkata" },
-            { text: "Faridabad", value: "Faridabad" },
-          ]}
-          defaultValue={campus}
         />
         <Input
           label={`Search ${assignTo} *`}
@@ -237,13 +234,12 @@ export default function IssueBookToStudent() {
             onDeleteBtnClick={() => {
               setInputs((preState) =>
                 preState.filter((eachInput) => eachInput !== input)
-              )
+              );
 
               const preState = [...assignBookAndCourse];
               preState.splice(index, 1);
               setAssignBookAndCourse(preState);
-            }
-            }
+            }}
             onBookAndCourseSelect={(book_id, course_id) => {
               const existIndex = assignBookAndCourse.findIndex(
                 (item) => item.book_id === book_id

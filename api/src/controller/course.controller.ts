@@ -1144,8 +1144,240 @@ type InfoType = {
   }[];
 };
 
+// type TFaculty = {
+//   for_subject_name: string;
+//   faculty_id: number;
+//   faculty_name: string;
+//   profile_image: string;
+// };
+
+// type TTimeTable = {
+//   course_id: number;
+//   course_name: string;
+//   course_code: string;
+//   subjects: string[];
+//   faculty: TFaculty[];
+
+//   // subject_with_faculty: {
+//   //   subject_name: string;
+//   //   faculty: {
+//   //     faculty_id: number;
+//   //     faculty_name: string;
+//   //     profile_image: string;
+//   //   }[];
+//   // }[];
+// };
+
+type TFacultyInfo = {
+  faculty_id: number;
+  faculty_name: string;
+  profile_image: string;
+};
+
+// type TOutput1 = {
+//   course_id: number;
+//   course_name: string;
+//   course_code: string;
+//   sub_fac: {
+//     subject_name: string;
+//     faculty: TFacultyInfo[];
+//   }[];
+// };
+
+// export const generateTimeTable2 = asyncErrorHandler(async (req, res) => {
+//   const { error, value } = VTimeTable.validate(req.query);
+//   if (error) throw new ErrorHandler(400, error.message);
+
+//   const cDate = new Date(value.date);
+//   if (cDate.getDay() === 0) {
+//     throw new ErrorHandler(
+//       405,
+//       `You can't prepare time table as it is "Sunday"`
+//     );
+//   }
+
+//   const client = await pool.connect();
+
+//   try {
+//     await client.query("BEGIN");
+
+//     const { rowCount, rows: holidayInfo } = await client.query(
+//       `SELECT holiday_name FROM holiday_management WHERE holiday_date = $1 AND institute = $2`,
+//       [value.date, value.institute]
+//     );
+
+//     if (rowCount !== 0)
+//       throw new ErrorHandler(
+//         405,
+//         `You can't prepare time table as it is Holiday "${holidayInfo[0].holiday_name}"`
+//       );
+
+//     const { rows: dreftData, rowCount: dreftCount } = await client.query(
+//       `SELECT * FROM time_table_draft WHERE date = $1`,
+//       [value.date]
+//     );
+//     const { rows } = await client.query(
+//       `
+//             SELECT
+//               c.course_id,
+//               c.course_name,
+//               c.course_code,
+//               c.subjects,
+//               COALESCE(
+//                   (
+//                       SELECT json_agg(
+//                           jsonb_build_object(
+//                               'faculty_id', fwcs.faculty_id,
+//                               'subject', fwcs.subject,
+//                               'faculty_name', e.name,
+//                               'profile_image', e.profile_image,
+//                               'max_teaching_hrs_per_week', CASE WHEN e.max_teaching_hrs_per_week = '' THEN '0' ELSE e.max_teaching_hrs_per_week END,
+//                               'faculty_current_working_hours', e.faculty_current_working_hours,
+//                               'is_active', e.is_active
+//                           )
+//                       )
+//                       FROM faculty_with_course_subject fwcs
+//                       INNER JOIN employee e ON e.id = fwcs.faculty_id
+//                       WHERE fwcs.course_id = c.course_id AND e.is_active = true
+//                   ),
+//                   '[]'::json
+//               ) AS faculty_details
+//             FROM courses c
+//             INNER JOIN course_batches cb ON cb.course_id = c.course_id
+              
+//             WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
+    
+//             GROUP BY c.course_id
+//         `,
+//       [value.institute, value.date]
+//     );
+
+//     const databasedata = rows as InfoType[];
+
+//     const outputs: TOutput1[] = [];
+
+//     const existFacAndPositions = new Map<number, number[]>();
+
+//     databasedata.forEach((data) => {
+//       const subjects = data.subjects.split(",");
+
+//       const tempData: TOutput1 = {
+//         course_id: data.course_id,
+//         course_code: data.course_code,
+//         course_name: data.course_name,
+//         sub_fac: [],
+//       };
+
+//       subjects.forEach((cSubject) => {
+//         tempData.sub_fac.push({
+//           subject_name: cSubject,
+//           faculty: data.faculty_details
+//             .filter((fac) => fac.subject.includes(cSubject))
+//             .map((item) => {
+//               // const tempExist = existFacAndPositions.get(item.faculty_id);
+//               // if (!tempExist) {
+//               //   existFacAndPositions.set(item.faculty_id, [index]);
+//               // } else {
+//               //   existFacAndPositions.set(item.faculty_id, [
+//               //     ...tempExist,
+//               //     index,
+//               //   ]);
+//               // }
+
+//               return {
+//                 faculty_id: item.faculty_id,
+//                 faculty_name: item.faculty_name,
+//                 profile_image: item.profile_image,
+//               };
+//             }),
+//         });
+//       });
+
+//       outputs.push(tempData);
+//     });
+
+//     function doSwap (facPosition : number, i : number, c_fac_array : TFacultyInfo[]) {
+//       // do the swap
+//       const tempFacInfo = c_fac_array[i];
+//       c_fac_array[i] = c_fac_array[facPosition];
+//       c_fac_array[facPosition] = tempFacInfo;
+//       existFacAndPositions.set(c_fac_array[i].faculty_id, [i]);
+//     }
+
+//     const checkAndSetFacPosition = (
+//       c_fac_id: number,
+//       facPosition: number,
+//       c_fac_array: TFacultyInfo[]
+//     ) => {
+//       const facInfo = existFacAndPositions.get(c_fac_id);
+
+//       if (!facInfo) {
+//         existFacAndPositions.set(c_fac_id, [facPosition]);
+//         return;
+//       }
+
+//       if (facPosition === 0 && facInfo.includes(0)) {
+//         //if i got someone who alreay exist at first position and current facPosition is also 0 than need to take action
+//         // what ? -> check that fac_array if i get any other fac who don't exist 0 th position swap him with current one
+//         let gotSomeone = false;
+
+//         for (let i = 0; i < c_fac_array.length; i++) {
+//           if (c_fac_array[i].faculty_id === c_fac_id) continue;
+
+//           const facInfo2 = existFacAndPositions.get(c_fac_array[i].faculty_id);
+//           if (!facInfo2) {
+//             doSwap(facPosition, i, c_fac_array);
+//             gotSomeone = true;
+//             existFacAndPositions.set(c_fac_array[i].faculty_id, [facPosition])
+//             break;
+//           } else if (!facInfo2.includes(0)){
+//             doSwap(facPosition, i, c_fac_array);
+//             gotSomeone = true;
+//             existFacAndPositions.set(c_fac_array[i].faculty_id, [...facInfo2, facPosition])
+//             break;
+//           }
+//         }
+//         if (gotSomeone === false) {
+//           // if i didn't got someone who is not present at 0th position that at the first add -1 as fac id
+//           c_fac_array.unshift({
+//             faculty_id: -1,
+//             faculty_name: "Choose Faculty",
+//             profile_image: "",
+//           });
+//         }
+//       }
+//     };
+
+//     outputs.forEach((output) => {
+//       output.sub_fac.forEach((item) => {
+//         item.faculty.forEach((fac, facIndex) => {
+//           checkAndSetFacPosition(fac.faculty_id, facIndex, item.faculty);
+//         });
+//       });
+//     });
+
+//     res.status(200).json(
+//       new ApiResponse(200, "Time Table Info", {
+//         time_table_info: outputs,
+//         virtual_table: dreftCount === 0 ? null : dreftData[0].virtual_table,
+//         draft_id: dreftCount === 0 ? -1 : dreftData[0].draft_id,
+//       })
+//     );
+
+//     await client.query("COMMIT");
+//     client.release();
+//   } catch (error: any) {
+//     await client.query("ROLLBACK");
+//     client.release();
+//     if (error?.isOperational) {
+//       throw new ErrorHandler(error.statusCode, error.message);
+//     } else {
+//       throw new ErrorHandler(500, error.message);
+//     }
+//   }
+// });
+
 type TFaculty = {
-  for_subject_name: string;
   faculty_id: number;
   faculty_name: string;
   profile_image: string;
@@ -1155,32 +1387,9 @@ type TTimeTable = {
   course_id: number;
   course_name: string;
   course_code: string;
-  subjects: string[];
-  faculty: TFaculty[];
-
-  // subject_with_faculty: {
-  //   subject_name: string;
-  //   faculty: {
-  //     faculty_id: number;
-  //     faculty_name: string;
-  //     profile_image: string;
-  //   }[];
-  // }[];
-};
-
-type TFacultyInfo = {
-  faculty_id: number;
-  faculty_name: string;
-  profile_image: string;
-};
-
-type TOutput1 = {
-  course_id: number;
-  course_name: string;
-  course_code: string;
   sub_fac: {
     subject_name: string;
-    faculty: TFacultyInfo[];
+    faculty: TFaculty[];
   }[];
 };
 
@@ -1254,111 +1463,130 @@ export const generateTimeTable2 = asyncErrorHandler(async (req, res) => {
 
     const databasedata = rows as InfoType[];
 
-    const outputs: TOutput1[] = [];
+    const output: TTimeTable[] = [];
+    const existFac = new Map<
+    number,
+    {
+      parent_index: number;
+      child_index: number;
+      positions: number[];
+    }
+  >();
 
-    const existFacAndPositions = new Map<number, number[]>();
-
-    databasedata.forEach((data) => {
+    databasedata.forEach((data, pIndex) => {
       const subjects = data.subjects.split(",");
 
-      const tempData: TOutput1 = {
-        course_id: data.course_id,
+      const tempData: TTimeTable = {
         course_code: data.course_code,
+        course_id: data.course_id,
         course_name: data.course_name,
         sub_fac: [],
       };
 
-      subjects.forEach((cSubject) => {
-        tempData.sub_fac.push({
-          subject_name: cSubject,
-          faculty: data.faculty_details
-            .filter((fac) => fac.subject.includes(cSubject))
-            .map((item) => {
-              // const tempExist = existFacAndPositions.get(item.faculty_id);
-              // if (!tempExist) {
-              //   existFacAndPositions.set(item.faculty_id, [index]);
-              // } else {
-              //   existFacAndPositions.set(item.faculty_id, [
-              //     ...tempExist,
-              //     index,
-              //   ]);
-              // }
+      subjects.forEach((subject, cIndex) => {
+        const fac_to_store: TFaculty[] = [];
+        const temp_fac_list: TFaculty[] = [];
 
-              return {
-                faculty_id: item.faculty_id,
-                faculty_name: item.faculty_name,
-                profile_image: item.profile_image,
-              };
-            }),
-        });
-      });
+        data.faculty_details.forEach((fac) => {
+          if (!fac.subject.includes(subject)) return;
 
-      outputs.push(tempData);
-    });
-
-    function doSwap (facPosition : number, i : number, c_fac_array : TFacultyInfo[]) {
-      // do the swap
-      const tempFacInfo = c_fac_array[i];
-      c_fac_array[i] = c_fac_array[facPosition];
-      c_fac_array[facPosition] = tempFacInfo;
-      existFacAndPositions.set(c_fac_array[i].faculty_id, [i]);
-    }
-
-    const checkAndSetFacPosition = (
-      c_fac_id: number,
-      facPosition: number,
-      c_fac_array: TFacultyInfo[]
-    ) => {
-      const facInfo = existFacAndPositions.get(c_fac_id);
-
-      if (!facInfo) {
-        existFacAndPositions.set(c_fac_id, [facPosition]);
-        return;
-      }
-
-      if (facPosition === 0 && facInfo.includes(0)) {
-        //if i got someone who alreay exist at first position and current facPosition is also 0 than need to take action
-        // what ? -> check that fac_array if i get any other fac who don't exist 0 th position swap him with current one
-        let gotSomeone = false;
-
-        for (let i = 0; i < c_fac_array.length; i++) {
-          if (c_fac_array[i].faculty_id === c_fac_id) continue;
-
-          const facInfo2 = existFacAndPositions.get(c_fac_array[i].faculty_id);
-          if (!facInfo2) {
-            doSwap(facPosition, i, c_fac_array);
-            gotSomeone = true;
-            existFacAndPositions.set(c_fac_array[i].faculty_id, [facPosition])
-            break;
-          } else if (!facInfo2.includes(0)){
-            doSwap(facPosition, i, c_fac_array);
-            gotSomeone = true;
-            existFacAndPositions.set(c_fac_array[i].faculty_id, [...facInfo2, facPosition])
-            break;
+          const currentPosition = fac_to_store.length;
+          const existFacInfo = existFac.get(fac.faculty_id);
+          if (!existFacInfo || !existFacInfo.positions.includes(0)) {
+            existFac.set(fac.faculty_id, {
+              positions: [...(existFacInfo?.positions || []), currentPosition],
+              parent_index: pIndex,
+              child_index: cIndex,
+            });
+            fac_to_store.push({
+              faculty_id : fac.faculty_id,
+              faculty_name : fac.faculty_name,
+              profile_image : fac.profile_image
+            });
+            return;
           }
-        }
-        if (gotSomeone === false) {
-          // if i didn't got someone who is not present at 0th position that at the first add -1 as fac id
-          c_fac_array.unshift({
-            faculty_id: -1,
-            faculty_name: "Choose Faculty",
-            profile_image: "",
-          });
-        }
-      }
-    };
 
-    outputs.forEach((output) => {
-      output.sub_fac.forEach((item) => {
-        item.faculty.forEach((fac, facIndex) => {
-          checkAndSetFacPosition(fac.faculty_id, facIndex, item.faculty);
+          temp_fac_list.push({
+            faculty_id : fac.faculty_id,
+            faculty_name : fac.faculty_name,
+            profile_image : fac.profile_image
+          });
         });
+
+        if (fac_to_store.length !== 0) {
+          fac_to_store.push(...temp_fac_list)
+          tempData.sub_fac.push({
+            subject_name : subject,
+            faculty: fac_to_store,
+          });
+          return;
+        }
+
+        // this mean in my current array i don't have anyone who it not teaching
+        let facWhomSwap : TFaculty | null = null;
+        for(let i = 0; i < temp_fac_list.length; i++) {
+          const existTempFacInfo = existFac.get(temp_fac_list[i].faculty_id);
+          if(!existTempFacInfo) throw new Error("existTempFacInfo Fac Id Should Be Here"); // it should be here
+
+          // if no output don't need to check
+          if(!output[existTempFacInfo.parent_index]) continue;
+
+          const index = output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty.findIndex(oldFac => oldFac.faculty_id !== temp_fac_list[i].faculty_id && !existFac.get(oldFac.faculty_id)?.positions.includes(0))
+          // mean there is no fac avilable to swap with current one
+          if(index === -1) continue;
+
+          // now if i got someone unusal swap him with first position item
+          const tempFacInfo = output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty[0];
+          output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty[0] = output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty[index];
+          output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty[index] = tempFacInfo;
+          //after swaping remamber to change the positions of swaped fac in existFac map data stracture
+
+          const whomSetAtTopId = output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty[0].faculty_id
+          const whomSetAtTopInfo = existFac.get(whomSetAtTopId);
+          if(!whomSetAtTopInfo) throw new Error("whomSetAtTopInfo Should Be Here");
+
+          existFac.set(whomSetAtTopId, {
+            ...whomSetAtTopInfo,
+            positions : [0, ...whomSetAtTopInfo.positions]
+          })
+          facWhomSwap = temp_fac_list[i];
+          break;
+        }
+
+        if(!facWhomSwap){
+          // if i didn't get anyone with replace than at the first position add -1 as fac id (as empty fac)
+          if(temp_fac_list.length !== 0) {
+            fac_to_store.push({
+              faculty_id : -1,
+              faculty_name : "Choose Faculty",
+              profile_image : ""
+            }, ...temp_fac_list);
+          }
+
+          tempData.sub_fac.push({
+            subject_name : subject,
+            faculty: fac_to_store,
+          });
+          return;
+        }
+
+        fac_to_store.push(
+          facWhomSwap,
+          ...temp_fac_list.filter(item => item.faculty_id !== facWhomSwap.faculty_id)
+        );
+        tempData.sub_fac.push({
+          subject_name : subject,
+          faculty: fac_to_store,
+        });
+
       });
+
+      output.push(tempData);
     });
 
     res.status(200).json(
       new ApiResponse(200, "Time Table Info", {
-        time_table_info: outputs,
+        time_table_info: output,
         virtual_table: dreftCount === 0 ? null : dreftData[0].virtual_table,
         draft_id: dreftCount === 0 ? -1 : dreftData[0].draft_id,
       })
@@ -1377,179 +1605,179 @@ export const generateTimeTable2 = asyncErrorHandler(async (req, res) => {
   }
 });
 
-export const generateTimeTable = asyncErrorHandler(async (req, res) => {
-  const { error, value } = VTimeTable.validate(req.query);
-  if (error) throw new ErrorHandler(400, error.message);
+// export const generateTimeTable = asyncErrorHandler(async (req, res) => {
+//   const { error, value } = VTimeTable.validate(req.query);
+//   if (error) throw new ErrorHandler(400, error.message);
 
-  const cDate = new Date(value.date);
-  if (cDate.getDay() === 0) {
-    throw new ErrorHandler(
-      405,
-      `You can't prepare time table as it is "Sunday"`
-    );
-  }
+//   const cDate = new Date(value.date);
+//   if (cDate.getDay() === 0) {
+//     throw new ErrorHandler(
+//       405,
+//       `You can't prepare time table as it is "Sunday"`
+//     );
+//   }
 
-  const client = await pool.connect();
+//   const client = await pool.connect();
 
-  try {
-    await client.query("BEGIN");
+//   try {
+//     await client.query("BEGIN");
 
-    const { rowCount, rows: holidayInfo } = await client.query(
-      `SELECT holiday_name FROM holiday_management WHERE holiday_date = $1 AND institute = $2`,
-      [value.date, value.institute]
-    );
+//     const { rowCount, rows: holidayInfo } = await client.query(
+//       `SELECT holiday_name FROM holiday_management WHERE holiday_date = $1 AND institute = $2`,
+//       [value.date, value.institute]
+//     );
 
-    if (rowCount !== 0)
-      throw new ErrorHandler(
-        405,
-        `You can't prepare time table as it is Holiday "${holidayInfo[0].holiday_name}"`
-      );
+//     if (rowCount !== 0)
+//       throw new ErrorHandler(
+//         405,
+//         `You can't prepare time table as it is Holiday "${holidayInfo[0].holiday_name}"`
+//       );
 
-    const { rows: dreftData, rowCount: dreftCount } = await client.query(
-      `SELECT * FROM time_table_draft WHERE date = $1`,
-      [value.date]
-    );
-    if (dreftCount !== 0) {
-      return res.status(200).json(
-        new ApiResponse(200, "Time Table Info", {
-          type: "draft",
-          result: dreftData[0],
-        })
-      );
-    }
+//     const { rows: dreftData, rowCount: dreftCount } = await client.query(
+//       `SELECT * FROM time_table_draft WHERE date = $1`,
+//       [value.date]
+//     );
+//     if (dreftCount !== 0) {
+//       return res.status(200).json(
+//         new ApiResponse(200, "Time Table Info", {
+//           type: "draft",
+//           result: dreftData[0],
+//         })
+//       );
+//     }
 
-    const { rows } = await client.query(
-      `
-            SELECT
-              c.course_id,
-              c.course_name,
-              c.course_code,
-              c.subjects,
-              COALESCE(
-                  (
-                      SELECT json_agg(
-                          jsonb_build_object(
-                              'faculty_id', fwcs.faculty_id,
-                              'subject', fwcs.subject,
-                              'faculty_name', e.name,
-                              'profile_image', e.profile_image,
-                              'max_teaching_hrs_per_week', CASE WHEN e.max_teaching_hrs_per_week = '' THEN '0' ELSE e.max_teaching_hrs_per_week END,
-                              'faculty_current_working_hours', e.faculty_current_working_hours,
-                              'is_active', e.is_active
-                          )
-                      )
-                      FROM faculty_with_course_subject fwcs
-                      INNER JOIN employee e ON e.id = fwcs.faculty_id
-                      WHERE fwcs.course_id = c.course_id AND e.is_active = true
-                  ),
-                  '[]'::json
-              ) AS faculty_details
-            FROM courses c
-            INNER JOIN course_batches cb ON cb.course_id = c.course_id
+//     const { rows } = await client.query(
+//       `
+//             SELECT
+//               c.course_id,
+//               c.course_name,
+//               c.course_code,
+//               c.subjects,
+//               COALESCE(
+//                   (
+//                       SELECT json_agg(
+//                           jsonb_build_object(
+//                               'faculty_id', fwcs.faculty_id,
+//                               'subject', fwcs.subject,
+//                               'faculty_name', e.name,
+//                               'profile_image', e.profile_image,
+//                               'max_teaching_hrs_per_week', CASE WHEN e.max_teaching_hrs_per_week = '' THEN '0' ELSE e.max_teaching_hrs_per_week END,
+//                               'faculty_current_working_hours', e.faculty_current_working_hours,
+//                               'is_active', e.is_active
+//                           )
+//                       )
+//                       FROM faculty_with_course_subject fwcs
+//                       INNER JOIN employee e ON e.id = fwcs.faculty_id
+//                       WHERE fwcs.course_id = c.course_id AND e.is_active = true
+//                   ),
+//                   '[]'::json
+//               ) AS faculty_details
+//             FROM courses c
+//             INNER JOIN course_batches cb ON cb.course_id = c.course_id
               
-            WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
+//             WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
     
-            GROUP BY c.course_id
-        `,
-      [value.institute, value.date]
-    );
+//             GROUP BY c.course_id
+//         `,
+//       [value.institute, value.date]
+//     );
 
-    const outputs = rows as InfoType[];
+//     const outputs = rows as InfoType[];
 
-    const results: TTimeTable[] = [];
-    const map = new Map<
-      number,
-      {
-        pIndex: number;
-        facPosition: number;
-        forSubject: string;
-      }
-    >();
+//     const results: TTimeTable[] = [];
+//     const map = new Map<
+//       number,
+//       {
+//         pIndex: number;
+//         facPosition: number;
+//         forSubject: string;
+//       }
+//     >();
 
-    outputs.forEach((output, pIndex) => {
-      const subjects = output.subjects.split(",");
+//     outputs.forEach((output, pIndex) => {
+//       const subjects = output.subjects.split(",");
 
-      const time_table: TTimeTable = {
-        course_name: output.course_name,
-        course_code: output.course_code,
-        course_id: output.course_id,
-        subjects: subjects,
-        faculty: [],
-      };
+//       const time_table: TTimeTable = {
+//         course_name: output.course_name,
+//         course_code: output.course_code,
+//         course_id: output.course_id,
+//         subjects: subjects,
+//         faculty: [],
+//       };
 
-      //
-      subjects.forEach((subject) => {
-        const current_fac_array: TFaculty[] = [];
-        const temp: TFaculty[] = [];
+//       //
+//       subjects.forEach((subject) => {
+//         const current_fac_array: TFaculty[] = [];
+//         const temp: TFaculty[] = [];
 
-        output.faculty_details.forEach((loopFac) => {
-          // check current employee teaching current subject or not
-          if (loopFac.subject.includes(subject)) {
-            const facInfoToStore = {
-              faculty_id: loopFac.faculty_id,
-              faculty_name: loopFac.faculty_name,
-              for_subject_name: subject,
-              profile_image: loopFac.profile_image,
-            };
-            const myCurrentPosition = time_table.faculty.filter(
-              (item) => item.for_subject_name === subject
-            ).length;
-            const mapInfo = map.get(loopFac.faculty_id);
-            if (
-              mapInfo &&
-              mapInfo.facPosition === 0 &&
-              myCurrentPosition === 0
-            ) {
-              temp.push(facInfoToStore);
-            } else {
-              // time_table.faculty.push(facInfoToStore)
-              current_fac_array.push(facInfoToStore);
+//         output.faculty_details.forEach((loopFac) => {
+//           // check current employee teaching current subject or not
+//           if (loopFac.subject.includes(subject)) {
+//             const facInfoToStore = {
+//               faculty_id: loopFac.faculty_id,
+//               faculty_name: loopFac.faculty_name,
+//               for_subject_name: subject,
+//               profile_image: loopFac.profile_image,
+//             };
+//             const myCurrentPosition = time_table.faculty.filter(
+//               (item) => item.for_subject_name === subject
+//             ).length;
+//             const mapInfo = map.get(loopFac.faculty_id);
+//             if (
+//               mapInfo &&
+//               mapInfo.facPosition === 0 &&
+//               myCurrentPosition === 0
+//             ) {
+//               temp.push(facInfoToStore);
+//             } else {
+//               // time_table.faculty.push(facInfoToStore)
+//               current_fac_array.push(facInfoToStore);
 
-              map.set(loopFac.faculty_id, {
-                pIndex,
-                facPosition: myCurrentPosition,
-                forSubject: subject,
-              });
-            }
-          }
-        });
+//               map.set(loopFac.faculty_id, {
+//                 pIndex,
+//                 facPosition: myCurrentPosition,
+//                 forSubject: subject,
+//               });
+//             }
+//           }
+//         });
 
-        if (current_fac_array.length === 0 && temp.length !== 0) {
-          current_fac_array.push({
-            faculty_id: -1,
-            faculty_name: "Choose Faculty",
-            for_subject_name: subject,
-            profile_image: "",
-          });
-        }
+//         if (current_fac_array.length === 0 && temp.length !== 0) {
+//           current_fac_array.push({
+//             faculty_id: -1,
+//             faculty_name: "Choose Faculty",
+//             for_subject_name: subject,
+//             profile_image: "",
+//           });
+//         }
 
-        current_fac_array.push(...temp);
+//         current_fac_array.push(...temp);
 
-        time_table.faculty.push(...current_fac_array);
-      });
+//         time_table.faculty.push(...current_fac_array);
+//       });
 
-      results.push(time_table);
-    });
+//       results.push(time_table);
+//     });
 
-    res.status(200).json(
-      new ApiResponse(200, "Time Table Info", {
-        type: "generated",
-        result: results,
-      })
-    );
+//     res.status(200).json(
+//       new ApiResponse(200, "Time Table Info", {
+//         type: "generated",
+//         result: results,
+//       })
+//     );
 
-    await client.query("COMMIT");
-    client.release();
-  } catch (error: any) {
-    await client.query("ROLLBACK");
-    client.release();
-    if (error?.isOperational) {
-      throw new ErrorHandler(error.statusCode, error.message);
-    } else {
-      throw new ErrorHandler(500, error.message);
-    }
-  }
-});
+//     await client.query("COMMIT");
+//     client.release();
+//   } catch (error: any) {
+//     await client.query("ROLLBACK");
+//     client.release();
+//     if (error?.isOperational) {
+//       throw new ErrorHandler(error.statusCode, error.message);
+//     } else {
+//       throw new ErrorHandler(500, error.message);
+//     }
+//   }
+// });
 
 export const saveTimeTable = asyncErrorHandler(async (req, res) => {
   const { error, value } = VSaveTimeTable.validate(req.body);

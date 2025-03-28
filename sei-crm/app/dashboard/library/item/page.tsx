@@ -17,7 +17,7 @@ import { BsFiletypeDocx } from "react-icons/bs";
 import { CiEdit } from "react-icons/ci";
 import { FaRegFileAudio, FaRegFileImage } from "react-icons/fa6";
 import { IoMdClose } from "react-icons/io";
-import { IoAddOutline, IoLinkSharp } from "react-icons/io5";
+import { IoAddOutline, IoEyeOutline, IoLinkSharp } from "react-icons/io5";
 import { MdOutlineDone } from "react-icons/md";
 import { PiFilePdf } from "react-icons/pi";
 import { useQuery } from "react-query";
@@ -39,13 +39,7 @@ export default function LibraryManagement() {
   const urlSearchParams = useSearchParams();
 
   const [tableDatas, setTableDatas] = useState<TTable>({
-    heads: [
-      "File Name",
-      "Course / Subject",
-      "Status",
-      "Created At",
-      "Action",
-    ],
+    heads: ["File Name", "Course / Subject", "Status", "Created At", "Action"],
     body: [],
   });
 
@@ -63,20 +57,22 @@ export default function LibraryManagement() {
         .data,
     onSuccess: (data) => {
       const newTableVal = { ...tableDatas };
-      if(`${
-        urlSearchParams.get("visibility") === "subject-specific"
-          ? "Subjects"
-          : urlSearchParams.get("visibility") === "course-specific"
-          ? "Course"
-          : "Course / Subject"
-      }`)
-      if(urlSearchParams.get("visibility") === "subject-specific") {
-        newTableVal.heads[1] = "Subjects"
-      } else if(urlSearchParams.get("visibility") === "course-specific") {
-         newTableVal.heads[1] = "Courses"
-      } else {
-        newTableVal.heads[1] = "Course / Subject"
-      }
+      if (
+        `${
+          urlSearchParams.get("visibility") === "subject-specific"
+            ? "Subjects"
+            : urlSearchParams.get("visibility") === "course-specific"
+            ? "Course"
+            : "Course / Subject"
+        }`
+      )
+        if (urlSearchParams.get("visibility") === "subject-specific") {
+          newTableVal.heads[1] = "Subjects";
+        } else if (urlSearchParams.get("visibility") === "course-specific") {
+          newTableVal.heads[1] = "Courses";
+        } else {
+          newTableVal.heads[1] = "Course / Subject";
+        }
       newTableVal.body = data.data.map((item) => [
         item.library_file_name,
         item.course_or_subject_name || "N/A",
@@ -90,6 +86,8 @@ export default function LibraryManagement() {
   });
 
   async function handleStatusBtn(isActive: boolean, library_id: number) {
+    if(!confirm("Are you sure you want to continue?")) return;
+
     mutate({
       apiPath: "/library/" + library_id,
       method: "patch",
@@ -159,6 +157,15 @@ export default function LibraryManagement() {
                           </TagsBtn>
                         ) : value === "actionBtn" ? (
                           <div className="flex items-center gap-3">
+                            <Link
+                              target="__blank"
+                              href={
+                                tableData?.data[rowIndex]
+                                  .library_resource_link || "#"
+                              }
+                            >
+                              <IoEyeOutline title="View Resources" size={18}/>
+                            </Link>
                             <button
                               disabled={isMutating}
                               onClick={() =>

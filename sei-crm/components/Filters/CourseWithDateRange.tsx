@@ -4,6 +4,7 @@ import Button from "../Button";
 import DropDown from "../DropDown";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import DateInput from "../DateInput";
+import Campus from "../Campus";
 
 export default function CourseWithDateRange() {
   const route = useRouter();
@@ -27,16 +28,7 @@ export default function CourseWithDateRange() {
       onSubmit={handleFormSubmit}
       className="w-full flex items-end justify-between *:flex-grow gap-x-5 pb-5"
     >
-      <DropDown
-        key={"institute"}
-        name="institute"
-        label="Campus"
-        options={[
-          { text: "Kolkata", value: "Kolkata" },
-          { text: "Faridabad", value: "Faridabad" },
-        ]}
-        defaultValue={searchParams.get("institute") || "Kolkata"}
-      />
+      <Campus />
       <DropDown
         key={"course_type"}
         name="course_type"

@@ -30,7 +30,8 @@ export const TIME_PERIOD = [
   "Period 8",
 ];
 
-export const AUTHORITY = ["SUPER ADMIN", "HOI", "HOD", "UDS / LDS"];
+// export const AUTHORITY = ["SUPER ADMIN", "HOI", "HOD", "UDS / LDS"];
+export const AUTHORITY = ["HOI", "HOD", "UDS / LDS"];
 
 export const inventoryCatList = [
   { category_id: 1, category_name: "Consumable" },
@@ -90,6 +91,7 @@ export const PERMISSION_PATH_MAP: Record<string, string | string[]> = {
 
   "/course" : "2-1",
   "/course/batch" : "2-1",
+  "/course/" : "2-1",
 
   "/setting" : "6-1",
   "/setting/member" : "6-1",

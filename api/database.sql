@@ -1376,6 +1376,10 @@ CREATE TABLE time_table (
     institute VARCHAR(100)
 );
 
+--NEW DB 27 MAR 2025
+DELETE FROM appraisal;
+
+ALTER TABLE appraisal ADD COLUMN final_status VARCHAR(30) CHECK (final_status IN ('Pending', 'Approved', 'Rejected')) DEFAULT 'Pending';
 
 -- fro clering all table of db
 -- DO $$ 

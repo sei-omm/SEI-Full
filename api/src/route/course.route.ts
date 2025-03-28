@@ -22,7 +22,7 @@ import {
   getCoursesWithSubject,
   getMultipleBatchWithId,
   changeBatchManually,
-  generateTimeTable,
+  // generateTimeTable,
   saveTimeTable,
   draftTimeTable,
   removeFromDraft,
@@ -63,7 +63,7 @@ courseRouter
   .patch("/batch", isAuthenticated, checkPermission, changeBatchManually) //chnage batch manually -> only access by marketing team
 
 
-  .get("/time-table", generateTimeTable)
+  // .get("/time-table", generateTimeTable)
   .get("/time-table/v2", generateTimeTable2)
   .post("/time-table", saveTimeTable)
   .post("/time-table/draft", draftTimeTable)

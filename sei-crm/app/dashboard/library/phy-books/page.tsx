@@ -9,12 +9,11 @@ import Input from "@/components/Input";
 import AddMultiBookForm from "@/components/Library/AddMultiBookForm";
 import Pagination from "@/components/Pagination";
 import SearchInput from "@/components/SearchInput";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 import { Books, ISuccess } from "@/types";
 import axios from "axios";
 import {
-  ReadonlyURLSearchParams,
   useRouter,
-  useSearchParams,
 } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { CiEdit } from "react-icons/ci";
@@ -25,7 +24,7 @@ type TTable = {
   body: string[][];
 };
 
-async function getBooksList(searchParams: ReadonlyURLSearchParams) {
+async function getBooksList(searchParams: URLSearchParams) {
   return (
     await axios.get(
       `${BASE_API}/library/physical/books?${searchParams.toString()}`
@@ -50,7 +49,7 @@ export default function PhysicalLibraryBooks() {
 
   const [currentEditRowIndex, setCurrentEditRowIndex] = useState<number[]>([]);
 
-  const searchParams = useSearchParams();
+  const searchParams = usePurifySearchParams();
   const route = useRouter();
 
   const {

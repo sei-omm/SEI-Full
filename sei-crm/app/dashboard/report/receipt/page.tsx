@@ -82,7 +82,7 @@ export default function ReceiptReport() {
       <div className="flex items-center justify-end">
         <GenarateExcelReportBtn
           apiPath={`/report/receipt/excel?${searchParams.toString()}`}
-          hidden = {report?.data.length === 0}
+          hidden = {report?.data.length === 0 || searchParams.size === 0}
         />
       </div>
 

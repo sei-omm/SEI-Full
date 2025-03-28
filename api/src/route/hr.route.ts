@@ -13,10 +13,7 @@ import {
   addLeaveValuesYearly,
   generateLeaveReceipt,
   getEachEmployeLeaveDetails,
-  getOthersLeaveList,
   getRequestedLeaveLists,
-  removeLeaveRequestRow,
-  updateLeaveStatus,
 } from "../controller/leave.controller";
 import {
   applyJobAsCandidate,

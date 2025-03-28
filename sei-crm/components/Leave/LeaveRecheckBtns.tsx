@@ -3,17 +3,13 @@
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import React from "react";
 import Button from "../Button";
-import DropDown from "../DropDown";
+import Campus from "../Campus";
 
-interface IProps {
-    searchParams: any;
-  }
-  
 
-export default function LeaveRecheckBtns({ searchParams } : IProps) {
+export default function LeaveRecheckBtns() {
   const { isLoading, mutate } = useDoMutation();
   return <div className="flex items-center justify-between">
-  <DropDown
+  {/* <DropDown
     changeSearchParamsOnChange
     label="Choose Institute"
     name="institute"
@@ -28,7 +24,8 @@ export default function LeaveRecheckBtns({ searchParams } : IProps) {
       },
     ]}
     defaultValue={searchParams.institute}
-  />
+  /> */}
+  <Campus changeSearchParamsOnChange/>
 
   <div className="flex items-center gap-4">
     <Button

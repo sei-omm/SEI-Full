@@ -1,7 +1,8 @@
 import { BASE_API } from "@/app/constant";
 import Contacts from "@/components/Contacts";
-import { ISuccess } from "@/types";
-import axios from "axios";
+import { IError, ISuccess } from "@/types";
+import axios, { AxiosError } from "axios";
+import { redirect } from "next/navigation";
 import React from "react";
 import { BsPeople } from "react-icons/bs";
 import { FaPeopleGroup } from "react-icons/fa6";
@@ -42,19 +43,26 @@ export default async function page({ searchParams }: IProps) {
   // const AUTH_TOKEN_OBJ = await getAuthTokenServer();
   const urlSearchParams = new URLSearchParams(searchParams);
 
-  const { data: result } = await axios.get<
-    ISuccess<{
-      total_employees: string;
-      active_employees: string;
-      employees_on_leave: string;
-      pending_leave_request: string;
-    }>
-  >(`${BASE_API}/hr/dashboard?${urlSearchParams.toString()}`);
+  try {
+    const { data: result } = await axios.get<
+      ISuccess<{
+        total_employees: string;
+        active_employees: string;
+        employees_on_leave: string;
+        pending_leave_request: string;
+      }>
+    >(`${BASE_API}/hr/dashboard?${urlSearchParams.toString()}`);
 
-  data[0].value = result.data.total_employees;
-  data[1].value = result.data.active_employees;
-  data[2].value = result.data.employees_on_leave;
-  data[3].value = result.data.pending_leave_request;
+    data[0].value = result.data.total_employees;
+    data[1].value = result.data.active_employees;
+    data[2].value = result.data.employees_on_leave;
+    data[3].value = result.data.pending_leave_request;
+  } catch (error) {
+    const err = error as AxiosError<IError>;
+    if (err.status === 401) return redirect("/login");
+    if (err.status === 403) return redirect("/error?status=403");
+    redirect("/error?status=" + err.status);
+  }
 
   return (
     <section className="w-full">
@@ -73,7 +81,7 @@ export default async function page({ searchParams }: IProps) {
         ))}
       </div>
 
-      <Contacts searchParams={searchParams} />
+      <Contacts />
     </section>
   );
 }

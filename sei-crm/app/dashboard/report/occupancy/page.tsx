@@ -3,39 +3,35 @@
 import { BASE_API } from "@/app/constant";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import Button from "@/components/Button";
+import Campus from "@/components/Campus";
 import OccupancyChat from "@/components/ChatView/OccupancyChat";
 import DateInput from "@/components/DateInput";
-import DropDown from "@/components/DropDown";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 import { IError, ISuccess, TOccupancyReport } from "@/types";
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { ReadonlyURLSearchParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useQuery } from "react-query";
 
 const fetchData = async (
-  params: string
+  searchParams: ReadonlyURLSearchParams,
+  campus : string
 ): Promise<ISuccess<TOccupancyReport[]>> => {
-  const response = await fetch(BASE_API + `/report/occupancy?${params}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const newSearchParams = new URLSearchParams(searchParams);
+  newSearchParams.set("institute", campus);
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch occupancy report");
-  }
-
-  return response.json();
+  return (await axios.get(BASE_API + `/report/occupancy?${newSearchParams.toString()}`)).data
 };
 
 export default function OccupancyReport() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  const { campus } = usePurifyCampus(searchParams);
 
   const [tableDatas, setTableDatas] = useState<{
     heads: string[];
@@ -62,7 +58,7 @@ export default function OccupancyReport() {
     isFetching,
   } = useQuery<ISuccess<TOccupancyReport[]>, AxiosError<IError>>(
     ["fetch-occupancy-report", searchParams.toString()],
-    () => fetchData(searchParams.toString()),
+    () => fetchData(searchParams, campus),
     {
       onSuccess(data) {
         const oldTableData = { ...tableDatas };
@@ -101,15 +97,7 @@ export default function OccupancyReport() {
         action={handleFilterSubmit}
         className="flex items-end justify-between *:flex-grow gap-4"
       >
-        <DropDown
-          label="Campus"
-          name="institute"
-          options={[
-            { text: "Kolkata", value: "Kolkata" },
-            { text: "Faridabad", value: "Faridabad" },
-          ]}
-          defaultValue={searchParams.get("institute") || "Kolkata"}
-        />
+        <Campus />
         <DateInput
           required
           label="Start Date"

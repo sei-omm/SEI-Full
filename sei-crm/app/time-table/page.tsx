@@ -2,13 +2,8 @@
 
 import Button from "@/components/Button";
 import DateInput from "@/components/DateInput";
-import DropDown from "@/components/DropDown";
 import HandleSuspence from "@/components/HandleSuspence";
-import {
-  ReadonlyURLSearchParams,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { stickyFirstCol } from "../utils/stickyFirstCol";
 import { useQuery } from "react-query";
@@ -19,8 +14,10 @@ import BackBtn from "@/components/BackBtn";
 import CellTimeTable from "@/components/Course/CellTimeTable";
 import { useDoMutation } from "../utils/useDoMutation";
 import { AiOutlineDelete } from "react-icons/ai";
+import Campus from "@/components/Campus";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 
-const fetchTimeTableInfo = async (searchParams: ReadonlyURLSearchParams) => {
+const fetchTimeTableInfo = async (searchParams: URLSearchParams) => {
   return (
     await axios.get(
       `${BASE_API}/course/time-table/v2?${searchParams.toString()}`
@@ -44,7 +41,7 @@ type TTable = {
 };
 
 export default function TimeTable() {
-  const searchParams = useSearchParams();
+  const searchParams = usePurifySearchParams();
   const route = useRouter();
 
   const filterFormRef = useRef<HTMLFormElement>(null);
@@ -78,7 +75,7 @@ export default function TimeTable() {
   >({
     queryKey: ["time-table-2", searchParams.toString()],
     queryFn: () => fetchTimeTableInfo(searchParams),
-    enabled: searchParams.size !== 0,
+    enabled: searchParams.size > 1,
     onSuccess(data) {
       const parsedVirtualTable = JSON.parse(
         data.data.virtual_table || "{}"
@@ -148,7 +145,7 @@ export default function TimeTable() {
 
     const userInput = prompt(`Type "Yes" If You Want To Save It In Database`);
     if (userInput !== "Yes") return;
-    
+
     saveToDb({
       apiPath: "/course/time-table",
       method: "post",
@@ -156,7 +153,7 @@ export default function TimeTable() {
         date: searchParams.get("date"),
         institute: searchParams.get("institute"),
         time_table_data: JSON.stringify(virtual_table.current),
-        total_rows : data?.data.time_table_info.length,
+        total_rows: data?.data.time_table_info.length,
         faculty_ids: Object.entries(virtual_table.current || {})
           .filter(
             (item) => item[1].fac !== null && item[1].fac?.faculty_id !== -1
@@ -178,7 +175,7 @@ export default function TimeTable() {
           action={handleTimeTableGeneratorBtn}
           className="flex items-end gap-3"
         >
-          <DropDown
+          {/* <DropDown
             name="institute"
             label="Choose Campus *"
             options={[
@@ -192,7 +189,8 @@ export default function TimeTable() {
               },
             ]}
             defaultValue={searchParams.get("institute") || "Kolkata"}
-          />
+          /> */}
+          <Campus />
           <DateInput
             required
             name="date"
@@ -273,7 +271,7 @@ export default function TimeTable() {
 
       <div className="w-full flex items-center justify-between pb-10">
         <BackBtn btnText="Back To Dashboard" customRoute="/dashboard" />
-        {searchParams.size === 0 ? null : (
+        {searchParams.size === 1 ? null : (
           <div className="flex items-center gap-3">
             {data?.data.draft_id !== -1 && (
               <Button

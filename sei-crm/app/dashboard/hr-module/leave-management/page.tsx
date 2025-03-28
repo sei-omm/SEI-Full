@@ -25,7 +25,7 @@ export default async function LeaveManagement({ searchParams }: IProps) {
           },
         ]}
       />
-      <LeaveRecheckBtns searchParams={searchParams} />
+      <LeaveRecheckBtns />
       {searchParams.tab === "request" ? (
         <LeaveRequests searchParams={searchParams} />
       ) : (

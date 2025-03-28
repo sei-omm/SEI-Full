@@ -331,7 +331,7 @@ export default function AppraisalForm({
             <Input
               name="state_of_health"
               viewOnly={isNew || disableAll}
-              viewOnlyText="NA"
+              viewOnlyText={appraisal?.data.appraisal_info.state_of_health || "NA"}
               label="State of Health"
               placeholder="Type here.."
               defaultValue={appraisal?.data.appraisal_info.state_of_health}
@@ -339,7 +339,7 @@ export default function AppraisalForm({
             <Input
               name="integrity"
               viewOnly={isNew || disableAll}
-              viewOnlyText="NA"
+              viewOnlyText={appraisal?.data.appraisal_info.integrity || "NA"}
               label="Integrity"
               placeholder="Type here.."
               defaultValue={appraisal?.data.appraisal_info.integrity}

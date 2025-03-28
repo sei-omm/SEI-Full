@@ -9,27 +9,29 @@ import { useQuery } from "react-query";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
 import { ISuccess, TMembers } from "@/types";
-import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import Spinner from "../Spinner";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { useDispatch } from "react-redux";
+import { useSearchParams } from "next/navigation";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 
 type TTable = {
   heads: string[];
   body: (string | null)[][];
 };
 
-const getMembers = async (searchParams: ReadonlyURLSearchParams) => {
+const getMembers = async (searchParams: string) => {
   return (
-    await axios.get(`${BASE_API}/setting/member?${searchParams.toString()}`)
+    await axios.get(`${BASE_API}/setting/member?institute=${searchParams}`)
   ).data;
 };
 
 export default function PermissionManagement() {
-  const searchParams = useSearchParams();
   const dispatch = useDispatch();
+  const searchParams = useSearchParams();
+  const { campus } = usePurifyCampus(searchParams);
 
   const selectedMemberId = useRef(-1);
 
@@ -39,8 +41,8 @@ export default function PermissionManagement() {
   });
 
   const { isFetching, error, data, refetch } = useQuery<ISuccess<TMembers[]>>({
-    queryKey: ["get-members", searchParams.toString()],
-    queryFn: () => getMembers(searchParams),
+    queryKey: ["get-members", campus],
+    queryFn: () => getMembers(campus),
     onSuccess(data) {
       setTableDatas((prev) => ({
         ...prev,
@@ -180,7 +182,7 @@ export default function PermissionManagement() {
                                 >
                                   <option value="Employee">Employee</option>
                                   <option value="Admin">Admin</option>
-                                  <option value="HR">Hr</option>
+                                  <option value="HR">HR</option>
                                 </select>
                               )
                             ) : value === "actionBtn" ? (
@@ -191,9 +193,10 @@ export default function PermissionManagement() {
                                       setDialog({
                                         type: "OPEN",
                                         dialogId: "assign-permission",
-                                        extraValue : {
-                                          member_id : data?.data[rowIndex]?.member_id
-                                        }
+                                        extraValue: {
+                                          member_id:
+                                            data?.data[rowIndex]?.member_id,
+                                        },
                                       })
                                     );
                                   }}

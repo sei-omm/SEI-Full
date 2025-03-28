@@ -36,6 +36,7 @@ import { AUTHORITY } from "../constant";
 import { beautifyDate } from "../utils/beautifyDate";
 import { calculateAge } from "../utils/calculateAge";
 import { encrypt, decrypt } from "../utils/crypto";
+import { sendNotificationUtil } from "../utils/sendNotificationUtil";
 
 const table_name = "employee";
 
@@ -1027,13 +1028,14 @@ export const createAppraisal = asyncErrorHandler(async (req, res) => {
       [appraisal[0].appraisal_id, value.employee_id, highAuthorityInfo[0].id]
     );
 
-    // await sendNotificationUtil({
-    //   notification_type: "private",
-    //   employee_ids: [highAuthorityInfo[0].id],
-    //   notification_title: "Appraisal Request",
-    //   notification_description: `An appraisal request has come from ${employee1Info[0].name}`,
-    //   client: client,
-    // });
+    await sendNotificationUtil({
+      notification_type: "private",
+      employee_ids: [highAuthorityInfo[0].id],
+      notification_title: "Appraisal Request",
+      notification_description: `You have received an appraisal request from the "${employee1Info[0].name}"`,
+      notification_link : `${process.env.CRM_FRONTEND_HOST}/account?tab=otherapr`,
+      client: client,
+    });
 
     await client.query("COMMIT");
     client.release();
@@ -1089,28 +1091,7 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, "Your Appraisals", rows));
   }
 
-  // const { rows : req1 } = await pool.query(
-  //   `SELECT appraisal_id FROM appraisal_and_employee WHERE to_employee_id = $1`,
-  //   [value.employee_id]
-  // );
-
-  // const appraisalID = req1[0].appraisal_id;
-
-  // const {} = await pool.query(
-  //   `
-  //     SELECT
-  //       aae.*
-  //     FROM appraisal_and_employee aae
-  //     WHERE aae.appraisal_id = $1
-  //   `,
-  //   [appraisalID]
-  // )
-
-  if (
-    (value.type === "Admin" || value.type === "Hr") &&
-    (value.role === "Admin" || value.role === "Hr")
-  ) {
-    // this is for admin panel
+  if(value.type === "others") {
     const { rows } = await pool.query(
       `
        SELECT
@@ -1118,8 +1099,7 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
         a.created_at,
         a.employee_id AS appraisal_of_employee_id,
         e.name AS appraisal_of,
-        e.profile_image,
-        e.email_address
+        aae.appraisal_status
        FROM appraisal_and_employee aae
   
        LEFT JOIN appraisal AS a
@@ -1127,19 +1107,33 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
   
        LEFT JOIN employee AS e
        ON e.id = a.employee_id
-
-       ${value.institute ? "WHERE e.institute = $1" : ""}
-
-       GROUP BY e.id, a.appraisal_id
-
+  
+       WHERE aae.to_employee_id = $1
+  
        ORDER BY a.appraisal_id DESC
       `,
-      value.institute ? [value.institute] : []
+      [value.employee_id]
     );
-
     return res.status(200).json(new ApiResponse(200, "Other Appraisals", rows));
   }
 
+  // this code for dashboard where Admin can see all the appraisal even if it's final status is Approved Or Not
+  // on the other hand HR can only see final_status = "Approved" appraisals
+  if(value.role !== "Super Admin" && !value.institute) throw new ErrorHandler(400, "For your role, institute is needed");
+
+  let filters = "WHERE";
+  const filterValues : string[] = [];
+
+  if(value.role !== "Super Admin") { // mean role come Admin Or Hr or other.
+    filters += " e.institute = $1";
+    filterValues.push(value.institute);
+  }
+
+  if(value.role === "HR") {
+    filters += " AND a.final_status = 'Approved'";
+  }
+
+  // this is for admin panel
   const { rows } = await pool.query(
     `
      SELECT
@@ -1147,7 +1141,8 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
       a.created_at,
       a.employee_id AS appraisal_of_employee_id,
       e.name AS appraisal_of,
-      aae.appraisal_status
+      e.profile_image,
+      e.email_address
      FROM appraisal_and_employee aae
 
      LEFT JOIN appraisal AS a
@@ -1156,37 +1151,16 @@ export const getAppraisalList = asyncErrorHandler(async (req, res) => {
      LEFT JOIN employee AS e
      ON e.id = a.employee_id
 
-     WHERE aae.to_employee_id = $1
+     ${filters}
+
+     GROUP BY e.id, a.appraisal_id
 
      ORDER BY a.appraisal_id DESC
     `,
-    [value.employee_id]
+    filterValues
   );
 
-  // const { rows } = await pool.query(
-  //   `
-  //   SELECT
-  //     a.appraisal_id,
-  //     a.created_at,
-  //     JSON_AGG(JSON_OBJECT('name' : e.name, 'status' : aae.appraisal_status)) as sended_to
-  //   FROM appraisal_and_employee AS aae
-
-  //   LEFT JOIN appraisal AS a
-  //   ON aae.appraisal_id = a.appraisal_id
-
-  //   LEFT JOIN employee AS e
-  //   ON aae.from_employee_id = e.id
-
-  //   WHERE aae.to_employee_id = $1
-
-  //   GROUP BY a.appraisal_id
-
-  //   ORDER BY a.appraisal_id DESC
-  //   `,
-  //   [value.employee_id]
-  // );
-
-  res.status(200).json(new ApiResponse(200, "Other Appraisals", rows));
+  return res.status(200).json(new ApiResponse(200, "Other Appraisals", rows));
 });
 
 export const getSingleAppraisal = asyncErrorHandler(async (req, res) => {
@@ -1260,7 +1234,7 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
   const { error: tryCatchErr } = await tryCatch(async () => {
     await client.query("BEGIN");
 
-    // find current employee info like
+    // find current employee info who have trigger the update api
     const { rows: employee1Info } = await client.query(
       `
           SELECT
@@ -1282,6 +1256,9 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
       AUTHORITY[currentEmployeeAuthorityIndex - 1];
 
     // if high authority name is not found then consider this form will not go beyond
+    const appraisal_body_to_update : any = {
+      ...req.body
+    }
     if (highAuthorityName !== undefined) {
       // add extra filter if higher authority is HOD than don't need to check department as it will go to HOI
       let extra_filter = "";
@@ -1315,27 +1292,34 @@ export const updateAppraisalReport = asyncErrorHandler(async (req, res) => {
           "No higher authority is defined for " + employee1Info[0].authority
         );
 
-      await client.query(
+      const { rowCount : hasInserted } = await client.query(
         `
         INSERT INTO appraisal_and_employee 
           (appraisal_id, from_employee_id, to_employee_id) 
         VALUES 
           ($1, $2, $3)
-        ON CONFLICT(appraisal_id, from_employee_id, to_employee_id) DO NOTHING;
+        ON CONFLICT(appraisal_id, from_employee_id, to_employee_id) DO NOTHING
+        RETURNING appraisal_id;
   `,
         [value.appraisal_id, value.employee_id, highAuthorityInfo[0].id]
       );
 
-      // await sendNotificationUtil({
-      //   notification_type: "private",
-      //   employee_ids: [highAuthorityInfo[0].id],
-      //   notification_title: "Appraisal Request",
-      //   notification_description: `An appraisal request has come from ${employee1Info[0].name}`,
-      //   client: client,
-      // });
+      if(hasInserted !== null && hasInserted > 0) {
+        // if new row in "appraisal_and_employee" has created than send the notification else don't
+        await sendNotificationUtil({
+          notification_type: "private",
+          employee_ids: [highAuthorityInfo[0].id],
+          notification_title: "Appraisal Request",
+          notification_description : "You have received an appraisal request; please verify it using the link below.",
+          notification_link : `${process.env.CRM_FRONTEND_HOST}/account?tab=otherapr`,
+          client: client,
+        });
+      }
+    } else {
+      appraisal_body_to_update.final_status = "Approved"
     }
-
-    const { keys, values, paramsNum } = objectToSqlConverterUpdate(req.body);
+    
+    const { keys, values, paramsNum } = objectToSqlConverterUpdate(appraisal_body_to_update);
     await client.query(
       `UPDATE appraisal SET ${keys} WHERE appraisal_id = $${paramsNum}`,
       [...values, value.appraisal_id]

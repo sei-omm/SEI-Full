@@ -5,6 +5,7 @@ import DropDown from "./DropDown";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import DateInput from "./DateInput";
+import Campus from "./Campus";
 
 // const months = [
 //   "January",
@@ -83,7 +84,7 @@ export default function SelectDate() {
         name="employee_type"
         defaultValue={searchParams.get("employee_type") || "-1"}
       />
-      <DropDown
+      {/* <DropDown
         label="Choose Campus"
         options={[
           { text: "All", value: "-1" },
@@ -92,7 +93,8 @@ export default function SelectDate() {
         ]}
         name="institute"
         defaultValue={searchParams.get("institute") || "-1"}
-      />
+      /> */}
+      <Campus />
       {/* <DropDown
         label="Choose Month"
         name="month"

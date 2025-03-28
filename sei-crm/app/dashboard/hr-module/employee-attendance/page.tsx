@@ -7,7 +7,6 @@ import AttendanceActionBtn from "@/components/AttendanceActionBtn";
 import SelectDate from "@/components/SelectDate";
 import Button from "@/components/Button";
 import Pagination from "@/components/Pagination";
-import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { useQuery } from "react-query";
 import axios from "axios";
@@ -17,6 +16,7 @@ import { toast } from "react-toastify";
 import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 
 type TableTypes = {
   heads: string[];
@@ -29,14 +29,14 @@ type TAttendanceUpdate = {
   attendance_date: string;
 };
 
-async function getAttendance(searchParams: ReadonlyURLSearchParams) {
+async function getAttendance(searchParams: URLSearchParams) {
   return (
     await axios.get(`${BASE_API}/hr/attendance?${searchParams.toString()}`)
   ).data;
 }
 
 export default async function EmployeeAttendance() {
-  const searchParams = useSearchParams();
+  const searchParams = usePurifySearchParams();
   const [tables, setTables] = useState<TableTypes>();
 
   const attendanceToUpdate = useRef<TAttendanceUpdate[]>([]);

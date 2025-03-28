@@ -5,13 +5,14 @@ import { BASE_API } from "@/app/constant";
 import { useCallback, useEffect, useState } from "react";
 import _ from "lodash";
 import { toast } from "react-toastify";
-import DropDown from "../DropDown";
 import Button from "../Button";
 import { EmployeeType, ISuccess, TInputSuggestion } from "@/types";
 import Input from "../Input";
-import { useSearchParams } from "next/navigation";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
+import Campus from "../Campus";
+import { useSearchParams } from "next/navigation";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 
 type TSearch = {
   name: string;
@@ -26,15 +27,15 @@ export default function SearchForPermission() {
   const [loading, setLoading] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] =
     useState<TInputSuggestion | null>(null);
+
   const searchParams = useSearchParams();
+  const {campus} = usePurifyCampus(searchParams);
 
   const searchName = async (searchTerm: string) => {
     try {
       setLoading(true);
       const { data } = await axios.get<ISuccess<TSearch[]>>(
-        `${BASE_API}/employee/search?q=${searchTerm}&institute=${
-          searchParams.get("institute") || "Kolkata"
-        }`
+        `${BASE_API}/employee/search?q=${searchTerm}&institute=${campus}`
       );
       setSearchResult(data.data);
       // setReslts(data.data);
@@ -51,7 +52,7 @@ export default function SearchForPermission() {
     _.debounce((searchTerm) => {
       searchName(searchTerm);
     }, 500), // 500ms delay
-    [searchParams.toString()]
+    [campus]
   );
 
   useEffect(() => {
@@ -80,19 +81,11 @@ export default function SearchForPermission() {
   return (
     <div className="pb-4 space-y-3">
       <form action={handleFormAction} className="gap-3 flex items-end">
-        <DropDown
+        <Campus
           changeSearchParamsOnChange
           onChange={() => {
             setSearchResult([]);
-            // setReslts([]);
           }}
-          name="institute"
-          label="Campus"
-          options={[
-            { text: "Kolkata", value: "Kolkata" },
-            { text: "Faridabad", value: "Faridabad" },
-          ]}
-          defaultValue={searchParams.get("institute") || "Kolkata"}
         />
         <Input
           required

@@ -5,6 +5,7 @@ import { getFileName } from "@/app/utils/getFileName";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import BackBtn from "@/components/BackBtn";
 import Button from "@/components/Button";
+import Campus from "@/components/Campus";
 import ChooseFileInput from "@/components/ChooseFileInput";
 import DropDown from "@/components/DropDown";
 import DropDownTag from "@/components/DropDownTag";
@@ -238,15 +239,7 @@ export default function ManageLibraryForm({ params }: IProps) {
             ]}
             defaultValue={response[1].data?.data?.visibility}
           />
-          <DropDown
-            name="institute"
-            label="Campus *"
-            options={[
-              { text: "Kolkata", value: "Kolkata" },
-              { text: "Faridabad", value: "Faridabad" },
-            ]}
-            defaultValue={response[1].data?.data?.institute}
-          />
+          <Campus label="Campus *" defaultValue={response[1].data?.data?.institute}/>
         </div>
         {visibility === "course-specific" ? (
           <DropDownTag

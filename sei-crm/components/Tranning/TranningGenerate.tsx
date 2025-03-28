@@ -11,6 +11,8 @@ import { setDialog } from "@/redux/slices/dialogs.slice";
 import { useDispatch } from "react-redux";
 import { EmployeeType, ISuccess, TInputSuggestion } from "@/types";
 import Input from "../Input";
+import Campus from "../Campus";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 import { useSearchParams } from "next/navigation";
 
 type TSearch = {
@@ -27,6 +29,7 @@ export default function TranningGenerate() {
   const [selectedSuggestion, setSelectedSuggestion] =
     useState<TInputSuggestion | null>(null);
   const searchParams = useSearchParams();
+  const { campus } = usePurifyCampus(searchParams);
 
   const dispatch = useDispatch();
 
@@ -34,9 +37,7 @@ export default function TranningGenerate() {
     try {
       setLoading(true);
       const { data } = await axios.get<ISuccess<TSearch[]>>(
-        `${BASE_API}/employee/search?q=${searchTerm}&institute=${
-          searchParams.get("institute") || "Kolkata"
-        }`
+        `${BASE_API}/employee/search?q=${searchTerm}&institute=${campus}`
       );
       setSearchResult(data.data);
       setReslts(data.data);
@@ -86,7 +87,7 @@ export default function TranningGenerate() {
         Generate Training Form
       </h2>
       <form action={handleFormAction} className="gap-3 flex items-end">
-        <DropDown
+        {/* <DropDown
           changeSearchParamsOnChange
           onChange={() => {
             setSearchResult([]);
@@ -99,6 +100,13 @@ export default function TranningGenerate() {
             { text: "Faridabad", value: "Faridabad" },
           ]}
           defaultValue={searchParams.get("institute") || "Kolkata"}
+        /> */}
+        <Campus
+          changeSearchParamsOnChange
+          onChange={() => {
+            setSearchResult([]);
+            setReslts([]);
+          }}
         />
         <Input
           required

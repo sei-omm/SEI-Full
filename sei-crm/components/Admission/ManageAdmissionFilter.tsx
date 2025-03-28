@@ -11,6 +11,8 @@ import HandleDataSuspense from "../HandleDataSuspense";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Input from "../Input";
 import DateInput from "../DateInput";
+import Campus from "../Campus";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 
 interface IProps {
   withMoreFilter?: boolean;
@@ -23,11 +25,9 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
 
   const [currentBatches, setCurrentBatches] = useState<string[]>([]);
   const [currentBatchDate, setCurrentBatchDate] = useState<string>("");
-  const [institute, setInstitute] = useState(
-    searchParams.get("institute") || "Kolkata"
-  );
+  const { campus, setCampus } = usePurifyCampus(searchParams);
   const [currentMonth, setCurrentMonth] = useState(
-    searchParams.get("month_year") || new Date().toISOString().slice(0, 7)
+    searchParams?.get("month_year") || new Date().toISOString().slice(0, 7)
   );
 
   const {
@@ -35,11 +35,11 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
     isFetching,
     error,
   } = useQuery<ISuccess<TCourseDropDown[]>>({
-    queryKey: ["get-courses-dropdown", institute, currentMonth],
+    queryKey: ["get-courses-dropdown", campus, currentMonth],
     queryFn: async () =>
       (
         await axios.get(
-          `${BASE_API}/course/drop-down?institute=${institute}&month_year=${currentMonth}`
+          `${BASE_API}/course/drop-down?institute=${campus}&month_year=${currentMonth}`
         )
       ).data,
     onSuccess(data) {
@@ -48,11 +48,12 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
           (fItem) =>
             fItem.course_id ==
             parseInt(
-              searchParams.get("course_id") || data.data[0].course_id.toString()
+              searchParams?.get("course_id") ||
+                data.data[0].course_id.toString()
             )
         )?.course_batches || [];
       setCurrentBatches(batchesInfo);
-      setCurrentBatchDate(searchParams.get("batch_date") || batchesInfo[0]);
+      setCurrentBatchDate(searchParams?.get("batch_date") || batchesInfo[0]);
     },
     refetchOnMount: true,
   });
@@ -124,17 +125,7 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
       <form onSubmit={handleFormSubmit} className="w-full">
         <input name="form_2" hidden />
         <div className="flex items-end justify-between flex-wrap gap-4 *:flex-grow gap-x-5 pb-5">
-          <DropDown
-            onChange={(item) => setInstitute(item.value)}
-            key={"institute"}
-            name="institute"
-            label="Campus"
-            options={[
-              { text: "Kolkata", value: "Kolkata" },
-              { text: "Faridabad", value: "Faridabad" },
-            ]}
-            defaultValue={searchParams.get("institute") || "Kolkata"}
-          />
+          <Campus onChange={(item) => setCampus(item.value)} />
           <DropDown
             key={"course_type"}
             name="course_type"
@@ -143,7 +134,7 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
               { text: "DGS Approved", value: "DGS Approved" },
               { text: "Value Added", value: "Value Added" },
             ]}
-            defaultValue={searchParams.get("course_type") || "DGS Approved"}
+            defaultValue={searchParams?.get("course_type") || "DGS Approved"}
           />
           <HandleDataSuspense
             isLoading={isFetching}
@@ -157,7 +148,7 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
                     course.data.find((fItem) => fItem.course_id == item.value)
                       ?.course_batches || [];
                   setCurrentBatchDate(
-                    searchParams.get("batch_date") || batchesInfo[0]
+                    searchParams?.get("batch_date") || batchesInfo[0]
                   );
                   setCurrentBatches(batchesInfo);
                 }}
@@ -169,7 +160,7 @@ export default function ManageAdmissionFilter({ withMoreFilter }: IProps) {
                   value: item.course_id,
                 }))}
                 defaultValue={
-                  searchParams.get("course_id") || course.data[0]?.course_id
+                  searchParams?.get("course_id") || course.data[0]?.course_id
                 }
               />
             )}

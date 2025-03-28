@@ -5,23 +5,20 @@ import { beautifyDate } from "@/app/utils/beautifyDate";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import BackBtn from "@/components/BackBtn";
 import Button from "@/components/Button";
+import Campus from "@/components/Campus";
 import DateInput from "@/components/DateInput";
-import DropDown from "@/components/DropDown";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 import { ISuccess, TVirtualTable } from "@/types";
 import axios from "axios";
 import Image from "next/image";
-import {
-  ReadonlyURLSearchParams,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 
-async function getTimeTableReport(searchParams: ReadonlyURLSearchParams) {
+async function getTimeTableReport(searchParams: URLSearchParams) {
   return (
     await axios.get(`${BASE_API}/report/time-table?${searchParams.toString()}`)
   ).data;
@@ -43,7 +40,7 @@ type TFinalData = {
 };
 
 export default function Report() {
-  const searchParams = useSearchParams();
+  const searchParams = usePurifySearchParams();
   const route = useRouter();
 
   const [finalData, setFinalData] = useState<TFinalData[]>([]);
@@ -61,7 +58,7 @@ export default function Report() {
 
   const prevData = [...finalData];
   const { data, error, isFetching } = useQuery<ISuccess<TTimeTableReport[]>>({
-    queryKey: ["get-time-table-report"],
+    queryKey: ["get-time-table-report", searchParams.toString()],
     queryFn: () => getTimeTableReport(searchParams),
     onSuccess(data) {
       data.data.map((item) => {
@@ -91,7 +88,7 @@ export default function Report() {
       setFinalData(prevData);
     },
 
-    enabled: searchParams.size !== 0,
+    enabled: searchParams.size > 1,
   });
 
   return (
@@ -102,21 +99,7 @@ export default function Report() {
             action={handleTimeTableGeneratorBtn}
             className="flex items-end gap-3"
           >
-            <DropDown
-              name="institute"
-              label="Choose Campus *"
-              options={[
-                {
-                  text: "Kolkata",
-                  value: "Kolkata",
-                },
-                {
-                  text: "Faridabad",
-                  value: "Faridabad",
-                },
-              ]}
-              defaultValue={searchParams.get("institute") || "Kolkata"}
-            />
+            <Campus />
             <DateInput
               required
               name="from_date"

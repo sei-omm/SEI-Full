@@ -77,7 +77,6 @@ export const sendNotificationUtil = async ({
       dbClient.release();
     }
   } catch (error) {
-    console.log(error);
     if (!client) {
       await dbClient.query("ROLLBACK");
       dbClient.release();

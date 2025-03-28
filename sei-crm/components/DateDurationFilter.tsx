@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useState } from "react";
 import DropDown from "./DropDown";
 import DateInput from "./DateInput";
 import Button from "./Button";
@@ -11,17 +10,19 @@ import { useQuery } from "react-query";
 import axios from "axios";
 import { ISuccess, TCourseDropDown } from "@/types";
 import HandleSuspence from "./HandleSuspence";
+import Campus from "./Campus";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 
 interface IProps {
   withMoreFilter?: boolean;
   withStudentRank?: boolean;
   withCourse?: boolean;
 
-  onCampusChange?: (campus : string) => void;
+  onCampusChange?: (campus: string) => void;
 
   children?: React.ReactNode;
-  fromDateLable?:string;
-  toDateLable?:string;
+  fromDateLable?: string;
+  toDateLable?: string;
 }
 
 export default function DateDurationFilter({
@@ -31,24 +32,13 @@ export default function DateDurationFilter({
   onCampusChange,
   children,
   toDateLable,
-  fromDateLable
+  fromDateLable,
 }: IProps) {
   const searchParams = useSearchParams();
+  const { campus, setCampus } = usePurifyCampus(searchParams);
+
   const route = useRouter();
   const pathname = usePathname();
-
-  const [institute, setInstitute] = useState("Kolkata");
-
-  // const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-  //   event.preventDefault();
-  //   const formData = new FormData(event.currentTarget);
-
-  //   const searchParams = new URLSearchParams();
-  //   searchParams.set("institute", `${formData.get("institute")}`);
-  //   searchParams.set("from_date", `${formData.get("from_date")}`);
-  //   searchParams.set("to_date", `${formData.get("to_date")}`);
-  //   route.push(`${pathname}?${searchParams.toString()}`);
-  // };
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -78,9 +68,9 @@ export default function DateDurationFilter({
   };
 
   const { data, isFetching, error } = useQuery<ISuccess<TCourseDropDown[]>>({
-    queryKey: ["get-course-for-filter", institute],
+    queryKey: ["get-course-for-filter", campus],
     queryFn: async () =>
-      (await axios.get(`${BASE_API}/course/drop-down?institute=${institute}`))
+      (await axios.get(`${BASE_API}/course/drop-down?institute=${campus}`))
         .data,
     enabled: withCourse,
   });
@@ -128,7 +118,7 @@ export default function DateDurationFilter({
             name="rank"
             label="Student Rank"
             options={STUDENT_RANKS.map((item) => ({ text: item, value: item }))}
-            defaultValue={searchParams.get("rank") || STUDENT_RANKS[0]}
+            defaultValue={searchParams?.get("rank") || STUDENT_RANKS[0]}
           />
         ) : null}
 
@@ -150,13 +140,13 @@ export default function DateDurationFilter({
                 })) || []),
               ]}
               defaultValue={
-                searchParams.get("course_id") || data?.data[0]?.course_id
+                searchParams?.get("course_id") || data?.data[0]?.course_id
               }
             />
           </HandleSuspence>
         ) : null}
 
-        <DropDown
+        {/* <DropDown
           onChange={(institute) => {
             setInstitute(institute.value);
             onCampusChange?.(institute.value);
@@ -167,21 +157,27 @@ export default function DateDurationFilter({
             { text: "Kolkata", value: "Kolkata" },
             { text: "Faridabad", value: "Faridabad" },
           ]}
-          defaultValue={searchParams.get("institute") || "Kolkata"}
+          defaultValue={searchParams?.get("institute") || "Kolkata"}
+        /> */}
+        <Campus
+          onChange={(institute) => {
+            setCampus(institute.value);
+            onCampusChange?.(institute.value);
+          }}
         />
 
         <DateInput
           required
           label={fromDateLable ?? "From Date *"}
           name="from_date"
-          date={searchParams.get("from_date")}
+          date={searchParams?.get("from_date")}
         />
 
         <DateInput
           required
           label={toDateLable ?? "To Date *"}
           name="to_date"
-          date={searchParams.get("to_date")}
+          date={searchParams?.get("to_date")}
         />
 
         {children}

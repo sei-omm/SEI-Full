@@ -3,10 +3,11 @@
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
-import DropDown from "@/components/DropDown";
+import Campus from "@/components/Campus";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
 import TagsBtn from "@/components/TagsBtn";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { ISuccess, TRefundDetails } from "@/types";
 import axios from "axios";
@@ -28,7 +29,7 @@ type TTable = {
 
 export default function ManageRefund() {
   const dispatch = useDispatch();
-  const [institute, setInstitute] = useState("Kolkata");
+  const { campus, setCampus } = usePurifyCampus(undefined);
   const [tableDatas, setTableDatas] = useState<TTable>({
     heads: [
       "Student Name",
@@ -53,8 +54,8 @@ export default function ManageRefund() {
     isFetching,
     data: report,
   } = useQuery<ISuccess<TRefundDetails[]>>({
-    queryKey: ["refund-list", institute],
-    queryFn: () => fetchManageRefund(`?institute=${institute}`),
+    queryKey: ["refund-list", campus],
+    queryFn: () => fetchManageRefund(`?institute=${campus}`),
     onSuccess(data) {
       setTableDatas((preState) => ({
         ...preState,
@@ -83,15 +84,7 @@ export default function ManageRefund() {
       {/* Filters */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Refund Requests</h2>
-        <DropDown
-          onChange={(item) => setInstitute(item.value)}
-          name="institute"
-          label="Campus"
-          options={[
-            { text: "Kolkata", value: "Kolkata" },
-            { text: "Faridabad", value: "Faridabad" },
-          ]}
-        />
+        <Campus onChange={(item) => setCampus(item.value)} />
       </div>
       <HandleSuspence
         noDataMsg="No Refund Request Avilable"

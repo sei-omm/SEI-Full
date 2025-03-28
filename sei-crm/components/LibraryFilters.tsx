@@ -7,6 +7,8 @@ import { BASE_API } from "@/app/constant";
 import axios from "axios";
 import Button from "./Button";
 import HandleDataSuspense from "./HandleDataSuspense";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
+import Campus from "./Campus";
 
 interface IDropDownTags extends TCourseDropDown {
   subject_id: number;
@@ -15,9 +17,7 @@ interface IDropDownTags extends TCourseDropDown {
 
 export default function LibraryFilters() {
   const urlSearchParams = useSearchParams();
-  const [institute, setInstitute] = useState(
-    urlSearchParams.get("institute") || "Kolkata"
-  );
+  const { campus, setCampus } = usePurifyCampus(urlSearchParams);
   const route = useRouter();
 
   const [visibility, setVisibility] = useState<TLibraryVisibility>(
@@ -32,14 +32,14 @@ export default function LibraryFilters() {
     queryKey: [
       "get-course-or-subejcts",
       visibility,
-      institute,
+      campus,
       urlSearchParams.toString(),
     ],
     queryFn: async () =>
       (
         await axios.get(
           visibility === "course-specific"
-            ? `${BASE_API}/course/drop-down?institute=${institute}`
+            ? `${BASE_API}/course/drop-down?institute=${campus}`
             : visibility === "subject-specific"
             ? BASE_API + "/subject"
             : ""
@@ -70,16 +70,7 @@ export default function LibraryFilters() {
       onSubmit={handleFormSumbit}
       className="flex items-end flex-wrap *:basis-56 gap-3"
     >
-      <DropDown
-        onChange={(item) => setInstitute(item.value)}
-        name="institute"
-        label="Campus *"
-        options={[
-          { text: "Kolkata", value: "Kolkata" },
-          { text: "Faridabad", value: "Faridabad" },
-        ]}
-        defaultValue={urlSearchParams.get("institute") || "Kolkata"}
-      />
+      <Campus onChange={(item) => setCampus(item.value)} />
       <DropDown
         name="visibility"
         onChange={(item) => setVisibility(item.value)}
@@ -109,9 +100,7 @@ export default function LibraryFilters() {
                   value: course.course_id.toString(),
                 })) || []),
               ]}
-              defaultValue={
-                urlSearchParams.get("course_id") || "-1"
-              }
+              defaultValue={urlSearchParams.get("course_id") || "-1"}
             />
           )}
         </HandleDataSuspense>
@@ -133,9 +122,7 @@ export default function LibraryFilters() {
                   value: course.subject_id,
                 })) || []),
               ]}
-              defaultValue={
-                urlSearchParams.get("subject_id") || "-1"
-              }
+              defaultValue={urlSearchParams.get("subject_id") || "-1"}
             />
           )}
         </HandleDataSuspense>

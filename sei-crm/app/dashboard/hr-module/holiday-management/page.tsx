@@ -4,8 +4,9 @@ import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import Button from "@/components/Button";
+import Campus from "@/components/Campus";
 import ChooseFileInput from "@/components/ChooseFileInput";
-import DropDown from "@/components/DropDown";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 import { ISuccess } from "@/types";
 import axios from "axios";
 import Link from "next/link";
@@ -39,7 +40,8 @@ type TTable = {
 
 const HolidayManagement = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
-  const [institute, setInstitute] = useState("Kolkata");
+  // const [institute, setInstitute] = useState("Kolkata");
+  const { campus, setCampus } = usePurifyCampus(undefined);
 
   const [tableDatasKolkata, setTableDatasKolkata] = useState<TTable>({
     heads: ["Holiday Name", "Holiday Date"],
@@ -107,7 +109,7 @@ const HolidayManagement = () => {
       apiPath: "/holiday/add",
       method: "post",
       formData: {
-        institute,
+        campus,
         holiday_list: excelData,
       },
     });
@@ -152,7 +154,7 @@ const HolidayManagement = () => {
               />
             </div>
             <div className="mt-2">
-              <DropDown
+              {/* <DropDown
                 onChange={(option) => {
                   setInstitute(option.value);
                 }}
@@ -162,6 +164,11 @@ const HolidayManagement = () => {
                   { text: "Kolkata", value: "Kolkata" },
                   { text: "Faridabad", value: "Faridabad" },
                 ]}
+              /> */}
+              <Campus
+                onChange={(option) => {
+                  setCampus(option.value);
+                }}
               />
             </div>
           </div>

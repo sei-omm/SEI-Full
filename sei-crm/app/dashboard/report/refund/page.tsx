@@ -8,6 +8,7 @@ import CourseWithDateRange from "@/components/Filters/CourseWithDateRange";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 import { ISuccess, TRefundReport } from "@/types";
 import axios from "axios";
 import Link from "next/link";
@@ -43,6 +44,7 @@ export default function RefundReport() {
   });
 
   const searchParams = useSearchParams();
+  const { campus } = usePurifyCampus(searchParams)
 
   const {
     data: report,
@@ -52,6 +54,7 @@ export default function RefundReport() {
     queryKey: ["fetch-refund-report", searchParams.toString()],
     queryFn: async () => {
       const urlSearchParams = new URLSearchParams(searchParams);
+      urlSearchParams.set("institute", campus);
       urlSearchParams.delete("month_year");
       return (await axios.get(`${BASE_API}/report/refund?${urlSearchParams.toString()}`)).data
     },

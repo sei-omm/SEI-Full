@@ -9,6 +9,7 @@ import Button from "../Button";
 import { CiSearch } from "react-icons/ci";
 import { useRouter, useSearchParams } from "next/navigation";
 import HandleSuspence from "../HandleSuspence";
+import Campus from "../Campus";
 
 type TFiltersInfo = {
   service_type: string[];
@@ -43,7 +44,7 @@ export default function VendorFilter() {
         action={handleForm}
         className="flex items-end justify-between *:flex-grow gap-5"
       >
-        <DropDown
+        {/* <DropDown
           name="institute"
           label="Campus"
           options={[
@@ -52,7 +53,8 @@ export default function VendorFilter() {
             { text: "Faridabad", value: "Faridabad" },
           ]}
           defaultValue={searchParams.get("institute") || -1}
-        />
+        /> */}
+        <Campus />
         <DropDown
           name="service_type"
           label="Type of Service"

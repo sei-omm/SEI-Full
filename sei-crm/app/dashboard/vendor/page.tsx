@@ -5,10 +5,10 @@ import HandleSuspence from "@/components/HandleSuspence";
 import VendorFilter from "@/components/Inventory/VendorFilter";
 import Pagination from "@/components/Pagination";
 import MultiVendorForm from "@/components/SingleLineForms/MultiVendorForm";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 import { ISuccess, TVendor } from "@/types";
 import axios from "axios";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { CiEdit } from "react-icons/ci";
 import { useQuery } from "react-query";
@@ -30,7 +30,7 @@ export default function Vendor() {
     body: [],
   });
 
-  const searchParams = useSearchParams();
+  const searchParams = usePurifySearchParams();
   // const dispatch = useDispatch();
 
   const {

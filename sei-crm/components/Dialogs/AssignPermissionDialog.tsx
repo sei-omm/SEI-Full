@@ -18,6 +18,20 @@ interface IDropMenu {
   toggleCheck: (id: string, isChecked: boolean) => void;
 }
 
+const final_sidebar = [
+  {
+    icon: null,
+    id: "camp",
+    name: "Campus",
+    slug: "",
+    subMenu: [
+      { id: "camp-1", icon: "", name: "Kolkata", slug: "" },
+      { id: "camp-2", icon: "", name: "Faridabad", slug: "" },
+    ],
+  },
+  ...sidebarOptions,
+];
+
 interface IEachListItem {
   option: TSideBar;
   checkedItems: { [key: string]: boolean };
@@ -102,7 +116,7 @@ export default function AssignPermissionDialog() {
       const updatedCheckedItems = { ...prev, [id]: isChecked };
 
       // If it's a parent, update all its children
-      const parent = sidebarOptions.find((item) => item.id === id);
+      const parent = final_sidebar.find((item) => item.id === id);
       if (parent && parent.subMenu) {
         parent.subMenu.forEach((child) => {
           updatedCheckedItems[child.id] = isChecked;
@@ -122,7 +136,7 @@ export default function AssignPermissionDialog() {
     refetchOnMount: true,
     onSuccess(data) {
       const parsedPermissions = JSON.parse(data.data.permissions);
-      setCheckedItems(parsedPermissions)
+      setCheckedItems(parsedPermissions);
     },
   });
 
@@ -139,7 +153,7 @@ export default function AssignPermissionDialog() {
       formData: {
         permissions: JSON.stringify(permission),
       },
-      id : extraValue?.member_id
+      id: extraValue?.member_id,
     });
   };
 
@@ -148,7 +162,7 @@ export default function AssignPermissionDialog() {
       <HandleSuspence isLoading={isFetching} error={error} dataLength={1}>
         <div className="pt-5">
           <DropMenu
-            options={sidebarOptions}
+            options={final_sidebar}
             checkedItems={checkedItems}
             toggleCheck={toggleCheck}
           />

@@ -8,6 +8,7 @@ import Button from "@/components/Button";
 import DownloadFormUrl from "@/components/DownloadFormUrl";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 import { IError, ISuccess } from "@/types";
 import axios, { AxiosError } from "axios";
 import Link from "next/link";
@@ -60,6 +61,8 @@ export default function BatchReport() {
     body: [],
   });
 
+  const { campus } = usePurifyCampus(searchParams);
+
   const {
     data: report,
     error,
@@ -67,11 +70,11 @@ export default function BatchReport() {
   } = useQuery<ISuccess<TBatch[]>, AxiosError<IError>>(
     ["get-dgs-indos-reports", searchParams.toString()],
     async () => {
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set('institute', campus);
       return (
         await axios.get(
-          `${BASE_API}/report/batch${
-            searchParams.size != 0 ? `?${searchParams.toString()}` : ""
-          }`
+          `${BASE_API}/report/batch?${newSearchParams.toString()}`
         )
       ).data;
     },

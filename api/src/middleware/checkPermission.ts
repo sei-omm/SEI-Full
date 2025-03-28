@@ -16,7 +16,7 @@ export const checkPermission = asyncErrorHandler(
     const routePattern = req.route?.path || ""; // e.g., "/department/:department_id"
 
     const pathToSearch = baseUrl.replace("/api/v1", "") + routePattern.replace(/\/:[^/]+/g, "");
-
+    
     //after verify auth then i will check the permission
     //&& parentPathName !== "/is-login"
     if (res.locals?.employee_id) {

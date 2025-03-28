@@ -1188,7 +1188,7 @@ export const getReceiptReport = asyncErrorHandler(
       p.paid_amount,
       p.payment_id,
       p.remark AS payment_remark,
-      p.bank_transaction_id,
+      STRING_AGG(p.bank_transaction_id, ', ') AS bank_transaction_id,
       p.misc_payment,
       p.misc_remark,
       p.receipt_no,
@@ -1213,7 +1213,7 @@ export const getReceiptReport = asyncErrorHandler(
       s.name, cb.batch_fee,
       s.indos_number, s.mobile_number, 
       s.email, p.payment_type, p.mode, 
-      p.paid_amount, p.payment_id, p.remark, p.misc_payment, p.misc_remark, p.receipt_no
+      p.paid_amount, p.payment_id, p.remark, p.misc_payment, p.misc_remark, p.receipt_no, p.discount_amount, p.created_at, p.discount_remark
       LIMIT ${LIMIT} OFFSET ${OFFSET};
     `,
       [value.institute, value.from_date, value.to_date]

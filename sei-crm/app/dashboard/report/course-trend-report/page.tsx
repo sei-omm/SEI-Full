@@ -27,6 +27,8 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
+import Campus from "@/components/Campus";
 
 type TCourseTrendReport = {
   batch_id: number;
@@ -47,6 +49,9 @@ ChartJS.register(
 );
 
 export default function CourseTrendReport() {
+  const searchParams = useSearchParams();
+  const route = useRouter();
+
   const [tableDatas, setTableDatas] = useState<{
     heads: string[];
     body: (string | number)[][];
@@ -61,7 +66,7 @@ export default function CourseTrendReport() {
   });
 
   const [barData, setBarData] = useState<any | null>(null);
-  const [institute, setInstitute] = useState("Kolkata");
+  const { campus, setCampus } = usePurifyCampus(searchParams);
 
   const manageBarChat = (response: ISuccess<TCourseTrendReport[]>) => {
     const dataForBarChat = {
@@ -88,9 +93,6 @@ export default function CourseTrendReport() {
     };
     setBarData(dataForBarChat);
   };
-
-  const searchParams = useSearchParams();
-  const route = useRouter();
 
   // const {
   //   data: report,
@@ -132,15 +134,10 @@ export default function CourseTrendReport() {
     ]
   >([
     {
-      queryKey: ["get-courses-dropdown-trend", institute],
+      queryKey: ["get-courses-dropdown-trend", campus],
       queryFn: async () =>
-        (
-          await axios.get(
-            `${BASE_API}/course/drop-down?institute=${
-              searchParams.get("institute") || institute
-            }`
-          )
-        ).data,
+        (await axios.get(`${BASE_API}/course/drop-down?institute=${campus}`))
+          .data,
     },
     {
       queryKey: ["get-course-trend-report", searchParams.toString()],
@@ -191,16 +188,7 @@ export default function CourseTrendReport() {
         onSubmit={handleFormSubmit}
         className="flex items-end gap-5 *:flex-grow"
       >
-        <DropDown
-          onChange={(item) => setInstitute(item.value)}
-          name="institute"
-          label="Campus"
-          options={[
-            { text: "Kolkata", value: "Kolkata" },
-            { text: "Faridabad", value: "Faridabad" },
-          ]}
-          defaultValue={searchParams.get("institute") || "Kolkata"}
-        />
+        <Campus onChange={(item) => setCampus(item.value)} />
 
         <DropDown
           name="course_type"

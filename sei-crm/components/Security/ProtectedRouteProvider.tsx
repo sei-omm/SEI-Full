@@ -2,11 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { TSideBar } from "@/types";
+import {  TSideBar } from "@/types";
 import { useDispatch } from "react-redux";
 import { setSideBar } from "@/redux/slices/sidebar.slice";
 import LoadingLayout from "../LoadingLayout";
 import Page403 from "../Pages/403";
+import { setCampus } from "@/redux/slices/campus.slice";
 
 interface IProps {
   children: React.ReactNode;
@@ -334,6 +335,16 @@ export default function ProtectedRouteProvider({ children }: IProps) {
     const permission = localStorage.getItem("permissions");
     if (permission) {
       const parsedPermissions = JSON.parse(permission);
+
+      if(parsedPermissions["camp-1"] === true && parsedPermissions["camp-2"] === true) {
+        dispatch(setCampus({campus : "Both"}))
+      } else if (parsedPermissions["camp-1"] === true){
+        dispatch(setCampus({campus : "Kolkata"}))
+      } else if (parsedPermissions["camp-2"] === true) {
+        dispatch(setCampus({campus : "Faridabad"}))
+      } else {
+        dispatch(setCampus({campus : null}))
+      }
 
       const newSidebar: TSideBar[] = [];
       let isCurrentPathExist = false;

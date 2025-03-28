@@ -5,7 +5,6 @@ import { useState } from "react";
 import HandleSuspence from "../HandleSuspence";
 import { EmployeeType, ISuccess } from "@/types";
 import { useQuery } from "react-query";
-import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
@@ -17,6 +16,7 @@ import { useDispatch } from "react-redux";
 import Pagination from "../Pagination";
 import { LuPrinter } from "react-icons/lu";
 import Link from "next/link";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 
 type TTable = {
   heads: string[];
@@ -35,14 +35,14 @@ type TTranningHistroyList = {
   employee_type: EmployeeType;
 };
 
-async function getTranningHistroyList(searchParams: ReadonlyURLSearchParams) {
+async function getTranningHistroyList(searchParams: URLSearchParams) {
   return (
     await axios.get(`${BASE_API}/tranning/history?${searchParams.toString()}`)
   ).data;
 }
 
 export default function GetTranningActivity() {
-  const searchParams = useSearchParams();
+  const searchParams = usePurifySearchParams();
 
   const dispatch = useDispatch();
 

@@ -852,3 +852,22 @@ export type TVirtualTable = Record<
     course_name : string;
   }
 >;
+
+export interface IDropDown {
+  wrapperCss?: string;
+  className?: string;
+  label?: string;
+  options?: OptionsType[];
+  defaultValue?: any;
+  name?: string;
+  onChange?: (item: OptionsType) => void;
+  changeSearchParamsOnChange?: boolean;
+  viewOnly?: boolean;
+  valueRef?: React.RefObject<HTMLInputElement>;
+  dialog?: boolean;
+}
+
+export type TCampus = "Kolkata" | "Faridabad" | "Both" | null;
+export interface CampusState {
+  campus: TCampus
+}

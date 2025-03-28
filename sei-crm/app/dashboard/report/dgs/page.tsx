@@ -6,10 +6,11 @@ import Button from "@/components/Button";
 import DownloadFormUrl from "@/components/DownloadFormUrl";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
 import { IError, ISuccess } from "@/types";
 import axios, { AxiosError } from "axios";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { LuFileSpreadsheet } from "react-icons/lu";
 import { useQuery } from "react-query";
@@ -21,6 +22,12 @@ type TDGSReport = {
   email: string;
 };
 
+async function getDgsApi(searchParams: ReadonlyURLSearchParams, campus : string) {
+  const newSearchParams = new URLSearchParams(searchParams);
+  newSearchParams.set("institute", campus);
+  return (await axios.get(`${BASE_API}/report/dgs?${newSearchParams.toString()}`)).data;
+}
+
 export default function DGSINDOSReport() {
   const [tableDatas, setTableDatas] = useState<{
     heads: string[];
@@ -31,42 +38,33 @@ export default function DGSINDOSReport() {
   });
 
   const searchParams = useSearchParams();
+  const {campus} = usePurifyCampus(searchParams)
 
   const {
     data: report,
     error,
     isFetching,
-    // refetch,
-  } = useQuery<ISuccess<TDGSReport[]>, AxiosError<IError>>(
-    ["get-dgs-indos-reports", searchParams.toString()],
-    async () =>
-      (
-        await axios.get(
-          `${BASE_API}/report/dgs${
-            searchParams.size != 0 ? `?${searchParams.toString()}` : ""
-          }`
-        )
-      ).data,
-    {
-      onSuccess: (data) => {
-        const oldStates = { ...tableDatas };
-        if (data.data.length === 0) return;
-        oldStates.heads = Object.keys(data.data[0]);
-        let indosNumbers = "";
-        oldStates.body = data.data.map((item, index) => {
-          indosNumbers += (index === 0 ? "" : ",") + item.indos_number;
-          const newObj = { ...item };
-          delete (newObj as { profile_image?: string | null }).profile_image;
-          return Object.values(newObj);
-        });
-        // manageLineChat();
-        alert(indosNumbers);
-        setTableDatas(oldStates);
-      },
-      enabled: searchParams.size != 0,
-      cacheTime: 0,
-    }
-  );
+  } = useQuery<ISuccess<TDGSReport[]>, AxiosError<IError>>({
+    queryKey: ["get-dgs-indos-reports", searchParams.toString()],
+    queryFn: () => getDgsApi(searchParams, campus),
+    onSuccess: (data) => {
+      const oldStates = { ...tableDatas };
+      if (data.data.length === 0) return;
+      oldStates.heads = Object.keys(data.data[0]);
+      let indosNumbers = "";
+      oldStates.body = data.data.map((item, index) => {
+        indosNumbers += (index === 0 ? "" : ",") + item.indos_number;
+        const newObj = { ...item };
+        delete (newObj as { profile_image?: string | null }).profile_image;
+        return Object.values(newObj);
+      });
+      // manageLineChat();
+      alert(indosNumbers);
+      setTableDatas(oldStates);
+    },
+    enabled: searchParams.size !== 0,
+    cacheTime: 0,
+  });
 
   return (
     <div className="space-y-10">
@@ -75,7 +73,7 @@ export default function DGSINDOSReport() {
         <DownloadFormUrl
           className={tableDatas.body.length !== 0 ? "block" : "hidden"}
           urlToDownload={
-            BASE_API + `/report/dgs/excel?${searchParams.toString()}`
+            BASE_API + `/report/dgs/excel?${searchParams?.toString()}`
           }
         >
           <Button type="button" className="!bg-[#34A853] flex-center gap-4">

@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import DropDown from "../DropDown";
+import Campus from "../Campus";
 
 export default function EmployeeTypeFilter() {
   const route = useRouter();
@@ -32,15 +33,10 @@ export default function EmployeeTypeFilter() {
         ]}
         defaultValue={searchParams.get("employee_type") || "-1"}
       />
-      <DropDown
+
+      <Campus
+        label={undefined}
         onChange={(item) => handleDropDownChange("institute", item.value)}
-        label=""
-        options={[
-          { text: "All", value: "-1" },
-          { text: "Kolkata", value: "Kolkata" },
-          { text: "Faridabad", value: "Faridabad" },
-        ]}
-        defaultValue={searchParams.get("institute") || "-1"}
       />
     </form>
   );

@@ -4,10 +4,10 @@ import { BASE_API } from "@/app/constant";
 import { ISuccess } from "@/types";
 import axios from "axios";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import HandleSuspence from "../HandleSuspence";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 
 type TTable = {
   head: string[];
@@ -35,7 +35,7 @@ export default function EmployeeLeaveDetails() {
     body: [],
   });
 
-  const searchParams = useSearchParams();
+  const searchParams = usePurifySearchParams();
 
   const {
     data: result,

@@ -5,11 +5,12 @@ import Button from "../Button";
 import AddMultiBookFormItem from "./AddMultiBookFormItem";
 import { useDoMutation } from "@/app/utils/useDoMutation";
 import { useLoadingDialog } from "@/app/hooks/useLoadingDialog";
-import DropDown from "../DropDown";
-import { useSearchParams } from "next/navigation";
 import { queryClient } from "@/redux/MyProvider";
 import GenarateExcelReportBtn from "../GenarateExcelReportBtn";
 import { Books } from "@/types";
+import { useSearchParams } from "next/navigation";
+import { usePurifyCampus } from "@/hooks/usePurifyCampus";
+import Campus from "../Campus";
 
 interface IProps {
   bookList: Books[];
@@ -18,6 +19,7 @@ interface IProps {
 export default function AddMultiBookForm({ bookList }: IProps) {
   const [inputs, setInputs] = useState<number[]>([]);
   const searchParams = useSearchParams();
+  const { campus } = usePurifyCampus(searchParams);
 
   const addNewFormRow = () => {
     setInputs((preState) => [
@@ -49,7 +51,7 @@ export default function AddMultiBookForm({ bookList }: IProps) {
       }
 
       obj[key] = value;
-      obj["institute"] = searchParams.get("institute") || "Kolkata";
+      obj["institute"] = campus;
       loopIndex++;
     });
 
@@ -70,26 +72,13 @@ export default function AddMultiBookForm({ bookList }: IProps) {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <DropDown
-          changeSearchParamsOnChange
-          name="institute"
-          label=""
-          options={[
-            {
-              text: "Kolkata",
-              value: "Kolkata",
-            },
-            {
-              text: "Faridabad",
-              value: "Faridabad",
-            },
-          ]}
-        />
+
+        <Campus changeSearchParamsOnChange label="" />
 
         <div className="flex items-center gap-4">
           <GenarateExcelReportBtn
             hidden={bookList.length === 0}
-            apiPath={`/report/physical-library-book/excel?institute=${searchParams.get("institute") || "Kolkata"}`}
+            apiPath={`/report/physical-library-book/excel?institute=${campus}`}
           />
           <Button onClick={addNewFormRow}>Add New Book</Button>
         </div>

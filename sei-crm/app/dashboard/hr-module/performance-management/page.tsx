@@ -2,13 +2,13 @@
 
 import { BASE_API } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
-import DropDown from "@/components/DropDown";
+import Campus from "@/components/Campus";
 import HandleSuspence from "@/components/HandleSuspence";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 import { ISuccess } from "@/types";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
-import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { IoPrintSharp } from "react-icons/io5";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
@@ -28,10 +28,10 @@ type TAppraisalEvery = {
   email_address: string;
 };
 
-async function getAppraisal(searchParams: ReadonlyURLSearchParams) {
+async function getAppraisal(searchParams: URLSearchParams) {
   return (
     await axios.get(
-      `${BASE_API}/employee/appraisal?type=Admin&institute=${
+      `${BASE_API}/employee/appraisal?institute=${
         searchParams.get("institute") || "Kolkata"
       }`
     )
@@ -44,7 +44,7 @@ export default function PerformanceManagement() {
     body: [],
   });
 
-  const searchParams = useSearchParams();
+  const searchParams = usePurifySearchParams();
 
   const {
     data: appraisal,
@@ -70,16 +70,7 @@ export default function PerformanceManagement() {
   return (
     <div className="space-y-6">
       <div className="inline-block">
-        <DropDown
-          changeSearchParamsOnChange
-          name="institute"
-          label="Campus"
-          options={[
-            { text: "Kolkata", value: "Kolkata" },
-            { text: "Faridabad", value: "Faridabad" },
-          ]}
-          defaultValue={searchParams.get("institute") || "Kolkata"}
-        />
+        <Campus changeSearchParamsOnChange/>
       </div>
       <HandleSuspence
         isLoading={isFetching}

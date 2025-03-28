@@ -30,6 +30,7 @@ import DropDownNew from "../FormInputs/DropDownNew";
 import InputNew from "../FormInputs/InputNew";
 import ChooseFileInputNew from "../FormInputs/ChooseFileInputNew";
 import TagInputNew from "../FormInputs/TagInputNew";
+import CampusNew from "../CampusNew";
 
 const formSchema = z.object({
   course_code: z.string().min(1, { message: "Course Code Is Required" }),
@@ -148,10 +149,6 @@ export default function CourseForm({ slug }: IProps) {
 
   const handleFormSubmit = (formData: FormValues) => {
     if (isNewCourse) {
-      // if (formData.get("course_showing_order") === "") {
-      //   formData.delete("course_showing_order");
-      // }
-
       return mutate({
         formData,
         method: "post",
@@ -160,7 +157,7 @@ export default function CourseForm({ slug }: IProps) {
           route.push(
             `/dashboard/course/manage-course?institute=${
               formData.institute
-            }&code=${Math.round(Math.random() * 100)}`
+            }?code=${Math.floor(Math.random() * 1000)}`
           );
         },
       });
@@ -176,7 +173,7 @@ export default function CourseForm({ slug }: IProps) {
         route.push(
           `/dashboard/course/manage-course?institute=${
             formData.institute
-          }&code=${Math.round(Math.random() * 100)}`
+          }?code=${Math.floor(Math.random() * 1000)}`
         );
       },
     });
@@ -207,20 +204,16 @@ export default function CourseForm({ slug }: IProps) {
             name="institute"
             control={control}
             render={({ field }) => (
-              <DropDownNew
+              <CampusNew
                 {...register("institute")}
                 key="institute"
                 label="Campus *"
-                options={[
-                  { text: "Kolkata", value: "Kolkata" },
-                  { text: "Faridabad", value: "Faridabad" },
-                ]}
                 onChange={(option) => {
                   setValue("institute", option.value);
                   clearErrors("institute");
                 }}
                 error={errors.institute?.message}
-                defaultValue={field.value}
+                defaultValue = {field.value}
               />
             )}
           />

@@ -2,19 +2,18 @@
 
 import { BASE_API } from "@/app/constant";
 import Button from "@/components/Button";
-import DropDown from "@/components/DropDown";
+import Campus from "@/components/Campus";
 import HandleSuspence from "@/components/HandleSuspence";
 import FileItem from "@/components/HR/FileItem";
 import FolderItem from "@/components/HR/FolderItem";
 import Input from "@/components/Input";
 import Pagination from "@/components/Pagination";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { IStorageResponse, ISuccess } from "@/types";
 import axios from "axios";
 import {
-  ReadonlyURLSearchParams,
-  useRouter,
-  useSearchParams,
+  useRouter
 } from "next/navigation";
 import React from "react";
 import { BsCloudUpload } from "react-icons/bs";
@@ -24,7 +23,7 @@ import { RiSearchLine } from "react-icons/ri";
 import { useQuery } from "react-query";
 import { useDispatch } from "react-redux";
 
-async function fetchData(searchParams: ReadonlyURLSearchParams) {
+async function fetchData(searchParams: URLSearchParams) {
   return (
     await axios.get(
       `${BASE_API}/storage?folder_id=${
@@ -34,7 +33,7 @@ async function fetchData(searchParams: ReadonlyURLSearchParams) {
   ).data;
 }
 
-async function searchFile(searchParams: ReadonlyURLSearchParams) {
+async function searchFile(searchParams: URLSearchParams) {
   return (
     await axios.get(
       `${BASE_API}/storage/search?q=${searchParams.get("search")}&institute=${
@@ -45,7 +44,7 @@ async function searchFile(searchParams: ReadonlyURLSearchParams) {
 }
 
 export default function ComplianceRecord() {
-  const searchParams = useSearchParams();
+  const searchParams = usePurifySearchParams();
   const route = useRouter();
 
   const { data, isFetching, error } = useQuery<ISuccess<IStorageResponse>>({
@@ -132,16 +131,17 @@ export default function ComplianceRecord() {
           </button>
         </form>
         {!searchParams.has("folder_id") && !searchParams.has("search") && (
-          <DropDown
-            changeSearchParamsOnChange
-            label="Choose Campus"
-            name="institute"
-            options={[
-              { text: "Kolkata", value: "Kolkata" },
-              { text: "Faridabad", value: "Faridabad" },
-            ]}
-            defaultValue={searchParams.get("institute") || "Kolkata"}
-          />
+          // <DropDown
+          //   changeSearchParamsOnChange
+          //   label="Choose Campus"
+          //   name="institute"
+          //   options={[
+          //     { text: "Kolkata", value: "Kolkata" },
+          //     { text: "Faridabad", value: "Faridabad" },
+          //   ]}
+          //   defaultValue={searchParams.get("institute") || "Kolkata"}
+          // />
+          <Campus changeSearchParamsOnChange/>
         )}
         {searchParams.has("folder_id") && (
           <div className="flex items-center gap-3 justify-end">
