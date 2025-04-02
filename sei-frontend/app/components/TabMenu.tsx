@@ -16,7 +16,7 @@ export default function TabMenu({ tabs, textSize }: IProps) {
             style={{fontSize : textSize + "px"}}
             className={`border px-5 py-1 cursor-pointer ${
               tab.isSelected ? "bg-[#e9b858]" : ""
-            } rounded-lg border-gray-600 font-medium`}
+            } rounded-full border-gray-600 font-medium`}
             href={tab.slug}
           >
             {tab.text}

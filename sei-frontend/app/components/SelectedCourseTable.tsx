@@ -7,7 +7,7 @@ import { IoAddOutline } from "react-icons/io5";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { queryClient } from "../redux/MyProvider";
-import { IResponse, TCourseBatches } from "../type";
+import { IResponse, TEnrollBatch } from "../type";
 import { formateDate } from "../utils/formateDate";
 import { useRouter } from "next/navigation";
 
@@ -29,7 +29,8 @@ export default function SelectedCourseTable() {
   const cartData = queryClient.getQueriesData([
     "get-batch-info",
     searchParams.toString(),
-  ])[0][1] as IResponse<TCourseBatches[]> | undefined;
+  ])[0][1] as IResponse<TEnrollBatch> | undefined;
+
   const route = useRouter();
   const pathname = usePathname();
 
@@ -42,7 +43,7 @@ export default function SelectedCourseTable() {
     if (cartData) {
       setTableDatas({
         head: ["SI No", "Course Name", "Batch Start Date", "Batch End Date", "Price", "Action"],
-        body: cartData?.data.map((item) => [
+        body: cartData?.data.batches_info.map((item) => [
           item.course_showing_order,
           item.course_name || "",
           item.start_date,
@@ -60,7 +61,7 @@ export default function SelectedCourseTable() {
   }, [cartData]);
 
   const handleCourseRemoveFromCartBtn = (rowIndex: number) => {
-    const idToRemove = cartData?.data[rowIndex].batch_id;
+    const idToRemove = cartData?.data.batches_info[rowIndex].batch_id;
     if (idToRemove) {
       const urlSearchParams = new URLSearchParams();
       searchParams.forEach((value, key) => {

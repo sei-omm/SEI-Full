@@ -34,7 +34,7 @@ export const addNewCourseValidator = Joi.object({
     .required()
     .label("Concern Marketing Executive"),
   max_batch: Joi.number().required().label("Maximum Batch / Month"),
-  category : Joi.string().required(),
+  category: Joi.string().required(),
 });
 
 export const getSingleCourseValidator = Joi.object({
@@ -75,7 +75,7 @@ export const updateCourseValidator = Joi.object({
   course_showing_order: Joi.number().optional().min(1),
   concern_marketing_executive_id: Joi.number().required(),
   max_batch: Joi.number().required(),
-  category : Joi.string().required(),
+  category: Joi.string().required(),
 });
 
 export const fillUpCourseFormValidator = Joi.object({
@@ -130,6 +130,7 @@ export const enrollBatchValidator = Joi.object({
   payment_mode: Joi.string().required().valid("Part-Payment", "Full-Payment"),
 
   student_id: Joi.number().optional(),
+  package_id : Joi.number().optional()
 });
 
 export const scheduleCourseBatchValidator = Joi.object({
@@ -189,11 +190,48 @@ export const VSaveTimeTable = Joi.object({
   time_table_data: Joi.string().required(),
   institute: Joi.string().required(),
   faculty_ids: Joi.array().items(Joi.number()),
-  total_rows : Joi.number().required()
+  total_rows: Joi.number().required(),
 });
 
 export const VDraftTimeTable = Joi.object({
   date: Joi.string().required(),
-  institute : Joi.string().required(),
-  virtual_table : Joi.string().required()
+  institute: Joi.string().required(),
+  virtual_table: Joi.string().required(),
 });
+
+// packages
+export const VAddPackage = Joi.object({
+  package_name: Joi.string().required(),
+  price: Joi.number().required(),
+  institute: Joi.string().required(),
+  visibility: Joi.string().required(),
+  course_info: Joi.array().items(
+    Joi.object({
+      course_id: Joi.number().required(),
+      course_fee: Joi.number().optional(),
+    })
+  ),
+});
+
+export const VUpdatePackage = VAddPackage.concat(
+  Joi.object({
+    package_id: Joi.number().required(),
+  })
+);
+
+export const VGetAllPackage = Joi.object({
+  institute: Joi.string().required(),
+  with_batches: Joi.boolean(),
+  with_full_course_info : Joi.boolean()
+});
+
+export const VGetSinglePackage = Joi.object({
+  package_id: Joi.number().required(),
+  // with_batches: Joi.boolean(),
+});
+
+export const VUpdatePackageVisibility = Joi.object({
+  package_id: Joi.number().required(),
+  visibility: Joi.string().required(),
+});
+

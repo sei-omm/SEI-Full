@@ -1,4 +1,4 @@
-import e, { Request, Response } from "express";
+import { Request, Response } from "express";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import {
   admissionReportValidator,
@@ -20,7 +20,6 @@ import { sendEmail } from "../utils/sendEmail";
 import Cursor from "pg-cursor";
 import { Readable } from "node:stream";
 import { parsePagination } from "../utils/parsePagination";
-import { VTimeTable } from "../validator/course.validator";
 import { pmsReportV } from "../validator/inventory.validator";
 
 // const sqlForAdmissionReport = `
@@ -152,16 +151,16 @@ export const createAdmissionReport = asyncErrorHandler(
     }
 
     if (req.query.form_id) {
-      FILTER = "WHERE ebc.form_id = $1";
+      FILTER = "WHERE ebc.form_id = $1 AND ebc.enrollment_status = 'Approve'";
       FILTER_VALUES = [req.query.form_id as string];
     } else if (req.query.indos_number) {
-      FILTER = "WHERE s.indos_number = $1";
+      FILTER = "WHERE s.indos_number = $1 AND ebc.enrollment_status = 'Approve'";
       FILTER_VALUES = [req.query.indos_number as string];
     } else if (req.query.cdc_num) {
-      FILTER = "WHERE s.cdc_num = $1";
+      FILTER = "WHERE s.cdc_num = $1 AND ebc.enrollment_status = 'Approve'";
       FILTER_VALUES = [req.query.cdc_num as string];
     } else if (req.query.passport_num) {
-      FILTER = "WHERE s.passport_num = $1";
+      FILTER = "WHERE s.passport_num = $1 AND ebc.enrollment_status = 'Approve'";
       FILTER_VALUES = [req.query.passport_num as string];
     }
 
@@ -172,14 +171,15 @@ export const createAdmissionReport = asyncErrorHandler(
           cb.start_date AS created_at,
           c.course_name,
           cb.batch_fee AS course_batch_fee,
-          GREATEST((cb.batch_fee - SUM(p.discount_amount)) - SUM(p.paid_amount), 0) as due_amount_for_course,
+          -- GREATEST((cb.batch_fee - SUM(p.discount_amount)) - SUM(p.paid_amount), 0) as due_amount_for_course,
+          GREATEST((cb.batch_fee - (SELECT SUM(discount_amount) FROM payments WHERE form_id = p.form_id)) - SUM(p.paid_amount), 0) as due_amount_for_course,
           c.course_type,
           s.email,
           s.mobile_number,
           SUM(p.paid_amount) paid_amount_for_course,
           SUM(p.misc_payment) as total_misc_amount,
           SUM(p.paid_amount) + SUM(p.misc_payment) as total_paid,
-          SUM(p.discount_amount) as total_discount
+          (SELECT SUM(discount_amount) FROM payments WHERE form_id = p.form_id) as total_discount
         FROM enrolled_batches_courses ebc
 
         INNER JOIN courses c
@@ -197,7 +197,7 @@ export const createAdmissionReport = asyncErrorHandler(
         ${FILTER}
 
         GROUP BY 
-        c.course_name, cb.start_date, cb.batch_fee, s.name, s.profile_image, c.course_type, s.email, s.mobile_number
+        p.form_id, c.course_name, cb.start_date, cb.batch_fee, s.name, s.profile_image, c.course_type, s.email, s.mobile_number
 
         LIMIT ${LIMIT} OFFSET ${OFFSET}
     `;

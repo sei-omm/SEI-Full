@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { BASE_API, STUDENT_RANKS } from "../constant";
 import {
   IResponse,
-  TCourseBatches,
+  TEnrollBatch,
   TMultipleCoursePrice,
   TStudentRegistationForm,
 } from "../type";
@@ -38,11 +38,12 @@ export default function ApplyCourseForm({ form_info }: IProps) {
   const cartData = queryClient.getQueriesData([
     "get-batch-info",
     searchParams.toString(),
-  ])[0][1] as IResponse<TCourseBatches[]> | undefined;
+  ])[0][1] as IResponse<TEnrollBatch> | undefined;
 
   const [calclutedPrice, setCalclutedPrice] = useState({
     totalPrice: 0,
     minToPay: 0,
+    dummyAmount: -1,
   });
 
   useQuery<IResponse<TMultipleCoursePrice[]> | undefined>({
@@ -61,13 +62,28 @@ export default function ApplyCourseForm({ form_info }: IProps) {
       ).data;
     },
     onSuccess(data) {
-      let totalPrice = 0;
-      let minToPay = 0;
+      let total_amount = 0;
+      let min_to_pay = 0;
       data?.data.forEach((item) => {
-        totalPrice += parseInt(item.total_price.toString());
-        minToPay += parseInt(item.minimum_to_pay.toString());
+        total_amount += parseInt(item.total_price.toString());
+        min_to_pay += parseInt(item.minimum_to_pay.toString());
       });
-      setCalclutedPrice({ totalPrice, minToPay });
+
+      if (cartData?.data.package_info) {
+        const discount = total_amount - cartData.data.package_info.price;
+        setCalclutedPrice({
+          totalPrice: total_amount - discount,
+          minToPay: min_to_pay - discount,
+          dummyAmount: total_amount,
+        });
+        return;
+      }
+
+      setCalclutedPrice({
+        totalPrice: total_amount,
+        minToPay: min_to_pay,
+        dummyAmount: -1,
+      });
     },
     refetchOnMount: true,
   });
@@ -77,7 +93,7 @@ export default function ApplyCourseForm({ form_info }: IProps) {
 
     const oldDates = new Map<string, boolean>();
     let isDuplicatedFound = false;
-    cartData?.data.forEach((item) => {
+    cartData?.data.batches_info.forEach((item) => {
       if (oldDates.has(item.start_date)) {
         isDuplicatedFound = true;
         return;
@@ -133,12 +149,18 @@ export default function ApplyCourseForm({ form_info }: IProps) {
         extraValue: {
           totalPrice: calclutedPrice.totalPrice,
           minToPay: calclutedPrice.minToPay,
+          dummyAmount: calclutedPrice.dummyAmount,
           currentTarget: event.currentTarget,
-          batch_ids: cartData?.data.map((item) => item.batch_id).join(","),
-          course_ids: cartData?.data.map((item) => item.course_id).join(","),
-          isInWaitingLists: cartData?.data
+          batch_ids: cartData?.data.batches_info
+            .map((item) => item.batch_id)
+            .join(","),
+          course_ids: cartData?.data.batches_info
+            .map((item) => item.course_id)
+            .join(","),
+          isInWaitingLists: cartData?.data.batches_info
             .map((item) => item.batch_reserved_seats >= item.batch_total_seats)
             .join(","),
+            package_id : cartData?.data.package_info?.package_id
         },
       })
     );

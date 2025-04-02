@@ -31,6 +31,7 @@ import { checkPermission } from "./middleware/checkPermission";
 import { accountRoute } from "./route/account.routes";
 import { sendOtp } from "./utils/SendSms";
 import asyncErrorHandler from "./middleware/asyncErrorHandler";
+import { pool } from "./config/db";
 
 dotenv.config();
 const app = express();
@@ -98,6 +99,32 @@ app.use("/api/v1/account", accountRoute);
 
 //global error handler
 app.use(globalErrorController);
+
+app.get("/pg", async (req, res) => {
+//   const { rows } = await pool.query(`
+
+//     CREATE TABLE package_course (
+//     package_id SERIAL PRIMARY KEY,
+//     package_name VARCHAR(255) NOT NULL,
+
+//     price DECIMAL(10, 2) NOT NULL
+// );
+
+// ALTER TABLE package_course ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+// ALTER TABLE package_course ADD COLUMN visibility VARCHAR(50) DEFAULT 'Public';
+
+//     CREATE TABLE package_course_course (
+//     row_id SERIAL PRIMARY KEY,
+
+//     package_id BIGINT,
+
+//     FOREIGN KEY (package_id) REFERENCES package_course(package_id) ON DELETE CASCADE,
+
+//     course_id BIGINT,
+//     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+// )`)
+//   res.json(rows)
+})
 
 //route error
 app.all("*", (req, res, next) => {

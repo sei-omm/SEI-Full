@@ -18,10 +18,15 @@ import {
   scheduleCourseBatchValidator,
   updateCourseValidator,
   updateScheduleCourseBatchValidator,
+  VAddPackage,
   VchangeBatchManually,
   VDraftTimeTable,
+  VGetAllPackage,
+  VGetSinglePackage,
   VSaveTimeTable,
   VTimeTable,
+  VUpdatePackage,
+  VUpdatePackageVisibility,
 } from "../validator/course.validator";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { getAuthToken } from "../utils/getAuthToken";
@@ -32,6 +37,7 @@ import { filterToSql } from "../utils/filterToSql";
 import { tryCatch } from "../utils/tryCatch";
 import { parsePagination } from "../utils/parsePagination";
 import { hasOverlappingBatchDate } from "../utils/hasOverlappingBatchDate";
+import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 
 const table_name = "courses";
 
@@ -789,85 +795,110 @@ export const enrollToBatch = asyncErrorHandler(
     //   `
     // )
 
-    const { rows, rowCount } = await pool.query(
-      `
-        SELECT
-            c.course_id,
-            cb.start_date,
-            cb.end_date,
-            CASE 
-                WHEN MIN(cb.batch_total_seats) <= MIN(cb.batch_reserved_seats) THEN true 
-                ELSE false 
-            END AS is_waiting_list,
-            SUM(cb.batch_fee) AS total_price,
-            CAST(SUM(cb.batch_fee * (cb.min_pay_percentage / 100.0)) AS INT) AS minimum_to_pay,
-            c.institute
-        FROM course_batches cb
+    const client = await pool.connect();
 
-        LEFT JOIN courses AS c
-        ON c.course_id = cb.course_id
+    try {
+      await client.query("BEGIN");
 
-        WHERE cb.batch_id IN (${paramsSql})
-        GROUP BY c.course_id, cb.start_date, cb.end_date;
-
-        `,
-      batchIds
-    );
-
-    if (rowCount === 0) throw new ErrorHandler(404, "Course Doesn't found");
-
-    if (hasOverlappingBatchDate(rows)) {
-      throw new ErrorHandler(
-        400,
-        "You have selected two courses with the same date please delete one of them."
+      const { rows, rowCount } = await client.query(
+        `
+          SELECT
+              c.course_id,
+              cb.start_date,
+              cb.end_date,
+              CASE 
+                  WHEN MIN(cb.batch_total_seats) <= MIN(cb.batch_reserved_seats) THEN true 
+                  ELSE false 
+              END AS is_waiting_list,
+              SUM(cb.batch_fee) AS total_price,
+              CAST(SUM(cb.batch_fee * (cb.min_pay_percentage / 100.0)) AS INT) AS minimum_to_pay,
+              c.institute
+          FROM course_batches cb
+  
+          LEFT JOIN courses AS c
+          ON c.course_id = cb.course_id
+  
+          WHERE cb.batch_id IN (${paramsSql})
+          GROUP BY c.course_id, cb.start_date, cb.end_date;
+  
+          `,
+        batchIds
       );
+
+      let packagePrice = 0;
+      if(req.query.package_id) {
+        const { rows } = await client.query("SELECT price FROM package_course WHERE package_id = $1", [req.query.package_id]);
+        packagePrice = rows[0].price;
+      }
+
+      if (rowCount === 0) throw new ErrorHandler(404, "Course Doesn't found");
+
+      if (hasOverlappingBatchDate(rows)) {
+        throw new ErrorHandler(
+          400,
+          "You have selected two courses with the same date please delete one of them."
+        );
+      }
+
+      const tokenInfo = {
+        course_ids: "",
+        total_price: 0,
+        minimum_to_pay: 0,
+        is_in_waiting_list: "",
+        institutes: "",
+        // package_id : parseInt(req.query.package_id?.toString() || "-1")
+        package_price : packagePrice
+      };
+
+      rows.forEach((item, index) => {
+        tokenInfo.course_ids +=
+          index === 0 ? item.course_id : "," + item.course_id;
+        tokenInfo.total_price += parseFloat(item.total_price);
+        tokenInfo.minimum_to_pay += parseFloat(item.minimum_to_pay);
+        tokenInfo.is_in_waiting_list +=
+          index === 0 ? item.is_waiting_list : "," + item.is_waiting_list;
+        tokenInfo.institutes +=
+          index === 0 ? item.institute : "," + item.institute;
+      });
+
+      const discountAmount = tokenInfo.total_price - packagePrice;
+
+      tokenInfo.total_price = tokenInfo.total_price - discountAmount;
+      tokenInfo.minimum_to_pay = tokenInfo.minimum_to_pay - discountAmount;
+
+      //create new order and send back to client side
+      const { id } = await createOrder(
+        payment_type === "Part-Payment"
+          ? tokenInfo.minimum_to_pay * 100
+          : tokenInfo.total_price * 100
+      );
+
+      const token_key = createToken(
+        {
+          ...tokenInfo,
+          batch_ids: req.query.batch_ids,
+          student_id: studentID,
+          payment_type,
+          order_id: id,
+        },
+        { expiresIn: "48h" }
+      );
+
+      res.status(201).json(
+        new ApiResponse(201, "Order id has created", {
+          // order_id: id,
+          // amount,
+          // razorpay_key: process.env.RAZORPAY_KEY_ID,
+          token_key,
+        })
+      );
+
+      await client.query("COMMIT");
+      client.release();
+    } catch (error) {
+      await client.query("ROLLBACK");
+      client.release();
     }
-
-    const tokenInfo = {
-      course_ids: "",
-      total_price: 0,
-      minimum_to_pay: 0,
-      is_in_waiting_list: "",
-      institutes: "",
-    };
-
-    rows.forEach((item, index) => {
-      tokenInfo.course_ids +=
-        index === 0 ? item.course_id : "," + item.course_id;
-      tokenInfo.total_price += parseFloat(item.total_price);
-      tokenInfo.minimum_to_pay += parseFloat(item.minimum_to_pay);
-      tokenInfo.is_in_waiting_list +=
-        index === 0 ? item.is_waiting_list : "," + item.is_waiting_list;
-      tokenInfo.institutes +=
-        index === 0 ? item.institute : "," + item.institute;
-    });
-
-    //create new order and send back to client side
-    const { id } = await createOrder(
-      payment_type === "Part-Payment"
-        ? tokenInfo.minimum_to_pay * 100
-        : tokenInfo.total_price * 100
-    );
-
-    const token_key = createToken(
-      {
-        ...tokenInfo,
-        batch_ids: req.query.batch_ids,
-        student_id: studentID,
-        payment_type,
-        order_id: id,
-      },
-      { expiresIn: "48h" }
-    );
-
-    res.status(201).json(
-      new ApiResponse(201, "Order id has created", {
-        // order_id: id,
-        // amount,
-        // razorpay_key: process.env.RAZORPAY_KEY_ID,
-        token_key,
-      })
-    );
   }
 );
 
@@ -1041,6 +1072,7 @@ export const getCoursesForDropDown = asyncErrorHandler(
       `
         SELECT 
           c.course_id, 
+          c.course_fee,
           c.course_name
           ${
             without_course_batches
@@ -1244,9 +1276,9 @@ type TFacultyInfo = {
 //               ) AS faculty_details
 //             FROM courses c
 //             INNER JOIN course_batches cb ON cb.course_id = c.course_id
-              
+
 //             WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
-    
+
 //             GROUP BY c.course_id
 //         `,
 //       [value.institute, value.date]
@@ -1465,13 +1497,13 @@ export const generateTimeTable2 = asyncErrorHandler(async (req, res) => {
 
     const output: TTimeTable[] = [];
     const existFac = new Map<
-    number,
-    {
-      parent_index: number;
-      child_index: number;
-      positions: number[];
-    }
-  >();
+      number,
+      {
+        parent_index: number;
+        child_index: number;
+        positions: number[];
+      }
+    >();
 
     databasedata.forEach((data, pIndex) => {
       const subjects = data.subjects.split(",");
@@ -1499,72 +1531,96 @@ export const generateTimeTable2 = asyncErrorHandler(async (req, res) => {
               child_index: cIndex,
             });
             fac_to_store.push({
-              faculty_id : fac.faculty_id,
-              faculty_name : fac.faculty_name,
-              profile_image : fac.profile_image
+              faculty_id: fac.faculty_id,
+              faculty_name: fac.faculty_name,
+              profile_image: fac.profile_image,
             });
             return;
           }
 
           temp_fac_list.push({
-            faculty_id : fac.faculty_id,
-            faculty_name : fac.faculty_name,
-            profile_image : fac.profile_image
+            faculty_id: fac.faculty_id,
+            faculty_name: fac.faculty_name,
+            profile_image: fac.profile_image,
           });
         });
 
         if (fac_to_store.length !== 0) {
-          fac_to_store.push(...temp_fac_list)
+          fac_to_store.push(...temp_fac_list);
           tempData.sub_fac.push({
-            subject_name : subject,
+            subject_name: subject,
             faculty: fac_to_store,
           });
           return;
         }
 
         // this mean in my current array i don't have anyone who it not teaching
-        let facWhomSwap : TFaculty | null = null;
-        for(let i = 0; i < temp_fac_list.length; i++) {
+        let facWhomSwap: TFaculty | null = null;
+        for (let i = 0; i < temp_fac_list.length; i++) {
           const existTempFacInfo = existFac.get(temp_fac_list[i].faculty_id);
-          if(!existTempFacInfo) throw new Error("existTempFacInfo Fac Id Should Be Here"); // it should be here
+          if (!existTempFacInfo)
+            throw new Error("existTempFacInfo Fac Id Should Be Here"); // it should be here
 
           // if no output don't need to check
-          if(!output[existTempFacInfo.parent_index]) continue;
+          if (!output[existTempFacInfo.parent_index]) continue;
 
-          const index = output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty.findIndex(oldFac => oldFac.faculty_id !== temp_fac_list[i].faculty_id && !existFac.get(oldFac.faculty_id)?.positions.includes(0))
+          const index = output[existTempFacInfo.parent_index].sub_fac[
+            existTempFacInfo.child_index
+          ].faculty.findIndex(
+            (oldFac) =>
+              oldFac.faculty_id !== temp_fac_list[i].faculty_id &&
+              !existFac.get(oldFac.faculty_id)?.positions.includes(0)
+          );
           // mean there is no fac avilable to swap with current one
-          if(index === -1) continue;
+          if (index === -1) continue;
 
           // now if i got someone unusal swap him with first position item
-          const tempFacInfo = output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty[0];
-          output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty[0] = output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty[index];
-          output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty[index] = tempFacInfo;
+          const tempFacInfo =
+            output[existTempFacInfo.parent_index].sub_fac[
+              existTempFacInfo.child_index
+            ].faculty[0];
+          output[existTempFacInfo.parent_index].sub_fac[
+            existTempFacInfo.child_index
+          ].faculty[0] =
+            output[existTempFacInfo.parent_index].sub_fac[
+              existTempFacInfo.child_index
+            ].faculty[index];
+          output[existTempFacInfo.parent_index].sub_fac[
+            existTempFacInfo.child_index
+          ].faculty[index] = tempFacInfo;
           //after swaping remamber to change the positions of swaped fac in existFac map data stracture
 
-          const whomSetAtTopId = output[existTempFacInfo.parent_index].sub_fac[existTempFacInfo.child_index].faculty[0].faculty_id
+          const whomSetAtTopId =
+            output[existTempFacInfo.parent_index].sub_fac[
+              existTempFacInfo.child_index
+            ].faculty[0].faculty_id;
           const whomSetAtTopInfo = existFac.get(whomSetAtTopId);
-          if(!whomSetAtTopInfo) throw new Error("whomSetAtTopInfo Should Be Here");
+          if (!whomSetAtTopInfo)
+            throw new Error("whomSetAtTopInfo Should Be Here");
 
           existFac.set(whomSetAtTopId, {
             ...whomSetAtTopInfo,
-            positions : [0, ...whomSetAtTopInfo.positions]
-          })
+            positions: [0, ...whomSetAtTopInfo.positions],
+          });
           facWhomSwap = temp_fac_list[i];
           break;
         }
 
-        if(!facWhomSwap){
+        if (!facWhomSwap) {
           // if i didn't get anyone with replace than at the first position add -1 as fac id (as empty fac)
-          if(temp_fac_list.length !== 0) {
-            fac_to_store.push({
-              faculty_id : -1,
-              faculty_name : "Choose Faculty",
-              profile_image : ""
-            }, ...temp_fac_list);
+          if (temp_fac_list.length !== 0) {
+            fac_to_store.push(
+              {
+                faculty_id: -1,
+                faculty_name: "Choose Faculty",
+                profile_image: "",
+              },
+              ...temp_fac_list
+            );
           }
 
           tempData.sub_fac.push({
-            subject_name : subject,
+            subject_name: subject,
             faculty: fac_to_store,
           });
           return;
@@ -1572,13 +1628,14 @@ export const generateTimeTable2 = asyncErrorHandler(async (req, res) => {
 
         fac_to_store.push(
           facWhomSwap,
-          ...temp_fac_list.filter(item => item.faculty_id !== facWhomSwap.faculty_id)
+          ...temp_fac_list.filter(
+            (item) => item.faculty_id !== facWhomSwap.faculty_id
+          )
         );
         tempData.sub_fac.push({
-          subject_name : subject,
+          subject_name: subject,
           faculty: fac_to_store,
         });
-
       });
 
       output.push(tempData);
@@ -1674,9 +1731,9 @@ export const generateTimeTable2 = asyncErrorHandler(async (req, res) => {
 //               ) AS faculty_details
 //             FROM courses c
 //             INNER JOIN course_batches cb ON cb.course_id = c.course_id
-              
+
 //             WHERE c.institute = $1 AND $2 BETWEEN cb.start_date AND cb.end_date
-    
+
 //             GROUP BY c.course_id
 //         `,
 //       [value.institute, value.date]
@@ -1863,3 +1920,315 @@ export const removeFromDraft = asyncErrorHandler(async (req, res) => {
   ]);
   res.status(200).json(new ApiResponse(200, "Time Table Removed From Draft"));
 });
+
+//get package course
+export const getPackageCourses = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VGetAllPackage.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { LIMIT, OFFSET } = parsePagination(req);
+
+  const { rows } = await pool.query(
+    `
+      SELECT 
+        pc.*,
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'course_id', c.course_id,
+            'course_name', c.course_name,
+            'require_documents', c.require_documents,
+            'course_duration', c.course_duration,
+            'remain_seats', c.remain_seats,
+            'course_showing_order', c.course_showing_order
+            ${
+              value.with_batches
+                ? `, 'batches', COALESCE((SELECT JSON_AGG(cb.*) FROM course_batches cb WHERE cb.start_date >= CURRENT_DATE AND cb.course_id = c.course_id), '[]')`
+                : ""
+            }
+          )
+        ) as course_info,
+        SUM(c.course_fee) AS total_course_fee
+      FROM package_course pc
+
+      INNER JOIN package_course_course pcc
+      ON pcc.package_id = pc.package_id
+
+      INNER JOIN courses c
+      ON c.course_id = pcc.course_id
+
+      WHERE c.institute = $1
+
+      GROUP BY pc.package_id
+
+      ORDER BY pc.package_id DESC
+
+      LIMIT ${LIMIT} OFFSET ${OFFSET}
+    `,
+    [value.institute]
+  );
+  res.status(200).json(new ApiResponse(200, "Info", rows));
+});
+
+export const addNewPackage = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VAddPackage.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.details[0].message);
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // add package info to package_course table
+    const { rows, rowCount } = await client.query(
+      "INSERT INTO package_course (package_name, price, visibility) VALUES ($1, $2, $3) RETURNING package_id",
+      [value.package_name, value.price, value.visibility]
+    );
+
+    if (!rowCount || rowCount === 0)
+      throw new ErrorHandler(
+        400,
+        "Not able to insert package course info please try again later"
+      );
+
+    // add course and package id to package_course_course
+    await client.query(
+      `INSERT INTO package_course_course (package_id, course_id) VALUES ${
+        sqlPlaceholderCreator(2, value.course_info.length).placeholder
+      }`,
+      value.course_info.flatMap((item: any) => [
+        rows[0].package_id,
+        item.course_id,
+      ])
+    );
+
+    res.status(201).json(new ApiResponse(201, "New package created"));
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error) {
+    await client.query("ROLLBACK");
+    client.release();
+    throw new ErrorHandler(
+      400,
+      "Some Error Occured while processing your request please try again later"
+    );
+  }
+});
+
+export const getSinglePackage = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VGetSinglePackage.validate({
+    ...req.query,
+    ...req.params,
+  });
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const { rows, rowCount } = await pool.query(
+    `
+
+    SELECT
+      pc.package_name,
+      pc.price,
+      pc.visibility,
+      MAX(c.institute) AS institute,
+      JSON_AGG(
+        JSON_BUILD_OBJECT(
+          'course_id', c.course_id,
+          'course_fee', c.course_fee
+        )
+      ) as course_info
+    FROM package_course pc
+
+    INNER JOIN package_course_course pcc
+    ON pcc.package_id = $1
+
+    LEFT JOIN courses c
+    ON c.course_id = pcc.course_id
+
+    WHERE pc.package_id = $1
+
+    GROUP BY pc.package_id
+    `,
+    [value.package_id]
+  );
+
+  if (!rowCount || rowCount === 0)
+    throw new ErrorHandler(400, "No package found with the given id");
+
+  res.status(200).json(new ApiResponse(200, "Package details", rows[0]));
+});
+
+export const setVisibility = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VUpdatePackageVisibility.validate({
+    ...req.params,
+    ...req.body,
+  });
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await pool.query(
+    `UPDATE package_course SET visibility = $1 WHERE package_id = $2`,
+    [value.visibility, value.package_id]
+  );
+
+  res.status(200).json(new ApiResponse(200, "Package visibility updated"));
+});
+
+export const updateSinglePackageInfo = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VUpdatePackage.validate({
+    ...req.params,
+    ...req.body,
+  });
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // add package info to package_course table
+    await client.query(
+      "UPDATE package_course SET package_name = $1, price = $2, visibility = $3 WHERE package_id = $4",
+      [value.package_name, value.price, value.visibility, value.package_id]
+    );
+
+    await client.query(
+      "DELETE FROM package_course_course WHERE package_id = $1",
+      [value.package_id]
+    );
+
+    // add course and package id to package_course_course
+    await client.query(
+      `INSERT INTO package_course_course (package_id, course_id) VALUES ${
+        sqlPlaceholderCreator(2, value.course_info.length).placeholder
+      }`,
+      value.course_info.flatMap((item: any) => [
+        value.package_id,
+        item.course_id,
+      ])
+    );
+
+    // const placeholders = value.course_info
+    //   .map((_: any, index: number) => `($${index * 2 + 1}, $${index * 2 + 2})`)
+    //   .join(", ");
+    // // add course and package id to package_course_course
+    // await client.query(
+    //   `
+    //   UPDATE package_course_course pcc
+    //   SET course_id = ci.course_id::BIGINT
+    //   FROM (VALUES ${placeholders}) AS ci(row_id, course_id)
+    //   WHERE pcc.row_id = ci.row_id::INT;
+    //   `,
+    //   value.course_info.flatMap((item: any) => [
+    //     item.row_id,
+    //     parseInt(item.course_id),
+    //   ])
+    // );
+
+    res.status(200).json(new ApiResponse(200, "Package info updated"));
+
+    await client.query("COMMIT");
+    client.release();
+  } catch (error) {
+    console.log(error);
+    await client.query("ROLLBACK");
+    client.release();
+    throw new ErrorHandler(
+      400,
+      "Some Error Occured while processing your request please try again later"
+    );
+  }
+});
+
+// export const deleteSingleCourseFromPackage = asyncErrorHandler(
+//   async (req, res) => {
+//     const { error, value } = VDeleteSingleCourseIdPackage.validate(req.params);
+//     if (error) throw new ErrorHandler(400, error.message);
+
+//     await pool.query("DELETE FROM package_course_course WHERE row_id = $1", [
+//       value.row_id,
+//     ]);
+//     res
+//       .status(200)
+//       .json(
+//         new ApiResponse(200, "The course has been removed from this package.")
+//       );
+//   }
+// );
+
+export const getPackageBatchWithId = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const ids = req.query.batch_ids?.toString().split(",") || [];
+    const pkid = req.query.pkid;
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const { rows: batch_info } = await client.query(
+        `
+        SELECT
+          cb.*,
+          c.course_id,
+          c.course_name,
+          c.course_showing_order
+       FROM course_batches cb
+        LEFT JOIN courses c
+        ON c.course_id = cb.course_id
+       WHERE batch_id IN (${ids.map((_, index) => `$${index + 1}`)})`,
+        ids
+      );
+
+      if (pkid) {
+        const courseIDs = batch_info.map((item) => item.course_id);
+        const { rows: package_info } = await client.query(
+          `
+            SELECT
+              pc.package_id,
+              pc.package_name,
+              pc.price,
+              STRING_AGG(pcc.course_id::TEXT, ',') as course_ids_of_pcc
+            FROM package_course pc
+
+            LEFT JOIN package_course_course pcc
+            ON pc.package_id = pcc.package_id
+
+            WHERE pc.package_id = $1
+
+            GROUP BY pc.package_id
+          `,
+          [pkid]
+        );
+
+        let isTrue = true;
+        const packageCourseIds: string[] =
+          package_info[0].course_ids_of_pcc.split(",");
+        packageCourseIds.forEach((pcid) => {
+          if (!courseIDs.includes(parseInt(pcid))) {
+            isTrue = false;
+          }
+        });
+
+        return res.status(200).json(
+          new ApiResponse(200, "", {
+            batches_info: batch_info,
+            package_info: isTrue ? package_info[0] : undefined,
+          })
+        );
+      }
+
+      res.status(200).json(
+        new ApiResponse(200, "", {
+          batches_info: batch_info,
+        })
+      );
+
+      await client.query("COMMIT");
+      client.release();
+    } catch (error) {
+      console.log(error);
+      await client.query("ROLLBACK");
+      client.release();
+      throw new ErrorHandler(500, "Internal Server Error");
+    }
+  }
+);

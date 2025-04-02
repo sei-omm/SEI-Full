@@ -6,10 +6,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getLocalLoginInfo } from "../utils/getLocalLoginInfo";
 
 interface IProps {
-  course: CourseType
+  course: CourseType;
+  package_id?: number;
 }
 
-export default function CourseBatchDateList({ course }: IProps) {
+export default function CourseBatchDateList({ course, package_id }: IProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const route = useRouter();
@@ -65,6 +66,13 @@ export default function CourseBatchDateList({ course }: IProps) {
     } else {
       urlSearchParams.set(key, batchId.toString());
     }
+
+    if (package_id && urlSearchParams.toString().includes("bid")) {
+      urlSearchParams.set("pkid", package_id.toString());
+    } else {
+      urlSearchParams.delete("pkid");
+    }
+
     route.push(`${pathname}?${urlSearchParams.toString()}`, { scroll: false });
   }
 

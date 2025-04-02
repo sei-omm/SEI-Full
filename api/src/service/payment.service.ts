@@ -1,5 +1,6 @@
 import { pool } from "../config/db";
 import { TEnrollCourseData } from "../types";
+import { distributeAmount } from "../utils/distributeAmount";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import { verifyToken } from "../utils/token";
@@ -24,6 +25,8 @@ export const verifyPayment = async (token: string, payment_id?: string) => {
   ) as string[];
   const institutes = jwtData.institutes.split(",") as string[];
   const razorpayPaymentId = payment_id;
+
+  const package_price = jwtData.package_price
 
   // const institutes = value.institutes.toString().split(",") as string[]
   const studentId = jwtData.student_id;
@@ -76,6 +79,11 @@ export const verifyPayment = async (token: string, payment_id?: string) => {
       totalMinToPay += parseInt(item.minimum_to_pay);
     });
 
+    const discount_amount = totalPrice - package_price;
+
+    totalPrice = totalPrice - discount_amount;
+    totalMinToPay = totalMinToPay - discount_amount;
+
     const convartPaidAmount = parseInt(amount.toString()) / 100;
 
     // now verify the user paid amount and calcluted price are same or not
@@ -83,8 +91,7 @@ export const verifyPayment = async (token: string, payment_id?: string) => {
       throw new ErrorHandler(400, "Your paid amount are not same");
     }
 
-    const paymentType =
-      convartPaidAmount === totalPrice ? "Full-Payment" : "Part-Payment";
+    const paymentType = convartPaidAmount === totalPrice ? "Full-Payment" : "Part-Payment";
 
     // store data to fillup_forms (single row will created althoug if multiple course or batches enroll)
     const customFormIdPrefix = `${
@@ -108,6 +115,8 @@ export const verifyPayment = async (token: string, payment_id?: string) => {
     const receiptNumber = `${
       institutes[0] === "Kolkata" ? "KOL" : "FDB"
     }/${date.getFullYear()}/${next_receipt_sr_number.rows[0].receipt_no}`;
+
+    const discountDisArray = distributeAmount(discount_amount, batchIds.length);
 
     batchIds?.forEach((bId, index) => {
       const currentBatchPriceInfo = batchPriceInDb.find(
@@ -139,7 +148,28 @@ export const verifyPayment = async (token: string, payment_id?: string) => {
         rows[0].form_id,
         bId,
         paymentType,
-        receiptNumber
+        receiptNumber,
+        0,
+        ""
+      );
+
+      payments_values.push(
+        studentId,
+        0,
+        razorpayPaymentId || id,
+        "",
+        "Online",
+        orderId,
+        0,
+        "",
+        courseIds[index],
+        rows[0].form_id,
+        bId,
+        "Discount",
+        receiptNumber,
+        // discount_amount / batchIds.length,
+        discountDisArray[index],
+        "Discount for the Package Course Enrollment"
       );
     });
 
@@ -167,8 +197,8 @@ export const verifyPayment = async (token: string, payment_id?: string) => {
 
     await client.query(
       `
-        INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, form_id, batch_id, payment_type, receipt_no)
-        VALUES ${sqlPlaceholderCreator(13, batchIds.length).placeholder}
+        INSERT INTO payments (student_id, paid_amount, payment_id, remark, mode, order_id, misc_payment, misc_remark, course_id, form_id, batch_id, payment_type, receipt_no, discount_amount, discount_remark)
+        VALUES ${sqlPlaceholderCreator(15, batchIds.length + batchIds.length).placeholder}
         `,
       payments_values
     );

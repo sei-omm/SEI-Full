@@ -51,6 +51,7 @@ export type TEnrollCourseData = {
   payment_type: string; // Payment mode as a string
   order_id: string;
   is_in_waiting_list: string;
+  package_price : number;
   institutes: string;
 };
 
@@ -68,3 +69,4 @@ export type TVirtualTable = Record<
     course_name: string;
   }
 >;
+

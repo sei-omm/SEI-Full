@@ -13,6 +13,7 @@ interface IProps {
   course: CourseType;
   withoutEnrollBtn?: boolean;
   withoutBatchDates?: boolean;
+  package_id?:number;
 }
 
 export default function CourseItem({
@@ -20,6 +21,7 @@ export default function CourseItem({
   className,
   withoutEnrollBtn,
   withoutBatchDates,
+  package_id,
 }: IProps) {
   return (
     <li
@@ -107,7 +109,7 @@ export default function CourseItem({
               Click on the Date to book your Course
             </span>
             <div className="flex items-center mt-4">
-              <CourseBatchDateList course={course} />
+              <CourseBatchDateList course={course} package_id={package_id}/>
             </div>
           </div>
         )}

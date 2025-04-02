@@ -162,3 +162,12 @@ export type TNoticeBoard = {
   created_at: string;
   visible: boolean;
 };
+
+export type TEnrollBatch = {
+  batches_info: TCourseBatches[];
+  package_info?: {
+    package_id: number;
+    package_name: string;
+    price: number;
+  };
+};

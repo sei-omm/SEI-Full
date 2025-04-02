@@ -196,13 +196,6 @@ export type InputTypes = React.DetailedHTMLProps<
 export type OptionsType = { text: string; value: any };
 
 export type TBatches = {
-  // batch_id: number;
-  // start_date: string;
-  // end_date: string;
-  // batch_fee: number;
-  // batch_total_seats: number;
-  // batch_reserved_seats: number;
-  // visibility: string;
   batch_id: number;
   start_date: string;
   end_date: string;
@@ -239,6 +232,31 @@ export interface ICourse extends ICourseWithSubject {
   concern_marketing_executive_id: number;
   batches?: TBatches[];
   category: string;
+}
+
+export interface IPackageCourse {
+  package_id: number;
+  package_name: string;
+  course_info: {
+    course_id: number;
+    course_name: string;
+    batches?: TBatches[];
+  }[];
+  price: number;
+  total_course_fee: number;
+  created_at: string;
+  visibility: string;
+}
+
+export interface ISinglePackage {
+  package_name: string;
+  course_info: {
+    course_id: number;
+    course_fee: number;
+  }[];
+  price: number;
+  institute: string;
+  visibility: string;
 }
 
 export type DropDownOptionType = {
@@ -376,6 +394,7 @@ export type TCourseDropDown = {
 export type TCourseDropDown2 = {
   course_id: number;
   course_name: string;
+  course_fee: number;
   course_batches: { batch_id: number; start_date: string }[];
 };
 
@@ -760,11 +779,11 @@ export type TTimeTableParseData = {
 export type TTimeTableParseData2 = {
   course_name: string;
   subjects: string;
-  fac : {
-    faculty_id : number;
-    faculty_name : string;
-    profile_image : string;
-  } | null
+  fac: {
+    faculty_id: number;
+    faculty_name: string;
+    profile_image: string;
+  } | null;
 };
 
 export type TMultiUpdateMantence = {
@@ -849,7 +868,7 @@ export type TVirtualTable = Record<
   {
     fac: TFacultyInfo | null;
     subject: string;
-    course_name : string;
+    course_name: string;
   }
 >;
 
@@ -869,5 +888,5 @@ export interface IDropDown {
 
 export type TCampus = "Kolkata" | "Faridabad" | "Both" | null;
 export interface CampusState {
-  campus: TCampus
+  campus: TCampus;
 }

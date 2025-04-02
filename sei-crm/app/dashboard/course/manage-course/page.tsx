@@ -40,13 +40,24 @@ export default async function CourseList() {
       <section className="space-y-5 px-5 py-5">
         {/* course action buttons */}
         <div className="w-full flex items-center justify-between gap-x-5">
-          <Campus changeSearchParamsOnChange defaultValue={searchParams.get("institute")}/>
-          <Link href={"manage-course/add-course"}>
-            <Button className="flex-center gap-x-2">
-              <IoIosAdd size={23} />
-              Add course
-            </Button>
-          </Link>
+          <Campus
+            changeSearchParamsOnChange
+            defaultValue={searchParams.get("institute")}
+          />
+          <div className="flex items-center gap-4">
+            <Link href={"manage-course/add-course"}>
+              <Button className="flex-center gap-x-2">
+                <IoIosAdd size={23} />
+                Add course
+              </Button>
+            </Link>
+            <Link href={"manage-package-course/add"}>
+              <Button className="flex-center gap-x-2">
+                <IoIosAdd size={23} />
+                Package course
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <HandleSuspence

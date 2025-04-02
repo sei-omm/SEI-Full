@@ -91,6 +91,7 @@ export const appraisalOptions = [
 export const AUTHORITY = ["HOI", "HOD", "UDS", "LDS"];
 
 export const STUDENT_RANKS = [
+  "All",
   "MASTER (FG)",
   "CHIEF ENGINEER (FG)",
   "CHIEF OFFICER (FG)",
@@ -183,3 +184,17 @@ export const TIME_PERIOD = [
   "Period 8",
 ];
 
+export const COURSE_CATEGORY = [
+  { text: "COMPETENCY COURSES", value: "competency-courses" },
+  { text: "SIMULATOR COURSES", value: "simulator-courses" },
+  {
+    text: "ADVANCED MODULAR COURSES",
+    value: "advanced-modular-courses",
+  },
+  {
+    text: "BASIC MODULAR COURSES",
+    value: "basic-modular-courses",
+  },
+  { text: "REFRESHER COURSES", value: "refresher-courses" },
+  { text: "PACKAGED COURSES", value: "packaged-courses" },
+];

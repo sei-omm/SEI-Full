@@ -8,7 +8,6 @@ import { IError, ISuccess } from "@/types";
 import axios, { AxiosError } from "axios";
 import Image from "next/image";
 import Link from "next/link";
-import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import {
@@ -25,7 +24,7 @@ import DateDurationFilter from "@/components/DateDurationFilter";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import Pagination from "@/components/Pagination";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
-import { usePurifyCampus } from "@/hooks/usePurifyCampus";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 
 ChartJS.register(
   CategoryScale,
@@ -52,14 +51,14 @@ type TAdmissionReport = {
   total_paid: string;
 };
 
-const fetchData = async (searchParams: ReadonlyURLSearchParams, campus : string) => {
+const fetchData = async (searchParams: URLSearchParams) => {
   const newSearchParams = new URLSearchParams(searchParams);
-  newSearchParams.set("institute", campus)
   const response = await axios.get(
-    `${BASE_API}/report/admission${newSearchParams.toString()}`
+    `${BASE_API}/report/admission?${newSearchParams.toString()}`
   );
   return response.data;
 };
+
 export default function AdmissionReport() {
   const [tableDatas, setTableDatas] = useState<{
     heads: string[];
@@ -82,8 +81,7 @@ export default function AdmissionReport() {
     body: [],
   });
 
-  const searchParams = useSearchParams();
-  const { campus } = usePurifyCampus(searchParams)
+  const searchParams = usePurifySearchParams();
 
   const {
     data: report,
@@ -91,7 +89,7 @@ export default function AdmissionReport() {
     isFetching,
   } = useQuery<ISuccess<TAdmissionReport[]>, AxiosError<IError>>(
     ["fetch-admission-report", searchParams?.toString()],
-    () => fetchData(searchParams, campus),
+    () => fetchData(searchParams),
     {
       onSuccess: (data) => {
         const oldStates = { ...tableDatas };

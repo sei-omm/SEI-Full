@@ -16,6 +16,7 @@ import {
 } from "react-hook-form";
 import DropDownNew from "../FormInputs/DropDownNew";
 import DateInputNew from "../FormInputs/DateInputNew";
+import CampusNew from "../CampusNew";
 
 interface IProps {
   index: number;
@@ -77,19 +78,13 @@ export default function ChooseCoursesListItem({
         name="institute"
         control={control}
         render={({ field }) => (
-          <DropDownNew
+          <CampusNew
             {...register("institute")}
             onChange={(item) => {
               setValue("institute", item.value);
               clearErrors("institute");
               setInstitute(item.value);
             }}
-            key={"institute"}
-            label="Campus"
-            options={[
-              { text: "Kolkata", value: "Kolkata" },
-              { text: "Faridabad", value: "Faridabad" },
-            ]}
             defaultValue={field.value}
             error={errors.course_info?.[0]?.institute?.message}
           />

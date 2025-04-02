@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import {  TSideBar } from "@/types";
+import { TSideBar } from "@/types";
 import { useDispatch } from "react-redux";
 import { setSideBar } from "@/redux/slices/sidebar.slice";
 import LoadingLayout from "../LoadingLayout";
@@ -136,6 +136,12 @@ export const sidebarOptions: TSideBar[] = [
         icon: "TbCategory2",
         name: "Course",
         slug: "/dashboard/course/manage-course",
+      },
+      {
+        id: "2-3",
+        icon: "TbCategory2",
+        name: "Package Course",
+        slug: "/dashboard/course/manage-package-course",
       },
       {
         id: "2-2",
@@ -384,7 +390,8 @@ export default function ProtectedRouteProvider({ children }: IProps) {
         !pathname.includes("/dashboard/course/manage-course/") &&
         !pathname.includes("/dashboard/admission/manage-form/") &&
         !pathname.includes("/dashboard/library/item/") && 
-        !pathname.includes("/dashboard/website-management/notice-board/")
+        !pathname.includes("/dashboard/website-management/notice-board/") &&
+        !pathname.includes("/dashboard/course/manage-package-course/add")
       ) {
         setProcess("failed");
       } else {

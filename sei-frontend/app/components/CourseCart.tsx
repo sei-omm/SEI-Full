@@ -19,7 +19,7 @@ import { useScrollChecker } from "../hooks/useScrollChecker";
 import { useQuery } from "react-query";
 import axios from "axios";
 import { BASE_API } from "../constant";
-import { IResponse, TCourseBatches } from "../type";
+import { IResponse, TEnrollBatch } from "../type";
 import HandleLoading from "./HandleLoading";
 import { hasOverlappingBatchDate } from "../utils/hasOverlappingBatchDate";
 import { AiOutlineDelete } from "react-icons/ai";
@@ -44,7 +44,7 @@ export default function CourseCart() {
   }, [pathname]);
 
   const { data, isFetching, error } = useQuery<
-    IResponse<TCourseBatches[]> | undefined
+    IResponse<TEnrollBatch> | undefined
   >({
     queryKey: ["get-batch-info", searchParams.toString()],
     queryFn: async () => {
@@ -55,9 +55,12 @@ export default function CourseCart() {
         }
       });
       if (ids.length === 0) return;
+      const pkid = searchParams.get("pkid");
       return (
         await axios.get(
-          `${BASE_API}/course/get-batch?batch_ids=${ids.join(",")}`
+          `${BASE_API}/course/package/batches?batch_ids=${ids.join(",")}${
+            pkid ? `&pkid=${pkid}` : ""
+          }`
         )
       ).data;
     },
@@ -70,21 +73,40 @@ export default function CourseCart() {
       );
     }
 
-    const isOverlaping = hasOverlappingBatchDate(data?.data || []);
+    const isOverlaping = hasOverlappingBatchDate(data?.data.batches_info || []);
     if (isOverlaping) {
       return alert(
         "You are choosing batches with overlapping dates. Please select a different batch."
       );
     }
 
-    router.push("/apply-course?" + searchParams.toString());
+    let searchParamsString = "";
+    searchParams.forEach((value, key) => {
+      if (key.includes("bid") || key.includes("pkid")) {
+        if (searchParamsString === "") {
+          searchParamsString += `${key}=${value}`;
+        } else {
+          searchParamsString += `&${key}=${value}`;
+        }
+      }
+    });
+
+    router.push("/apply-course?" + searchParamsString);
   };
 
   const handleDeleteCourse = (course_id: number) => {
     const urlSearchParams = new URLSearchParams(searchParams);
     urlSearchParams.delete(`bid${course_id}`);
+    if (!urlSearchParams.toString().includes("bid")) {
+      urlSearchParams.delete("pkid");
+    }
     router.push(`${pathname}?${urlSearchParams.toString()}`, { scroll: false });
   };
+
+  const totalAmount = data?.data.batches_info?.reduce(
+    (accumulator, current) => accumulator + current.batch_fee,
+    0
+  );
 
   return (
     <div
@@ -94,11 +116,11 @@ export default function CourseCart() {
           : "hidden"
       }  ${
         isExpand ? "bg-white" : "bg-[#E9B858]"
-      } border border-gray-300 bottom-10 right-10 z-10 card-shdow shadow-2xl rounded-2xl p-5 max-w-[35rem] sm:right-0 ${
+      } border border-gray-300 bottom-10 right-10 z-[60] card-shdow shadow-2xl rounded-2xl p-5 max-w-[35rem] sm:right-0 ${
         isExpand ? "sm:left-0" : ""
       } ${
         scrollingDirection === "DOWN" ? "sm:bottom-5" : "sm:bottom-20"
-      } sm:transition-all sm:duration-500 sm:p-3 sm:mx-2 sm:max-w-full`}
+      } sm:transition-all sm:duration-500 sm:p-3 sm:mx-2 sm:max-w-full max-h-[90%] overflow-y-auto`}
     >
       {isExpand ? null : (
         <div
@@ -117,11 +139,17 @@ export default function CourseCart() {
       <div className={`space-y-5 ${isExpand ? "block" : "hidden"}`}>
         <div className="flex items-center justify-between">
           <span className="font-semibold">
-            Total : <span className="font-inter">₹</span>
-            {data?.data?.reduce(
-              (accumulator, current) => accumulator + current.batch_fee,
-              0
-            )}
+            Total :{" "}
+            <span className={`${data?.data.package_info ? "line-through text-sm text-gray-500" : ""}`}>
+              <span className="font-inter">₹</span>
+              {totalAmount}
+            </span>
+            {data?.data.package_info ? (
+              <span className="ml-1">
+                <span className="font-inter">₹</span>
+                {data.data.package_info.price}
+              </span>
+            ) : null}
           </span>
 
           <FaAngleDown
@@ -133,10 +161,10 @@ export default function CourseCart() {
         <HandleLoading
           isLoading={isFetching}
           error={error}
-          dataLength={data?.data?.length}
+          dataLength={data?.data?.batches_info?.length}
         >
           <ul className="space-y-6 overflow-y-auto max-h-96 notice-board-scroll">
-            {data?.data?.map((item) => (
+            {data?.data?.batches_info.map((item) => (
               <li key={item.batch_id} className="relative">
                 <div className="absolute top-0 bottom-0 w-3 bg-[#E9B858] mt-[1px] rounded-2xl"></div>
                 <div className="pl-5 space-y-1">

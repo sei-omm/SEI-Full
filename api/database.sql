@@ -1363,7 +1363,7 @@ CREATE TABLE time_table_draft (
     institute VARCHAR(255),
     virtual_table TEXT NOT NULL,
     UNIQUE (date, institute)
-)
+);
 
 DROP TABLE time_table;
 
@@ -1380,6 +1380,29 @@ CREATE TABLE time_table (
 DELETE FROM appraisal;
 
 ALTER TABLE appraisal ADD COLUMN final_status VARCHAR(30) CHECK (final_status IN ('Pending', 'Approved', 'Rejected')) DEFAULT 'Pending';
+
+-- NEW DB 29 Mar 2025
+CREATE TABLE package_course (
+    package_id SERIAL PRIMARY KEY,
+    package_name VARCHAR(255) NOT NULL,
+
+    price DECIMAL(10, 2) NOT NULL
+);
+
+ALTER TABLE package_course ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE package_course ADD COLUMN visibility VARCHAR(50) DEFAULT 'Public';
+
+CREATE TABLE package_course_course (
+    package_id BIGINT,
+    FOREIGN KEY (package_id) REFERENCES package_course(package_id) ON DELETE CASCADE,
+
+    course_id BIGINT,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
+
+    UNIQUE (package_id, course_id)
+);
+
+CREATE INDEX package_id_index ON package_course_course (package_id);
 
 -- fro clering all table of db
 -- DO $$ 

@@ -235,12 +235,6 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
     throw new ErrorHandler(400, error.message);
   }
 
-  // if (
-  //   data?.courseAndStudentInfo.rowCount === 0 ||
-  //   data?.paymentsDataInfo.rowCount === 0
-  // )
-  //   throw new ErrorHandler(500, "Data Empty Error");
-
   const paymentInfo: {
     total_paid: number;
     total_fee: number;
@@ -262,44 +256,24 @@ export const getSingleAdmissionInfo = async (form_id: string) => {
   };
 
   const existedPaymentIds = new Map();
+
   data?.paymentsDataInfo.rows.forEach((item: any) => {
     if (existedPaymentIds.has(item.payment_id)) {
-      const tempPayInfo =
-        paymentInfo.payments[existedPaymentIds.get(item.payment_id)];
-      tempPayInfo.paid_amount =
-        parseInt(tempPayInfo.paid_amount) + parseInt(item.paid_amount);
-      tempPayInfo.misc_payment =
-        parseInt(tempPayInfo.misc_payment) + parseInt(item.misc_payment);
-      tempPayInfo.discount_amount =
-        parseInt(tempPayInfo.discount_amount) + parseInt(item.discount_amount);
+      const tempPayInfo = paymentInfo.payments[existedPaymentIds.get(item.payment_id)];
+      tempPayInfo.paid_amount = parseInt(tempPayInfo.paid_amount) + parseInt(item.paid_amount);
+      tempPayInfo.misc_payment = parseInt(tempPayInfo.misc_payment) + parseInt(item.misc_payment);
+      tempPayInfo.discount_amount = parseInt(tempPayInfo.discount_amount) + parseInt(item.discount_amount);
     } else {
       paymentInfo.payments.push(item);
       existedPaymentIds.set(item.payment_id, paymentInfo.payments.length - 1);
     }
-    // paymentInfo.total_paid = parseFloat(paymentInfo.total_paid.toString()) + parseFloat(item.paid_amount);
     paymentInfo.total_misc_payment += parseInt(item.misc_payment || 0.0);
-    // paymentInfo.total_paid += parseInt(
-    //   item.paid_amount + parseInt(item.misc_payment) || 0.0
-    // );
     paymentInfo.total_paid += parseInt(item.paid_amount || 0.0);
     paymentInfo.total_discount += parseInt(item.discount_amount || 0.0);
   });
 
-  // paymentInfo.total_fee = parseInt(data?.getBatchesFeesInfo.rows[0].total_fee || 0) - paymentInfo.total_discount;
-  paymentInfo.total_fee =
-    parseInt(data?.getBatchesFeesInfo.rows[0].total_fee || 0.0) -
-    paymentInfo.total_discount;
+  paymentInfo.total_fee = parseInt(data?.getBatchesFeesInfo.rows[0].total_fee || 0.0) - paymentInfo.total_discount;
 
-  // paymentInfo.total_due = parseInt(
-  //   (
-  //     paymentInfo.total_fee -
-  //     paymentInfo.total_paid +
-  //     paymentInfo.total_misc_payment +
-  //     paymentInfo.total_discount
-  //   ).toString()
-  // );
-
-  // paymentInfo.total_due = parseInt((paymentInfo.total_fee - paymentInfo.total_paid).toString());
   paymentInfo.total_due = (paymentInfo.total_fee - paymentInfo.total_paid) < 0 ? 0 : (paymentInfo.total_fee - paymentInfo.total_paid);
 
   paymentInfo.total_fees += paymentInfo.total_fee + paymentInfo.total_misc_payment;

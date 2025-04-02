@@ -19,17 +19,6 @@ interface IProps {
 export default function CourseListItem({ course, className }: IProps) {
   return (
     <li className={`card-shdow border-gray-400 rounded-xl p-5 ${className}`}>
-      {/* <div className="h-40 w-full aspect-video relative overflow-hidden rounded-xl">
-        <Image
-          className="object-cover size-full"
-          src={course.thumbnails}
-          alt="Course Image"
-          height={1200}
-          width={1200}
-        />
-        <div className="size-full absolute inset-0 fade-to-top-yellow-color"></div>
-      </div> */}
-
       <div className="flex items-center justify-between py-2">
         <div className="flex-center gap-x-1">
           <CgTimelapse size={14} />

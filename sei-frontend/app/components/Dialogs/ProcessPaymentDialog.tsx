@@ -48,7 +48,7 @@ export default function ProcessPaymentDialog() {
       IResponse,
       IResponse<EnrollCourseType>
     >({
-      url: `${BASE_API}/course/enroll?batch_ids=${batchIdsInString}`,
+      url: `${BASE_API}/course/enroll?batch_ids=${batchIdsInString}${extraValue?.package_id ? `&package_id=${extraValue?.package_id}` : ""}`,
       method: "post",
       headers: {
         "Content-Type": "application/json",
@@ -75,9 +75,15 @@ export default function ProcessPaymentDialog() {
     <DialogBody className="w-[30rem] space-y-5">
       <span className="block mt-10 text-2xl">
         <span>Course Fee : </span>
-        <span className="font-inter">₹</span>
-        {extraValue.totalPrice}
-        {/* {course.total_price} */}
+
+        {extraValue.dummyAmount > 0 ? (
+          <span className="text-sm line-through mr-2">
+            <span className="font-inter">₹</span>
+            {extraValue.dummyAmount}
+          </span>
+        ) : null}
+
+        <span className="font-inter">₹{extraValue.totalPrice}</span>
       </span>
 
       {/* Payment Mode */}

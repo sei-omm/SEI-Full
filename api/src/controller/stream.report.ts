@@ -24,7 +24,6 @@ import { pmsReportV } from "../validator/inventory.validator";
 import { filterToSql } from "../utils/filterToSql";
 import { generateEmployeeAttendance } from "../service/attendance.service";
 import { TVirtualTable } from "../types";
-import axios from "axios";
 
 export const streamMaintenceRecordExcelReport = asyncErrorHandler(
   async (req, res) => {
@@ -1090,7 +1089,8 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
           cb.start_date AS created_at,
           c.course_name,
           cb.batch_fee AS course_batch_fee,
-          GREATEST((cb.batch_fee - SUM(p.discount_amount)) - SUM(p.paid_amount), 0) as due_amount_for_course,
+          -- GREATEST((cb.batch_fee - SUM(p.discount_amount)) - SUM(p.paid_amount), 0) as due_amount_for_course,
+          GREATEST((cb.batch_fee - (SELECT SUM(discount_amount) FROM payments WHERE form_id = p.form_id)) - SUM(p.paid_amount), 0) as due_amount_for_course,
           s.name,
           c.course_type,
           s.email,
@@ -1098,7 +1098,7 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
           SUM(p.paid_amount) paid_amount_for_course,
           SUM(p.misc_payment) as total_misc_amount,
           SUM(p.paid_amount) + SUM(p.misc_payment) as total_paid,
-          SUM(p.discount_amount) as total_discount
+          (SELECT SUM(discount_amount) FROM payments WHERE form_id = p.form_id) as total_discount
         FROM enrolled_batches_courses ebc
         INNER JOIN courses c
         ON c.course_id = ebc.course_id
@@ -1116,7 +1116,7 @@ export const streamAdmissionExcelReport = asyncErrorHandler(
         ${FILTER}
 
         GROUP BY 
-        c.course_name, cb.start_date, cb.batch_fee, s.name, s.profile_image, c.course_type, s.email, s.mobile_number
+        p.form_id, c.course_name, cb.start_date, cb.batch_fee, s.name, s.profile_image, c.course_type, s.email, s.mobile_number
       `,
       FILTER_VALUES,
       {

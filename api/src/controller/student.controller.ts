@@ -60,6 +60,7 @@ export const getStudentInfo = asyncErrorHandler(
                         'enrolled_batch_date', cb.start_date,
                         'enrollment_status', ebc.enrollment_status,
                         'enrolled_batch_id', cb.batch_id,
+                        'course_showing_order', c.course_showing_order,
                         'due_amount', cb.batch_fee - COALESCE(( SELECT SUM(paid_amount) + SUM(discount_amount) FROM payments WHERE batch_id = cb.batch_id AND student_id = ebc.student_id ), 0)
                     )
                     ORDER BY ebc.created_at DESC

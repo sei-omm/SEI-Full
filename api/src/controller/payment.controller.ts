@@ -26,6 +26,7 @@ import {
   verifyPayment,
   verifyPaymentLinkPayment,
 } from "../service/payment.service";
+import { distributeAmount } from "../utils/distributeAmount";
 
 // export const verifyPayment = asyncErrorHandler(
 //   async (req: Request, res: Response) => {
@@ -552,7 +553,8 @@ export const addPayment = asyncErrorHandler(
         );
       });
     } else if (value.payment_type === "Discount") {
-      rows.forEach((item) => {
+      const discountDisArray = distributeAmount(parseInt(value.discount_amount ?? 0), rows.length);
+      rows.forEach((item, index) => {
         const receiptNoPrefix = `${
           item.institute === "Kolkata" ? "KOL" : "FDB"
         }/${date.getFullYear()}/`;
@@ -570,7 +572,8 @@ export const addPayment = asyncErrorHandler(
           item.batch_id,
           value.form_id,
           value.payment_type,
-          parseInt(value.discount_amount ?? 0) / rows.length,
+          // parseInt(value.discount_amount ?? 0) / rows.length,
+          discountDisArray[index],
           value.discount_remark,
           receiptNoPrefix,
           value.bank_transaction_id

@@ -3,7 +3,7 @@
 import React, { useRef } from "react";
 import Button from "../Button";
 import axios from "axios";
-import { BASE_API } from "@/app/constant";
+import { BASE_API, COURSE_CATEGORY } from "@/app/constant";
 import { useQueries, UseQueryResult } from "react-query";
 import { ICourse, ISuccess } from "@/types";
 import HandleSuspence from "../HandleSuspence";
@@ -248,20 +248,7 @@ export default function CourseForm({ slug }: IProps) {
                 {...register("category")}
                 key="category"
                 label="Category *"
-                options={[
-                  { text: "COMPETENCY COURSES", value: "competency-courses" },
-                  { text: "SIMULATOR COURSES", value: "simulator-courses" },
-                  {
-                    text: "ADVANCED MODULAR COURSES",
-                    value: "advanced-modular-courses",
-                  },
-                  {
-                    text: "BASIC MODULAR COURSES",
-                    value: "basic-modular-courses",
-                  },
-                  { text: "REFRESHER COURSES", value: "refresher-courses" },
-                  { text: "PACKAGED COURSES", value: "packaged-courses" },
-                ]}
+                options={COURSE_CATEGORY}
                 onChange={(option) => {
                   setValue("category", option.value);
                   clearErrors("category");
