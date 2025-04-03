@@ -139,18 +139,18 @@ export const getAllItemInfo = asyncErrorHandler(
     //   LEFT JOIN vendor v
     //   ON v.vendor_id = iii.vendor_id
 
-    //   LEFT JOIN update_opening_stock u 
+    //   LEFT JOIN update_opening_stock u
     //   ON u.item_id = iii.item_id
 
     //   ${
     //     search
     //       ? `
-    //         WHERE iii.item_name ILIKE '%' || $1 || '%' 
+    //         WHERE iii.item_name ILIKE '%' || $1 || '%'
     //               OR iii.item_id::TEXT LIKE '%' || $1 || '%'
     //   `
     //       : filterQuery
     //   }
-      
+
     //   LIMIT ${LIMIT} OFFSET ${OFFSET}
     //   `,
     //   search ? [search] : filterValues
@@ -616,66 +616,299 @@ export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    await client.query(
-      `
-      CREATE TEMP TABLE temp_info_table 
-        (
-        item_id INT, 
-        current_purchase_date DATE, 
-        cost_per_unit_current DECIMAL(10, 2),
-        status TEXT,
-        total_value DECIMAL(10, 2),
-        opening_stock INT
-        )
+    // await client.query(
+    //   `
+    //   CREATE TEMP TABLE temp_info_table 
+    //     (
+    //     item_id INT, 
+    //     current_purchase_date DATE, 
+    //     cost_per_unit_current DECIMAL(10, 2),
+    //     status TEXT,
+    //     total_value DECIMAL(10, 2),
+    //     opening_stock INT
+    //     )
         
-      `
+    //   `
+    // );
+
+    // await client.query(
+    //   `
+    //   INSERT INTO temp_info_table 
+    //     (
+    //       item_id, current_purchase_date, cost_per_unit_current, status, total_value, opening_stock
+    //     )
+    //   VALUES
+    //     ${sqlPlaceholderCreator(6, value.length).placeholder}
+    //   `,
+    //   value.flatMap((item) => [
+    //     item.item_id,
+    //     item.purchase_date,
+    //     item.cost_per_unit,
+    //     item.status,
+    //     item.total_value,
+    //     item.stock,
+    //   ])
+    // );
+
+    const existItem = new Map<number, number>();
+    const report: {
+      item_id: number;
+      item_name: string;
+      category: number;
+      sub_category: number;
+      where_to_use: string;
+      used_by: string;
+      description: string;
+      minimum_quantity: number;
+      current_status: string;
+
+      vendor_id: number;
+      institute: string;
+      created_at: string;
+
+      closing_stock: number;
+      opening_stock: number;
+      item_consumed: number;
+      stock_added: number;
+      total_value: number;
+      cost_per_unit_current: number;
+      cost_per_unit_previous: number;
+      current_purchase_date: string;
+
+      remark : string;
+    }[] = [];
+
+    const updated_data: {
+      item_id: number;
+      current_purchase_date: string;
+      cost_per_unit_previous: number;
+      cost_per_unit_current: number;
+      current_status: string;
+      total_value: number;
+      opening_stock: number;
+      closing_stock: number;
+      item_consumed : number; // not need to store in db
+      remark : string;
+    }[] = [];
+
+    const item_ids = value.map(item => item.item_id);
+
+    const { rows : inventoryInfo } = await client.query(
+      "SELECT * FROM inventory_item_info WHERE item_id = ANY($1)",
+      [item_ids]
     );
+
+    let loopi = -1;
+    for (const temp of value) {
+      loopi++;
+      // if already exist than update else insert
+      const index = existItem.get(temp.item_id);
+
+      const current_inventory_info = inventoryInfo.find(loopItem => loopItem.item_id === temp.item_id);
+    
+      if (index === undefined) {
+        updated_data.push({
+          item_id: temp.item_id,
+          current_purchase_date: temp.purchase_date,
+          cost_per_unit_previous : current_inventory_info.cost_per_unit_current,
+          cost_per_unit_current: temp.cost_per_unit,
+          current_status: temp.status,
+          total_value: parseFloat(current_inventory_info.total_value) + temp.total_value,
+          opening_stock: current_inventory_info.opening_stock + temp.stock,
+          closing_stock: current_inventory_info.opening_stock + temp.stock - current_inventory_info.item_consumed,
+          item_consumed : current_inventory_info.item_consumed,
+          remark : temp.remark,
+        })
+        existItem.set(temp.item_id, loopi)
+      } else {
+        updated_data[index] = {
+          item_id: temp.item_id,
+            current_purchase_date: temp.purchase_date,
+            cost_per_unit_previous : updated_data[index].cost_per_unit_current,
+            cost_per_unit_current: temp.cost_per_unit,
+            current_status: temp.status,
+            total_value: updated_data[index].total_value + temp.total_value,
+            opening_stock: updated_data[index].opening_stock + temp.stock,
+            closing_stock: updated_data[index].opening_stock + temp.stock - updated_data[index].item_consumed,
+            item_consumed : updated_data[index].item_consumed,
+            remark : temp.remark,
+        }
+      }
+
+      report.push({
+        item_id : current_inventory_info.item_id,
+        item_name : current_inventory_info.item_name,
+        category : current_inventory_info.category,
+        sub_category : current_inventory_info.sub_category,
+        where_to_use : current_inventory_info.where_to_use,
+        used_by : current_inventory_info.used_by,
+        description : current_inventory_info.description,
+        minimum_quantity : current_inventory_info.minimum_quantity,
+        current_status : updated_data[index || 0].current_status,
+        vendor_id : current_inventory_info.vendor_id,
+        institute : current_inventory_info.institute,
+        created_at : current_inventory_info.created_at,
+        closing_stock : updated_data[index|| 0].closing_stock,
+        opening_stock : updated_data[index || 0].opening_stock,
+        item_consumed : 0,
+        stock_added : temp.stock,
+        total_value : updated_data[index || 0].total_value,
+        cost_per_unit_current : parseFloat(updated_data[index || 0].cost_per_unit_current.toString()),
+        cost_per_unit_previous : parseFloat(updated_data[index || 0].cost_per_unit_previous.toString()),
+        current_purchase_date : updated_data[index || 0].current_purchase_date,
+        remark : updated_data[index || 0].remark
+      })
+    }
+
+    const values = updated_data.map(item => `(
+      ${item.item_id},
+      '${item.current_purchase_date}', 
+      ${item.cost_per_unit_previous}, 
+      ${item.cost_per_unit_current}, 
+      '${item.current_status ?? ''}', 
+      ${item.total_value}, 
+      ${item.opening_stock}, 
+      ${item.closing_stock},
+      '${item.remark}'
+    )`).join(", ");
+    
+      await client.query(
+      `
+        UPDATE inventory_item_info AS i
+        SET 
+          current_purchase_date = v.current_purchase_date::DATE,
+          cost_per_unit_previous = v.cost_per_unit_previous,
+          cost_per_unit_current = v.cost_per_unit_current,
+          current_status = v.current_status,
+          total_value = v.total_value,
+          opening_stock = v.opening_stock,
+          closing_stock = v.closing_stock,
+          remark = v.remark
+        FROM (VALUES ${values}) AS v(item_id, current_purchase_date, cost_per_unit_previous, cost_per_unit_current, current_status, total_value, opening_stock, closing_stock, remark)
+
+        WHERE i.item_id = v.item_id
+
+      `
+    )
 
     await client.query(
       `
-      INSERT INTO temp_info_table 
+      INSERT INTO inventory_daily_report
         (
-          item_id, current_purchase_date, cost_per_unit_current, status, total_value, opening_stock
-        )
-      VALUES
-        ${sqlPlaceholderCreator(6, value.length).placeholder}
-      `,
-      value.flatMap((item) => [
-        item.item_id,
-        item.purchase_date,
-        item.cost_per_unit,
-        item.status,
-        item.total_value,
-        item.stock,
-      ])
-    );
-
-    await client.query(
+          item_id,
+          item_name,
+          category,
+          sub_category,
+          where_to_use,
+          used_by,
+          description,
+          minimum_quantity,
+          current_status,
+          vendor_id,
+          institute,
+          created_at,
+          closing_stock,
+          opening_stock,
+          item_consumed,
+          stock_added,
+          total_value,
+          cost_per_unit_current,
+          cost_per_unit_previous,
+          current_purchase_date,
+          remark
+        ) VALUES ${sqlPlaceholderCreator(21, report.length).placeholder}
+      
       `
-      UPDATE inventory_item_info SET 
-        current_purchase_date = CASE
-          WHEN tmp.current_purchase_date < CURRENT_DATE THEN inventory_item_info.current_purchase_date
-          ELSE tmp.current_purchase_date
-        END,
-        cost_per_unit_previous = CASE
-          WHEN (CURRENT_DATE - tmp.current_purchase_date) = 1 THEN tmp.cost_per_unit_current
-          ELSE inventory_item_info.cost_per_unit_current
-        END,
-        cost_per_unit_current = CASE
-          WHEN tmp.current_purchase_date < CURRENT_DATE THEN inventory_item_info.cost_per_unit_current
-          ELSE tmp.cost_per_unit_current
-        END,
-        -- cost_per_unit_previous = inventory_item_info.cost_per_unit_current,
-        current_status = tmp.status,
-        total_value = inventory_item_info.total_value + tmp.total_value,
-        opening_stock = inventory_item_info.opening_stock + tmp.opening_stock,
-        closing_stock = inventory_item_info.opening_stock + tmp.opening_stock - inventory_item_info.item_consumed
-      FROM temp_info_table tmp
-      WHERE inventory_item_info.item_id = tmp.item_id
-      `
-    );
+      ,
+      report.flatMap(item => [
+      ...Object.values(item)
+    ]))
 
-    //add inof to inventory stock info
+    // await client.query(
+    //   `
+    //   UPDATE inventory_item_info SET
+    //     current_purchase_date = CASE
+    //       WHEN tmp.current_purchase_date < CURRENT_DATE THEN inventory_item_info.current_purchase_date
+    //       ELSE tmp.current_purchase_date
+    //     END,
+    //     cost_per_unit_previous = CASE
+    //       WHEN (CURRENT_DATE - tmp.current_purchase_date) = 1 THEN tmp.cost_per_unit_current
+    //       ELSE inventory_item_info.cost_per_unit_current
+    //     END,
+    //     cost_per_unit_current = CASE
+    //       WHEN tmp.current_purchase_date < CURRENT_DATE THEN inventory_item_info.cost_per_unit_current
+    //       ELSE tmp.cost_per_unit_current
+    //     END,
+    //     -- cost_per_unit_previous = inventory_item_info.cost_per_unit_current,
+    //     current_status = tmp.status,
+    //     total_value = inventory_item_info.total_value + tmp.total_value,
+    //     opening_stock = inventory_item_info.opening_stock + tmp.opening_stock,
+    //     closing_stock = inventory_item_info.opening_stock + tmp.opening_stock - inventory_item_info.item_consumed
+    //   FROM (
+    //     SELECT
+    //       item_id,
+    //       SUM(total_value) as total_value
+    //     FROM temp_info_table
+    //     GROUP BY item_id
+    //   ) tmp
+    //   WHERE inventory_item_info.item_id = tmp.item_id
+    //   `
+    // );
+
+    // await client.query(
+    //   `
+    //       WITH aggregated_tmp AS (
+    //         SELECT
+    //           item_id,
+    //           MAX(current_purchase_date) AS current_purchase_date, -- or another aggregate as needed
+    //           MAX(cost_per_unit_current) AS cost_per_unit_current,    -- adjust as required
+    //           MAX(status) AS status,                                  -- adjust as required
+    //           SUM(total_value) AS total_value,
+    //           SUM(opening_stock) AS opening_stock
+    //         FROM temp_info_table
+    //         GROUP BY item_id
+    //       ),
+    //       updated AS (
+    //         UPDATE inventory_item_info
+    //         SET
+    //           current_purchase_date = CASE
+    //             WHEN agg.current_purchase_date < CURRENT_DATE THEN inventory_item_info.current_purchase_date
+    //             ELSE agg.current_purchase_date
+    //           END,
+    //           cost_per_unit_previous = CASE
+    //             WHEN (CURRENT_DATE - agg.current_purchase_date) = 1 THEN agg.cost_per_unit_current
+    //             ELSE inventory_item_info.cost_per_unit_current
+    //           END,
+    //           cost_per_unit_current = CASE
+    //             WHEN agg.current_purchase_date < CURRENT_DATE THEN inventory_item_info.cost_per_unit_current
+    //             ELSE agg.cost_per_unit_current
+    //           END,
+    //           current_status = agg.status,
+    //           total_value = inventory_item_info.total_value + agg.total_value,
+    //           opening_stock = inventory_item_info.opening_stock + agg.opening_stock,
+    //           closing_stock = inventory_item_info.opening_stock + agg.opening_stock - inventory_item_info.item_consumed
+    //         FROM aggregated_tmp agg
+    //         WHERE inventory_item_info.item_id = agg.item_id
+    //         RETURNING inventory_item_info.*
+    //       )
+    //       INSERT INTO inventory_daily_report (
+    //         item_id, item_name, category, sub_category, where_to_use, used_by,
+    //         description, minimum_quantity, current_status, vendor_id, institute, created_at,
+    //         closing_stock, opening_stock, item_consumed, stock_added, total_value,
+    //         cost_per_unit_current, cost_per_unit_previous, current_purchase_date, report_date
+    //       )
+    //       SELECT
+    //         u.item_id, u.item_name, u.category, u.sub_category, u.where_to_use, u.used_by,
+    //         u.description, u.minimum_quantity, u.current_status, u.vendor_id, u.institute, u.created_at,
+    //         u.closing_stock, u.opening_stock, 0, agg.opening_stock, u.total_value,
+    //         u.cost_per_unit_current, u.cost_per_unit_previous, u.current_purchase_date, NOW()
+    //       FROM updated u
+    //       JOIN aggregated_tmp agg ON u.item_id = agg.item_id;
+    //   `
+    // )
+
+    //add info to inventory stock info
+
     await client.query(
       `
       INSERT INTO inventory_stock_info 
@@ -715,15 +948,71 @@ export const consumeStock = asyncErrorHandler(
       await client.query("BEGIN");
 
       //consume stock date form inventory_item_info table
-      await client.query(
+      const { rows } = await client.query(
         `
         UPDATE inventory_item_info SET 
           item_consumed = inventory_item_info.item_consumed + $1,
-          closing_stock = inventory_item_info.closing_stock - $1
-        WHERE item_id = $2
+          closing_stock = inventory_item_info.closing_stock - $1,
+          remark = $2
+        WHERE item_id = $3
+        RETURNING *
         `,
-        [value.consume_stock, value.item_id]
+        [value.consume_stock, value.remark, value.item_id]
       );
+
+      // store inventory report table
+      await client.query(
+        `
+         INSERT INTO inventory_daily_report
+            (
+              item_id,
+              item_name,
+              category,
+              sub_category,
+              where_to_use,
+              used_by,
+              description,
+              minimum_quantity,
+              current_status,
+              vendor_id,
+              institute,
+              created_at,
+              closing_stock,
+              opening_stock,
+              item_consumed,
+              stock_added,
+              total_value,
+              cost_per_unit_current,
+              cost_per_unit_previous,
+              current_purchase_date,
+              remark
+            ) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+        `,
+        [
+          rows[0].item_id,
+          rows[0].item_name,
+          rows[0].category,
+          rows[0].sub_category,
+          rows[0].where_to_use,
+          rows[0].used_by,
+          rows[0].description,
+          rows[0].minimum_quantity,
+          rows[0].current_status,
+          rows[0].vendor_id,
+          rows[0].institute,
+          rows[0].created_at,
+          rows[0].closing_stock,
+          rows[0].opening_stock,
+          value.consume_stock,
+          0,
+          parseFloat(rows[0].total_value),
+          parseFloat(rows[0].cost_per_unit_current),
+          parseFloat(rows[0].cost_per_unit_previous),
+          rows[0].current_purchase_date,
+          value.remark,
+        ]
+      )
 
       //add new row to inventory_stock_info table
       const { columns, values, params } = objectToSqlInsert(value);
@@ -779,11 +1068,18 @@ export const getMaintenceRecords = asyncErrorHandler(
     }
 
     if (req.query.from_date && req.query.to_date) {
-      const filter_by = req.query.filter_by === "maintenance_date" ? "mr.maintence_date::DATE" : "mr.completed_date::DATE"
+      const filter_by =
+        req.query.filter_by === "maintenance_date"
+          ? "mr.maintence_date::DATE"
+          : "mr.completed_date::DATE";
       if (filterQuery === "WHERE") {
-        filterQuery += ` ${filter_by} BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
+        filterQuery += ` ${filter_by} BETWEEN $${paramsNumber} AND $${
+          paramsNumber + 1
+        }`;
       } else {
-        filterQuery +=` AND ${filter_by} BETWEEN $${paramsNumber} AND $${paramsNumber + 1}`;
+        filterQuery += ` AND ${filter_by} BETWEEN $${paramsNumber} AND $${
+          paramsNumber + 1
+        }`;
       }
       paramsNumber++;
       paramsNumber++;
@@ -791,14 +1087,14 @@ export const getMaintenceRecords = asyncErrorHandler(
       filterValues.push(req.query.to_date as string);
     }
 
-    if(req.query.status) {
+    if (req.query.status) {
       if (filterQuery === "WHERE") {
         filterQuery += ` mr.status = $${paramsNumber}`;
       } else {
         filterQuery += ` AND mr.status = $${paramsNumber}`;
       }
       paramsNumber++;
-      filterValues.push(req.query.status as string)
+      filterValues.push(req.query.status as string);
     }
 
     if (filterQuery === "WHERE") {
@@ -1276,7 +1572,6 @@ export const changeLastDoneDate = asyncErrorHandler(async (req, res) => {
   const client = await pool.connect();
 
   try {
-
     await client.query("BEGIN");
 
     const { rows, rowCount } = await client.query(
@@ -1286,10 +1581,12 @@ export const changeLastDoneDate = asyncErrorHandler(async (req, res) => {
         remark 
       FROM pms_history WHERE planned_maintenance_system_id = $1
       ORDER BY last_done DESC LIMIT 1
-      `, 
-      [value.pms_id])
+      `,
+      [value.pms_id]
+    );
 
-    if(rowCount === 0) throw new ErrorHandler(400, "No Planned Maintenance System Found");
+    if (rowCount === 0)
+      throw new ErrorHandler(400, "No Planned Maintenance System Found");
 
     await client.query(
       `
@@ -1297,20 +1594,25 @@ export const changeLastDoneDate = asyncErrorHandler(async (req, res) => {
             (planned_maintenance_system_id, frequency, last_done, next_due, description, remark)
         VALUES ($1, $2, $3, $4, $5, $6)
       `,
-      [value.pms_id, rows[0].frequency, value.last_done, value.next_due, rows[0].description, rows[0].remark]
-    )
+      [
+        value.pms_id,
+        rows[0].frequency,
+        value.last_done,
+        value.next_due,
+        rows[0].description,
+        rows[0].remark,
+      ]
+    );
 
     res.status(200).json(new ApiResponse(200, "Last Done Date Has Updated"));
 
     await client.query("COMMIT");
     client.release();
-  } catch (error : any) {
+  } catch (error: any) {
     await client.query("ROLLBACK");
     client.release();
     throw new ErrorHandler(400, error.mesage);
   }
-
-  
 
   // await pool.query(
   //   `
@@ -1331,13 +1633,11 @@ export const deletePmsItem = asyncErrorHandler(async (req, res) => {
 
 export const deletePmsHistory = asyncErrorHandler(async (req, res) => {
   const pms_history_id = req.params.pms_history_id;
-  await pool.query(
-    `DELETE FROM pms_history WHERE pms_history_id = $1`,
-    [pms_history_id]
-  );
+  await pool.query(`DELETE FROM pms_history WHERE pms_history_id = $1`, [
+    pms_history_id,
+  ]);
   res.status(200).json(new ApiResponse(200, "Info Removed Successfully"));
 });
-
 
 export const getPmsItemHistory = asyncErrorHandler(async (req, res) => {
   const { planned_maintenance_system_id } = req.params;

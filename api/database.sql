@@ -1404,6 +1404,43 @@ CREATE TABLE package_course_course (
 
 CREATE INDEX package_id_index ON package_course_course (package_id);
 
+-- NEW DB 03 APR 2025
+DELETE FROM inventory_item_info;
+
+CREATE TABLE inventory_daily_report (
+    row_id SERIAL PRIMARY KEY,
+
+    item_id INT,
+    item_name VARCHAR(255),
+    category INT,
+    sub_category INT,
+    where_to_use TEXT,
+    used_by TEXT,
+    description TEXT,
+    minimum_quantity INT,
+    current_status VARCHAR(50),
+
+    vendor_id INT,
+    FOREIGN KEY (vendor_id) REFERENCES vendor(vendor_id) ON DELETE SET NULL,
+
+    institute VARCHAR(255),
+    created_at TIMESTAMP,  -- Assuming it's stored as a time value
+    closing_stock INT,
+    opening_stock INT,
+    item_consumed INT,
+    stock_added INT,
+    total_value INT,
+    cost_per_unit_current INT,
+    cost_per_unit_previous INT,
+    current_purchase_date DATE,
+
+    report_date TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE inventory_daily_report ADD COLUMN remark TEXT DEFAULT '';
+ALTER TABLE inventory_item_info ADD COLUMN remark TEXT DEFAULT '';
+
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

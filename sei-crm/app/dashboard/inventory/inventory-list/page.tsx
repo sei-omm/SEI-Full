@@ -9,7 +9,6 @@ import { beautifyDate } from "@/app/utils/beautifyDate";
 import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import Button from "@/components/Button";
 import DropDown from "@/components/DropDown";
-import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
 import SearchInput from "@/components/SearchInput";
@@ -63,6 +62,7 @@ export default function InventoryList() {
       "Cost per Unit (Current Cost)",
       "Cost per Unit (Previous Cost)",
       "Total Value",
+      "Remarks"
     ],
     body: [],
   });
@@ -159,6 +159,7 @@ export default function InventoryList() {
           item.cost_per_unit_current?.toString(),
           item.cost_per_unit_previous?.toString(),
           `₹${item.total_value}`,
+          item.remark
         ]);
 
         setTableDatas((prev) => ({ ...prev, body }));
@@ -184,14 +185,15 @@ export default function InventoryList() {
 
   return (
     <div className="space-y-10">
-      <div className="flex items-end justify-between">
-        <div className="pb-2">
+      <div className="flex items-center justify-between">
+        {/* <div className="pb-2">
           <GenarateExcelReportBtn
             apiPath={`/report/inventory/export/excel?${searchParamas.toString()}`}
             hidden={searchParamas.get("search") !== null}
             text="Export In Excel"
           />
-        </div>
+        </div> */}
+        <h2 className="font-semibold text-xl">Inventory List</h2>
         <form
           action={handleFilterSumit}
           className="flex gap-6 justify-end items-end"

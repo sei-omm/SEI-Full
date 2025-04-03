@@ -15,7 +15,9 @@ import {
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { beautifyDate } from "../utils/beautifyDate";
 import {
+  inventoryCatKeyValue,
   inventoryCatList,
+  inventorySubCatKeyValue,
   inventorySubCatList,
   TIME_PERIOD,
 } from "../constant";
@@ -1755,6 +1757,163 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
   });
 });
 
+export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
+  const { error, value } = inventoryReportValidator.validate(req.query);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  // Set response headers for streaming
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="Inventory_Report.xlsx"'
+  );
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+    stream: res,
+    useStyles: true,
+  });
+  const worksheet = workbook.addWorksheet("Inventory Report");
+
+  worksheet.mergeCells("A1:S1");
+  worksheet.getCell("A1").value = `Inventory Report (${value.institute}) (${value.from_date} - ${value.to_date})`;
+  worksheet.getCell("A1").font = {
+    size: 20,
+    bold: true,
+    color: { argb: "000000" },
+  };
+  worksheet.getCell("A1").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFF00" },
+  };
+  worksheet.getRow(1).height = 30;
+  worksheet.getCell("A1").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+
+  worksheet.addRow([
+    "SR NUMBER",
+    "CATEGORY",
+    "SUB CATEGORY",
+    "NAME OF ITEM",
+    "DESCRIPTION",
+    "WHERE TO BE USED",
+    "USED BY",
+    "OPENING STOCK",
+    "MINIMUM QUANTITY TO MAINTAIN",
+    "ITEM CONSUMED",
+    "STOCK ADDED",
+    "CLOSING STOCK",
+    "STATUS",
+    "LAST PURCHASED DATE",
+    "SUPPLIER",
+    "COST PER UNIT (CURRENT COST)",
+    "COST PER UNIT (PREVIOUS COST)",
+    "TOTAL VALUE",
+    "REMARKS"
+  ]);
+
+  // Row styling (header row)
+  worksheet.getRow(2).eachCell((cell) => {
+    cell.style = {
+      font: {
+        bold: true,
+        size: 12,
+        color: { argb: "000000" },
+      },
+      alignment: { horizontal: "center", vertical: "middle" },
+      fill: {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F4A460" },
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+  });
+
+
+  const client = await pool.connect();
+  const query = new QueryStream(
+    `
+      SELECT
+       row_number() OVER () AS sr_no,
+       idr.category,
+       idr.sub_category,
+       idr.item_name,
+       idr.description,
+       idr.where_to_use,
+       idr.used_by,
+       idr.opening_stock,
+       idr.minimum_quantity,
+       idr.item_consumed,
+       idr.stock_added,
+       idr.closing_stock,
+       idr.current_status,
+       idr.current_purchase_date,
+       v.vendor_name,
+       idr.cost_per_unit_current,
+       idr.cost_per_unit_previous,
+       idr.total_value,
+       idr.remark
+      FROM inventory_daily_report idr
+
+      LEFT JOIN vendor v
+      ON v.vendor_id = idr.vendor_id
+
+      WHERE idr.institute = $1 AND idr.report_date BETWEEN $2 AND $3
+    `,
+    [value.institute, value.from_date, value.to_date],
+    {
+      batchSize: 10,
+    }
+  );
+
+  const pgStream = client.query(query);
+
+  // Process PostgreSQL stream data and append to Excel sheet
+  pgStream.on("data", (data) => {
+
+    const valueArr = Object.values(data);
+
+    valueArr[1] = inventoryCatKeyValue[`${data.category}`];
+    valueArr[2] = inventorySubCatKeyValue[`${data.sub_category}`];
+
+    const excelRow = worksheet.addRow(valueArr);
+
+    // Style the data rows
+    excelRow.eachCell((cell) => {
+      cell.style = {
+        font: { size: 11 },
+        alignment: { horizontal: "center" },
+        border: {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        },
+      };
+    });
+  });
+
+  pgStream.on("end", () => {
+    workbook.commit();
+    client.release(); // Release the client when done
+  });
+
+  pgStream.on("error", (err) => {
+    client.release();
+  });
+});
+
 // export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
 //   const { error, value } = inventoryReportValidator.validate(req.query);
 //   if (error) throw new ErrorHandler(400, error.message);
@@ -1775,7 +1934,7 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
 //   });
 //   const worksheet = workbook.addWorksheet("Inventory Report");
 
-//   worksheet.mergeCells("A1:K1");
+//   worksheet.mergeCells("A1:G1");
 //   worksheet.getCell("A1").value = `Inventory Report (${
 //     value.institute
 //   }) ${beautifyDate(value.from_date)} - ${beautifyDate(value.to_date)}`;
@@ -1800,13 +1959,9 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
 //     "DATE",
 //     "ITEM NAME",
 //     "MINIMUM STOCK",
+//     "OPENING STOCK",
+//     "CLOSING STOCK",
 //     "SUPPLIER",
-//     "STOCKS ADDED",
-//     "EACH STOCK CPU",
-//     "EACH STOCK STATUS",
-//     "EACH STOCK TOTAL VALUE",
-//     "CONSUMED STOCK",
-//     "CONSUMED STOCK REMARK"
 //   ]);
 
 //   // Row styling (header row)
@@ -1835,19 +1990,16 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
 //   const client = await pool.connect();
 //   const query = new QueryStream(
 //     `
-//       SELECT
+// 	  SELECT
 //         row_number() OVER () AS sr_no,
 //         isi.purchase_date,
 //         iii.item_name,
 //         iii.minimum_quantity,
+//         iii.opening_stock,
+//         iii.closing_stock,
 //         v.vendor_name,
-//         STRING_AGG(isi.stock::TEXT, ' + ') AS added_stocks,
-//         STRING_AGG(isi.cost_per_unit::TEXT, ' + ') AS each_stock_cpu,
-//         STRING_AGG(isi.status, ' + ') AS stock_added_status,
-//         STRING_AGG(isi.total_value::TEXT, ' + ') AS each_stock_total_value,
-// 		    -- (SELECT SUM(consume_stock) FROM inventory_item_consume WHERE item_id = iii.item_id AND consumed_date = isi.purchase_date) AS consumed_stock
-//         STRING_AGG(iic.consume_stock::TEXT, ' + ') AS consumed_stock,
-//         STRING_AGG(iic.remark, ' + ') AS consumed_stock_remark
+// 		    JSON_AGG(isi.*) AS added_stock_info,
+//         JSON_AGG(iic.*) AS consume_stock_info
 //       FROM inventory_item_info iii
 
 //       LEFT JOIN vendor v
@@ -1873,7 +2025,16 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
 
 //   // Process PostgreSQL stream data and append to Excel sheet
 //   pgStream.on("data", (data) => {
-//     const excelRow = worksheet.addRow(Object.values(data));
+//     const excelRow = worksheet.addRow([
+//       data.sr_no,
+//       data.purchase_date,
+//       data.item_name,
+//       data.minimum_quantity,
+//       data.opening_stock,
+//       data.closing_stock,
+//       data.vendor_name,
+//     ]);
+
 //     // Style the data rows
 //     excelRow.eachCell((cell) => {
 //       cell.style = {
@@ -1887,6 +2048,54 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
 //         },
 //       };
 //     });
+
+//     const addedStockRow = worksheet.addRow(["", "Added Stock Info"]);
+//     // worksheet.mergeCells(`B${headingRow1.number}:E${headingRow1.number}`);
+
+//     addedStockRow.eachCell((cell) => {
+//       cell.style = {
+//         font: { size: 11, bold: true },
+//       };
+//     });
+
+//     data.added_stock_info.forEach((item: any) => {
+//       const innerRow = worksheet.addRow([
+//         "",
+//         `Stock Added : ${item.stock}`,
+//         `Cost Per Unit : ${item.cost_per_unit}`,
+//         `Purchased At : ${beautifyDate(item.purchase_date)}`,
+//       ]);
+//       innerRow.eachCell((cell) => {
+//         cell.style = {
+//           font: { size: 11 },
+//         };
+//       });
+//     });
+
+//     const consumeStockRow = worksheet.addRow(["", "Consumed Stock Info"]);
+//     consumeStockRow.eachCell((cell) => {
+//       cell.style = {
+//         font: {
+//           size: 11,
+//           bold: true,
+//           // color: { argb: "D1001F" }
+//         },
+//       };
+//     });
+
+//     data.consume_stock_info.forEach((item: any) => {
+//       const innerRow = worksheet.addRow([
+//         "",
+//         `Stock Consumed : ${item.consume_stock}`,
+//         `Consumed Date : ${beautifyDate(item.consumed_date)}`,
+//         `Remark : ${item.remark}`,
+//       ]);
+//       innerRow.eachCell((cell) => {
+//         cell.style = {
+//           font: { size: 11 },
+//         };
+//       });
+//     });
 //   });
 
 //   pgStream.on("end", () => {
@@ -1898,200 +2107,6 @@ export const streamRefundExcelReport = asyncErrorHandler(async (req, res) => {
 //     client.release();
 //   });
 // });
-
-export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
-  const { error, value } = inventoryReportValidator.validate(req.query);
-  if (error) throw new ErrorHandler(400, error.message);
-
-  // Set response headers for streaming
-  res.setHeader(
-    "Content-Disposition",
-    'attachment; filename="Inventory_Report.xlsx"'
-  );
-  res.setHeader(
-    "Content-Type",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  );
-
-  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-    stream: res,
-    useStyles: true,
-  });
-  const worksheet = workbook.addWorksheet("Inventory Report");
-
-  worksheet.mergeCells("A1:G1");
-  worksheet.getCell("A1").value = `Inventory Report (${
-    value.institute
-  }) ${beautifyDate(value.from_date)} - ${beautifyDate(value.to_date)}`;
-  worksheet.getCell("A1").font = {
-    size: 20,
-    bold: true,
-    color: { argb: "000000" },
-  };
-  worksheet.getCell("A1").fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFFF00" },
-  };
-  worksheet.getRow(1).height = 30;
-  worksheet.getCell("A1").alignment = {
-    horizontal: "center",
-    vertical: "middle",
-  };
-
-  worksheet.addRow([
-    "SR NUMBER",
-    "DATE",
-    "ITEM NAME",
-    "MINIMUM STOCK",
-    "OPENING STOCK",
-    "CLOSING STOCK",
-    "SUPPLIER",
-  ]);
-
-  // Row styling (header row)
-  worksheet.getRow(2).eachCell((cell) => {
-    cell.style = {
-      font: {
-        bold: true,
-        size: 12,
-        color: { argb: "000000" },
-      },
-      alignment: { horizontal: "center", vertical: "middle" },
-      fill: {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "F4A460" },
-      },
-      border: {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-        bottom: { style: "thin" },
-      },
-    };
-  });
-
-  const client = await pool.connect();
-  const query = new QueryStream(
-    `
-	  SELECT
-        row_number() OVER () AS sr_no,
-        isi.purchase_date,
-        iii.item_name,
-        iii.minimum_quantity,
-        iii.opening_stock,
-        iii.closing_stock,
-        v.vendor_name,
-		    JSON_AGG(isi.*) AS added_stock_info,
-        JSON_AGG(iic.*) AS consume_stock_info
-      FROM inventory_item_info iii
-
-      LEFT JOIN vendor v
-      ON v.vendor_id = iii.vendor_id
-
-      LEFT JOIN inventory_stock_info isi
-      ON isi.item_id = iii.item_id
-
-      LEFT JOIN inventory_item_consume iic
-      ON iic.item_id = iii.item_id
-
-      WHERE iii.institute = $1 AND isi.purchase_date BETWEEN $2 AND $3
-
-      GROUP BY iii.item_id, v.vendor_name, isi.purchase_date
-    `,
-    [value.institute, value.from_date, value.to_date],
-    {
-      batchSize: 10,
-    }
-  );
-
-  const pgStream = client.query(query);
-
-  // Process PostgreSQL stream data and append to Excel sheet
-  pgStream.on("data", (data) => {
-    const excelRow = worksheet.addRow([
-      data.sr_no,
-      data.purchase_date,
-      data.item_name,
-      data.minimum_quantity,
-      data.opening_stock,
-      data.closing_stock,
-      data.vendor_name,
-    ]);
-
-    // Style the data rows
-    excelRow.eachCell((cell) => {
-      cell.style = {
-        font: { size: 11 },
-        alignment: { horizontal: "center" },
-        border: {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          right: { style: "thin" },
-          bottom: { style: "thin" },
-        },
-      };
-    });
-
-    const addedStockRow = worksheet.addRow(["", "Added Stock Info"]);
-    // worksheet.mergeCells(`B${headingRow1.number}:E${headingRow1.number}`);
-
-    addedStockRow.eachCell((cell) => {
-      cell.style = {
-        font: { size: 11, bold: true },
-      };
-    });
-
-    data.added_stock_info.forEach((item: any) => {
-      const innerRow = worksheet.addRow([
-        "",
-        `Stock Added : ${item.stock}`,
-        `Cost Per Unit : ${item.cost_per_unit}`,
-        `Purchased At : ${beautifyDate(item.purchase_date)}`,
-      ]);
-      innerRow.eachCell((cell) => {
-        cell.style = {
-          font: { size: 11 },
-        };
-      });
-    });
-
-    const consumeStockRow = worksheet.addRow(["", "Consumed Stock Info"]);
-    consumeStockRow.eachCell((cell) => {
-      cell.style = {
-        font: {
-          size: 11,
-          bold: true,
-          // color: { argb: "D1001F" }
-        },
-      };
-    });
-
-    data.consume_stock_info.forEach((item: any) => {
-      const innerRow = worksheet.addRow([
-        "",
-        `Stock Consumed : ${item.consume_stock}`,
-        `Consumed Date : ${beautifyDate(item.consumed_date)}`,
-        `Remark : ${item.remark}`,
-      ]);
-      innerRow.eachCell((cell) => {
-        cell.style = {
-          font: { size: 11 },
-        };
-      });
-    });
-  });
-
-  pgStream.on("end", () => {
-    workbook.commit();
-    client.release(); // Release the client when done
-  });
-
-  pgStream.on("error", (err) => {
-    client.release();
-  });
-});
 
 export type TTimeTableParseData = {
   course_name: string;
@@ -3139,6 +3154,186 @@ export const streamAttendanceExcelReport = asyncErrorHandler(
     });
   }
 );
+
+// export const streamNewInventoryReport = asyncErrorHandler(async (req, res) => {
+//   const { institute, category } = req.query;
+
+//   // Set response headers for streaming
+//   res.setHeader(
+//     "Content-Disposition",
+//     'attachment; filename="Inventory_Report.xlsx"'
+//   );
+//   res.setHeader(
+//     "Content-Type",
+//     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//   );
+
+//   const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+//     stream: res,
+//     useStyles: true,
+//   });
+//   const worksheet = workbook.addWorksheet("Inventory Report");
+
+//   worksheet.mergeCells("A1:R1");
+//   worksheet.getCell("A1").value = `Inventory Report (${institute || "All"})`;
+//   worksheet.getCell("A1").font = {
+//     size: 20,
+//     bold: true,
+//     color: { argb: "000000" },
+//   };
+//   worksheet.getCell("A1").fill = {
+//     type: "pattern",
+//     pattern: "solid",
+//     fgColor: { argb: "FFFF00" },
+//   };
+//   worksheet.getRow(1).height = 30;
+//   worksheet.getCell("A1").alignment = {
+//     horizontal: "center",
+//     vertical: "middle",
+//   };
+
+//   worksheet.addRow([
+//     "SR NUMBER",
+//     "Category",
+//     "Sub Category 1",
+//     "Name of Item",
+//     "Description",
+//     "WHERE TO BE USED",
+//     "Used By",
+//     "Opening Stock",
+//     "Minimum Quantity to maintain",
+//     "Item Consumed",
+//     "Closing Stock",
+//     "Status",
+//     "Last Purchased Date",
+//     "Supplier",
+//     "Cost per Unit (Current Cost)",
+//     "Cost per Unit (Previous Cost)",
+//     "Total Value",
+//     "Remarks",
+//   ]);
+
+//   // Row styling (header row)
+//   worksheet.getRow(2).eachCell((cell) => {
+//     cell.style = {
+//       font: {
+//         bold: true,
+//         size: 12,
+//         color: { argb: "000000" },
+//       },
+//       alignment: { horizontal: "center", vertical: "middle" },
+//       fill: {
+//         type: "pattern",
+//         pattern: "solid",
+//         fgColor: { argb: "F4A460" },
+//       },
+//       border: {
+//         top: { style: "thin" },
+//         left: { style: "thin" },
+//         right: { style: "thin" },
+//         bottom: { style: "thin" },
+//       },
+//     };
+//   });
+
+//   let filter = "WHERE";
+//   const filter_values: string[] = [];
+//   let paramsNum = 1;
+
+//   if (institute) {
+//     filter += ` iii.institute = $${paramsNum}`;
+//     filter_values.push(institute as string);
+//     paramsNum++;
+//   }
+
+//   if (category) {
+//     if (filter === "WHERE") {
+//       filter += ` iii.category = $${paramsNum}`;
+//     } else {
+//       filter += ` AND iii.category = $${paramsNum}`;
+//     }
+//     filter_values.push(category as string);
+//     paramsNum++;
+//   }
+
+//   if (filter === "WHERE") {
+//     filter = "";
+//   }
+
+//   const client = await pool.connect();
+//   const query = new QueryStream(
+//     `
+//     SELECT
+//       row_number() OVER () AS sr_no,
+//       iii.category,
+//       iii.sub_category,
+//       iii.item_name,
+//       iii.description,
+//       iii.where_to_use,
+//       iii.used_by,
+//       iii.opening_stock,
+//       iii.minimum_quantity,
+//       iii.item_consumed,
+//       iii.closing_stock,
+//       iii.current_status,
+//       iii.current_purchase_date,
+//       v.vendor_name,
+//       iii.cost_per_unit_current,
+//       iii.cost_per_unit_previous,
+//       iii.total_value,
+//       (SELECT remark FROM inventory_stock_info WHERE item_id = iii.item_id ORDER BY purchase_date DESC LIMIT 1)
+//     FROM inventory_item_info iii
+
+//     LEFT JOIN vendor v
+//     ON v.vendor_id = iii.vendor_id
+
+//     ${filter}
+
+//     `,
+//     filter_values,
+//     {
+//       batchSize: 10,
+//     }
+//   );
+
+//   const pgStream = client.query(query);
+
+//   // Process PostgreSQL stream data and append to Excel sheet
+//   pgStream.on("data", (data) => {
+//     const valueArr = Object.values(data);
+//     valueArr[1] = inventoryCatList.find(
+//       (item) => item.category_id === data.category
+//     )?.category_name;
+//     valueArr[2] = inventorySubCatList.find(
+//       (item) => item.sub_category_id === data.category
+//     )?.sub_category_name;
+//     const excelRow = worksheet.addRow(valueArr);
+
+//     // Style the data rows
+//     excelRow.eachCell((cell) => {
+//       cell.style = {
+//         font: { size: 11 },
+//         alignment: { horizontal: "center" },
+//         border: {
+//           top: { style: "thin" },
+//           left: { style: "thin" },
+//           right: { style: "thin" },
+//           bottom: { style: "thin" },
+//         },
+//       };
+//     });
+//   });
+
+//   pgStream.on("end", () => {
+//     workbook.commit();
+//     client.release(); // Release the client when done
+//   });
+
+//   pgStream.on("error", (err) => {
+//     client.release();
+//   });
+// });
+
 
 export const streamNewInventoryReport = asyncErrorHandler(async (req, res) => {
   const { institute, category } = req.query;

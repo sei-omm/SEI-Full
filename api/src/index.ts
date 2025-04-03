@@ -32,6 +32,7 @@ import { accountRoute } from "./route/account.routes";
 import { sendOtp } from "./utils/SendSms";
 import asyncErrorHandler from "./middleware/asyncErrorHandler";
 import { pool } from "./config/db";
+import { inventoryRoutesV2 } from "./route/v2/inventory.routes";
 
 dotenv.config();
 const app = express();
@@ -54,10 +55,13 @@ app.use(
   })
 );
 
-app.get("/otp", asyncErrorHandler(async (req, res) => {
-  await sendOtp("+919382413005")
-  res.send("Send")
-}))
+app.get(
+  "/otp",
+  asyncErrorHandler(async (req, res) => {
+    await sendOtp("+919382413005");
+    res.send("Send");
+  })
+);
 
 // app.use(
 //   cors({
@@ -97,34 +101,32 @@ app.use("/api/v1/setting", isAuthenticated, checkPermission, settingRoute);
 app.use("/api/v1/db", setupDbRoute);
 app.use("/api/v1/account", accountRoute);
 
+//v2
+app.use("/api/v2/inventory", inventoryRoutesV2);
+
 //global error handler
 app.use(globalErrorController);
 
 app.get("/pg", async (req, res) => {
-//   const { rows } = await pool.query(`
+  await pool.query(
+    `
+      INSERT INTO inventory_daily_report (
+          item_id, item_name, category, sub_category, where_to_use, used_by, description, 
+          minimum_quantity, current_status, vendor_id, institute, created_at, closing_stock, 
+          opening_stock, item_consumed, total_value, cost_per_unit_current, cost_per_unit_previous, 
+          current_purchase_date, report_date
+      )
+      SELECT 
+          item_id, item_name, category, sub_category, where_to_use, used_by, description, 
+          minimum_quantity, current_status, vendor_id, institute, created_at, closing_stock, 
+          opening_stock, item_consumed, total_value, cost_per_unit_current, cost_per_unit_previous, 
+          current_purchase_date, NOW() - INTERVAL '1 day'
+      FROM inventory_item_info;
+    `
+  );
 
-//     CREATE TABLE package_course (
-//     package_id SERIAL PRIMARY KEY,
-//     package_name VARCHAR(255) NOT NULL,
-
-//     price DECIMAL(10, 2) NOT NULL
-// );
-
-// ALTER TABLE package_course ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-// ALTER TABLE package_course ADD COLUMN visibility VARCHAR(50) DEFAULT 'Public';
-
-//     CREATE TABLE package_course_course (
-//     row_id SERIAL PRIMARY KEY,
-
-//     package_id BIGINT,
-
-//     FOREIGN KEY (package_id) REFERENCES package_course(package_id) ON DELETE CASCADE,
-
-//     course_id BIGINT,
-//     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
-// )`)
-//   res.json(rows)
-})
+  res.send("DONE DONE");
+});
 
 //route error
 app.all("*", (req, res, next) => {

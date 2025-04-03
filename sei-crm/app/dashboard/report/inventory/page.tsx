@@ -1,6 +1,6 @@
 "use client";
 
-import { BASE_API } from "@/app/constant";
+import { BASE_API, inventoryCatKeyValue, inventorySubCatKeyValue } from "@/app/constant";
 import { beautifyDate } from "@/app/utils/beautifyDate";
 import DateDurationFilter from "@/components/DateDurationFilter";
 import GenarateExcelReportBtn from "@/components/GenarateExcelReportBtn";
@@ -11,22 +11,49 @@ import { useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 
-type TInventoryItem = {
-  purchase_date: string; // ISO 8601 date string
-  item_id: number; // Unique identifier for the item
-  item_name: string; // Name of the item
-  minimum_quantity: number; // Minimum quantity required
-  vendor_id: number; // Unique identifier for the vendor
-  vendor_name: string; // Name of the vendor
-  added_stocks: string; // Number of stocks added (as a string)
-  each_stock_cpu: string; // Cost per unit (as a string)
-  stock_added_status: string; // Status message for added stocks
-  each_stock_total_value: string; // Total value of added stocks (as a string)
-  consumed_stock: string; // Number of stocks consumed (as a string)
-  consumed_stock_remark: string;
-  opening_stock: number;
+// type TInventoryItem = {
+//   purchase_date: string; // ISO 8601 date string
+//   item_id: number; // Unique identifier for the item
+//   item_name: string; // Name of the item
+//   minimum_quantity: number; // Minimum quantity required
+//   vendor_id: number; // Unique identifier for the vendor
+//   vendor_name: string; // Name of the vendor
+//   added_stocks: string; // Number of stocks added (as a string)
+//   each_stock_cpu: string; // Cost per unit (as a string)
+//   stock_added_status: string; // Status message for added stocks
+//   each_stock_total_value: string; // Total value of added stocks (as a string)
+//   consumed_stock: string; // Number of stocks consumed (as a string)
+//   consumed_stock_remark: string;
+//   opening_stock: number;
+//   closing_stock: number;
+// };
+
+interface TInventoryItem {
+  row_id: number;
+  item_id: number;
+  item_name: string;
+  category: number;
+  sub_category: number;
+  where_to_use: string;
+  used_by: string;
+  description: string;
+  minimum_quantity: number;
+  current_status: string;
+  vendor_id: number;
+  institute: string;
+  created_at: string; // You may also use Date if you want to handle it as a Date object
   closing_stock: number;
-};
+  opening_stock: number;
+  item_consumed: number;
+  stock_added: number;
+  total_value: number;
+  cost_per_unit_current: number;
+  cost_per_unit_previous: number;
+  current_purchase_date: string; // Same as above, can be Date
+  report_date: string; // Same as above, can be Date
+  vendor_name: string;
+  remark : string;
+}
 
 export default function InventoryReport() {
   const searchParams = useSearchParams();
@@ -36,18 +63,24 @@ export default function InventoryReport() {
     body: (string | null | number)[][];
   }>({
     heads: [
-      "DATE",
-      "ITEM NAME",
-      "MINIMUM STOCK",
-      "OPENING STOCK",
-      "CLOSING STOCK",
-      "SUPPLIER",
-      "STOCKS ADDED",
-      "EACH STOCK CPU",
-      "EACH STOCK STATUS",
-      "EACH STOCK TOTAL VALUE",
-      "CONSUMED STOCK",
-      "CONSUMED STOCK REMARK",
+      "Name of Item",
+      "Category",
+      "Sub Category",
+      "Description",
+      "WHERE TO BE USED",
+      "Used By",
+      "Opening Stock",
+      "Minimum Quantity to maintain",
+      "Item Consumed",
+      "Stock Added",
+      "Closing Stock",
+      "Status",
+      "Last Purchased Date",
+      "Supplier",
+      "Cost per Unit (Current Cost)",
+      "Cost per Unit (Previous Cost)",
+      "Total Value",
+      "Remarks",
     ],
     body: [],
   });
@@ -72,18 +105,24 @@ export default function InventoryReport() {
         if (data.data.length === 0) return;
 
         oldStates.body = data.data.map((item) => [
-          item.purchase_date,
           item.item_name,
-          item.minimum_quantity,
+          inventoryCatKeyValue[`${item.category}`],
+          inventorySubCatKeyValue[`${item.sub_category}`],
+          item.description,
+          item.where_to_use,
+          item.used_by,
           item.opening_stock,
+          item.minimum_quantity,
+          item.item_consumed,
+          item.stock_added,
           item.closing_stock,
+          item.current_status,
+          beautifyDate(item.current_purchase_date),
           item.vendor_name,
-          item.added_stocks,
-          item.each_stock_cpu,
-          item.stock_added_status,
-          item.each_stock_total_value,
-          item.consumed_stock,
-          item.consumed_stock_remark,
+          item.cost_per_unit_current,
+          item.cost_per_unit_previous,
+          item.total_value,
+          item.remark
         ]);
 
         setTableDatas(oldStates);
@@ -145,9 +184,7 @@ export default function InventoryReport() {
                         }`}
                         key={value}
                       >
-                        {colIndex === 0
-                          ? beautifyDate(value?.toString() || "")
-                          : value}
+                        {value}
                       </td>
                     ))}
                   </tr>

@@ -10,6 +10,11 @@ export const inventoryCatList = [
   { category_id: 2, category_name: "Durable" },
 ];
 
+export const inventoryCatKeyValue : Record<string, string> = {
+  "1": "Consumable",
+  "2": "Durable",
+}
+
 export const inventorySubCatList = [
   { sub_category_id: 1, sub_category_name: "Civil" },
   { sub_category_id: 2, sub_category_name: "Electrical" },
@@ -21,6 +26,18 @@ export const inventorySubCatList = [
   { sub_category_id: 8, sub_category_name: "Handouts" },
   { sub_category_id: 9, sub_category_name: "Ladhiyapur Store" },
 ];
+
+export const inventorySubCatKeyValue : Record<string, string> = {
+  "1": "Civil",
+  "2": "Electrical",
+  "3": "Furniture",
+  "4": "LSA",
+  "5": "FFA",
+  "6": "Stationary",
+  "7": "IT",
+  "8": "Handouts",
+  "9": "Ladhiyapur Store",
+}
 
 export const inventoryItemStatuList = [
   { item_status_id: 1, item_status_name: "Repairable" },

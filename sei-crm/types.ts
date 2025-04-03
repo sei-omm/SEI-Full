@@ -573,6 +573,7 @@ export type TInventoryWithStockItem = {
   cost_per_unit_previous: string; // Assuming it's a string due to decimal format
   current_purchase_date: string | null; // Nullable date string
   vendor_name: string;
+  remark : string;
 };
 
 export type TMaintenanceRecord = {

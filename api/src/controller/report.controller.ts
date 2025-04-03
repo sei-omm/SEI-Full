@@ -1479,42 +1479,60 @@ export const inventoryReport = asyncErrorHandler(async (req, res) => {
 
   const { LIMIT, OFFSET } = parsePagination(req);
 
+  // const { rows } = await pool.query(
+  //   `
+  //   SELECT
+  //       isi.purchase_date,
+  //       iii.item_id,
+  //       iii.item_name,
+  //       iii.minimum_quantity,
+  //       iii.vendor_id,
+  //       v.vendor_name,
+  //       iii.opening_stock,
+  //       iii.closing_stock,
+  //       STRING_AGG(isi.stock::TEXT, ' + ') AS added_stocks,
+  //       STRING_AGG(isi.cost_per_unit::TEXT, ' + ') AS each_stock_cpu,
+  //       STRING_AGG(isi.status, ' + ') AS stock_added_status,
+  //       STRING_AGG(isi.total_value::TEXT, ' + ') AS each_stock_total_value,
+  //       STRING_AGG(iic.consume_stock::TEXT, ' + ') AS consumed_stock,
+  //       STRING_AGG(iic.remark, ' + ') AS consumed_stock_remark
+  //     FROM inventory_item_info iii
+
+  //     LEFT JOIN vendor v
+  //     ON v.vendor_id = iii.vendor_id
+
+  //     LEFT JOIN inventory_stock_info isi
+  //     ON isi.item_id = iii.item_id
+
+  //     LEFT JOIN inventory_item_consume iic
+  //     ON iic.item_id = iii.item_id
+
+  //     WHERE iii.institute = $1 AND isi.purchase_date BETWEEN $2 AND $3
+
+  //     GROUP BY iii.item_id, v.vendor_name, isi.purchase_date
+
+  //     LIMIT ${LIMIT} OFFSET ${OFFSET}
+  //   `,
+  //   [value.institute, value.from_date, value.to_date]
+  // );
+
   const { rows } = await pool.query(
     `
-    SELECT
-        isi.purchase_date,
-        iii.item_id,
-        iii.item_name,
-        iii.minimum_quantity,
-        iii.vendor_id,
-        v.vendor_name,
-        iii.opening_stock,
-        iii.closing_stock,
-        STRING_AGG(isi.stock::TEXT, ' + ') AS added_stocks,
-        STRING_AGG(isi.cost_per_unit::TEXT, ' + ') AS each_stock_cpu,
-        STRING_AGG(isi.status, ' + ') AS stock_added_status,
-        STRING_AGG(isi.total_value::TEXT, ' + ') AS each_stock_total_value,
-        STRING_AGG(iic.consume_stock::TEXT, ' + ') AS consumed_stock,
-        STRING_AGG(iic.remark, ' + ') AS consumed_stock_remark
-      FROM inventory_item_info iii
+      SELECT
+       idr.*,
+       v.vendor_name
+      FROM inventory_daily_report idr
 
       LEFT JOIN vendor v
-      ON v.vendor_id = iii.vendor_id
+      ON v.vendor_id = idr.vendor_id
 
-      LEFT JOIN inventory_stock_info isi
-      ON isi.item_id = iii.item_id
-
-      LEFT JOIN inventory_item_consume iic
-      ON iic.item_id = iii.item_id
-
-      WHERE iii.institute = $1 AND isi.purchase_date BETWEEN $2 AND $3
-
-      GROUP BY iii.item_id, v.vendor_name, isi.purchase_date
+      WHERE idr.institute = $1 AND idr.report_date BETWEEN $2 AND $3
 
       LIMIT ${LIMIT} OFFSET ${OFFSET}
     `,
     [value.institute, value.from_date, value.to_date]
-  );
+  )
+
 
   res.status(200).json(new ApiResponse(200, "Inventory Report", rows));
 });
