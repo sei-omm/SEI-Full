@@ -8,12 +8,12 @@ import { stickyFirstCol } from "@/app/utils/stickyFirstCol";
 import HandleSuspence from "@/components/HandleSuspence";
 import Pagination from "@/components/Pagination";
 import MultiPlannedMaintenanceSystem from "@/components/SingleLineForms/MultiPlannedMaintenanceSystem";
+import { usePurifySearchParams } from "@/hooks/usePurifySearchParams";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { ISuccess, TPlannedMaintenanceSystem, TPmsFrequency } from "@/types";
 import { axiosQuery } from "@/utils/axiosQuery";
 import { getNextDueDate } from "@/utils/getNextDueDate";
 import axios from "axios";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AiOutlineDelete } from "react-icons/ai";
 import { MdOutlineHistory, MdOutlineRemoveRedEye } from "react-icons/md";
@@ -48,7 +48,7 @@ export default function PlannedMaintenanceSystem() {
     ],
     body: [],
   });
-  const searchParams = useSearchParams();
+  const searchParams = usePurifySearchParams();
 
   const dispatch = useDispatch();
 

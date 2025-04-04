@@ -135,8 +135,8 @@ export default function InventoryReport() {
   return (
     <div className="space-y-8">
       <DateDurationFilter
-        fromDateLable="From Purchase Date *"
-        toDateLable="To Purchase Date *"
+        fromDateLable="From Date *"
+        toDateLable="To Date *"
       />
 
       <div className="flex justify-end">

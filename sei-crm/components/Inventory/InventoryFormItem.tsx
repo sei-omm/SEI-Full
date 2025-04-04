@@ -8,10 +8,12 @@ import HandleSuspence from "../HandleSuspence";
 import { useQuery } from "react-query";
 import axios from "axios";
 import { BASE_API } from "@/app/constant";
+import { getDate } from "@/app/utils/getDate";
 
 type TVendorItems = {
   item_id: number;
   item_name: string;
+  current_purchase_date: string;
 };
 
 async function getVendorItems(vendorID: number) {
@@ -32,6 +34,8 @@ export default function InventoryFormItem({
   handleDeleteBtnClick,
   currentVendorId,
 }: IProps) {
+  const [minPurchaseDate, setMinPurchaseDate] = useState("");
+
   const [inputValues, setInputValues] = useState<{
     opening_stock: number;
     item_consumed: number;
@@ -58,6 +62,10 @@ export default function InventoryFormItem({
   } = useQuery<ISuccess<TVendorItems[]>>({
     queryKey: ["get-vendor-items", currentVendorId],
     queryFn: () => getVendorItems(currentVendorId),
+    onSuccess: (data) => {
+      const recent_purchase_date = data.data[0].current_purchase_date;
+      setMinPurchaseDate(getDate(new Date(recent_purchase_date)));
+    },
     enabled: currentVendorId !== -1,
   });
 
@@ -78,6 +86,14 @@ export default function InventoryFormItem({
         <DropDown
           name="item_id"
           label="Items"
+          onChange={(option) => {
+            const recent_purchase_date = vendor_items?.data.find(
+              (item) => item.item_id === option.value
+            )?.current_purchase_date;
+            if (recent_purchase_date !== undefined) {
+              setMinPurchaseDate(getDate(new Date(recent_purchase_date)));
+            }
+          }}
           options={
             vendor_items?.data.map((item) => ({
               text: item.item_name,
@@ -86,7 +102,7 @@ export default function InventoryFormItem({
           }
         />
       </HandleSuspence>
-{/* 
+      {/* 
       <Input
         wrapperCss="!min-w-28"
         viewOnly={true}
@@ -114,7 +130,11 @@ export default function InventoryFormItem({
         placeholder="0"
       />
       <Input name="status" label="Status" placeholder="Enter Some Status" />
-      <DateInput name="purchase_date" label="Purchased Date" />
+      <DateInput
+        name="purchase_date"
+        label="Purchased Date"
+        min={minPurchaseDate}
+      />
 
       <Input
         required

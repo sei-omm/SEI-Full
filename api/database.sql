@@ -1441,6 +1441,27 @@ ALTER TABLE inventory_daily_report ADD COLUMN remark TEXT DEFAULT '';
 ALTER TABLE inventory_item_info ADD COLUMN remark TEXT DEFAULT '';
 
 
+-- NEW DB 04 APR 2025
+DELETE FROM planned_maintenance_system;
+
+ALTER TABLE planned_maintenance_system 
+DROP CONSTRAINT planned_maintenance_system_custom_item_institute_key;
+
+ALTER TABLE planned_maintenance_system 
+DROP CONSTRAINT planned_maintenance_system_item_id_institute_key;
+
+ALTER TABLE planned_maintenance_system
+ADD COLUMN frequency VARCHAR(255);
+
+ALTER TABLE planned_maintenance_system 
+ADD CONSTRAINT planned_maintenance_system_custom_item_institute_key UNIQUE (custom_item, institute, frequency);
+
+ALTER TABLE planned_maintenance_system 
+ADD CONSTRAINT planned_maintenance_system_item_id_institute_key UNIQUE (item_id, institute, frequency);
+
+ALTER TABLE pms_history 
+ADD CONSTRAINT planned_maintenance_system_id_frequency_unique UNIQUE (planned_maintenance_system_id, frequency);
+
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

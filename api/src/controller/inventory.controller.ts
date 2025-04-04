@@ -188,7 +188,8 @@ export const getItemOfVendor = asyncErrorHandler(async (req, res) => {
     `
     SELECT
       item_id,
-      item_name
+      item_name,
+      current_purchase_date
     FROM inventory_item_info
     WHERE vendor_id = $1
     `,
@@ -705,11 +706,13 @@ export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
       const index = existItem.get(temp.item_id);
 
       const current_inventory_info = inventoryInfo.find(loopItem => loopItem.item_id === temp.item_id);
-    
+      // const max_date_num = new Date(temp.purchase_date) > new Date(current_inventory_info.current_purchase_date) ? 1 : 2;
+
       if (index === undefined) {
         updated_data.push({
           item_id: temp.item_id,
           current_purchase_date: temp.purchase_date,
+          // current_purchase_date : max_date_num === 1 ? temp.purchase_date : current_inventory_info.current_purchase_date,
           cost_per_unit_previous : current_inventory_info.cost_per_unit_current,
           cost_per_unit_current: temp.cost_per_unit,
           current_status: temp.status,
@@ -724,6 +727,7 @@ export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
         updated_data[index] = {
           item_id: temp.item_id,
             current_purchase_date: temp.purchase_date,
+            // current_purchase_date : max_date_num === 1 ? temp.purchase_date : current_inventory_info.current_purchase_date,
             cost_per_unit_previous : updated_data[index].cost_per_unit_current,
             cost_per_unit_current: temp.cost_per_unit,
             current_status: temp.status,
@@ -734,6 +738,37 @@ export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
             remark : temp.remark,
         }
       }
+
+          // await client.query(
+    //   `
+    //   UPDATE inventory_item_info SET
+    //     current_purchase_date = CASE
+    //       WHEN tmp.current_purchase_date < CURRENT_DATE THEN inventory_item_info.current_purchase_date
+    //       ELSE tmp.current_purchase_date
+    //     END,
+    //     cost_per_unit_previous = CASE
+    //       WHEN (CURRENT_DATE - tmp.current_purchase_date) = 1 THEN tmp.cost_per_unit_current
+    //       ELSE inventory_item_info.cost_per_unit_current
+    //     END,
+    //     cost_per_unit_current = CASE
+    //       WHEN tmp.current_purchase_date < CURRENT_DATE THEN inventory_item_info.cost_per_unit_current
+    //       ELSE tmp.cost_per_unit_current
+    //     END,
+    //     -- cost_per_unit_previous = inventory_item_info.cost_per_unit_current,
+    //     current_status = tmp.status,
+    //     total_value = inventory_item_info.total_value + tmp.total_value,
+    //     opening_stock = inventory_item_info.opening_stock + tmp.opening_stock,
+    //     closing_stock = inventory_item_info.opening_stock + tmp.opening_stock - inventory_item_info.item_consumed
+    //   FROM (
+    //     SELECT
+    //       item_id,
+    //       SUM(total_value) as total_value
+    //     FROM temp_info_table
+    //     GROUP BY item_id
+    //   ) tmp
+    //   WHERE inventory_item_info.item_id = tmp.item_id
+    //   `
+    // );
 
       report.push({
         item_id : current_inventory_info.item_id,
@@ -823,37 +858,6 @@ export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
       report.flatMap(item => [
       ...Object.values(item)
     ]))
-
-    // await client.query(
-    //   `
-    //   UPDATE inventory_item_info SET
-    //     current_purchase_date = CASE
-    //       WHEN tmp.current_purchase_date < CURRENT_DATE THEN inventory_item_info.current_purchase_date
-    //       ELSE tmp.current_purchase_date
-    //     END,
-    //     cost_per_unit_previous = CASE
-    //       WHEN (CURRENT_DATE - tmp.current_purchase_date) = 1 THEN tmp.cost_per_unit_current
-    //       ELSE inventory_item_info.cost_per_unit_current
-    //     END,
-    //     cost_per_unit_current = CASE
-    //       WHEN tmp.current_purchase_date < CURRENT_DATE THEN inventory_item_info.cost_per_unit_current
-    //       ELSE tmp.cost_per_unit_current
-    //     END,
-    //     -- cost_per_unit_previous = inventory_item_info.cost_per_unit_current,
-    //     current_status = tmp.status,
-    //     total_value = inventory_item_info.total_value + tmp.total_value,
-    //     opening_stock = inventory_item_info.opening_stock + tmp.opening_stock,
-    //     closing_stock = inventory_item_info.opening_stock + tmp.opening_stock - inventory_item_info.item_consumed
-    //   FROM (
-    //     SELECT
-    //       item_id,
-    //       SUM(total_value) as total_value
-    //     FROM temp_info_table
-    //     GROUP BY item_id
-    //   ) tmp
-    //   WHERE inventory_item_info.item_id = tmp.item_id
-    //   `
-    // );
 
     // await client.query(
     //   `
@@ -1330,7 +1334,7 @@ export const bulkUpdateMaintenceRecord = asyncErrorHandler(async (req, res) => {
 export const getPlannedMaintenanceSystem = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { LIMIT, OFFSET } = parsePagination(req);
-    const institute = req.query.institute;
+    const { filterQuery, filterValues } = filterToSql(req.query, "pm");
 
     const { rows } = await pool.query(
       `
@@ -1349,13 +1353,13 @@ export const getPlannedMaintenanceSystem = asyncErrorHandler(
 
         LEFT JOIN history_data hd ON hd.planned_maintenance_system_id = pm.planned_maintenance_system_id
 
-      ${institute ? "WHERE pm.institute = $1" : ""}
+      ${filterQuery}
 
       ORDER BY pm.planned_maintenance_system_id DESC
 
       LIMIT ${LIMIT} OFFSET ${OFFSET}
       `,
-      institute ? [institute] : []
+      filterValues
     );
     res.status(200).json(new ApiResponse(200, "", rows));
   }
@@ -1422,13 +1426,13 @@ export const addMultiPlannedMaintenanceSystemInventoryItem = asyncErrorHandler(
         const { rows, rowCount } = await client.query(
           `
           INSERT INTO planned_maintenance_system
-           (item_id, institute)
+           (item_id, institute, frequency)
           VALUES
-            ${sqlPlaceholderCreator(2, inventoryItem.length).placeholder}
-          ON CONFLICT (item_id, institute) DO NOTHING
+            ${sqlPlaceholderCreator(3, inventoryItem.length).placeholder}
+          ON CONFLICT (item_id, institute, frequency) DO NOTHING
           RETURNING planned_maintenance_system_id
           `,
-          inventoryItem.flatMap((item) => [item.item_id, item.institute])
+          inventoryItem.flatMap((item) => [item.item_id, item.institute, item.frequency])
         );
 
         if (rowCount === 0) {
@@ -1458,13 +1462,13 @@ export const addMultiPlannedMaintenanceSystemInventoryItem = asyncErrorHandler(
         const { rows: rows2, rowCount: rowCount2 } = await client.query(
           `
           INSERT INTO planned_maintenance_system
-           (custom_item, institute)
+           (custom_item, institute, frequency)
           VALUES
-            ${sqlPlaceholderCreator(2, customItem.length).placeholder}
-          ON CONFLICT (custom_item, institute) DO NOTHING
+            ${sqlPlaceholderCreator(3, customItem.length).placeholder}
+          ON CONFLICT (custom_item, institute, frequency) DO NOTHING
           RETURNING planned_maintenance_system_id
           `,
-          customItem.flatMap((item) => [item.custom_item, item.institute])
+          customItem.flatMap((item) => [item.custom_item, item.institute, item.frequency])
         );
 
         if (rowCount2 === 0) {
@@ -1499,6 +1503,8 @@ export const addMultiPlannedMaintenanceSystemInventoryItem = asyncErrorHandler(
           (planned_maintenance_system_id, frequency, last_done, next_due, description, remark)
         VALUES
          ${sqlPlaceholderCreator(6, value.length).placeholder}
+        ON CONFLICT (planned_maintenance_system_id, frequency) DO UPDATE
+          SET last_done = EXCLUDED.last_done, next_due = EXCLUDED.next_due, description = EXCLUDED.description, remark = EXCLUDED.remark
         `,
         value.flatMap((item) => {
           let pmsIdToStore = 0;

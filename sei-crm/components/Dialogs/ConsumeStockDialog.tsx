@@ -8,10 +8,13 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import { setDialog } from "@/redux/slices/dialogs.slice";
 import { queryClient } from "@/redux/MyProvider";
 import { sendNoification } from "@/utils/sendNoification";
+// import DateInput from "../DateInput";
 
 export default function ConsumeStockDialog() {
   const { extraValue } = useSelector((state: RootState) => state.dialogs);
   const dispatch = useDispatch();
+
+  // const CURRENT_DATE = new Date().toISOString().split("T")[0]
 
   const { mutate, isLoading: isMutating } = useDoMutation();
 
@@ -53,15 +56,23 @@ export default function ConsumeStockDialog() {
     <DialogBody>
       <form action={handleFormSubmit} className="space-y-5">
         <div>
-          <Input
-            title="Invalid Number Of Item You Want To Consume"
-            required
-            type="number"
-            name="consume_stock"
-            min={1}
-            max={extraValue?.remain_stock || 0}
-            label="Number Of Stock Want To Consume *"
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              title="Invalid Number Of Item You Want To Consume"
+              required
+              type="number"
+              name="consume_stock"
+              min={1}
+              max={extraValue?.remain_stock || 0}
+              // label="Number Of Stock Want To Consume *"
+              label="Stock"
+            />
+            {/* <DateInput
+              name="consume_date"
+              label="Consume Date"
+              max={CURRENT_DATE}
+            /> */}
+          </div>
           <span className="text-xs text-gray-500">
             Your Have{" "}
             <span className="font-semibold">

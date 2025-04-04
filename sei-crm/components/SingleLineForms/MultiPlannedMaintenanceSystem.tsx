@@ -5,11 +5,14 @@ import { useDoMutation } from "@/app/utils/useDoMutation";
 import { queryClient } from "@/redux/MyProvider";
 import PlannedMaintenanceItem from "./PlannedMaintenanceItem";
 import DropDown from "../DropDown";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Campus from "../Campus";
 
 export default function MultiPlannedMaintenanceSystem() {
   const [inputs, setInputs] = useState<number[]>([]);
   const searchParams = useSearchParams();
+  const route = useRouter();
+  const pathname = usePathname();
 
   const { isLoading, mutate } = useDoMutation();
 
@@ -51,13 +54,35 @@ export default function MultiPlannedMaintenanceSystem() {
   return (
     <div className="space-y-5">
       <div className="flex items-end justify-between">
-        <DropDown
+        {/* <DropDown
           changeSearchParamsOnChange
           name="institute"
           label="Campus"
           options={[
             { text: "Kolkata", value: "Kolkata" },
             { text: "Faridabad", value: "Faridabad" },
+          ]}
+        /> */}
+        <Campus changeSearchParamsOnChange />
+        <DropDown
+          onChange={(option) => {
+            const urlSearchParams = new URLSearchParams(searchParams);
+            if (option.value === "All") {
+              urlSearchParams.delete("frequency");
+            } else {
+              urlSearchParams.set("frequency", option.value);
+            }
+            route.push(`${pathname}?${urlSearchParams.toString()}`);
+          }}
+          name="frequency"
+          label="Frequency"
+          options={[
+            { text: "All", value: "All" },
+            { text: "Daily", value: "Daily" },
+            { text: "Weekly", value: "Weekly" },
+            { text: "Monthly", value: "Monthly" },
+            { text: "Half Yearly", value: "Half Yearly" },
+            { text: "Yearly", value: "Yearly" },
           ]}
         />
         <Button
