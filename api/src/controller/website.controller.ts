@@ -102,7 +102,9 @@ export const getBlogsList = asyncErrorHandler(async (req, res) => {
         heading, 
         meta_description, 
         meta_keywords, 
-        created_at 
+        created_at,
+        thumbnail,
+        visible
       FROM blogs
       ORDER BY blog_id DESC
       LIMIT ${LIMIT} OFFSET ${OFFSET}

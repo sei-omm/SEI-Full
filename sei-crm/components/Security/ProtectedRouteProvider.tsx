@@ -298,12 +298,12 @@ export const sidebarOptions: TSideBar[] = [
     name: "Website Management",
     slug: "#",
     subMenu: [
-      // {
-      //   id: "10-2",
-      //   icon: "RiBloggerLine",
-      //   name: "Blogs",
-      //   slug: "/dashboard/website-management/blogs",
-      // },
+      {
+        id: "10-2",
+        icon: "RiBloggerLine",
+        name: "Blogs",
+        slug: "/dashboard/website-management/blogs",
+      },
       {
         id: "10-1",
         icon: "CgWebsite",
@@ -342,14 +342,17 @@ export default function ProtectedRouteProvider({ children }: IProps) {
     if (permission) {
       const parsedPermissions = JSON.parse(permission);
 
-      if(parsedPermissions["camp-1"] === true && parsedPermissions["camp-2"] === true) {
-        dispatch(setCampus({campus : "Both"}))
-      } else if (parsedPermissions["camp-1"] === true){
-        dispatch(setCampus({campus : "Kolkata"}))
+      if (
+        parsedPermissions["camp-1"] === true &&
+        parsedPermissions["camp-2"] === true
+      ) {
+        dispatch(setCampus({ campus: "Both" }));
+      } else if (parsedPermissions["camp-1"] === true) {
+        dispatch(setCampus({ campus: "Kolkata" }));
       } else if (parsedPermissions["camp-2"] === true) {
-        dispatch(setCampus({campus : "Faridabad"}))
+        dispatch(setCampus({ campus: "Faridabad" }));
       } else {
-        dispatch(setCampus({campus : null}))
+        dispatch(setCampus({ campus: null }));
       }
 
       const newSidebar: TSideBar[] = [];
@@ -389,7 +392,7 @@ export default function ProtectedRouteProvider({ children }: IProps) {
         !pathname.includes("/dashboard/hr-module/job-posting/") &&
         !pathname.includes("/dashboard/course/manage-course/") &&
         !pathname.includes("/dashboard/admission/manage-form/") &&
-        !pathname.includes("/dashboard/library/item/") && 
+        !pathname.includes("/dashboard/library/item/") &&
         !pathname.includes("/dashboard/website-management/notice-board/") &&
         !pathname.includes("/dashboard/course/manage-package-course/add")
       ) {
@@ -406,7 +409,7 @@ export default function ProtectedRouteProvider({ children }: IProps) {
   if (process === "loading") return <LoadingLayout />;
 
   if (process === "failed") {
-    return <Page403 />
+    return <Page403 />;
   }
 
   return <>{children}</>;

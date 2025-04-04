@@ -3,9 +3,16 @@ import { BASE_API } from "@/app/constant";
 import { CourseType, IResponse } from "@/app/type";
 import CourseItem from "../CourseItem";
 
-export default async function PackageCourseListView() {
+interface IProps {
+    centerName: string | undefined;
+}
+
+export default async function PackageCourseListView({ centerName } : IProps) {
   const response = await fetch(
-    `${BASE_API}/course/package?institute=Kolkata&with_batches=true`
+    `${BASE_API}/course/package?institute=${centerName}&with_batches=true`,
+    {
+      cache: "no-store",
+    }
   );
 
   const result = (await response.json()) as IResponse<

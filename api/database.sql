@@ -1326,22 +1326,6 @@ CREATE TABLE members (
 INSERT INTO members (employee_id, permissions) VALUES (27, '{"1":true,"2":true,"3":true,"4":true,"5":true,"6":true,"7":true,"8":true,"9":true,"10":true,"1-1":true,"1-2":true,"1-3":true,"1-4":true,"1-5":true,"1-6":true,"1-7":true,"1-8":true,"1-9":true,"1-10":true,"7-1":true,"7-2":true,"7-3":true,"8-3":true,"3-1":true,"3-2":true,"9-1":true,"2-1":true,"2-2":true,"4-1":true,"4-2":true,"4-3":true,"4-4":true,"5-1":true,"5-2":true,"5-3":true,"5-4":true,"5-5":true,"5-6":true,"5-7":true,"5-8":true,"5-9":true,"5-11":true,"5-10":true,"10-1":true,"6-1":true}');
 
 -- NEW TABLE 15 MAR 2023
-CREATE TABLE blogs (
-    blog_id SERIAL PRIMARY KEY,
-    heading VARCHAR(255) NOT NULL,
-    blog_content TEXT NOT NULL,
-    thumbnail TEXT NOT NULL,
-
-    meta_title VARCHAR(255) NOT NULL,
-    meta_description TEXT NOT NULL,
-    meta_keywords TEXT NOT NULL,
-    meta_canonical_url VARCHAR(255) NOT NULL,
-
-    created_at DATE DEFAULT CURRENT_DATE,
-
-    visible BOOLEAN NOT NULL DEFAULT TRUE
-);
-
 DROP TABLE otps;
 
 CREATE TABLE otps (
@@ -1464,6 +1448,24 @@ ADD CONSTRAINT planned_maintenance_system_item_id_institute_key UNIQUE (item_id,
 
 ALTER TABLE pms_history 
 ADD CONSTRAINT planned_maintenance_system_id_frequency_unique UNIQUE (planned_maintenance_system_id, frequency);
+
+
+CREATE TABLE blogs (
+    blog_id SERIAL PRIMARY KEY,
+    heading VARCHAR(255) NOT NULL,
+    blog_content TEXT NOT NULL,
+    thumbnail TEXT NOT NULL,
+
+    meta_title VARCHAR(255) NOT NULL,
+    meta_description TEXT NOT NULL,
+    meta_keywords TEXT NOT NULL,
+    meta_canonical_url VARCHAR(255) NOT NULL,
+
+    created_at DATE DEFAULT CURRENT_DATE,
+
+    visible BOOLEAN NOT NULL DEFAULT TRUE
+);
+
 
 -- fro clering all table of db
 -- DO $$ 

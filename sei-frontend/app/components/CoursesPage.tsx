@@ -110,7 +110,7 @@ export default async function CoursesPage({ centerName, category }: IProps) {
 
       {/* Courses List */}
       {category === "packaged-courses" ? (
-        <PackageCourseListView />
+        <PackageCourseListView centerName={centerName} />
       ) : (
         <CoursesListView courses={courses} />
       )}
