@@ -66,6 +66,7 @@ export default async function CoursesPage({ centerName, category }: IProps) {
 
       <div className="pt-9 flex items-center">
         <TabMenu
+          className="sm:overflow-x-scroll sm:w-full sm:flex-nowrap sm:py-2"
           textSize={16}
           tabs={[
             {

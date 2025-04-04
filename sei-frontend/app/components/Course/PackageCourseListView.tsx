@@ -2,6 +2,7 @@ import React from "react";
 import { BASE_API } from "@/app/constant";
 import { CourseType, IResponse } from "@/app/type";
 import CourseItem from "../CourseItem";
+import { capitalizeFirstChar } from "@/app/utils/capitalizeFirstChar";
 
 interface IProps {
     centerName: string | undefined;
@@ -9,7 +10,7 @@ interface IProps {
 
 export default async function PackageCourseListView({ centerName } : IProps) {
   const response = await fetch(
-    `${BASE_API}/course/package?institute=${centerName}&with_batches=true`,
+    `${BASE_API}/course/package?institute=${capitalizeFirstChar(centerName || "")}&with_batches=true`,
     {
       cache: "no-store",
     }
@@ -24,6 +25,8 @@ export default async function PackageCourseListView({ centerName } : IProps) {
       total_course_fee: number;
     }[]
   >;
+
+  console.log(result)
 
   return (
     <section className="w-full py-10">
