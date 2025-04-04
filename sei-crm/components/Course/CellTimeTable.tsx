@@ -123,6 +123,14 @@ export default function CellTimeTable({
     const currentSubFacInfo = time_table_data?.[row].sub_fac.find(
       (item) => item.subject_name === subject_name
     )?.faculty;
+    if (!virtual_table) return alert("No Row Data Found");
+
+    virtual_table[`${row}:${col}`] = {
+      fac: currentSubFacInfo?.[0] || null,
+      subject: subject_name,
+      course_name : time_table_data?.[row].course_name || ""
+    };
+
     setCurrentFaculties(currentSubFacInfo || []);
     setSingleFacInfo(currentSubFacInfo?.[0] || null);
   };

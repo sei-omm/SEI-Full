@@ -6,15 +6,43 @@ import Input from "../Input";
 import ChooseFileInput from "../ChooseFileInput";
 import { InfoLayout } from "../Account/InfoLayout";
 import TextArea from "../TextArea";
+import Button from "../Button";
+import DropDown from "../DropDown";
+import { useDoMutation } from "@/app/utils/useDoMutation";
+import { useRouter } from "next/navigation";
+import { useQuery } from "react-query";
+import axios from "axios";
+import { BASE_API } from "@/app/constant";
+import { ISuccess } from "@/types";
+import HandleSuspence from "../HandleSuspence";
+import { getFileName } from "@/app/utils/getFileName";
 
-// interface IProps {
-//   blog_id: number | "add";
-// }
+interface IProps {
+  blog_id: number | "add";
+}
 
-export default function ManageBlog() {
-  // const isNew = blog_id === "add";
+async function fetchSingleBlog(blogId: number) {
+  return (await axios.get(`${BASE_API}/website/blogs/${blogId}`)).data;
+}
+
+interface BlogPost {
+  blog_id: number;
+  heading: string;
+  blog_content: string;
+  thumbnail: string;
+  meta_title: string;
+  meta_description: string;
+  meta_keywords: string;
+  meta_canonical_url: string;
+  created_at: string; // You might also consider using Date if you want to work with date objects
+  visible: boolean;
+}
+
+export default function ManageBlog({ blog_id }: IProps) {
+  const isNew = blog_id === "add";
 
   const blogContentRef = useRef<string>("");
+  const routes = useRouter();
 
   useEffect(() => {
     document.documentElement.style.setProperty(
@@ -23,61 +51,124 @@ export default function ManageBlog() {
     );
   }, []);
 
+  const { data, isFetching, error } = useQuery<ISuccess<BlogPost>>({
+    queryKey: ["blog", blog_id],
+    queryFn: () => fetchSingleBlog(blog_id as number),
+    enabled: !isNew,
+  });
+
+  const { isLoading, mutate } = useDoMutation();
+  const handleManageBlog = (formData: FormData) => {
+    formData.set(`blog_content`, blogContentRef.current);
+    if (isNew) {
+      mutate({
+        apiPath: "/website/blogs",
+        method: "post",
+        formData,
+        onSuccess() {
+          routes.back();
+        },
+      });
+      return;
+    }
+
+    formData.set(
+      `blog_content`,
+      blogContentRef.current === ""
+        ? (data?.data.blog_content as string)
+        : blogContentRef.current
+    );
+
+    formData.set("thumbnail", formData.get("thumbnail") || data?.data.thumbnail as any)
+
+    mutate({
+      apiPath: "/website/blogs",
+      method: "put",
+      formData,
+      id: blog_id as number,
+      onSuccess() {
+        routes.back();
+      },
+    });
+  };
+
   return (
     <div key={Math.random()}>
-      {/* <Tabs
-        tabs={[
-          {
-            name: "Basic Info",
-            slug: "?tab=basic",
-          },
-        ]}
-      /> */}
+      <HandleSuspence isLoading={isFetching} error={error} dataLength={1}>
+        <form action={handleManageBlog} className="space-y-5">
+          <InfoLayout className="w-full space-y-5">
+            <ChooseFileInput
+              name="thumbnail"
+              id="choose_thumbnail"
+              label="Choose Blog Thumbnail"
+              fileName={
+                getFileName(data?.data.thumbnail) || "Choose Blog Thumbnail"
+              }
+              accept="image/*"
+              viewLink={data?.data.thumbnail}
+            />
+            <div className="grid grid-cols-2 gap-5">
+              <Input
+                required
+                name="heading"
+                placeholder="Type Your Blog Heading"
+                label="Blog Heading *"
+                defaultValue={data?.data.heading}
+              />
+              <DropDown
+                name="visible"
+                label="Blog Visibility"
+                options={[
+                  { text: "Public", value: true },
+                  { text: "Private", value: false },
+                ]}
+                defaultValue={data?.data.visible}
+              />
+            </div>
 
-      <form className="space-y-5">
-        <InfoLayout className="w-full space-y-5">
-          <ChooseFileInput
-            id="choose_thumbnail"
-            label="Choose Blog Thumbnail"
-            fileName="Choose Blog Thumbnail"
-            disableUpload // remove after testing
-            accept="image/*"
-          />
-          <Input placeholder="Type Your Blog Heading" label="Blog Heading *" />
+            <Editor
+              storageFolderName="blogs"
+              label="Blog Content"
+              textEditorContentRef={blogContentRef}
+              defaultValue={data?.data.blog_content}
+            />
+          </InfoLayout>
 
-          <Editor
-            storageFolderName="blogs"
-            label="Blog Content"
-            textEditorContentRef={blogContentRef}
-          />
-        </InfoLayout>
+          <InfoLayout className="w-full space-y-3">
+            <h2 className="font-semibold text-xl">Blog Meta Info</h2>
+            <div className="space-y-3">
+              <Input
+                label="Blog Meta Title"
+                name="meta_title"
+                placeholder="Type Blog Meta Title"
+                defaultValue={data?.data.meta_title}
+              />
+              <TextArea
+                label="Blog Meta Description"
+                name="meta_description"
+                placeholder="Type Blog Meta Description"
+                defaultValue={data?.data.meta_description}
+              />
+              <Input
+                label="Blog Keywords"
+                name="meta_keywords"
+                placeholder="Keyword 1, Keyword 2, Keyword 3"
+                defaultValue={data?.data.meta_keywords}
+              />
+              <Input
+                label="Canonical Url"
+                name="meta_canonical_url"
+                placeholder="https://www.seiedutrust.com"
+                defaultValue={data?.data.meta_canonical_url}
+              />
+            </div>
+          </InfoLayout>
 
-        <InfoLayout className="w-full space-y-3">
-          <h2 className="font-semibold text-xl">Blog Meta Info</h2>
-          <div className="space-y-3">
-            <Input
-              label="Blog Meta Title"
-              name="meta_title"
-              placeholder="Type Blog Meta Title"
-            />
-            <TextArea
-              label="Blog Meta Description"
-              name="meta_description"
-              placeholder="Type Blog Meta Description"
-            />
-            <Input
-              label="Blog Keywords"
-              name="meta_keywords"
-              placeholder="Keyword 1, Keyword 2, Keyword 3"
-            />
-            <Input
-              label="Canonical Url"
-              name="meta_canonical_url"
-              placeholder="https://www.seiedutrust.com"
-            />
-          </div>
-        </InfoLayout>
-      </form>
+          <Button loading={isLoading} disabled={isLoading}>
+            {isNew ? "Upload Blog" : "Update Blog"}
+          </Button>
+        </form>
+      </HandleSuspence>
     </div>
   );
 }
