@@ -56,7 +56,7 @@ export default function ConsumeStockDialog() {
     <DialogBody>
       <form action={handleFormSubmit} className="space-y-5">
         <div>
-          <div className="grid grid-cols-2 gap-3">
+          <div>
             <Input
               title="Invalid Number Of Item You Want To Consume"
               required
@@ -64,8 +64,8 @@ export default function ConsumeStockDialog() {
               name="consume_stock"
               min={1}
               max={extraValue?.remain_stock || 0}
-              // label="Number Of Stock Want To Consume *"
-              label="Stock"
+              label="Number Of Stock Want To Consume *"
+              // label="Stock"
             />
             {/* <DateInput
               name="consume_date"

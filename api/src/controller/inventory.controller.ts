@@ -706,13 +706,12 @@ export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
       const index = existItem.get(temp.item_id);
 
       const current_inventory_info = inventoryInfo.find(loopItem => loopItem.item_id === temp.item_id);
-      // const max_date_num = new Date(temp.purchase_date) > new Date(current_inventory_info.current_purchase_date) ? 1 : 2;
 
       if (index === undefined) {
         updated_data.push({
           item_id: temp.item_id,
           current_purchase_date: temp.purchase_date,
-          // current_purchase_date : max_date_num === 1 ? temp.purchase_date : current_inventory_info.current_purchase_date,
+          // current_purchase_date : new Date(temp.purchase_date) > new Date(current_inventory_info.current_purchase_date) ? temp.purchase_date : current_inventory_info.current_purchase_date,
           cost_per_unit_previous : current_inventory_info.cost_per_unit_current,
           cost_per_unit_current: temp.cost_per_unit,
           current_status: temp.status,
@@ -727,7 +726,7 @@ export const addMultiItemStock = asyncErrorHandler(async (req, res) => {
         updated_data[index] = {
           item_id: temp.item_id,
             current_purchase_date: temp.purchase_date,
-            // current_purchase_date : max_date_num === 1 ? temp.purchase_date : current_inventory_info.current_purchase_date,
+            // current_purchase_date : new Date(temp.purchase_date) > new Date(current_inventory_info.current_purchase_date) ? temp.purchase_date : current_inventory_info.current_purchase_date,
             cost_per_unit_previous : updated_data[index].cost_per_unit_current,
             cost_per_unit_current: temp.cost_per_unit,
             current_status: temp.status,
