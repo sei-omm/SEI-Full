@@ -104,7 +104,9 @@ export const getBlogsList = asyncErrorHandler(async (req, res) => {
         meta_keywords, 
         created_at,
         thumbnail,
-        visible
+        visible,
+        thumbnail_alt_tag,
+        slug
       FROM blogs
       ORDER BY blog_id DESC
       LIMIT ${LIMIT} OFFSET ${OFFSET}
@@ -118,8 +120,10 @@ export const getSingleBlog = asyncErrorHandler(async (req, res) => {
   const { error, value } = VSingleBlog.validate(req.params);
   if (error) throw new ErrorHandler(400, error.message);
 
+  const search_with = Number.isNaN(parseInt(value.blog_id)) ? "slug" : "blog_id"
+
   const { rowCount, rows } = await pool.query(
-    `SELECT * FROM blogs WHERE blog_id = $1`,
+    `SELECT * FROM blogs WHERE ${search_with} = $1`,
     [value.blog_id]
   );
   if (!rowCount || rowCount === 0)
@@ -134,12 +138,18 @@ export const postNewBlog = asyncErrorHandler(async (req, res) => {
 
   const { params, values, columns } = objectToSqlInsert(value);
 
-  await pool.query(
+  const { rowCount } = await pool.query(
     `
       INSERT INTO blogs ${columns} VALUES ${params}
+      ON CONFLICT (slug) DO NOTHING
+      RETURNING blog_id
     `,
     values
   );
+
+  if (!rowCount || rowCount === 0) {
+    throw new ErrorHandler(400, "Duplicate Heading Please Change The Heading");
+  }
 
   res.status(201).json(new ApiResponse(201, "New Blog Added"));
 });
@@ -154,12 +164,18 @@ export const updateSingleBlog = asyncErrorHandler(async (req, res) => {
   const { keys, values, paramsNum } = objectToSqlConverterUpdate(req.body);
   values.push(value.blog_id);
 
-  await pool.query(
+  const { rowCount } = await pool.query(
     `
-      UPDATE blogs SET ${keys} WHERE blog_id = $${paramsNum}
+      UPDATE blogs SET ${keys} 
+        WHERE 
+          blog_id = $${paramsNum}
     `,
     values
   );
+
+  if (!rowCount || rowCount === 0) {
+    throw new ErrorHandler(400, "Duplicate Heading Please Change The Heading");
+  }
 
   res.status(200).json(new ApiResponse(200, "Blog Updated"));
 });

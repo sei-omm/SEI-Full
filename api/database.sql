@@ -1449,6 +1449,7 @@ ADD CONSTRAINT planned_maintenance_system_item_id_institute_key UNIQUE (item_id,
 ALTER TABLE pms_history 
 ADD CONSTRAINT planned_maintenance_system_id_frequency_unique UNIQUE (planned_maintenance_system_id, frequency);
 
+DROP TABLE blogs;
 
 CREATE TABLE blogs (
     blog_id SERIAL PRIMARY KEY,
@@ -1463,8 +1464,16 @@ CREATE TABLE blogs (
 
     created_at DATE DEFAULT CURRENT_DATE,
 
-    visible BOOLEAN NOT NULL DEFAULT TRUE
+    visible BOOLEAN NOT NULL DEFAULT TRUE,
+
+    thumbnail_alt_tag VARCHAR(255) DEFAULT '',
+
+    slug TEXT NOT NULL,
+
+    UNIQUE(slug)
 );
+
+CREATE INDEX blog_slug_index ON blogs (slug);
 
 
 -- fro clering all table of db

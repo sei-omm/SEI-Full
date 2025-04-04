@@ -25,7 +25,7 @@ import { IoMdSpeedometer } from "react-icons/io";
 import { CgWebsite } from "react-icons/cg";
 import { GoDiscussionOutdated, GoStack } from "react-icons/go";
 
-import { TbCategory2, TbReportSearch } from "react-icons/tb";
+import { TbCategory2, TbReportSearch, TbSocial } from "react-icons/tb";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { FaPeopleRoof } from "react-icons/fa6";
 import { RiBloggerLine, RiRefundLine, RiSettings3Line } from "react-icons/ri";
@@ -63,7 +63,8 @@ const iconMap: Record<string, JSX.Element> = {
   TbReportSearch: <TbReportSearch />,
   CgWebsite: <CgWebsite />,
   RiSettings3Line: <RiSettings3Line />,
-  RiBloggerLine : <RiBloggerLine />
+  RiBloggerLine : <RiBloggerLine />,
+  TbSocial : <TbSocial />
 };
 
 export default function Sidebar() {

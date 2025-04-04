@@ -19,7 +19,7 @@ export const VDeleteSingleNotice = Joi.object({
 
 // blogs
 export const VSingleBlog = Joi.object({
-  blog_id: Joi.number().required(),
+  blog_id: Joi.any().required(),
 });
 
 export const VPostNewBlog = Joi.object({
@@ -31,6 +31,9 @@ export const VPostNewBlog = Joi.object({
   meta_keywords: Joi.string().optional().allow(""),
   meta_canonical_url: Joi.string().optional().allow(""),
   visible: Joi.boolean().required(),
+  thumbnail_alt_tag: Joi.string().optional(),
+
+  slug: Joi.string().required(),
 });
 
 export const VUpdateSingleBlog = Joi.object({
@@ -44,6 +47,9 @@ export const VUpdateSingleBlog = Joi.object({
   meta_description: Joi.string().optional().allow(""),
   meta_keywords: Joi.string().optional().allow(""),
   meta_canonical_url: Joi.string().optional().allow(""),
-  
+  thumbnail_alt_tag: Joi.string().optional(),
+
   visible: Joi.boolean().required(),
+
+  slug: Joi.string().required(),
 });

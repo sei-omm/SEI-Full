@@ -310,6 +310,12 @@ export const sidebarOptions: TSideBar[] = [
         name: "Notice Board",
         slug: "/dashboard/website-management/notice-board",
       },
+      {
+        id: "10-3",
+        icon: "TbSocial",
+        name: "Social Media",
+        slug: "/dashboard/website-management/social-media",
+      },
     ],
   },
   {

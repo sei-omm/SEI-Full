@@ -12,6 +12,8 @@ import { MdOutlineDateRange } from "react-icons/md";
 import { HiOutlineGlobeAlt } from "react-icons/hi";
 import { CiEdit } from "react-icons/ci";
 import Link from "next/link";
+import Button from "../Button";
+import Pagination from "../Pagination";
 
 interface BlogList {
   blog_id: number;
@@ -21,6 +23,8 @@ interface BlogList {
   created_at: string; // ISO 8601 format
   thumbnail: string; // URL string
   visible: boolean;
+  thumbnail_alt_tag: string;
+  slug : string;
 }
 
 async function getBlogsList() {
@@ -31,14 +35,24 @@ export default function Blogs() {
   const { data, error, isFetching } = useQuery<ISuccess<BlogList[]>>({
     queryKey: ["blog-list"],
     queryFn: getBlogsList,
+    refetchOnMount: true,
   });
 
   return (
-    <div>
+    <div className="space-y-5">
+      <div className="w-full flex items-center">
+        <h2 className="flex-1 font-semibold text-2xl">Blogs List</h2>
+
+        <Link href={"blogs/add"}>
+          <Button>Add New Blog</Button>
+        </Link>
+      </div>
+
       <HandleSuspence
         isLoading={isFetching}
         error={error}
         dataLength={data?.data.length}
+        noDataMsg="No Blogs Found"
       >
         <ul className="w-full card">
           {data?.data.map((blog) => (
@@ -49,7 +63,7 @@ export default function Blogs() {
                     <Image
                       className="size-fit"
                       src={blog.thumbnail}
-                      alt=""
+                      alt={blog.thumbnail_alt_tag}
                       height={500}
                       width={500}
                     />
@@ -68,10 +82,12 @@ export default function Blogs() {
                       </p>
 
                       <span
-                        className={`font-semibold text-sm text-green-800 underline flex items-center gap-1`}
+                        className={`font-semibold text-sm ${
+                          blog.visible ? "text-green-800" : "text-red-800"
+                        } underline flex items-center gap-1`}
                       >
                         <HiOutlineGlobeAlt />
-                        Public
+                        {blog.visible ? "Public" : "Private"}
                       </span>
 
                       <div className="flex-1 flex items-center justify-end">
@@ -90,6 +106,8 @@ export default function Blogs() {
           ))}
         </ul>
       </HandleSuspence>
+
+      <Pagination dataLength={data?.data.length} />
     </div>
   );
 }

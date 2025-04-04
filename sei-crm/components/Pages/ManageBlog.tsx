@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Editor from "../Editor";
 import Input from "../Input";
 import ChooseFileInput from "../ChooseFileInput";
@@ -16,6 +16,8 @@ import { BASE_API } from "@/app/constant";
 import { ISuccess } from "@/types";
 import HandleSuspence from "../HandleSuspence";
 import { getFileName } from "@/app/utils/getFileName";
+import BackBtn from "../BackBtn";
+import { createSlug } from "@/app/utils/createSlug";
 
 interface IProps {
   blog_id: number | "add";
@@ -36,6 +38,8 @@ interface BlogPost {
   meta_canonical_url: string;
   created_at: string; // You might also consider using Date if you want to work with date objects
   visible: boolean;
+  thumbnail_alt_tag: string;
+  slug: string;
 }
 
 export default function ManageBlog({ blog_id }: IProps) {
@@ -51,9 +55,14 @@ export default function ManageBlog({ blog_id }: IProps) {
     );
   }, []);
 
+  const [slug, setSlug] = useState("");
+
   const { data, isFetching, error } = useQuery<ISuccess<BlogPost>>({
     queryKey: ["blog", blog_id],
     queryFn: () => fetchSingleBlog(blog_id as number),
+    onSuccess(data) {
+      setSlug(createSlug(data.data.heading));
+    },
     enabled: !isNew,
   });
 
@@ -66,7 +75,11 @@ export default function ManageBlog({ blog_id }: IProps) {
         method: "post",
         formData,
         onSuccess() {
-          routes.back();
+          routes.push(
+            `/dashboard/website-management/blogs?code=${Math.floor(
+              Math.random() * 100
+            )}`
+          );
         },
       });
       return;
@@ -79,7 +92,10 @@ export default function ManageBlog({ blog_id }: IProps) {
         : blogContentRef.current
     );
 
-    formData.set("thumbnail", formData.get("thumbnail") || data?.data.thumbnail as any)
+    formData.set(
+      "thumbnail",
+      formData.get("thumbnail") || (data?.data.thumbnail as any)
+    );
 
     mutate({
       apiPath: "/website/blogs",
@@ -87,48 +103,62 @@ export default function ManageBlog({ blog_id }: IProps) {
       formData,
       id: blog_id as number,
       onSuccess() {
-        routes.back();
+        routes.push(
+          `/dashboard/website-management/blogs?code=${Math.random() * 100}`
+        );
       },
     });
   };
 
   return (
-    <div key={Math.random()}>
+    <div key={blog_id}>
       <HandleSuspence isLoading={isFetching} error={error} dataLength={1}>
         <form action={handleManageBlog} className="space-y-5">
           <InfoLayout className="w-full space-y-5">
-            <ChooseFileInput
-              name="thumbnail"
-              id="choose_thumbnail"
-              label="Choose Blog Thumbnail"
-              fileName={
-                getFileName(data?.data.thumbnail) || "Choose Blog Thumbnail"
-              }
-              accept="image/*"
-              viewLink={data?.data.thumbnail}
-            />
             <div className="grid grid-cols-2 gap-5">
+              <ChooseFileInput
+                name="thumbnail"
+                id="choose_thumbnail"
+                label="Choose Blog Thumbnail *"
+                fileName={
+                  getFileName(data?.data.thumbnail) || "Choose Blog Thumbnail"
+                }
+                accept="image/*"
+                viewLink={data?.data.thumbnail}
+              />
+
+              <div className="mt-2">
+                <Input
+                  name="thumbnail_alt_tag"
+                  label="Thumbnail Alt Tag"
+                  placeholder="Enter Alt Tag"
+                  defaultValue={data?.data.thumbnail_alt_tag}
+                />
+              </div>
+
               <Input
+                onBlur={(e) => {
+                  setSlug(createSlug(e.currentTarget.value));
+                }}
                 required
                 name="heading"
                 placeholder="Type Your Blog Heading"
                 label="Blog Heading *"
                 defaultValue={data?.data.heading}
               />
-              <DropDown
-                name="visible"
-                label="Blog Visibility"
-                options={[
-                  { text: "Public", value: true },
-                  { text: "Private", value: false },
-                ]}
-                defaultValue={data?.data.visible}
+              <Input
+                key={slug}
+                required
+                name="slug"
+                placeholder="Type Blog Slug"
+                label="Blog Slug"
+                defaultValue={slug}
               />
             </div>
 
             <Editor
               storageFolderName="blogs"
-              label="Blog Content"
+              label="Blog Content *"
               textEditorContentRef={blogContentRef}
               defaultValue={data?.data.blog_content}
             />
@@ -164,9 +194,24 @@ export default function ManageBlog({ blog_id }: IProps) {
             </div>
           </InfoLayout>
 
-          <Button loading={isLoading} disabled={isLoading}>
-            {isNew ? "Upload Blog" : "Update Blog"}
-          </Button>
+          <InfoLayout className="w-full space-y-3">
+            <h2 className="font-semibold text-xl">Settings</h2>
+            <DropDown
+              name="visible"
+              label="Blog Visibility *"
+              options={[
+                { text: "Public", value: true },
+                { text: "Private", value: false },
+              ]}
+              defaultValue={data?.data.visible}
+            />
+          </InfoLayout>
+          <div className="flex items-center gap-5">
+            <BackBtn />
+            <Button loading={isLoading} disabled={isLoading}>
+              {isNew ? "Upload Blog" : "Update Blog"}
+            </Button>
+          </div>
         </form>
       </HandleSuspence>
     </div>
