@@ -26,8 +26,6 @@ export default async function PackageCourseListView({ centerName } : IProps) {
     }[]
   >;
 
-  console.log(result)
-
   return (
     <section className="w-full py-10">
       <ul className="space-y-12">
