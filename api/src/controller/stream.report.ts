@@ -1869,7 +1869,7 @@ export const streamInventoryReport = asyncErrorHandler(async (req, res) => {
       LEFT JOIN vendor v
       ON v.vendor_id = idr.vendor_id
 
-      WHERE idr.institute = $1 AND idr.report_date BETWEEN $2 AND $3
+      WHERE idr.institute = $1 AND idr.current_purchase_date BETWEEN $2 AND $3
     `,
     [value.institute, value.from_date, value.to_date],
     {

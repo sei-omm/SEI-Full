@@ -1444,8 +1444,11 @@ ALTER TABLE inventory_item_info ADD COLUMN remark TEXT DEFAULT '';
 -- NEW DB 04 APR 2025
 DELETE FROM planned_maintenance_system;
 
+DELETE FROM inventory_item_info;
+DELETE FROM inventory_daily_report;
+
 ALTER TABLE planned_maintenance_system 
-DROP CONSTRAINT planned_maintenance_system_custom_item_institute_key;
+DROP CONSTRAINT unique_custom_item_institute;
 
 ALTER TABLE planned_maintenance_system 
 DROP CONSTRAINT planned_maintenance_system_item_id_institute_key;
