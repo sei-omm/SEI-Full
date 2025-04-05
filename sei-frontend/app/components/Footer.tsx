@@ -17,7 +17,7 @@ type TSocialLinks = {
 
 export default async function Footer() {
   const response = await fetch(`${BASE_API}/website/social`, {
-    cache: "default",
+    cache: "no-store",
   });
 
   const social_links: TSocialLinks[] = [];

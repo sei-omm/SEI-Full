@@ -1483,7 +1483,6 @@ CREATE TABLE social_links (
     institute VARCHAR(255) DEFAULT('Kolkata')
 );
 
-
 -- fro clering all table of db
 -- DO $$ 
 -- BEGIN

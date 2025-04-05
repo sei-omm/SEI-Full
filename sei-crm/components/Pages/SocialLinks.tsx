@@ -150,7 +150,6 @@ export default function SocialLinks() {
     });
   };
   const handleFormSubmit = (data: FormType) => {
-    alert("Here");
     if (updateIds.current.length === 0) {
       storeNewData(data);
     } else {

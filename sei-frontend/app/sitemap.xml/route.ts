@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { BASE_API } from "../constant";
 import { IResponse } from "../type";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const { nextUrl } = req;
 
