@@ -9,6 +9,7 @@ import {
   getBlogsList,
   getSingleBlog,
   getSingleNotice,
+  getSlugs,
   getSocialLinks,
   postNewBlog,
   updateSingleBlog,
@@ -26,6 +27,7 @@ websiteRoute
   .get("/notice", getAllNotice)
 
   .get("/blogs", getBlogsList)
+  .get("/blogs/slug", getSlugs)
   .get("/blogs/:blog_id", getSingleBlog)
   .post("/blogs", postNewBlog)
   .put("/blogs/:blog_id", updateSingleBlog)

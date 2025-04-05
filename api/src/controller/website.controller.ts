@@ -196,6 +196,11 @@ export const deleteBlog = asyncErrorHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Blog Remove"));
 });
 
+export const getSlugs = asyncErrorHandler(async (req, res) => {
+  const { rows } = await pool.query("SELECT slug FROM blogs");
+  res.status(200).json(new ApiResponse(200, "Blog Slgs", rows));
+});
+
 // Social Links
 export const getSocialLinks = asyncErrorHandler(async (req, res) => {
   const { filterQuery, filterValues } = filterToSql(req.query);
