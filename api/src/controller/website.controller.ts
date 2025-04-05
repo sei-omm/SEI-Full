@@ -218,11 +218,11 @@ export const createSocialLinks = asyncErrorHandler(async (req, res) => {
 
   await pool.query(
     `
-    INSERT INTO social_links (social_platform, link, icon) VALUES ${
-      sqlPlaceholderCreator(3, value.length).placeholder
+    INSERT INTO social_links (social_platform, link, icon, institute) VALUES ${
+      sqlPlaceholderCreator(4, value.length).placeholder
     }
     `,
-    value.flatMap((item) => [item.social_platform, item.link, item.icon])
+    value.flatMap((item) => [item.social_platform, item.link, item.icon, item.institute])
   );
 
   res.status(201).json(new ApiResponse(201, "Social Links Are Added"));
@@ -233,7 +233,7 @@ export const updateSocialLinks = asyncErrorHandler(async (req, res) => {
   if (error) throw new ErrorHandler(400, error.message);
 
   const valuePlaceholders = value
-    .map((item, i) => {
+    .map((_, i) => {
       const idx = i * 5;
       // values.push(item.order_id, item.status);
       return `($${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${

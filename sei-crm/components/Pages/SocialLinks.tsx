@@ -164,14 +164,14 @@ export default function SocialLinks() {
         <Campus changeSearchParamsOnChange label="Filter With Campus" />
 
         <Button
-          onClick={() =>
+          onClick={() => {
             append({
               social_platform: "",
               link: "",
               icon: "",
               institute: searchParams.get("institute") || "",
-            })
-          }
+            });
+          }}
           className="flex items-center gap-3"
         >
           <span>+</span> <span>Add Links</span>
