@@ -7,7 +7,7 @@ export function filterToSql(query: object, preFix: string[] | string | null = nu
 
     if (filterQuery === "") filterQuery = "WHERE";
 
-    const preFixStr = Array.isArray(preFix) ? `${preFix[index]}.` : `${preFix}.`;
+    const preFixStr = Array.isArray(preFix) ? `${preFix[index]}.` : preFix ? `${preFix}.` : "";
 
     if (index === 0) {
       filterQuery += ` ${preFixStr}${key} = $${placeholderNum}`;

@@ -1475,6 +1475,14 @@ CREATE TABLE blogs (
 
 CREATE INDEX blog_slug_index ON blogs (slug);
 
+CREATE TABLE social_links (
+    social_link_id SERIAL PRIMARY KEY,
+    social_platform VARCHAR(255) NOT NULL,
+    link TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    institute VARCHAR(255) DEFAULT('Kolkata')
+);
+
 
 -- fro clering all table of db
 -- DO $$ 

@@ -1,5 +1,9 @@
-import React from "react";
+import dynamic from "next/dynamic";
 
-export default function page() {
-  return <div>page</div>;
+const SocialLinks = dynamic(() => import("@/components/Pages/SocialLinks"), {
+  ssr: false,
+});
+
+export default function SocialLinksPage() {
+  return <SocialLinks />;
 }

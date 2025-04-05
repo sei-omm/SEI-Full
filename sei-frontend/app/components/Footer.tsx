@@ -1,17 +1,44 @@
 import Image from "next/image";
 import React from "react";
-
-import { GrFacebookOption } from "react-icons/gr";
-import { FaInstagram } from "react-icons/fa";
-// import { FaLinkedinIn } from "react-icons/fa";
-// import { FaYoutube } from "react-icons/fa";
 import { CiLogin } from "react-icons/ci";
 
 import Link from "next/link";
 import Button from "./Button";
-import { IoLogoTwitter } from "react-icons/io5";
+import { BASE_API } from "../constant";
+import { IResponse } from "../type";
 
-export default function Footer() {
+type TSocialLinks = {
+  social_link_id: number;
+  social_platform: string;
+  link: string;
+  icon: string;
+  institute: string;
+};
+
+export default async function Footer() {
+  const response = await fetch(`${BASE_API}/website/social`, {
+    cache: "default",
+  });
+
+  const social_links: TSocialLinks[] = [];
+
+  if (response.ok) {
+    try {
+      const result = (await response.json()) as IResponse<TSocialLinks[]>;
+      social_links.push(...result.data);
+    } catch {}
+  }
+
+  const kolkata_social_links: TSocialLinks[] = [];
+  const faridabad_social_links: TSocialLinks[] = [];
+  social_links.forEach((item) => {
+    if (item.institute === "Kolkata") {
+      kolkata_social_links.push(item);
+    } else {
+      faridabad_social_links.push(item);
+    }
+  });
+
   return (
     <footer className="w-full bg-[#384A5A] text-background mt-10 pt-9">
       <div className="main-layout grid grid-cols-3 gap-10 sm:grid-cols-1">
@@ -44,10 +71,25 @@ export default function Footer() {
 
           <div className="space-y-6">
             {/* <h2 className="text-xs text-gray-400">Kolkata</h2> */}
-            <div className="space-y-2">
-              <h2 className="text-xs text-gray-400">Kolkata</h2>
-              <div className="flex items-center gap-4">
-                <Link
+            {kolkata_social_links.length !== 0 ? (
+              <div className="space-y-2">
+                <h2 className="text-xs text-gray-400">Kolkata</h2>
+                <div className="flex items-center gap-4">
+                  {kolkata_social_links.map((socialInfo) => (
+                    <Link
+                      key={socialInfo.social_link_id}
+                      href={socialInfo.link}
+                      title={socialInfo.social_platform}
+                      className="size-8 inline-block rounded-lg border flex-center p-1"
+                    >
+                      {/* <GrFacebookOption /> */}
+                      <div
+                        className="size-[18px]"
+                        dangerouslySetInnerHTML={{ __html: socialInfo.icon }}
+                      ></div>
+                    </Link>
+                  ))}
+                  {/* <Link
                   href={"https://www.facebook.com/seieducational.trust"}
                   className="size-8 inline-block rounded-lg border flex-center p-1"
                 >
@@ -64,33 +106,50 @@ export default function Footer() {
                   className="size-8 inline-block rounded-lg border flex-center p-1"
                 >
                   <FaInstagram />
-                </Link>
+                </Link> */}
+                </div>
               </div>
-            </div>
+            ) : null}
             <div className="w-32 h-[1px] opacity-40 bg-slate-500"></div>
-            <div className="space-y-2">
-              <h2 className="text-xs text-gray-400">Faridabad</h2>
-              <div className="flex items-center gap-4">
-                <Link
-                  href={"https://www.facebook.com/share/17SvrnvhJz/"}
-                  className="size-8 inline-block rounded-lg border flex-center p-1"
-                >
-                  <GrFacebookOption />
-                </Link>
-                {/* <Link
-                href={"https://twitter.com/kolseiedutrust"}
-                className="size-8 inline-block rounded-lg border flex-center p-1"
-              >
-                <IoLogoTwitter />
-              </Link> */}
-                <Link
-                  href={"https://www.instagram.com/seiedutrustfaridabad/"}
-                  className="size-8 inline-block rounded-lg border flex-center p-1"
-                >
-                  <FaInstagram />
-                </Link>
+            {faridabad_social_links.length !== 0 ? (
+              <div className="space-y-2">
+                <h2 className="text-xs text-gray-400">Faridabad</h2>
+                <div className="flex items-center gap-4">
+                  {faridabad_social_links.map((socialInfo) => (
+                    <Link
+                      key={socialInfo.social_link_id}
+                      href={socialInfo.link}
+                      title={socialInfo.social_platform}
+                      className="size-8 inline-block rounded-lg border flex-center p-1"
+                    >
+                      <div
+                        className="size-[18px]"
+                        dangerouslySetInnerHTML={{ __html: socialInfo.icon }}
+                      ></div>
+                    </Link>
+                  ))}
+
+                  {/* <Link
+                      href={"https://www.facebook.com/share/17SvrnvhJz/"}
+                      className="size-8 inline-block rounded-lg border flex-center p-1"
+                    >
+                      <GrFacebookOption />
+                    </Link>
+                    <Link
+                    href={"https://twitter.com/kolseiedutrust"}
+                    className="size-8 inline-block rounded-lg border flex-center p-1"
+                  >
+                    <IoLogoTwitter />
+                  </Link>
+                    <Link
+                      href={"https://www.instagram.com/seiedutrustfaridabad/"}
+                      className="size-8 inline-block rounded-lg border flex-center p-1"
+                    >
+                      <FaInstagram />
+                    </Link> */}
+                </div>
               </div>
-            </div>
+            ) : null}
           </div>
         </div>
 
@@ -185,8 +244,8 @@ export default function Footer() {
         </Link>
       </div>
 
-   {/* bg-[#7c7c62a9]  */}
-   {/* bg-[#7c7c62a9] */}
+      {/* bg-[#7c7c62a9]  */}
+      {/* bg-[#7c7c62a9] */}
       <div className="bg-[#2c455a] mt-4">
         <div className="flex items-center flex-wrap gap-y-3 justify-between main-layout py-2 text-sm sm:justify-center">
           <span>© 2019 SEI Education Trust. All Rights Reserved.</span>

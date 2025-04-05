@@ -53,3 +53,27 @@ export const VUpdateSingleBlog = Joi.object({
 
   slug: Joi.string().required(),
 });
+
+// social links
+export const VAddSocialLinks = Joi.array().items(
+  Joi.object({
+    social_platform: Joi.string().required(),
+    link: Joi.string().required(),
+    icon: Joi.string().required(),
+    institute: Joi.string().required(),
+  })
+);
+
+export const VUpdateSocialLink = Joi.array().items(
+  Joi.object({
+    social_link_id: Joi.number().required(),
+    social_platform: Joi.string().required(),
+    link: Joi.string().required(),
+    icon: Joi.string().required(),
+    institute: Joi.string().required(),
+  })
+);
+
+export const VSingleSocialLink = Joi.object({
+  social_link_id: Joi.number().required(),
+});

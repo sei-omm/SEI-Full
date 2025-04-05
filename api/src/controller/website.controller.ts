@@ -2,18 +2,23 @@ import { pool } from "../config/db";
 import asyncErrorHandler from "../middleware/asyncErrorHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ErrorHandler } from "../utils/ErrorHandler";
+import { filterToSql } from "../utils/filterToSql";
 import {
   objectToSqlConverterUpdate,
   objectToSqlInsert,
 } from "../utils/objectToSql";
 import { parsePagination } from "../utils/parsePagination";
+import { sqlPlaceholderCreator } from "../utils/sql/sqlPlaceholderCreator";
 import {
   VAddNewNotice,
+  VAddSocialLinks,
   VDeleteSingleNotice,
   VPostNewBlog,
   VSingleBlog,
+  VSingleSocialLink,
   VUpdateSingleBlog,
   VUpdateSingleNotice,
+  VUpdateSocialLink,
 } from "../validator/website.validator";
 
 export const addNewNotice = asyncErrorHandler(async (req, res) => {
@@ -120,7 +125,9 @@ export const getSingleBlog = asyncErrorHandler(async (req, res) => {
   const { error, value } = VSingleBlog.validate(req.params);
   if (error) throw new ErrorHandler(400, error.message);
 
-  const search_with = Number.isNaN(parseInt(value.blog_id)) ? "slug" : "blog_id"
+  const search_with = Number.isNaN(parseInt(value.blog_id))
+    ? "slug"
+    : "blog_id";
 
   const { rowCount, rows } = await pool.query(
     `SELECT * FROM blogs WHERE ${search_with} = $1`,
@@ -187,4 +194,81 @@ export const deleteBlog = asyncErrorHandler(async (req, res) => {
   await pool.query(`DELETE FROM blogs WHERE blog_id = $1`, [value.blog_id]);
 
   res.status(200).json(new ApiResponse(200, "Blog Remove"));
+});
+
+// Social Links
+export const getSocialLinks = asyncErrorHandler(async (req, res) => {
+  const { filterQuery, filterValues } = filterToSql(req.query);
+
+  const { rows } = await pool.query(
+    `SELECT * FROM social_links ${filterQuery}`,
+    filterValues
+  );
+  res.status(200).json(new ApiResponse(200, "Social Links", rows));
+});
+
+export const createSocialLinks = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VAddSocialLinks.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  await pool.query(
+    `
+    INSERT INTO social_links (social_platform, link, icon) VALUES ${
+      sqlPlaceholderCreator(3, value.length).placeholder
+    }
+    `,
+    value.flatMap((item) => [item.social_platform, item.link, item.icon])
+  );
+
+  res.status(201).json(new ApiResponse(201, "Social Links Are Added"));
+});
+
+export const updateSocialLinks = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VUpdateSocialLink.validate(req.body);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  const valuePlaceholders = value
+    .map((item, i) => {
+      const idx = i * 5;
+      // values.push(item.order_id, item.status);
+      return `($${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${
+        idx + 5
+      })`;
+    })
+    .join(", ");
+
+  await pool.query(
+    `
+      UPDATE social_links AS sl
+      SET 
+        social_platform = v.social_platform,
+        link = v.link,
+        icon = v.icon,
+        institute = v.institute
+      FROM (VALUES ${valuePlaceholders}) AS v(social_link_id, social_platform, link, icon, institute)
+      WHERE sl.social_link_id = v.social_link_id::INTEGER
+    `,
+    value.flatMap((item) => [
+      item.social_link_id,
+      item.social_platform,
+      item.link,
+      item.icon,
+      item.institute,
+    ])
+  );
+
+  res.status(200).json(new ApiResponse(200, "Social Link Info Has Update"));
+});
+
+export const deleteSingleSocialLink = asyncErrorHandler(async (req, res) => {
+  const { error, value } = VSingleSocialLink.validate(req.params);
+  if (error) throw new ErrorHandler(400, error.message);
+
+  // await new Promise((resolve) => setTimeout(resolve, 3000));
+
+  await pool.query("DELETE FROM social_links WHERE social_link_id = $1", [
+    value.social_link_id,
+  ]);
+
+  res.status(200).json(new ApiResponse(200, "Social Link Has Removed"));
 });

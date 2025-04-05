@@ -1,15 +1,19 @@
 import { Router } from "express";
 import {
   addNewNotice,
+  createSocialLinks,
   deleteBlog,
   deleteSingleNotice,
+  deleteSingleSocialLink,
   getAllNotice,
   getBlogsList,
   getSingleBlog,
   getSingleNotice,
+  getSocialLinks,
   postNewBlog,
   updateSingleBlog,
   updateSingleNotice,
+  updateSocialLinks,
 } from "../controller/website.controller";
 
 export const websiteRoute = Router();
@@ -26,3 +30,8 @@ websiteRoute
   .post("/blogs", postNewBlog)
   .put("/blogs/:blog_id", updateSingleBlog)
   .delete("/blogs/:blog_id", deleteBlog)
+
+  .get("/social", getSocialLinks)
+  .post("/social", createSocialLinks)
+  .put("/social", updateSocialLinks)
+  .delete("/social/:social_link_id", deleteSingleSocialLink);
